@@ -15,12 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\Test.h">
+    <ClInclude Include="source\Daedalus\Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Daedalus\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Daedalus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Daedalus\EntryPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Test.cpp">
+    <ClCompile Include="source\Daedalus\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

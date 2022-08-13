@@ -32,6 +32,11 @@ bin-int/
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app
+
+#Visual Studio stuff
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

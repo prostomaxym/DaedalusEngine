@@ -1,0 +1,3 @@
+[submodule "Daedalus/ThirdPartyLibraries/spdlog"]
+	path = Daedalus/ThirdPartyLibraries/spdlog
+	url = https://github.com/gabime/spdlog

@@ -27,6 +27,7 @@ project "dlEngine"
 
 	includedirs
 	{
+		"%{prj.name}/source",
 		"%{prj.name}/ThirdParty/spdlog/include"
 	}
 
@@ -81,7 +82,7 @@ project "dlSandbox"
 
 	links
 	{
-		"DaedlEnginedalus"
+		"dlEngine"
 	}
 
 	filter "system:windows"

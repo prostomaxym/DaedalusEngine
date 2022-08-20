@@ -9,3 +9,7 @@
 #else
 	#error Daedalus only support Windows
 #endif
+
+
+// Evil macros
+#define BIT(x) (1 << x)

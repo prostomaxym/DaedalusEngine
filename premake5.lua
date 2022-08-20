@@ -11,8 +11,8 @@ workspace "Daedalus"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 
-project "Daedalus"
-	location "Daedalus"
+project "dlEngine"
+	location "dlEngine"
 	kind "SharedLib"
 	language "C++"
 
@@ -43,7 +43,7 @@ project "Daedalus"
 	
 		postbuildcommands
 		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/dlSandbox")
 		}
 
 	filter "configurations:Debug"
@@ -59,8 +59,8 @@ project "Daedalus"
 		optimize "On"
 
 
-project "Sandbox"
-	location "Sandbox"
+project "dlSandbox"
+	location "dlSandbox"
 	kind "ConsoleApp"
 	language "C++"
 
@@ -75,13 +75,13 @@ project "Sandbox"
 
 	includedirs
 	{
-		"Daedalus/ThirdParty/spdlog/include",
-		"Daedalus/source"
+		"dlEngine/ThirdParty/spdlog/include",
+		"dlEngine/source"
 	}
 
 	links
 	{
-		"Daedalus"
+		"DaedlEnginedalus"
 	}
 
 	filter "system:windows"

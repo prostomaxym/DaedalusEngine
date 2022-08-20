@@ -1,6 +1,7 @@
 # Folders
 bin/
 bin-int/
+build/
 .vs/
 
 # Prerequisites

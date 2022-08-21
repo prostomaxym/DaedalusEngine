@@ -12,4 +12,4 @@
 
 
 // Evil macros
-#define BIT(x) (1 << x)
+#define BITMASK(x) (1 << x)

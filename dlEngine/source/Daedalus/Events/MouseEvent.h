@@ -27,6 +27,7 @@ private:
 	float m_mouseY;
 };
 
+
 class DAEDALUS_API MouseScrolledEvent : public Event
 {
 public:
@@ -48,6 +49,7 @@ private:
 	float m_offsetY;
 };
 
+
 class DAEDALUS_API MouseButtonEvent : public Event
 {
 public:
@@ -59,6 +61,7 @@ protected:
 	MouseButtonEvent(int button) : m_button(button) {}
 	int m_button;
 };
+
 
 class DAEDALUS_API MouseButtonPressedEvent : public MouseButtonEvent
 {
@@ -72,6 +75,7 @@ public:
 		return "MouseButtonPressedEvent: " + std::to_string(m_button);
 	}
 };
+
 
 class DAEDALUS_API MouseButtonReleasedEvent : public MouseButtonEvent
 {

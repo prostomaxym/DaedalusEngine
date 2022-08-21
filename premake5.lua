@@ -10,11 +10,18 @@ workspace "Daedalus"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+IncludeDir = {}
+
+IncludeDir["GLFW"] = "dlEngine/ThirdParty/GLFW/include"
+include "dlEngine/ThirdParty/GLFW/"
+
+
 ---------------------------------------------------------------------------------------------------
 project "dlEngine"
 	location "dlEngine"
 	kind "SharedLib"
 	language "C++"
+	cppdialect "C++17"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -31,7 +38,14 @@ project "dlEngine"
 	includedirs
 	{
 		"%{prj.name}/source",
-		"%{prj.name}/ThirdParty/spdlog/include"
+		"%{prj.name}/ThirdParty/spdlog/include",
+		"%{IncludeDir.GLFW}"
+	}
+
+	links 
+	{ 
+		"GLFW",
+		"opengl32.lib"
 	}
 
 	filter "system:windows"
@@ -68,6 +82,7 @@ project "dlSandbox"
 	location "dlSandbox"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -116,6 +131,7 @@ project "dlUnitTests"
 	location "dlUnitTests"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-int/" .. outputdir .. "/%{prj.name}")

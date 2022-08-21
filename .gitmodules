@@ -1,6 +1,9 @@
 [submodule "dlEngine/ThirdParty/spdlog"]
-	path =dlEngine/ThirdParty/spdlog
+	path = dlEngine/ThirdParty/spdlog
 	url = https://github.com/gabime/spdlog
 [submodule "ThirdParty/googletest"]
 	path = ThirdParty/googletest
 	url = https://github.com/google/googletest
+[submodule "dlEngine/ThirdParty/glfw"]
+	path = dlEngine/ThirdParty/glfw
+	url = https://github.com/prostomaxym/glfw

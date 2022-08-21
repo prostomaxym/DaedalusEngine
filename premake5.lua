@@ -45,7 +45,7 @@ project "dlEngine"
 	links 
 	{ 
 		"GLFW",
-		"opengl32.lib"
+		"opengl32.lib"	
 	}
 
 	filter "system:windows"
@@ -67,6 +67,7 @@ project "dlEngine"
 
 	filter "configurations:Debug"
 		defines "DL_DEBUG"
+		defines "DL_ENABLE_ASSERTS"
 		symbols "On"
 
 	filter "configurations:Release"
@@ -116,6 +117,7 @@ project "dlSandbox"
 
 	filter "configurations:Debug"
 		defines "DL_DEBUG"
+		defines "DL_ENABLE_ASSERTS"
 		symbols "On"
 
 	filter "configurations:Release"

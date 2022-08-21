@@ -7,7 +7,7 @@ namespace Daedalus {
 class DAEDALUS_API KeyEvent : public Event
 {
 public:
-	EVENT_CLASS_CATEGORY(Keyboard | Input)
+	EVENT_CLASS_CATEGORY(KeyboardEvent | InputEvent)
 public:
 	inline int GetKeyCode() const { return m_keycode; }
 

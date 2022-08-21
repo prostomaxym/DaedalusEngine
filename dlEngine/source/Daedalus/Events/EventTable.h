@@ -33,13 +33,13 @@ enum class EventType
 
 enum EventCategory
 {
-	None = 0,
+	NoneEvent = 0,
 
-	Application = BITMASK(0),
-	Input = BITMASK(1),
-	Keyboard = BITMASK(2),
-	Mouse = BITMASK(3),
-	MouseButton = BITMASK(4)
+	ApplicationEvent = BITMASK(0),
+	InputEvent = BITMASK(1),
+	KeyboardEvent = BITMASK(2),
+	MouseEvent = BITMASK(3),
+	MouseButtonEvent = BITMASK(4)
 };
 
 #define EVENT_CLASS_TYPE(type)	static EventType GetStaticType { return EventType::##type; }\

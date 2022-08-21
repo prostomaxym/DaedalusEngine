@@ -8,7 +8,7 @@ class DAEDALUS_API MouseMovedEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(MouseMoved)
-	EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
+	EVENT_CLASS_CATEGORY(MouseEvent | InputEvent)
 public:
 	MouseMovedEvent(float x, float y) : m_mouseX(x), m_mouseY(y) {}
 
@@ -30,7 +30,7 @@ class DAEDALUS_API MouseScrolledEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(MouseScrolled)
-	EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
+	EVENT_CLASS_CATEGORY(MouseEvent | InputEvent)
 public:
 	MouseScrolledEvent(float offsetX, float offsetY) : m_offsetX(offsetX), m_offsetY(offsetY) {}
 
@@ -51,7 +51,7 @@ private:
 class DAEDALUS_API MouseButtonEvent : public Event
 {
 public:
-	EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
+	EVENT_CLASS_CATEGORY(MouseEvent | InputEvent)
 public:
 	inline int GetMouseButton() const { return m_button; }
 

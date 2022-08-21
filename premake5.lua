@@ -19,6 +19,9 @@ project "dlEngine"
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
 	objdir("bin-int/" .. outputdir .. "/%{prj.name}")
 
+	pchheader "dlpch.h"
+	pchsource "dlEngine/source/dlpch.cpp"
+
 	files
 	{
 		"%{prj.name}/source/**.h",

@@ -1,3 +1,4 @@
+#include "dlpch.h"
 #include "Application.h"
 
 namespace Daedalus {

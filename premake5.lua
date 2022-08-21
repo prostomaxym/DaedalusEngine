@@ -44,7 +44,8 @@ project "dlEngine"
 	
 		postbuildcommands
 		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/dlSandbox")
+			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/dlSandbox"),
+			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/dlUnitTests")
 		}
 
 	filter "configurations:Debug"
@@ -125,13 +126,14 @@ project "dlUnitTests"
 	includedirs
 	{
 		"dlEngine/source",
-		"ThirdParty/googletest/googletest/include/gtest"
+		"ThirdParty/googletest/googletest/include"
 	}
 
 	links
 	{
 		"dlEngine",
-		"googletest"
+		"ThirdParty/lib/googletest/%{cfg.buildcfg}/gtest.lib",
+		"ThirdParty/lib/googletest/%{cfg.buildcfg}/gtest_main.lib"
 	}
 
 	filter "system:windows"

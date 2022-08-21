@@ -10,7 +10,7 @@ workspace "Daedalus"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-
+---------------------------------------------------------------------------------------------------
 project "dlEngine"
 	location "dlEngine"
 	kind "SharedLib"
@@ -58,7 +58,7 @@ project "dlEngine"
 	filter "configurations:Production"
 		defines "DL_PRODUCTION"
 		optimize "On"
-
+---------------------------------------------------------------------------------------------------
 
 project "dlSandbox"
 	location "dlSandbox"
@@ -83,6 +83,55 @@ project "dlSandbox"
 	links
 	{
 		"dlEngine"
+	}
+
+	filter "system:windows"
+		cppdialect "C++17"
+		staticruntime "On"
+		systemversion "latest"
+
+		defines
+		{
+			"DL_PLATFORM_WINDOWS",
+		}
+
+	filter "configurations:Debug"
+		defines "DL_DEBUG"
+		symbols "On"
+
+	filter "configurations:Release"
+		defines "DL_RELEASE"
+		optimize "On"
+
+	filter "configurations:Production"
+		defines "DL_PRODUCTION"
+		optimize "On"
+---------------------------------------------------------------------------------------------------
+
+project "dlUnitTests"
+	location "dlUnitTests"
+	kind "ConsoleApp"
+	language "C++"
+
+	targetdir("bin/" .. outputdir .. "/%{prj.name}")
+	objdir("bin-int/" .. outputdir .. "/%{prj.name}")
+
+	files
+	{
+		"%{prj.name}/source/**.h",
+		"%{prj.name}/source/**.cpp"
+	}
+
+	includedirs
+	{
+		"dlEngine/source",
+		"ThirdParty/googletest/googletest/include/gtest"
+	}
+
+	links
+	{
+		"dlEngine",
+		"googletest"
 	}
 
 	filter "system:windows"

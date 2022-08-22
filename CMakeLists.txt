@@ -12,5 +12,5 @@ IF(WIN32)
     add_compile_definitions(DL_PLATFORM_WINDOWS)
 ENDIF()
 
-add_subdirectory(dlEngine)
-add_subdirectory(dlSandbox)
+add_subdirectory(dlEngine ${binaryDir})
+add_subdirectory(dlSandbox ${binaryDir})

@@ -20,12 +20,10 @@ target_include_directories(${PROJECT_NAME}
 			PUBLIC 
 				${CMAKE_CURRENT_SOURCE_DIR}/../dlEngine/source/
                 ${CMAKE_CURRENT_SOURCE_DIR}/../dlEngine/ThirdParty/spdlog/include
-                ${CMAKE_CURRENT_SOURCE_DIR}/../dlEngine/ThirdParty/glfw/include
                 )
 
 target_link_libraries(${PROJECT_NAME}
 				PRIVATE
 					dlEngine
                     spdlog
-                    glfw3
 					)		

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-add_subdirectory(ThirdParty/glfw)
+add_subdirectory(ThirdParty/glfw3)
 add_subdirectory(ThirdParty/spdlog)
 
 project(
@@ -49,15 +49,15 @@ add_compile_definitions(DL_ENABLE_ASSERTS
                         DL_BUILD_DLL)
 
 target_include_directories(${PROJECT_NAME}
-			PUBLIC 
+			PRIVATE 
 				${CMAKE_CURRENT_SOURCE_DIR}/source/
                 ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog/include
-                ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw/include
+                ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw3/include
                 )
 
 target_link_libraries(${PROJECT_NAME}
-				PUBLIC
-                    opengl32
+				PRIVATE    
                     spdlog
+                    opengl32
                     glfw3
 					)		

@@ -1,2 +1,11 @@
-call ThirdParty\bin\premake\premake5.exe vs2022
+@echo off
+
+if not exist build\ (
+  mkdir build
+)
+
+cd build
+
+cmake ../ -DENABLE_TESTS=TRUE
+
 PAUSE

@@ -20,3 +20,9 @@ ENDIF()
 
 add_subdirectory(dlEngine)
 add_subdirectory(dlSandbox)
+
+if (${ENABLE_TESTS})
+    enable_testing()
+    add_subdirectory(ThirdParty/googletest)
+    add_subdirectory(dlUnitTests)
+endif()

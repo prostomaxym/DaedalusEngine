@@ -7,10 +7,16 @@ project(
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(COMPILE_OUTPUT_FOLDER ${CMAKE_SOURCE_DIR}/bin/x64/)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 
 IF(WIN32)
-    add_compile_definitions(DL_PLATFORM_WINDOWS)
+  add_compile_definitions(DL_PLATFORM_WINDOWS)
 ENDIF()
 
-add_subdirectory(dlEngine ${binaryDir})
-add_subdirectory(dlSandbox ${binaryDir})
+add_subdirectory(dlEngine)
+add_subdirectory(dlSandbox)

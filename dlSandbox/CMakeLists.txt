@@ -5,25 +5,19 @@ project(
   VERSION 1.0.0
   LANGUAGES CXX)
 
-set(PROJECT_INCLUDES)
-
-set(PROJECT_SOURCES
+set(PROJECT_FILES
 	source/SandboxApp.cpp)
 
-set(PROJECT_FILES ${PROJECT_SOURCES} ${PROJECT_INCLUDES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
 
 add_compile_definitions(DL_ENABLE_ASSERTS)
 
-target_include_directories(${PROJECT_NAME}
-			PUBLIC 
-				${CMAKE_CURRENT_SOURCE_DIR}/../dlEngine/source/
-                ${CMAKE_CURRENT_SOURCE_DIR}/../dlEngine/ThirdParty/spdlog/include
-                )
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
-				PRIVATE
-					dlEngine
-                    spdlog
-					)		
+PRIVATE
+  dlEngine
+  spdlog
+)

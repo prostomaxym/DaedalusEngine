@@ -42,9 +42,9 @@ public:
 	EVENT_CLASS_TYPE(KeyReleased)
 public:
 
-	KeyReleasedEvent(int keycode, int repeat_count) : KeyEvent(keycode) {}
+	KeyReleasedEvent(int keycode) : KeyEvent(keycode) {}
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "KeyPressedEvent: " + std::to_string(m_keycode);
 	}

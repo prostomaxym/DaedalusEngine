@@ -25,6 +25,8 @@ private:
 	virtual void Init(const WindowProps& props);
 	virtual void Shutdown();
 
+	virtual void SetupCallbacks();
+
 private:
 	GLFWwindow* m_window;
 

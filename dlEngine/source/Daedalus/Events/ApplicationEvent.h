@@ -15,7 +15,7 @@ public:
 	inline int GetWidth() const { return m_width; }
 	inline int GetHeight() const { return m_height; }
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "WindowReiseEvent: " + std::to_string(m_width) + ", " + std::to_string(m_height);
 	}
@@ -30,7 +30,12 @@ class DAEDALUS_API WindowCloseEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(WindowClose)
-	Event_CLASS_CATEGORY(ApplicationEvent)
+	EVENT_CLASS_CATEGORY(ApplicationEvent)
+
+	std::string GetInfo() const override
+	{
+		return "WindowCloseEvent";
+	}
 public:
 	WindowCloseEvent() {}
 };
@@ -40,7 +45,7 @@ class DAEDALUS_API AppTickEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(AppTick)
-	Event_CLASS_CATEGORY(ApplicationEvent)
+	EVENT_CLASS_CATEGORY(ApplicationEvent)
 public:
 	AppTickEvent() {}
 };
@@ -50,7 +55,7 @@ class DAEDALUS_API AppUpdateEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(AppUpdate)
-	Event_CLASS_CATEGORY(ApplicationEvent)
+	EVENT_CLASS_CATEGORY(ApplicationEvent)
 public:
 	AppUpdateEvent() {}
 };
@@ -60,7 +65,7 @@ class DAEDALUS_API AppRenderEvent : public Event
 {
 public:
 	EVENT_CLASS_TYPE(AppRender)
-	Event_CLASS_CATEGORY(ApplicationEvent)
+	EVENT_CLASS_CATEGORY(ApplicationEvent)
 public:
 	AppRenderEvent() {}
 };

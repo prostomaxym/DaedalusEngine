@@ -2,9 +2,18 @@
 
 #include "EventTable.h"
 
-class EventDispatcher;
+#include <string>
+#include <ostream>
 
 namespace Daedalus {
+
+class EventDispatcher;
+
+#define EVENT_CLASS_TYPE(type)	static EventType GetStaticType() { return EventType::type; }\
+								virtual EventType GetEventType() const override { return GetStaticType(); }\
+								virtual const char* GetNameC() const override { return #type; }
+
+#define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
 class DAEDALUS_API Event
 {

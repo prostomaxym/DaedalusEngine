@@ -15,7 +15,7 @@ public:
 	inline float GetX() const { return m_mouseX; }
 	inline float GetY() const { return m_mouseY; }
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "MouseMovedEvent: " + std::to_string(m_mouseX) + ", " + std::to_string(m_mouseY);
 	}
@@ -37,7 +37,7 @@ public:
 	inline int GetOffsetX() const { return m_offsetX; }
 	inline int GetOffsetY() const { return m_offsetY; }
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "MouseScrolledEvent: " + std::to_string(m_offsetX) + ", " + std::to_string(m_offsetY);
 	}
@@ -68,7 +68,7 @@ public:
 public:
 	MouseButtonPressedEvent(int button) : MouseButtonEvent(button) {}
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "MouseButtonPressedEvent: " + std::to_string(m_button);
 	}
@@ -82,7 +82,7 @@ public:
 public:
 	MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) {}
 
-	std::string GetName() const override
+	std::string GetInfo() const override
 	{
 		return "MouseButtonReleasedEvent: " + std::to_string(m_button);
 	}

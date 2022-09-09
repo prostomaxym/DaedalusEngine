@@ -28,7 +28,7 @@ set(PROJECT_FILES
     source/Daedalus/Application.cpp
     source/Daedalus/Core.h
     source/Daedalus/EntryPoint.h
-    source/Daedalus/Iwindow.h
+    source/Daedalus/IWindow.h
     source/Daedalus/Log.h
     source/Daedalus/Log.cpp
     source/Daedalus/Events/ApplicationEvent.h

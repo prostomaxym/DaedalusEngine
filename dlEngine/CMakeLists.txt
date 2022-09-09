@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+IF(UNIX)
+    execute_process(COMMAND sudo apt update
+                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev)
+ENDIF()
+
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+set(GLFW_BUILD_EXAMPLES OFF)
+
 add_subdirectory(ThirdParty/glfw3)
 add_subdirectory(ThirdParty/spdlog)
 
@@ -47,7 +56,6 @@ add_compile_definitions(
 set_target_properties(
     spdlog 
     glfw 
-    docs 
     uninstall 
     update_mappings 
 

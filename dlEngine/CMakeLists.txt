@@ -2,11 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 IF(UNIX)
     execute_process(COMMAND sudo apt update
-                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
-                    COMMAND sudo apt-get install libgl-dev
-                    COMMAND sudo apt install mesa-common-dev
-                    COMMAND sudo apt-get install mesa-utils
-                    COMMAND ln -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libopengl32.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libOpenGL32.so)
+                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev)
 ENDIF()
 
 set(GLFW_BUILD_TESTS OFF)

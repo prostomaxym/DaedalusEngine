@@ -6,7 +6,7 @@ IF(UNIX)
                     COMMAND sudo apt-get install libgl-dev
                     COMMAND sudo apt install mesa-common-dev
                     COMMAND sudo apt-get install mesa-utils
-                    COMMAND ln -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libopengl32.a ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libOpenGL32.a)
+                    COMMAND ln -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libopengl32.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libOpenGL32.so)
 ENDIF()
 
 set(GLFW_BUILD_TESTS OFF)

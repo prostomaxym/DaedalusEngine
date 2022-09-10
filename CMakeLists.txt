@@ -15,9 +15,9 @@ ELSEIF(UNIX)
   add_compile_definitions(DL_PLATFORM_LINUX)
 ENDIF()
 
-IF(${DL_PLATFORM_WINDOWS})
+IF(WIN32)
   set(PLATFORM_NAME "windows")
-ELSEIF(${DL_PLATFORM_LINUX})
+ELSEIF(UNIX)
   set(PLATFORM_NAME "linux")
 ENDIF()
 

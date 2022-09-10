@@ -55,11 +55,13 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
 
-add_compile_definitions(
-    DL_ENABLE_ASSERTS
-    DL_BUILD_DLL)
+add_compile_definitions(DL_BUILD_DLL)
 
-# set target properties to hide libs from solution
+add_compile_definitions(
+    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
+    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
+)
+
 set_target_properties(
     spdlog 
     glfw 

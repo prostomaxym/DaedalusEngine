@@ -32,8 +32,26 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 add_subdirectory(dlEngine)
 add_subdirectory(dlSandbox)
 
+IF(WIN32)
+  install(TARGETS dlEngine 
+          RUNTIME DESTINATION bin
+          PERMISSIONS OWNER_WRITE)
+
+ELSEIF(UNIX)
+  install(TARGETS dlEngine 
+          LIBRARY DESTINATION bin
+          PERMISSIONS OWNER_WRITE)
+ENDIF()
+
+install(TARGETS dlSandbox 
+        RUNTIME DESTINATION bin
+        PERMISSIONS OWNER_WRITE)
+ 
 if (${ENABLE_TESTS})
     enable_testing()
+
+    set(INSTALL_GTEST OFF)
+
     add_subdirectory(ThirdParty/googletest)
     add_subdirectory(dlUnitTests)
 endif()

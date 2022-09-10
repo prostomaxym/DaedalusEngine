@@ -1,5 +1,7 @@
 #pragma once
 
+#include <csignal>
+
 #include <algorithm>
 #include <functional>
 #include <iostream>

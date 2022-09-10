@@ -3,6 +3,8 @@
 
 #ifdef DL_PLATFORM_WINDOWS
 	#include "Platform/Windows/WindowsWindow.h"
+#elif defined DL_PLATFORM_LINUX
+	#include "Platform/Linux/LinuxWindow.h"
 #endif
 
 #include "Daedalus/Events/EventDispatcher.h"
@@ -16,6 +18,8 @@ Application::Application()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	m_window = std::make_unique<WindowsWindow>(WindowProps());
+#elif defined DL_PLATFORM_LINUX
+	m_window = std::make_unique<LinuxWindow>(WindowProps());
 #endif 
 
 	m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));

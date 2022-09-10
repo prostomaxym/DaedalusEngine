@@ -1,4 +1,4 @@
-name: CMake
+name: Linux-GC
 
 on:
   push:
@@ -21,7 +21,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'true'
-    - uses: openrndr/setup-opengl@v1.1
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

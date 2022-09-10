@@ -47,6 +47,7 @@ install(TARGETS dlSandbox
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_WRITE)
  
+set(ENABLE_TESTS ON)
 if (${ENABLE_TESTS})
     enable_testing()
 

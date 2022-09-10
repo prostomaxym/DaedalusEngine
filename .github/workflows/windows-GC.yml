@@ -1,4 +1,4 @@
-name: CMake
+name: Windows-GC
 
 on:
   push:

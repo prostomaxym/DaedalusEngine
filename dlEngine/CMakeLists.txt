@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16.3)
 
 IF(UNIX)
     execute_process(COMMAND sudo apt update
-                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev)
+                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
+                    COMMAND sudo apt-get install libgl-dev)
 ENDIF()
 
 set(GLFW_BUILD_TESTS OFF)

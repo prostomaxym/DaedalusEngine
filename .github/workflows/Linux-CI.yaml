@@ -1,4 +1,4 @@
-name: Linux-GC
+name: Linux-CI
 
 on:
   push:

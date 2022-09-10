@@ -5,6 +5,7 @@ IF(UNIX)
                     COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
                     COMMAND sudo apt-get install libgl-dev
                     COMMAND sudo apt install mesa-common-dev
+                    COMMAND sudo apt-get install mesa-utils
                     COMMAND ln -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libopengl32.a ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libOpenGL32.a)
 ENDIF()
 

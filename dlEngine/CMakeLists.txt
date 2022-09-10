@@ -5,8 +5,7 @@ IF(UNIX)
                     COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
                     COMMAND sudo apt-get install libgl-dev
                     COMMAND sudo apt install mesa-common-dev
-                    COMMAND sudo apt-get install mesa-utils
-                    COMMAND ln -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libopengl32.a ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}libOpenGL32.a)
+                    COMMAND sudo apt-get install mesa-utils)
 ENDIF()
 
 set(GLFW_BUILD_TESTS OFF)
@@ -83,10 +82,12 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw3/include
 )
 
+find_package(OpenGL REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
     spdlog
 PRIVATE    
-    opengl32
+    ${OPENGL_LIBRARIES}
     glfw
 )

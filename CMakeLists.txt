@@ -48,7 +48,6 @@ install(TARGETS dlSandbox
         PERMISSIONS OWNER_WRITE)
  
 set(ENABLE_TESTS ON)
-
 if (${ENABLE_TESTS})
     enable_testing()
 

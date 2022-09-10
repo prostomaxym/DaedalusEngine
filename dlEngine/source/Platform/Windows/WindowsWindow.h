@@ -1,45 +1,16 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#ifdef DL_PLATFORM_WINDOWS
 
-#include "Daedalus/IWindow.h"
+#include "Platform/GLFWWindow.h"
 
 namespace Daedalus {
 
-class WindowsWindow : public IWindow
-{
-public:
-	WindowsWindow(const WindowProps& props);
-	virtual ~WindowsWindow();
-
-	void OnUpdate() override;
-
-	inline int GetWidth() const override { return m_data.width; }
-	inline int GetHeight() const override { return m_data.height; }
-
-	inline void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
-	void SetVSync(bool enabled) override;
-	bool IsVSync() const override;
-
-private:
-	virtual void Init(const WindowProps& props);
-	virtual void Shutdown();
-
-	virtual void SetupCallbacks();
-
-private:
-	GLFWwindow* m_window;
-
-	struct WindowData
+	class WindowsWindow : public GLFWWindow
 	{
-		std::string title;
-		unsigned int width, height;
-		bool VSync;
-
-		EventCallbackFn EventCallback;
+	public:
+		WindowsWindow(const WindowProps& props);
+		virtual ~WindowsWindow() = default;
 	};
-
-	WindowData m_data;
-};
-
 }
+#endif // DL_PLATFORM_WINDOWS

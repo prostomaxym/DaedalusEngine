@@ -17,7 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 IF(WIN32)
   add_compile_definitions(DL_PLATFORM_WINDOWS)
 ELSEIF(UNIX)
-  add_compile_definitions(DL_PLATFORM_UNIX)
+  add_compile_definitions(DL_PLATFORM_LINUX)
 ENDIF()
 
 add_subdirectory(dlEngine)

@@ -6,8 +6,14 @@
 	#else
 		#define DAEDALUS_API __declspec(dllimport)
 	#endif
+#elif defined DL_PLATFORM_LINUX
+	#ifdef DL_BUILD_DLL
+		#define DAEDALUS_API __attribute__((visibility("default")))
+	#else
+		#define DAEDALUS_API
+	#endif
 #else
-	#error Daedalus only support Windows
+	#error Daedalus only support Windows and Linux
 #endif
 
 

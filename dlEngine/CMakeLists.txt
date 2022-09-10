@@ -38,8 +38,14 @@ set(PROJECT_FILES
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
     
+    source/Platform/GLFWWindow.h
+    source/Platform/GLFWWindow.cpp
+
     source/Platform/Windows/WindowsWindow.h
     source/Platform/Windows/WindowsWindow.cpp
+
+    source/Platform/Linux/LinuxWindow.h
+    source/Platform/Linux/LinuxWindow.cpp
     )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})

@@ -74,6 +74,7 @@ set(ver_patch ${CMAKE_MATCH_1})
 
 message("-- App version: ${ver_major}.${ver_minor}.${ver_patch}")
 
+
 # Package config
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_NAME "Daedalus Development Sandbox")

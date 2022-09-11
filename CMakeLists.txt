@@ -74,8 +74,13 @@ set(ver_patch ${CMAKE_MATCH_1})
 
 message("-- App version: ${ver_major}.${ver_minor}.${ver_patch}")
 
-# Packing config
+
+# Package config
 include(InstallRequiredSystemLibraries)
+set(CPACK_PACKAGE_NAME "Daedalus Development Sandbox")
+set(CPACK_PACKAGE_VENDOR "Maksym Yershykov Dev")
+set(CPACK_PACKAGE_DESCRIPTION "Development Kit for Daedalus Engine: Daedalus Engine, Sandbox Application and Daedalus Editor")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Development Kit for Daedalus Engine")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VERSION_MAJOR "${ver_major}")
 set(CPACK_PACKAGE_VERSION_MINOR "${ver_minor}")

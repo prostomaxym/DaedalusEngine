@@ -3,6 +3,6 @@
 cd ../
 cd build
 
-cmake --install . --prefix ../install
+cmake --install . --prefix ../install --config Release
 
 PAUSE

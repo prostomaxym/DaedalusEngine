@@ -1,14 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-# Setup Linux dependencies
-IF(UNIX)
-    execute_process(COMMAND sudo apt update
-                    COMMAND sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
-                    COMMAND sudo apt-get install libgl-dev
-                    COMMAND sudo apt install mesa-common-dev
-                    COMMAND sudo apt-get install mesa-utils)
-ENDIF()
-
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)

@@ -5,8 +5,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
   CACHE STRING "Vcpkg toolchain file")
 
-add_subdirectory(ThirdParty/spdlog/)
-
 
 #------------------ Project config ------------------------------#
 project(
@@ -36,6 +34,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 
 # Subprojects config
+add_subdirectory(ThirdParty/spdlog/)
 add_subdirectory(dlEngine)
 add_subdirectory(dlSandbox)
 

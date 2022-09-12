@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd LinuxScripts
-        ./InstallDependencies.sh
+        sudo ./InstallDependencies.sh
         
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON

@@ -2,11 +2,18 @@ name: Windows-Release
 
 on:
   workflow_dispatch
+  
+variables:
+  - name: ProductName
+    value: "Daedalus"
+  - name: ProductPath
+    value: "empty"
 
 env:
   BUILD_TYPE: Release
 
 jobs:
+
   build:
     runs-on: windows-latest
 
@@ -29,6 +36,11 @@ jobs:
         $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
         $ProductPath = "${{github.workspace}}/install/" + $ProductName + ".exe"
+        Write-Host "ProductName: $ProductName"
+        Write-Host "ProductPath: $ProductPath"
+        Write-Host "##vso[task.setvariable variable=ProductName]$ProductName"
+        Write-Host "##vso[task.setvariable variable=ProductPath]$ProductPath"
+
         cd build
         cpack
 
@@ -37,6 +49,6 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         prerelease: true
-        title: $(ProductName)
+        title: $[ProductName]
         files: |
-            $(ProductPath)
+            $[ProductPath]

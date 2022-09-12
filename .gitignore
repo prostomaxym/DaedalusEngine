@@ -6,6 +6,9 @@ install/
 Testing/
 .vs/
 
+# Specific files
+TODO.txt
+
 # Prerequisites
 *.d
 

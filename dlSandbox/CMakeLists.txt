@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.16.3)
 project(
   dlSandbox
   VERSION 1.0.0
-  LANGUAGES CXX)
+  LANGUAGES CXX
+  )
 
 set(PROJECT_FILES
 	source/SandboxApp.cpp)
@@ -16,10 +17,8 @@ add_compile_definitions(DL_ENABLE_ASSERTS)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
-find_package(spdlog CONFIG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
   dlEngine
-  spdlog::spdlog_header_only
+  spdlog
 )

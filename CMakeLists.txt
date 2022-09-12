@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+#----------------- Dependencies config --------------------------#
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake)
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
   CACHE STRING "Vcpkg toolchain file")
 
+add_subdirectory(ThirdParty/spdlog/)
+
+
+#------------------ Project config ------------------------------#
 project(
   Daedalus
   VERSION 1.0.0
   LANGUAGES CXX)
-
-# Project config
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -35,14 +38,20 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 # Subprojects config
 add_subdirectory(dlEngine)
 add_subdirectory(dlSandbox)
+
+# Hide targets to special folder
+set_target_properties(
+    spdlog 
+    PROPERTIES FOLDER HiddenTargets)
  
-set(ENABLE_TESTS ON)
-if (${ENABLE_TESTS})
+# Tests setup
+if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(dlUnitTests)
 endif()
 
-# Install config
+
+#--------------------- Install config -------------------------#
 IF(WIN32)
   install(TARGETS dlEngine 
           RUNTIME DESTINATION bin
@@ -61,6 +70,8 @@ install(TARGETS dlSandbox
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/version.txt
         DESTINATION .)
 
+
+#--------------------- Package config -------------------------#
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" ver)
 
 string(REGEX MATCH "VERSION_MAJOR ([0-9]*)" _ ${ver})
@@ -74,8 +85,6 @@ set(ver_patch ${CMAKE_MATCH_1})
 
 message("-- Daedalus version: ${ver_major}.${ver_minor}.${ver_patch}")
 
-
-# Package config
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_NAME "Daedalus Development Sandbox")
 set(CPACK_PACKAGE_VENDOR "Maksym Yershykov Dev")

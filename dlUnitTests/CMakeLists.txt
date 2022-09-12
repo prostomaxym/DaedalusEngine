@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+#----------------- Dependencies config --------------------------#
+find_package(GTest CONFIG REQUIRED)
+
+
+#----------------- Project config --------------------------#
 project(
     dlUnitTests
     VERSION 1.0.0
-    LANGUAGES CXX)
+    LANGUAGES CXX
+    )
 
 set(PROJECT_FILES
 
@@ -16,8 +22,6 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
-
-find_package(GTest CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    

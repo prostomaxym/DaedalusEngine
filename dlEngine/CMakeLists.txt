@@ -1,9 +1,22 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+#----------------- Dependencies config --------------------------#
+find_package(OpenGL REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+
+
+#------------------ Project config ------------------------------#
 project(
     dlEngine
     VERSION 1.0.0
-    LANGUAGES CXX)
+    LANGUAGES CXX
+    )
+
+add_compile_definitions(DL_BUILD_DLL)
+add_compile_definitions(
+    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
+    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
+)
 
 set(PROJECT_FILES
 
@@ -40,29 +53,19 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
-
-add_compile_definitions(DL_BUILD_DLL)
-
-add_compile_definitions(
-    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/source/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog/include
 )
-
-find_package(OpenGL REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-    spdlog::spdlog_header_only
+    spdlog
 PRIVATE    
     ${OPENGL_LIBRARIES}
     glfw

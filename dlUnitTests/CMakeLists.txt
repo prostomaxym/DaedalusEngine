@@ -15,26 +15,17 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
 
-# set target properties to hide libs from solution
-set_target_properties(
-    gtest
-    gtest_main
-    gmock
-    gmock_main
-
-    PROPERTIES FOLDER HiddenTargets)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME}
-PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}../ThirdParty/googletest/googletest/include
-)
+find_package(GTest CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    
     dlEngine
-    gtest
+    GTest::gmock
+    GTest::gmock_main
+    GTest::gtest
+    GTest::gtest_main
 )
 
 add_test(NAME "${PROJECT_NAME}" COMMAND "${PROJECT_NAME}")

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake)
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  CACHE STRING "Vcpkg toolchain file")
+
 project(
   Daedalus
   VERSION 1.0.0
@@ -35,10 +39,6 @@ add_subdirectory(dlSandbox)
 set(ENABLE_TESTS ON)
 if (${ENABLE_TESTS})
     enable_testing()
-
-    set(INSTALL_GTEST OFF)
-
-    add_subdirectory(ThirdParty/googletest)
     add_subdirectory(dlUnitTests)
 endif()
 
@@ -72,7 +72,7 @@ set(ver_minor ${CMAKE_MATCH_1})
 string(REGEX MATCH "VERSION_PATCH ([0-9]*)" _ ${ver})
 set(ver_patch ${CMAKE_MATCH_1})
 
-message("-- App version: ${ver_major}.${ver_minor}.${ver_patch}")
+message("-- Daedalus version: ${ver_major}.${ver_minor}.${ver_patch}")
 
 
 # Package config

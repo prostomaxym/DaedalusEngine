@@ -1,13 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_DOCS OFF)
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_INSTALL OFF)
-
-add_subdirectory(ThirdParty/glfw3)
-add_subdirectory(ThirdParty/spdlog)
-
 project(
     dlEngine
     VERSION 1.0.0
@@ -57,28 +49,20 @@ add_compile_definitions(
     $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
 )
 
-set_target_properties(
-    spdlog 
-    glfw  
-    update_mappings 
-
-    PROPERTIES FOLDER HiddenTargets)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/source/
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog/include
-PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw3/include
 )
 
 find_package(OpenGL REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-    spdlog
+    spdlog::spdlog_header_only
 PRIVATE    
     ${OPENGL_LIBRARIES}
     glfw

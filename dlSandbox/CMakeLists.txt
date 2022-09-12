@@ -16,8 +16,10 @@ add_compile_definitions(DL_ENABLE_ASSERTS)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
+find_package(spdlog CONFIG REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
   dlEngine
-  spdlog
+  spdlog::spdlog_header_only
 )

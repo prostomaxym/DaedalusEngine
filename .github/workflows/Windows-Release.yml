@@ -2,12 +2,6 @@ name: Windows-Release
 
 on:
   workflow_dispatch
-  
-variables:
-  - name: ProductName
-    value: "Daedalus"
-  - name: ProductPath
-    value: "empty"
 
 env:
   BUILD_TYPE: Release

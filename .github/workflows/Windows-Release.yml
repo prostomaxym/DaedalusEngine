@@ -1,0 +1,50 @@
+name: Windows-Release
+
+on:
+  workflow_dispatch
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=OFF
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Install
+      run: cmake --install ${{github.workspace}}/build --prefix ${{github.workspace}}/install
+
+    - name: Pack Installer
+      run: |
+        $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
+        $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
+        $ProductPath = "${{github.workspace}}/install/" + $ProductName + ".exe"
+        Write-Host "ProductName: $ProductName"
+        Write-Host "ProductPath: $ProductPath"
+        Write-Host "VersionNumber: $VersionNumber"
+        Write-Output "##vso[task.setvariable variable=ProductName]$ProductName"
+        Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
+        Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
+
+        cd build
+        cpack
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "v0.1.1"
+        prerelease: true
+        title: "Daedalus Development Sandbox"
+        files: |
+            "/install/Daedalus Development Sandbox-0.1.1-win64.exe"

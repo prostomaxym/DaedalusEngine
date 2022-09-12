@@ -40,16 +40,11 @@ jobs:
         cd build
         cpack
 
-    - name: Check Var
-      run: |
-        echo $(ProductName)
-        echo $(ProductPath)
-
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: $VersionNumber
+        automatic_release_tag: "Daedalus Development Sandbox v0.1.1"
         prerelease: true
-        title: "$(ProductName)"
+        title: "Daedalus Development Sandbox"
         files: |
-            $(ProductPath)
+            ${{github.workspace}}/install/Daedalus Development Sandbox-0.1.1-win64.exe

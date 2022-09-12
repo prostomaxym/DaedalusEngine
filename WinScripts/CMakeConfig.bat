@@ -8,6 +8,6 @@ if not exist build\ (
 
 cd build
 
-cmake ../ -DENABLE_TESTS=TRUE
+cmake ../ -DENABLE_TESTS=ON
 
 PAUSE

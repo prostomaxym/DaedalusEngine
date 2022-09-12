@@ -1,17 +1,22 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_DOCS OFF)
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_INSTALL OFF)
+#----------------- Dependencies config --------------------------#
+find_package(OpenGL REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 
-add_subdirectory(ThirdParty/glfw3)
-add_subdirectory(ThirdParty/spdlog)
 
+#------------------ Project config ------------------------------#
 project(
     dlEngine
     VERSION 1.0.0
-    LANGUAGES CXX)
+    LANGUAGES CXX
+    )
+
+add_compile_definitions(DL_BUILD_DLL)
+add_compile_definitions(
+    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
+    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
+)
 
 set(PROJECT_FILES
 
@@ -48,33 +53,15 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
-
-add_compile_definitions(DL_BUILD_DLL)
-
-add_compile_definitions(
-    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-)
-
-set_target_properties(
-    spdlog 
-    glfw  
-    update_mappings 
-
-    PROPERTIES FOLDER HiddenTargets)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/source/
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog/include
-PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glfw3/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog/include
 )
-
-find_package(OpenGL REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC

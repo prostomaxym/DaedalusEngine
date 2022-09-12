@@ -47,4 +47,4 @@ jobs:
         prerelease: true
         title: "Daedalus Development Sandbox"
         files: |
-            "${{github.workspace}}\install\Daedalus Development Sandbox-0.1.1-win64.exe"
+            "/install/Daedalus Development Sandbox-0.1.1-win64.exe"

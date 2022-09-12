@@ -32,16 +32,23 @@ jobs:
         $ProductPath = "${{github.workspace}}/install/" + $ProductName + ".exe"
         Write-Host "ProductName: $ProductName"
         Write-Host "ProductPath: $ProductPath"
+        Write-Host "VersionNumber: $VersionNumber"
         Write-Output "##vso[task.setvariable variable=ProductName]$ProductName"
+        Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
         Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
 
         cd build
         cpack
 
+    - name: Check Var
+      run: |
+        echo $(ProductName)
+        echo $(ProductPath)
+
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
+        automatic_release_tag: $VersionNumber
         prerelease: true
         title: "$(ProductName)"
         files: |

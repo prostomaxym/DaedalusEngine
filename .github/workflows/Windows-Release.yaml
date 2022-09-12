@@ -27,6 +27,7 @@ jobs:
     - name: Pack Installer
       run: |
         $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
+        $ProductPath = ${{github.workspace}}/install/Daedalus Development Sandbox-${VersionNumber}-win64.exe"
         cd build
         cpack
 
@@ -37,4 +38,4 @@ jobs:
         prerelease: true
         title: "Prelease Windows Build $VersionNumber"
         files: |
-            ${{github.workspace}}/install/Daedalus Development Sandbox-$VersionNumber-win64.exe
+            $ProductPath

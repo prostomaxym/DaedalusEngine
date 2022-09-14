@@ -26,6 +26,7 @@ public:
 	virtual int GetCategoryFlags() const = 0;
 
 	inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
+	inline bool IsHandled() { return m_handled; }
 
 protected:
 	bool m_handled = false;

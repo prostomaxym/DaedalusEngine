@@ -30,6 +30,10 @@ set(PROJECT_FILES
     source/Daedalus/Core.h
     source/Daedalus/EntryPoint.h
     source/Daedalus/IWindow.h
+    source/Daedalus/Layer.h
+    source/Daedalus/Layer.cpp
+    source/Daedalus/LayerStack.h
+    source/Daedalus/LayerStack.cpp
     source/Daedalus/Log.h
     source/Daedalus/Log.cpp
     source/Daedalus/Events/ApplicationEvent.h

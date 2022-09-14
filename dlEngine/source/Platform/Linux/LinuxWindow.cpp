@@ -5,7 +5,7 @@
 
 namespace Daedalus {
 
-	LinuxWindow::LinuxWindow(const WindowProps& props) : GLFWWindow(props) {}
+LinuxWindow::LinuxWindow(const WindowProps& props) : GLFWWindow(props) {}
 
 }
 

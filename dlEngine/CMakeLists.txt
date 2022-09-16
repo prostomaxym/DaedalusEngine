@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
+set(glad_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/vcpkg/installed/x64-${PLATFORM_NAME}/share/glad")
+
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)

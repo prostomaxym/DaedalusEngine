@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 find_package(OpenGL REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -77,6 +77,6 @@ PUBLIC
     spdlog
 PRIVATE    
     ${OPENGL_LIBRARIES}
-    glfw
     glad::glad
+    glfw
 )

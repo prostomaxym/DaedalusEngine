@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16.3)
 #----------------- Dependencies config --------------------------#
 find_package(OpenGL REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -12,11 +13,15 @@ project(
     LANGUAGES CXX
     )
 
-add_compile_definitions(DL_BUILD_DLL)
+add_compile_definitions(
+    DL_BUILD_DLL
+    GLFW_INCLUDE_NONE
+    )
+
 add_compile_definitions(
     $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
     $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-)
+    )
 
 set(PROJECT_FILES
 
@@ -73,4 +78,5 @@ PUBLIC
 PRIVATE    
     ${OPENGL_LIBRARIES}
     glfw
+    glad::glad
 )

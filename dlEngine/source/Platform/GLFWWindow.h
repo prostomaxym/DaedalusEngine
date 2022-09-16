@@ -1,9 +1,8 @@
 #pragma once
 
+#include "Daedalus/IWindow.h"
 
 #include <GLFW/glfw3.h>
-
-#include "Daedalus/IWindow.h"
 
 namespace Daedalus {
 

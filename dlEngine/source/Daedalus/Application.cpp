@@ -9,7 +9,7 @@
 
 #include "Daedalus/Events/EventDispatcher.h"
 
-#include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
 namespace Daedalus {
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -29,7 +29,7 @@ void Application::Run()
 {
 	while (m_running)
 	{
-		glClearColor(1, 0, 1, 1);
+		glClearColor(1.f, 0.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		for (auto layer : m_layer_stack)

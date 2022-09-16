@@ -5,6 +5,8 @@
 #include "Daedalus/Events/MouseEvent.h"
 #include "Daedalus/Events/KeyEvent.h"
 
+#include <glad/glad.h>
+
 namespace Daedalus {
 
 static bool s_GLFWInitialized = false;
@@ -34,7 +36,7 @@ void GLFWWindow::Init(const WindowProps& props)
 
 	if (!s_GLFWInitialized)
 	{
-		int success = glfwInit();
+		const auto success = glfwInit();
 		DL_CORE_ASSERT(success, "Could not intialize GLFW!");
 		glfwSetErrorCallback(GLFWErrorCallback);
 
@@ -43,6 +45,8 @@ void GLFWWindow::Init(const WindowProps& props)
 
 	m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
 	glfwMakeContextCurrent(m_window);
+	const auto status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+	DL_ASSERT(status, "Failed to initialize GLAD");
 	glfwSetWindowUserPointer(m_window, &m_data);
 	SetVSync(false);
 

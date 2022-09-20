@@ -17,8 +17,6 @@ From project root:
 ````console
     cd ThirdParty/vcpkg
     ./bootstrap-vcpkg.bat
-    ./vcpkg --triplet=x64-windows install glfw3
-    ./vcpkg --triplet=x64-windows install gtest
 ````
 or run InstallVCPKG.ps1 from WinScripts folder
 <br>
@@ -54,8 +52,6 @@ sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-
 
 cd ThirdParty/vcpkg
 ./bootstrap-vcpkg.sh
-./vcpkg --triplet=x64-linux install glfw3
-./vcpkg --triplet=x64-linux install gtest
 ````
 or run InstallDependencies.sh from LinuxScripts folder
 <br>

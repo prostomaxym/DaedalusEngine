@@ -34,14 +34,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 
 # Subprojects config
-add_subdirectory(ThirdParty/spdlog/)
 add_subdirectory(dlEngine)
 add_subdirectory(dlSandbox)
-
-# Hide targets to special folder
-set_target_properties(
-    spdlog 
-    PROPERTIES FOLDER HiddenTargets)
  
 # Tests setup
 if (ENABLE_TESTS)

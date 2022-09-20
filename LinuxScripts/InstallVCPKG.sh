@@ -1,6 +1,6 @@
 cd ../
 cd ThirdParty/vcpkg
 ./bootstrap-vcpkg.sh
-./vcpkg --triplet=x64-linux install glfw3
-./vcpkg --triplet=x64-linux install gtest
-./vcpkg --triplet=x64-linux --recurse install glad[gl-api-latest]
+./vcpkg install glfw3 --triplet=x64-linux
+./vcpkg install gtest --triplet=x64-linux
+./vcpkg install glad[gl-api-latest] --triplet=x64-linux --recurse

@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
-set(glad_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/vcpkg/installed/x64-${PLATFORM_NAME}/share/glad")
-
 find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -71,12 +70,11 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/so
 target_include_directories(${PROJECT_NAME}
 PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/source/
-    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog/include
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-    spdlog
+    spdlog::spdlog
 PRIVATE    
     ${OPENGL_LIBRARIES}
     glad::glad

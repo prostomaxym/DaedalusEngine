@@ -8,7 +8,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/b
 
 #------------------ Project config ------------------------------#
 project(
-  Daedalus
+  daedalus
   VERSION 1.0.0
   LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)

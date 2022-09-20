@@ -1,0 +1,9 @@
+{
+    "name": "daedalus",
+    "version-string": "1.0.0",
+    "dependencies": [
+        {"name": "glfw3"},
+        {"name": "gtest"},
+        {"name": "glad", "features": ["gl-api-latest"]}
+    ]
+}

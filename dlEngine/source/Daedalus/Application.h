@@ -12,6 +12,12 @@ class DAEDALUS_API Application
 {
 public:
 	static Application* GetInstance();
+	virtual ~Application();
+
+	Application(const Application&) = delete;
+	Application(const Application&&) = delete;
+	Application& operator=(const Application&) = delete;
+	Application& operator=(const Application&&) = delete;
 
 	inline IWindow& GetWindow() { return *m_window; }
 

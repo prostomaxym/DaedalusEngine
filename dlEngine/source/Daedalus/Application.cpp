@@ -21,7 +21,7 @@ Application* Application::GetInstance()
 {
 	if (!s_instance)
 	{
-		s_instance = new Application();
+		s_instance = new Application;
 	}
 
 	return s_instance;
@@ -35,6 +35,10 @@ Application::Application()
 	m_window = std::make_unique<LinuxWindow>(WindowProps());
 #endif 
 	m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+}
+
+Application::~Application()
+{
 }
 
 void Application::Run()

@@ -6,11 +6,12 @@
 
 namespace Daedalus {
 
-	class LinuxWindow : public GLFWWindow
-	{
-	public:
-		LinuxWindow(const WindowProps& props);
-		virtual ~LinuxWindow() = default;
-	};
+class LinuxWindow : public GLFWWindow
+{
+public:
+	LinuxWindow(const WindowProps& props);
+	virtual ~LinuxWindow() = default;
+};
+
 }
 #endif // DL_PLATFORM_LINUX

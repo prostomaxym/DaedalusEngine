@@ -9,19 +9,34 @@ extern "C"
 }
 #endif
 
+class ExampleLayer : public Daedalus::Layer
+{
+public:
+	ExampleLayer() : Layer("Example") {}
+
+	void OnUpdate() override
+	{
+		DL_INFO("ExampleLayer::Update");
+	}
+
+	void OnEvent(Daedalus::Event& event) override
+	{
+		DL_TRACE("{0}", event);
+	}
+};
+
 class Sandbox : public Daedalus::Application
 {
 public:
 	Sandbox()
 	{
-
+		PushLayer(new ExampleLayer());
 	}
 
 	~Sandbox()
 	{
 
 	}
-
 };
 
 Daedalus::Application* Daedalus::CreateApplication()

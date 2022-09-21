@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 find_package(OpenGL REQUIRED)
+find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -12,11 +14,15 @@ project(
     LANGUAGES CXX
     )
 
-add_compile_definitions(DL_BUILD_DLL)
+add_compile_definitions(
+    DL_BUILD_DLL
+    GLFW_INCLUDE_NONE
+    )
+
 add_compile_definitions(
     $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
     $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-)
+    )
 
 set(PROJECT_FILES
 
@@ -30,6 +36,10 @@ set(PROJECT_FILES
     source/Daedalus/Core.h
     source/Daedalus/EntryPoint.h
     source/Daedalus/IWindow.h
+    source/Daedalus/Layer.h
+    source/Daedalus/Layer.cpp
+    source/Daedalus/LayerStack.h
+    source/Daedalus/LayerStack.cpp
     source/Daedalus/Log.h
     source/Daedalus/Log.cpp
     source/Daedalus/Events/ApplicationEvent.h
@@ -60,13 +70,13 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/so
 target_include_directories(${PROJECT_NAME}
 PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/source/
-    ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/spdlog/include
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
-    spdlog
+    spdlog::spdlog
 PRIVATE    
     ${OPENGL_LIBRARIES}
+    glad::glad
     glfw
 )

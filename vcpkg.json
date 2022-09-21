@@ -1,0 +1,14 @@
+{
+    "name": "daedalus",
+    "version-string": "1.0.0",
+    "dependencies": [
+        {"name": "glfw3"},
+        {"name": "gtest"},
+        {"name": "glad", "features": ["gl-api-latest"]},
+        {"name": "spdlog"}
+    ],
+    "builtin-baseline":"8e3595fad04f60f55250ff0e2f2d4e7e7a580a50",
+    "overrides": [
+    {"name": "fmt", "version-string": "8.1.1"}
+    ]
+}

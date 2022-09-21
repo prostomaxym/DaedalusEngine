@@ -46,5 +46,5 @@ if (ENABLE_TESTS)
 endif()
 
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/Install.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/Pack.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Install.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Pack.cmake)

@@ -1,15 +1,19 @@
 #--------------------- Install config -------------------------#
+if(NOT DEFINED INSTALL_CONFIG)
+        set(INSTALL_CONFIG "Release")
+endif()
+
 IF(WIN32)
 install(TARGETS 
-          dlEngine
+        dlEngine
 
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_WRITE)
 
 install(FILES
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/spdlog.dll
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/fmt.dll
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/glfw3.dll
+        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/spdlog.dll
+        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/fmt.dll
+        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/glfw3.dll
 
         DESTINATION bin
         PERMISSIONS OWNER_WRITE)
@@ -22,9 +26,9 @@ install(TARGETS
         PERMISSIONS OWNER_WRITE)
 
 install(FILES
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/spdlog.so
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/fmt.so
-          ${CMAKE_SOURCE_DIR}/bin/${PLATFORM_NAME}-x64/${CMAKE_BUILD_TYPE}/glfw3.so
+        ${COMPILE_OUTPUT_FOLDER}/spdlog.so
+        ${COMPILE_OUTPUT_FOLDER}/fmt.so
+        ${COMPILE_OUTPUT_FOLDER}/glfw3.so
 
         DESTINATION bin
         PERMISSIONS OWNER_WRITE)

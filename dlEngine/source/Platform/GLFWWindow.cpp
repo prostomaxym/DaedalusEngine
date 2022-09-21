@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 
-namespace Daedalus {
+using namespace Daedalus;
 
 static bool s_GLFWInitialized = false;
 
@@ -161,6 +161,4 @@ void GLFWWindow::SetVSync(bool enabled)
 bool GLFWWindow::IsVSync() const
 {
 	return m_data.VSync;
-}
-
 }

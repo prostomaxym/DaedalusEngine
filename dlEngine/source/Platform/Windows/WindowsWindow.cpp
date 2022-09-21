@@ -3,10 +3,8 @@
 #include "dlpch.h"
 #include "WindowsWindow.h"
 
-namespace Daedalus {
+using namespace Daedalus;
 
 WindowsWindow::WindowsWindow(const WindowProps& props) : GLFWWindow(props) {}
-
-}
 
 #endif // DL_PLATFORM_WINDOWS

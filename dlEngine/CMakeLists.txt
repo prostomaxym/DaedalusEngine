@@ -5,6 +5,7 @@ find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -48,6 +49,8 @@ set(PROJECT_FILES
     source/Daedalus/Events/EventTable.h
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
+    source/Daedalus/ImGui/ImGuiLayer.h
+    source/Daedalus/ImGui/ImGuiLayer.cpp
     
     source/Platform/GLFWWindow.h
     source/Platform/GLFWWindow.cpp
@@ -75,6 +78,7 @@ PUBLIC
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
     spdlog::spdlog
+    imgui::imgui
 PRIVATE    
     ${OPENGL_LIBRARIES}
     glad::glad

@@ -11,7 +11,8 @@
 
 #include <glad/glad.h>
 
-namespace Daedalus {
+using namespace Daedalus;
+
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 Application::Application()
@@ -69,6 +70,4 @@ bool Application::OnWindowClosed(WindowCloseEvent& event)
 {
 	m_running = false;
 	return true;
-}
-
 }

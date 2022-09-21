@@ -2,7 +2,7 @@
 
 #include "LayerStack.h"
 
-namespace Daedalus {
+using namespace Daedalus;
 
 LayerStack::LayerStack()
 {
@@ -48,6 +48,4 @@ void LayerStack::PopOverlay(Layer* overlay)
 		DL_CORE_TRACE("Overlay {0} poped.", overlay->GetName());
 		m_layers.erase(it);
 	}
-}
-
 }

@@ -15,6 +15,18 @@ using namespace Daedalus;
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
+Application* Application::s_instance = nullptr;
+
+Application* Application::GetInstance()
+{
+	if (!s_instance)
+	{
+		s_instance = new Application();
+	}
+
+	return s_instance;
+}
+
 Application::Application()
 {
 #ifdef DL_PLATFORM_WINDOWS
@@ -23,7 +35,6 @@ Application::Application()
 	m_window = std::make_unique<LinuxWindow>(WindowProps());
 #endif 
 	m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
-
 }
 
 void Application::Run()
@@ -59,11 +70,13 @@ void Application::OnEvent(Event& event)
 void Application::PushLayer(Layer* layer)
 {
 	m_layer_stack.PushLayer(layer);
+	layer->OnAttach();
 }
 
 void Application::PushOverlay(Layer* overlay)
 {
 	m_layer_stack.PushOverlay(overlay);
+	overlay->OnAttach();
 }
 
 bool Application::OnWindowClosed(WindowCloseEvent& event)

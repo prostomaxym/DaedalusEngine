@@ -11,8 +11,9 @@ namespace Daedalus {
 class DAEDALUS_API Application
 {
 public:
-	Application();
-	virtual ~Application() = default;
+	static Application* GetInstance();
+
+	inline IWindow& GetWindow() { return *m_window; }
 
 	void Run();
 
@@ -20,6 +21,11 @@ public:
 
 	void PushLayer(Layer* layer);
 	void PushOverlay(Layer* overlay);
+
+protected:
+	Application();
+
+	static Application* s_instance;
 
 private:
 	bool OnWindowClosed(WindowCloseEvent& event);

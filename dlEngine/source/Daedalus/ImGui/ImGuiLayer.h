@@ -4,7 +4,7 @@
 
 namespace Daedalus {
 
-	class ImGuiLayer : public Layer
+	class DAEDALUS_API ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();
@@ -14,5 +14,8 @@ namespace Daedalus {
 		void OnDetach() override;
 		void OnUpdate() override;
 		void OnEvent(Event& event) override;
+
+	private:
+		double m_time;
 	};
 }

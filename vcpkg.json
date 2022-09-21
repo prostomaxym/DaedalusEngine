@@ -6,7 +6,7 @@
         {"name": "gtest"},
         {"name": "glad", "features": ["gl-api-latest"]},
         {"name": "spdlog"},
-        {"name": "imgui"}
+        {"name": "imgui", "features": ["opengl3-binding", "glfw-binding"]}
     ],
     "builtin-baseline":"8e3595fad04f60f55250ff0e2f2d4e7e7a580a50",
     "overrides": [

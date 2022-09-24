@@ -78,7 +78,7 @@ public:
 class DAEDALUS_API MouseButtonReleasedEvent : public MouseButtonEvent
 {
 public:
-	EVENT_CLASS_TYPE(MouseButtonPressed)
+	EVENT_CLASS_TYPE(MouseButtonReleased)
 public:
 	MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) {}
 

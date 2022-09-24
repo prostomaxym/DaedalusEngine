@@ -7,13 +7,12 @@
 	#include "Platform/Linux/LinuxWindow.h"
 #endif
 
+#include "Daedalus/Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 
 #include <glad/glad.h>
 
 using namespace Daedalus;
-
-#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 Application* Application::s_instance = nullptr;
 
@@ -34,7 +33,7 @@ Application::Application()
 #elif defined DL_PLATFORM_LINUX
 	m_window = std::make_unique<LinuxWindow>(WindowProps());
 #endif 
-	m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 }
 
 Application::~Application()
@@ -60,7 +59,7 @@ void Application::Run()
 void Application::OnEvent(Event& event)
 {
 	EventDispatcher dispatcher(event);
-	dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(Application::OnWindowClosed));
+	dispatcher.Dispatch<WindowCloseEvent>(DL_BIND_EVENT_FN(Application::OnWindowClosed));
 
 	DL_CORE_TRACE("{0}", event);
 	for (auto it = m_layer_stack.end(); it != m_layer_stack.begin();)

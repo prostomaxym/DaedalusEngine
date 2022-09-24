@@ -17,14 +17,13 @@ class EventDispatcher;
 
 class DAEDALUS_API Event
 {
-	friend class EventDispatcher;
-
 public:
 	virtual EventType GetEventType() const = 0;
 	virtual std::string GetInfo() const = 0;
 	virtual const char* GetNameC() const = 0;
 	virtual int GetCategoryFlags() const = 0;
 
+	inline void SetHandle(bool handle) { m_handled = handle; }
 	inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 	inline bool IsHandled() { return m_handled; }
 

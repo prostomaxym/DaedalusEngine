@@ -104,6 +104,13 @@ void GLFWWindow::SetupCallbacks()
 			}
 		});
 
+	glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int keycode)
+		{
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			KeyTypedEvent event(keycode);
+			data.EventCallback(event);
+		});
+
 	glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods)
 		{
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));

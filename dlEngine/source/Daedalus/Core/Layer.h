@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Core.h"
+#include "Core.h"
 #include "Daedalus/Events/Event.h"
 
 #include <string>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Daedalus/Core.h>
+#include <Daedalus/Core/Core.h>
 
 namespace Daedalus {
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Core.h"
-#include "Events/Event.h"
-#include "Events/ApplicationEvent.h"
+#include "Daedalus/Events/Event.h"
+#include "Daedalus/Events/ApplicationEvent.h"
 #include "IWindow.h"
 #include "LayerStack.h"
 

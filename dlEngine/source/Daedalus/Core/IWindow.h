@@ -2,7 +2,7 @@
 
 #include "dlpch.h"
 
-#include "Daedalus/Core.h"
+#include "Core.h"
 #include "Daedalus/Events/Event.h"
 
 namespace Daedalus {

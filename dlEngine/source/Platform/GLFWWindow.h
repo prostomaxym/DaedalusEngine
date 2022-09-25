@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/IWindow.h"
+#include "Daedalus/Core/IWindow.h"
 
 #include <GLFW/glfw3.h>
 

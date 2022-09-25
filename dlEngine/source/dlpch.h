@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <utility>
 
-#include "Daedalus/Log.h"
+#include "Daedalus/Core/Log.h"
 
 #ifdef DL_PLATFORM_WINDOWS
 	#include <Windows.h>

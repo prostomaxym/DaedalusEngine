@@ -32,17 +32,18 @@ set(PROJECT_FILES
     source/dlpch.cpp
     source/DummyTest.h
 
-    source/Daedalus/Application.h
-    source/Daedalus/Application.cpp
-    source/Daedalus/Core.h
-    source/Daedalus/EntryPoint.h
-    source/Daedalus/IWindow.h
-    source/Daedalus/Layer.h
-    source/Daedalus/Layer.cpp
-    source/Daedalus/LayerStack.h
-    source/Daedalus/LayerStack.cpp
-    source/Daedalus/Log.h
-    source/Daedalus/Log.cpp
+    source/Daedalus/Core/Application.h
+    source/Daedalus/Core/Application.cpp
+    source/Daedalus/Core/Core.h
+    source/Daedalus/Core/EntryPoint.h
+    source/Daedalus/Core/IWindow.h
+    source/Daedalus/Core/Layer.h
+    source/Daedalus/Core/Layer.cpp
+    source/Daedalus/Core/LayerStack.h
+    source/Daedalus/Core/LayerStack.cpp
+    source/Daedalus/Core/Log.h
+    source/Daedalus/Core/Log.cpp
+    
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
     source/Daedalus/Events/EventDispatcher.h

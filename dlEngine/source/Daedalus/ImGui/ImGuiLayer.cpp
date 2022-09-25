@@ -1,8 +1,8 @@
 #include "dlpch.h"
 #include "ImGuiLayer.h"
 
-#include "Daedalus/Application.h"
-#include "Daedalus/Core.h"
+#include "Daedalus/Core/Application.h"
+#include "Daedalus/Core/Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 
 #include <imgui_impl_opengl3.h>

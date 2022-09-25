@@ -7,7 +7,7 @@
 	#include "Platform/Linux/LinuxWindow.h"
 #endif
 
-#include "Daedalus/Core.h"
+#include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 
 #include <glad/glad.h>
@@ -64,9 +64,10 @@ void Application::OnEvent(Event& event)
 	DL_CORE_TRACE("{0}", event);
 	for (auto it = m_layer_stack.end(); it != m_layer_stack.begin();)
 	{
-		(*--it)->OnEvent(event);
 		if (event.IsHandled())
 			break;
+
+		(*--it)->OnEvent(event);
 	}
 }
 

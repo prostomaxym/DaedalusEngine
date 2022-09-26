@@ -14,6 +14,7 @@ public:
 
 	void OnUpdate() override;
 
+	inline void* GetNativeWindow() const override { return m_window; }
 	inline int GetWidth() const override { return m_data.width; }
 	inline int GetHeight() const override { return m_data.height; }
 

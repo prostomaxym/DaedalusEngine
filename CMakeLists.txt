@@ -45,6 +45,6 @@ if (ENABLE_TESTS)
     add_subdirectory(dlUnitTests)
 endif()
 
-
+# Install setup
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Install.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Pack.cmake)

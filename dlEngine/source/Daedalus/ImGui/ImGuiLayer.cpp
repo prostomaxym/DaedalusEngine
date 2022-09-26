@@ -64,16 +64,35 @@ void ImGuiLayer::OnEvent(Event& event)
 {
 	EventDispatcher dispatcher(event);
 
-	dispatcher.Dispatch<MouseButtonPressedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressedEvent));
-	dispatcher.Dispatch<MouseButtonReleasedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonReleasedEvent));
-	dispatcher.Dispatch<MouseMovedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseMovedEvent));
-	dispatcher.Dispatch<MouseScrolledEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseScrolledEvent));
-
-	dispatcher.Dispatch<KeyPressedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyPressedEvent));
-	dispatcher.Dispatch<KeyReleasedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyReleasedEvent));
-	dispatcher.Dispatch<KeyTypedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyTypedEvent));
-
-	dispatcher.Dispatch<WindowResizeEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnWindowResizedEvent));
+	switch (event.GetEventType())
+	{
+	case EventType::MouseButtonPressed:
+		dispatcher.Dispatch<MouseButtonPressedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonPressedEvent));
+		break;
+	case EventType::MouseButtonReleased:
+		dispatcher.Dispatch<MouseButtonReleasedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseButtonReleasedEvent));
+		break;
+	case EventType::MouseMoved:
+		dispatcher.Dispatch<MouseMovedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseMovedEvent));
+		break;
+	case EventType::MouseScrolled:
+		dispatcher.Dispatch<MouseScrolledEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnMouseScrolledEvent));
+		break;
+	case EventType::KeyPressed:
+		dispatcher.Dispatch<KeyPressedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyPressedEvent));
+		break;
+	case EventType::KeyReleased:
+		dispatcher.Dispatch<KeyReleasedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyReleasedEvent));
+		break;
+	case EventType::KeyTyped:
+		dispatcher.Dispatch<KeyTypedEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnKeyTypedEvent));
+		break;
+	case EventType::WindowResize:
+		dispatcher.Dispatch<WindowResizeEvent>(DL_BIND_EVENT_FN(ImGuiLayer::OnWindowResizedEvent));
+		break;
+	default:
+		break;
+	}
 }
 
 bool Daedalus::ImGuiLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)

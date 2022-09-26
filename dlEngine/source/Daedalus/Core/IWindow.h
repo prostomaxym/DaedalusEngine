@@ -30,6 +30,7 @@ public:
 
 	virtual void OnUpdate() = 0;
 
+	virtual void* GetNativeWindow() const = 0;
 	virtual int GetWidth() const = 0;
 	virtual int GetHeight() const = 0;
 

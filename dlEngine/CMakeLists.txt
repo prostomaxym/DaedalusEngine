@@ -15,16 +15,6 @@ project(
     LANGUAGES CXX
     )
 
-add_compile_definitions(
-    DL_BUILD_DLL
-    GLFW_INCLUDE_NONE
-    )
-
-add_compile_definitions(
-    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-    )
-
 set(PROJECT_FILES
 
     source/Daedalus.h
@@ -36,6 +26,7 @@ set(PROJECT_FILES
     source/Daedalus/Core/Application.cpp
     source/Daedalus/Core/Core.h
     source/Daedalus/Core/EntryPoint.h
+    source/Daedalus/Core/Input.h
     source/Daedalus/Core/IWindow.h
     source/Daedalus/Core/Layer.h
     source/Daedalus/Core/Layer.cpp
@@ -53,12 +44,18 @@ set(PROJECT_FILES
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp
     
-    source/Platform/GLFWWindow.h
-    source/Platform/GLFWWindow.cpp
+    source/Platform/GLFW/GLFWInput.h
+    source/Platform/GLFW/GLFWInput.cpp
+    source/Platform/GLFW/GLFWWindow.h
+    source/Platform/GLFW/GLFWWindow.cpp
 
+    source/Platform/Windows/WindowsInput.h
+    source/Platform/Windows/WindowsInput.cpp
     source/Platform/Windows/WindowsWindow.h
     source/Platform/Windows/WindowsWindow.cpp
 
+    source/Platform/Linux/LinuxInput.h
+    source/Platform/Linux/LinuxInput.cpp
     source/Platform/Linux/LinuxWindow.h
     source/Platform/Linux/LinuxWindow.cpp
     )
@@ -69,19 +66,28 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
+target_compile_definitions(${PROJECT_NAME} 
+    PUBLIC
+        GLFW_INCLUDE_NONE
+        $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
+        $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
+    PRIVATE 
+        DL_BUILD_DLL
+        )
+
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
 
 target_include_directories(${PROJECT_NAME}
-PUBLIC 
-	${CMAKE_CURRENT_SOURCE_DIR}/source/
-)
+    PUBLIC 
+	    ${CMAKE_CURRENT_SOURCE_DIR}/source/
+    )
 
 target_link_libraries(${PROJECT_NAME}
-PUBLIC
-    spdlog::spdlog
-    imgui::imgui
-PRIVATE    
-    ${OPENGL_LIBRARIES}
-    glad::glad
-    glfw
-)
+    PUBLIC
+        spdlog::spdlog
+        imgui::imgui
+    PRIVATE    
+        ${OPENGL_LIBRARIES}
+        glad::glad
+        glfw
+    )

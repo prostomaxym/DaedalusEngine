@@ -16,7 +16,8 @@ public:
 
 	void OnUpdate() override
 	{
-		DL_INFO("ExampleLayer::Update");
+		//DL_INFO("ExampleLayer::Update");
+		DL_TRACE(Daedalus::Input::IsKeyPressed(DL_KEY_TAB));
 	}
 
 	void OnEvent(Daedalus::Event& event) override

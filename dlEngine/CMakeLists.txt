@@ -27,7 +27,8 @@ set(PROJECT_FILES
     source/Daedalus/Core/Core.h
     source/Daedalus/Core/EntryPoint.h
     source/Daedalus/Core/Input.h
-    source/Daedalus/Core/IWindow.h
+    source/Daedalus/Core/IWindow.h   
+    source/Daedalus/Core/KeyCodes.h
     source/Daedalus/Core/Layer.h
     source/Daedalus/Core/Layer.cpp
     source/Daedalus/Core/LayerStack.h

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Core.h"
-#include "Events/Event.h"
-#include "Events/ApplicationEvent.h"
+#include "Daedalus/Events/Event.h"
+#include "Daedalus/Events/ApplicationEvent.h"
 #include "IWindow.h"
 #include "LayerStack.h"
 
@@ -11,8 +11,15 @@ namespace Daedalus {
 class DAEDALUS_API Application
 {
 public:
-	Application();
-	virtual ~Application() = default;
+	static Application* GetInstance();
+	virtual ~Application();
+
+	Application(const Application&) = delete;
+	Application(const Application&&) = delete;
+	Application& operator=(const Application&) = delete;
+	Application& operator=(const Application&&) = delete;
+
+	inline IWindow& GetWindow() { return *m_window; }
 
 	void Run();
 
@@ -20,6 +27,11 @@ public:
 
 	void PushLayer(Layer* layer);
 	void PushOverlay(Layer* overlay);
+
+protected:
+	Application();
+
+	static Application* s_instance;
 
 private:
 	bool OnWindowClosed(WindowCloseEvent& event);

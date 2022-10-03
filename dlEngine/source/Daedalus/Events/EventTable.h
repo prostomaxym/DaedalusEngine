@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Daedalus/Core.h>
+#include <Daedalus/Core/Core.h>
 
 namespace Daedalus {
 
@@ -23,6 +23,7 @@ enum class EventType
 	//Keyboard events
 	KeyPressed,
 	KeyReleased,
+	KeyTyped,
 
 	//Mouse events
 	MouseButtonPressed,

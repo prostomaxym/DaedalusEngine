@@ -28,18 +28,31 @@ public:
 class Sandbox : public Daedalus::Application
 {
 public:
-	Sandbox()
+	static Application* GetInstance()
 	{
-		PushLayer(new ExampleLayer());
+		if (!s_instance)
+		{
+			s_instance = new Sandbox();
+		}
+
+		return s_instance;
 	}
 
 	~Sandbox()
 	{
 
 	}
+
+private:
+	Sandbox()
+	{
+		PushLayer(new ExampleLayer());
+		PushOverlay(new Daedalus::ImGuiLayer());
+	}
 };
 
 Daedalus::Application* Daedalus::CreateApplication()
 {
-	return new Sandbox();
+	// Entry point is defined in engine
+	return Sandbox::GetInstance();
 }

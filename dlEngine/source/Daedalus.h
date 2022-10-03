@@ -1,11 +1,12 @@
 #pragma once
 
-// Only for client applications
+// Deadalus API for client applications
 
-#include "Daedalus/Application.h"
-#include "Daedalus/Layer.h"
-#include "Daedalus/Log.h"
+#include "Daedalus/Core/Application.h"
+#include "Daedalus/Core/Layer.h"
+#include "Daedalus/Core/Log.h"
+#include "Daedalus/ImGui/ImGuiLayer.h"
 
 // ---Entry Point------------------------
-#include "Daedalus/EntryPoint.h"
+#include "Daedalus/Core/EntryPoint.h"
 // --------------------------------------

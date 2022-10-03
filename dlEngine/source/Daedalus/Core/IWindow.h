@@ -2,7 +2,7 @@
 
 #include "dlpch.h"
 
-#include "Daedalus/Core.h"
+#include "Core.h"
 #include "Daedalus/Events/Event.h"
 
 namespace Daedalus {
@@ -30,6 +30,7 @@ public:
 
 	virtual void OnUpdate() = 0;
 
+	virtual void* GetNativeWindow() const = 0;
 	virtual int GetWidth() const = 0;
 	virtual int GetHeight() const = 0;
 

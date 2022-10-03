@@ -50,4 +50,17 @@ public:
 	}
 };
 
+class DAEDALUS_API KeyTypedEvent : public KeyEvent
+{
+public:
+	EVENT_CLASS_TYPE(KeyTyped)
+public:
+	KeyTypedEvent(int keycode) : KeyEvent(keycode) {}
+
+	std::string GetInfo() const override
+	{
+		return "KeyTypedEvent: " + std::to_string(m_keycode);
+	}
+};
+
 }

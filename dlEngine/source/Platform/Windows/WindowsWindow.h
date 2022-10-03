@@ -2,7 +2,7 @@
 
 #ifdef DL_PLATFORM_WINDOWS
 
-#include "Platform/GLFWWindow.h"
+#include "Platform/GLFW/GLFWWindow.h"
 
 namespace Daedalus {
 

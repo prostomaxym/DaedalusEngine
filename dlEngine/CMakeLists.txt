@@ -5,6 +5,7 @@ find_package(OpenGL REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -14,16 +15,6 @@ project(
     LANGUAGES CXX
     )
 
-add_compile_definitions(
-    DL_BUILD_DLL
-    GLFW_INCLUDE_NONE
-    )
-
-add_compile_definitions(
-    $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-    $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
-    )
-
 set(PROJECT_FILES
 
     source/Daedalus.h
@@ -31,30 +22,40 @@ set(PROJECT_FILES
     source/dlpch.cpp
     source/DummyTest.h
 
-    source/Daedalus/Application.h
-    source/Daedalus/Application.cpp
-    source/Daedalus/Core.h
-    source/Daedalus/EntryPoint.h
-    source/Daedalus/IWindow.h
-    source/Daedalus/Layer.h
-    source/Daedalus/Layer.cpp
-    source/Daedalus/LayerStack.h
-    source/Daedalus/LayerStack.cpp
-    source/Daedalus/Log.h
-    source/Daedalus/Log.cpp
+    source/Daedalus/Core/Application.h
+    source/Daedalus/Core/Application.cpp
+    source/Daedalus/Core/Core.h
+    source/Daedalus/Core/EntryPoint.h
+    source/Daedalus/Core/Input.h
+    source/Daedalus/Core/IWindow.h
+    source/Daedalus/Core/Layer.h
+    source/Daedalus/Core/Layer.cpp
+    source/Daedalus/Core/LayerStack.h
+    source/Daedalus/Core/LayerStack.cpp
+    source/Daedalus/Core/Log.h
+    source/Daedalus/Core/Log.cpp
+    
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
     source/Daedalus/Events/EventDispatcher.h
     source/Daedalus/Events/EventTable.h
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
+    source/Daedalus/ImGui/ImGuiLayer.h
+    source/Daedalus/ImGui/ImGuiLayer.cpp
     
-    source/Platform/GLFWWindow.h
-    source/Platform/GLFWWindow.cpp
+    source/Platform/GLFW/GLFWInput.h
+    source/Platform/GLFW/GLFWInput.cpp
+    source/Platform/GLFW/GLFWWindow.h
+    source/Platform/GLFW/GLFWWindow.cpp
 
+    source/Platform/Windows/WindowsInput.h
+    source/Platform/Windows/WindowsInput.cpp
     source/Platform/Windows/WindowsWindow.h
     source/Platform/Windows/WindowsWindow.cpp
 
+    source/Platform/Linux/LinuxInput.h
+    source/Platform/Linux/LinuxInput.cpp
     source/Platform/Linux/LinuxWindow.h
     source/Platform/Linux/LinuxWindow.cpp
     )
@@ -65,18 +66,28 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
+target_compile_definitions(${PROJECT_NAME} 
+    PUBLIC
+        GLFW_INCLUDE_NONE
+        $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
+        $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
+    PRIVATE 
+        DL_BUILD_DLL
+        )
+
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
 
 target_include_directories(${PROJECT_NAME}
-PUBLIC 
-	${CMAKE_CURRENT_SOURCE_DIR}/source/
-)
+    PUBLIC 
+	    ${CMAKE_CURRENT_SOURCE_DIR}/source/
+    )
 
 target_link_libraries(${PROJECT_NAME}
-PUBLIC
-    spdlog::spdlog
-PRIVATE    
-    ${OPENGL_LIBRARIES}
-    glad::glad
-    glfw
-)
+    PUBLIC
+        spdlog::spdlog
+        imgui::imgui
+    PRIVATE    
+        ${OPENGL_LIBRARIES}
+        glad::glad
+        glfw
+    )

@@ -6,6 +6,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -91,4 +92,5 @@ target_link_libraries(${PROJECT_NAME}
         ${OPENGL_LIBRARIES}
         glad::glad
         glfw
+        glm::glm
     )

@@ -36,7 +36,7 @@ void LayerStack::PopLayer(Layer* layer)
 	{
 		DL_CORE_TRACE("Layer {0} poped.", layer->GetName());
 		m_layers.erase(it);
-		m_layer_insert--;
+		--m_layer_insert;
 	}
 }
 

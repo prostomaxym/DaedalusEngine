@@ -45,7 +45,7 @@ void GLFWWindow::Init(const WindowProps& props)
 
 	m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
 	glfwMakeContextCurrent(m_window);
-	const auto status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+	const auto status = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 	DL_ASSERT(status, "Failed to initialize GLAD");
 	glfwSetWindowUserPointer(m_window, &m_data);
 	SetVSync(false);

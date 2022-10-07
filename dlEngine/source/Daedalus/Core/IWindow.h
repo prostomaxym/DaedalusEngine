@@ -13,7 +13,7 @@ struct WindowProps
 	int width;
 	int height;
 
-	WindowProps(const std::string& title_ = "Daedalus Engine",
+	explicit WindowProps(const std::string& title_ = "Daedalus Engine",
 		int width_ = 1280,
 		int height_ = 720)
 		: title(title_), width(width_), height(height_)

@@ -26,13 +26,13 @@ Application* Application::GetInstance()
 	return s_instance;
 }
 
-Application::Application()
-{
+Application::Application() :
 #ifdef DL_PLATFORM_WINDOWS
-	m_window = std::make_unique<WindowsWindow>(WindowProps());
+	m_window(std::make_unique<WindowsWindow>(WindowProps()))
 #elif defined DL_PLATFORM_LINUX
-	m_window = std::make_unique<LinuxWindow>(WindowProps());
+	m_window(std::make_unique<LinuxWindow>(WindowProps()))
 #endif 
+{
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 }
 

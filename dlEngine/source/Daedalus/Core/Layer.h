@@ -10,7 +10,7 @@ namespace Daedalus {
 class DAEDALUS_API Layer 
 {
 public:
-	Layer(const std::string& name = "Layer");
+	explicit Layer(const std::string& name = "Layer");
 	virtual ~Layer() = default;
 
 	virtual void OnAttach() {};

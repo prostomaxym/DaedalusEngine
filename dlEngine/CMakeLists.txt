@@ -43,6 +43,8 @@ set(PROJECT_FILES
     source/Daedalus/Events/EventTable.h
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
+    source/Daedalus/Events/GamepadEvent.h
+    
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp
     

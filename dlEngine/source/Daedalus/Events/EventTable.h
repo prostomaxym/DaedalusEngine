@@ -29,7 +29,15 @@ enum class EventType
 	MouseButtonPressed,
 	MouseButtonReleased,
 	MouseMoved,
-	MouseScrolled
+	MouseScrolled,
+
+	//Gamepad button events
+	GamepadPressed,
+	GamepadReleased,
+
+	//Gamepad analog events
+	GamepadStick,
+	GamepadTrigger
 };
 
 enum EventCategory
@@ -40,7 +48,9 @@ enum EventCategory
 	InputEvent = BITMASK(1),
 	KeyboardEvent = BITMASK(2),
 	MouseEvent = BITMASK(3),
-	MouseButtonEvent = BITMASK(4)
+	ButtonMouseEvent = BITMASK(4),
+	GamepadButtonEvent = BITMASK(5),
+	GamepadAnalogEvent = BITMASK(6)
 };
 
 }

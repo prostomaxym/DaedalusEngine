@@ -51,7 +51,7 @@ private:
 class DAEDALUS_API MouseButtonEvent : public Event
 {
 public:
-	EVENT_CLASS_CATEGORY(MouseEvent | InputEvent)
+	EVENT_CLASS_CATEGORY(ButtonMouseEvent | MouseEvent | InputEvent)
 public:
 	inline int GetMouseButton() const { return m_button; }
 

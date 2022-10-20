@@ -9,21 +9,44 @@ namespace Daedalus {
 class DAEDALUS_API Input
 {
 public:
+	// Keyboard + mouse input
 	inline static bool IsKeyPressed(int keycode) { return s_instance->IsKeyPressedImpl(keycode); }
 
 	inline static bool IsMouseButtonPressed(int button) { return s_instance->IsMouseButtonPressedImpl(button); }
 	inline static std::pair<float,float> GetMousePos() { return s_instance->GetMousePosImpl(); }
 
-protected:
-	virtual bool IsKeyPressedImpl(int keycode) = 0;
+	//Gamepad input
+	enum class StickType
+	{
+		Left,
+		Right
+	};
 
+	enum class BamperType
+	{
+		Left,
+		Right
+	};
+
+	inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPresseImpl(keycode); }
+	inline std::pair<float, float> GetStickPos(StickType type) { return s_instance->GetStickPosImpl(type); }
+	inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
+
+protected:
+	// Keyboard + mouse input
+	virtual bool IsKeyPressedImpl(int keycode) = 0;
 	virtual bool IsMouseButtonPressedImpl(int button) = 0;
 	virtual std::pair<float, float> GetMousePosImpl() = 0;
 
+	//Gamepad input
+	virtual bool IsGpadKeyPresseImpl(int keycode) = 0;
+	virtual std::pair<float, float> GetStickPosImpl(StickType type) = 0;
+	virtual float GetBumperPosImpl(BamperType type) = 0;
+
 private:
 	static Input* s_instance;
-	bool s_has_mouse_keyboard = false;
-	bool s_has_gamepad = false;
+	bool m_has_mouse_keyboard = false;
+	bool m_has_gamepad = false;
 };
 
 }

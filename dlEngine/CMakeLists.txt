@@ -48,18 +48,18 @@ set(PROJECT_FILES
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp
     
+    source/Platform/Platform.h
+    source/Platform/Platform.cpp
     source/Platform/GLFW/GLFWInput.h
     source/Platform/GLFW/GLFWInput.cpp
     source/Platform/GLFW/GLFWWindow.h
     source/Platform/GLFW/GLFWWindow.cpp
 
     source/Platform/Windows/WindowsInput.h
-    source/Platform/Windows/WindowsInput.cpp
     source/Platform/Windows/WindowsWindow.h
     source/Platform/Windows/WindowsWindow.cpp
 
     source/Platform/Linux/LinuxInput.h
-    source/Platform/Linux/LinuxInput.cpp
     source/Platform/Linux/LinuxWindow.h
     source/Platform/Linux/LinuxWindow.cpp
     )

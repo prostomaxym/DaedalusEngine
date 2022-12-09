@@ -6,8 +6,11 @@
 
 namespace Daedalus {
 
+class Platform;
+
 class DAEDALUS_API Input
 {
+	friend Platform;
 public:
 	// Keyboard + mouse input
 	inline static bool IsKeyPressed(int keycode) { return s_instance->IsKeyPressedImpl(keycode); }
@@ -33,6 +36,8 @@ public:
 	inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
 
 protected:
+	static void CreateInstance(Input* inst) { s_instance = inst; }
+
 	// Keyboard + mouse input
 	virtual bool IsKeyPressedImpl(int keycode) = 0;
 	virtual bool IsMouseButtonPressedImpl(int button) = 0;

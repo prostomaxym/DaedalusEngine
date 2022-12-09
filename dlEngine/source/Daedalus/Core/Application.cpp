@@ -1,14 +1,9 @@
 #include "dlpch.h"
 #include "Application.h"
 
-#ifdef DL_PLATFORM_WINDOWS
-	#include "Platform/Windows/WindowsWindow.h"
-#elif defined DL_PLATFORM_LINUX
-	#include "Platform/Linux/LinuxWindow.h"
-#endif
-
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
+#include "Platform/Platform.h"
 
 #include <glad/glad.h>
 
@@ -27,12 +22,9 @@ Application* Application::GetInstance()
 }
 
 Application::Application() :
-#ifdef DL_PLATFORM_WINDOWS
-	m_window(std::make_unique<WindowsWindow>(WindowProps()))
-#elif defined DL_PLATFORM_LINUX
-	m_window(std::make_unique<LinuxWindow>(WindowProps()))
-#endif 
+	m_window(Platform::createWindow())
 {
+	Platform::InitInputSystem();
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 }
 

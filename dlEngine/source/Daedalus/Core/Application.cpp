@@ -15,7 +15,7 @@ Application* Application::GetInstance()
 {
 	if (!s_instance)
 	{
-		s_instance = new Application;
+		s_instance = new Application();
 	}
 
 	return s_instance;
@@ -24,8 +24,13 @@ Application* Application::GetInstance()
 Application::Application() :
 	m_window(Platform::createWindow())
 {
+	s_instance = this;
+
 	Platform::InitInputSystem();
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
+
+	m_imgui_layer = new ImGuiLayer();
+	PushOverlay(m_imgui_layer);
 }
 
 Application::~Application()
@@ -45,6 +50,9 @@ void Application::Run()
 		}
 
 		m_window->OnUpdate();
+
+		m_imgui_layer->Begin();
+		m_imgui_layer->End();
 	}
 }
 

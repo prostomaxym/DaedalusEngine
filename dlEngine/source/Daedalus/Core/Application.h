@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "Daedalus/Events/Event.h"
 #include "Daedalus/Events/ApplicationEvent.h"
+#include "Daedalus/ImGui/ImGuiLayer.h"
 #include "IWindow.h"
 #include "LayerStack.h"
 
@@ -37,7 +38,9 @@ private:
 	bool OnWindowClosed(WindowCloseEvent& event);
 
 	std::unique_ptr<IWindow> m_window;
+	ImGuiLayer* m_imgui_layer;
 	LayerStack m_layer_stack;
+	
 	bool m_running = true;
 };
 

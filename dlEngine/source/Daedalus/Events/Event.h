@@ -23,6 +23,7 @@ public:
 	virtual const char* GetNameC() const = 0;
 	virtual int GetCategoryFlags() const = 0;
 
+	inline void AddHandle(bool handle) { m_handled |= handle; }
 	inline void SetHandle(bool handle) { m_handled = handle; }
 	inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 	inline bool IsHandled() { return m_handled; }

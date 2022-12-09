@@ -12,26 +12,20 @@ class DAEDALUS_API ImGuiLayer : public Layer
 {
 public:
 	ImGuiLayer();
-	~ImGuiLayer();
+	virtual ~ImGuiLayer() = default;
 
-	void OnAttach() override;
-	void OnDetach() override;
-	void OnUpdate() override;
-	void OnEvent(Event& event) override;
+	virtual void OnAttach() override;
+	virtual void OnDetach() override;
+	virtual void OnEvent(Event& e) override;
 
+	void Begin();
+	void End();
+
+	void BlockEvents(bool block) { m_block_events = block; }
+
+	void SetDarkThemeColors();
 private:
-	bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
-	bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
-	bool OnMouseMovedEvent(MouseMovedEvent& event);
-	bool OnMouseScrolledEvent(MouseScrolledEvent& event);
-
-	bool OnKeyPressedEvent(KeyPressedEvent& event);
-	bool OnKeyReleasedEvent(KeyReleasedEvent& event);
-	bool OnKeyTypedEvent(KeyTypedEvent& event);
-
-	bool OnWindowResizedEvent(WindowResizeEvent& event);
-
-	double m_time;
+	bool m_block_events = true;
 };
 
 }

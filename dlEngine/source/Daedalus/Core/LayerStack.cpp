@@ -2,50 +2,47 @@
 
 #include "LayerStack.h"
 
-using namespace Daedalus;
+#include <algorithm>
 
-LayerStack::LayerStack()
-{
-	m_layer_insert = m_layers.begin();
-}
+using namespace Daedalus;
 
 LayerStack::~LayerStack()
 {
-	for (auto layer : m_layers)
+	for (Layer* layer : m_layers)
 	{
+		layer->OnDetach();
 		delete layer;
 	}
 }
 
 void LayerStack::PushLayer(Layer* layer)
 {
-	DL_CORE_TRACE("Layer {0} pushed.", layer->GetName());
-	m_layer_insert = m_layers.emplace(m_layer_insert, layer);
+	m_layers.emplace(m_layers.begin() + m_layer_insert_index, layer);
+	m_layer_insert_index++;
 }
 
 void LayerStack::PushOverlay(Layer* overlay)
 {
-	DL_CORE_TRACE("Overay {0} pushed.", overlay->GetName());
 	m_layers.emplace_back(overlay);
 }
 
 void LayerStack::PopLayer(Layer* layer)
 {
-	if (auto it = std::find(m_layers.begin(), m_layers.end(), layer);
-		it != m_layers.end())
+	auto it = std::find(m_layers.begin(), m_layers.begin() + m_layer_insert_index, layer);
+	if (it != m_layers.begin() + m_layer_insert_index)
 	{
-		DL_CORE_TRACE("Layer {0} poped.", layer->GetName());
+		layer->OnDetach();
 		m_layers.erase(it);
-		--m_layer_insert;
+		m_layer_insert_index--;
 	}
 }
 
 void LayerStack::PopOverlay(Layer* overlay)
 {
-	if (auto it = std::find(m_layers.begin(), m_layers.end(), overlay);
-		it != m_layers.end())
+	auto it = std::find(m_layers.begin() + m_layer_insert_index, m_layers.end(), overlay);
+	if (it != m_layers.end())
 	{
-		DL_CORE_TRACE("Overlay {0} poped.", overlay->GetName());
+		overlay->OnDetach();
 		m_layers.erase(it);
 	}
 }

@@ -47,7 +47,6 @@ private:
 	Sandbox()
 	{
 		PushLayer(new ExampleLayer());
-		PushOverlay(new Daedalus::ImGuiLayer());
 	}
 };
 

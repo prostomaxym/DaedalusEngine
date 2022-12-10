@@ -4,8 +4,7 @@
 #include "Daedalus/Events/ApplicationEvent.h"
 #include "Daedalus/Events/MouseEvent.h"
 #include "Daedalus/Events/KeyEvent.h"
-
-#include <glad/glad.h>
+#include "Platform/OpenGL/OpenGLContext.h"
 
 using namespace Daedalus;
 
@@ -44,9 +43,9 @@ void GLFWWindow::Init(const WindowProps& props)
 	}
 
 	m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
-	glfwMakeContextCurrent(m_window);
-	const auto status = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-	DL_ASSERT(status, "Failed to initialize GLAD");
+	m_context = std::make_unique<OpenGLContext>(m_window);
+	m_context->Init();
+
 	glfwSetWindowUserPointer(m_window, &m_data);
 	SetVSync(false);
 
@@ -152,7 +151,7 @@ void GLFWWindow::SetupCallbacks()
 void GLFWWindow::OnUpdate()
 {
 	glfwPollEvents();
-	glfwSwapBuffers(m_window);
+	m_context->SwapBuffers();
 }
 
 void GLFWWindow::SetVSync(bool enabled)

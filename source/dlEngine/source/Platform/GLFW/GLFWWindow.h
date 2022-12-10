@@ -1,12 +1,16 @@
 #pragma once
 
-#include "Daedalus/Core/IWindow.h"
+#include "Daedalus/Core/Window.h"
+#include "Daedalus/Renderer/GraphicsContext.h"
+
+#include <memory>
+#include <string>
 
 #include <GLFW/glfw3.h>
 
 namespace Daedalus {
 
-class GLFWWindow : public IWindow
+class GLFWWindow : public Window
 {
 public:
 	GLFWWindow(const WindowProps& props);
@@ -29,6 +33,7 @@ private:
 	virtual void SetupCallbacks();
 
 private:
+	std::unique_ptr<GraphicsContext> m_context;
 	GLFWwindow* m_window;
 
 	struct WindowData

@@ -4,7 +4,7 @@
 #include "Daedalus/Events/Event.h"
 #include "Daedalus/Events/ApplicationEvent.h"
 #include "Daedalus/ImGui/ImGuiLayer.h"
-#include "IWindow.h"
+#include "Window.h"
 #include "LayerStack.h"
 
 namespace Daedalus {
@@ -20,7 +20,7 @@ public:
 	Application& operator=(const Application&) = delete;
 	Application& operator=(const Application&&) = delete;
 
-	inline IWindow& GetWindow() { return *m_window; }
+	inline Window& GetWindow() { return *m_window; }
 
 	void Run();
 
@@ -37,7 +37,7 @@ protected:
 private:
 	bool OnWindowClosed(WindowCloseEvent& event);
 
-	std::unique_ptr<IWindow> m_window;
+	std::unique_ptr<Window> m_window;
 	ImGuiLayer* m_imgui_layer;
 	LayerStack m_layer_stack;
 	

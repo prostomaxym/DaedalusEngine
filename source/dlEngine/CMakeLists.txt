@@ -28,7 +28,7 @@ set(PROJECT_FILES
     source/Daedalus/Core/Core.h
     source/Daedalus/Core/EntryPoint.h
     source/Daedalus/Core/Input.h
-    source/Daedalus/Core/IWindow.h   
+    source/Daedalus/Core/Window.h   
     source/Daedalus/Core/KeyCodes.h
     source/Daedalus/Core/Layer.h
     source/Daedalus/Core/Layer.cpp
@@ -44,16 +44,23 @@ set(PROJECT_FILES
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
     source/Daedalus/Events/GamepadEvent.h
+
+    source/Daedalus/Renderer/GraphicsContext.h
+    source/Daedalus/Renderer/GraphicsContext.cpp
     
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp
     
     source/Platform/Platform.h
     source/Platform/Platform.cpp
+
     source/Platform/GLFW/GLFWInput.h
     source/Platform/GLFW/GLFWInput.cpp
     source/Platform/GLFW/GLFWWindow.h
     source/Platform/GLFW/GLFWWindow.cpp
+
+    source/Platform/OpenGL/OpenGLContext.h
+    source/Platform/OpenGL/OpenGLContext.cpp
 
     source/Platform/Windows/WindowsInput.h
     source/Platform/Windows/WindowsWindow.h

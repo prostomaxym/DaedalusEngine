@@ -9,7 +9,7 @@ using namespace Daedalus;
 
 Input* Input::s_instance = nullptr;
 
-std::unique_ptr<IWindow> Daedalus::Platform::createWindow()
+std::unique_ptr<Window> Daedalus::Platform::createWindow()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return std::make_unique<WindowsWindow>(WindowProps());

@@ -5,7 +5,9 @@ Game Engine. Personal project. Under early stage of development
 ## Builds
 
 [![Windows-Master-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Master-CI.yml/badge.svg?branch=master)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Master-CI.yml)
+[![Windows-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml)
 [![Linux-Master-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml/badge.svg?branch=master)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml)
+[![Linux-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml)
 
 
 ## How to Build

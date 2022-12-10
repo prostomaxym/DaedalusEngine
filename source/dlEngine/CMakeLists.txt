@@ -6,6 +6,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 
@@ -97,6 +98,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         spdlog::spdlog
         imgui::imgui
+        imguizmo::imguizmo
     PRIVATE    
         ${OPENGL_LIBRARIES}
         glad::glad

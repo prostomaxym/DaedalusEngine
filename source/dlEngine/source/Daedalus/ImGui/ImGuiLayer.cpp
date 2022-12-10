@@ -5,11 +5,12 @@
 #include "Daedalus/Core/Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_glfw.h>
-
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_glfw.h>
+#include<ImGuizmo.h>
 
 using namespace Daedalus;
 
@@ -26,8 +27,8 @@ void ImGuiLayer::OnAttach()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 	float fontSize = 18.0f;// *2.0f;
 
@@ -39,7 +40,7 @@ void ImGuiLayer::OnAttach()
 
 	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
 	ImGuiStyle& style = ImGui::GetStyle();
-	if (io.ConfigFlags /*& ImGuiConfigFlags_ViewportsEnable*/)
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		style.WindowRounding = 0.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
@@ -76,7 +77,7 @@ void ImGuiLayer::Begin()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-	//ImGuizmo::BeginFrame();
+	ImGuizmo::BeginFrame();
 	static bool show = true;
 	ImGui::ShowDemoWindow(&show);
 }
@@ -90,11 +91,11 @@ void ImGuiLayer::End()
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-	if (io.ConfigFlags /*& ImGuiConfigFlags_ViewportsEnable*/)
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		GLFWwindow* backup_current_context = glfwGetCurrentContext();
-		//ImGui::UpdatePlatformWindows();
-		//ImGui::RenderPlatformWindowsDefault();
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
 		glfwMakeContextCurrent(backup_current_context);
 	}
 }

@@ -6,9 +6,11 @@
         {"name": "gtest"},
         {"name": "glad", "features": ["gl-api-latest"]},
         {"name": "spdlog"},
-        {"name": "imgui", "features": ["opengl3-binding", "glfw-binding"]}
+        {"name": "imgui", "features": ["opengl3-binding", "glfw-binding", "docking-experimental"]},
+        {"name": "imguizmo"},
+        {"name": "glm"}
     ],
-    "builtin-baseline":"8e3595fad04f60f55250ff0e2f2d4e7e7a580a50",
+    "builtin-baseline":"cf1fda5443f2acfa976d5bda70c50fa22c26fe80",
     "overrides": [
     {"name": "fmt", "version-string": "8.1.1"}
     ]

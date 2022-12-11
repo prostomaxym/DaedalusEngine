@@ -1,5 +1,5 @@
 # Daedalus Engine
-Game Engine
+Game Engine. Personal project. Under early stage of development
 
 
 ## Builds

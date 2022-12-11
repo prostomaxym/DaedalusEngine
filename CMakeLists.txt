@@ -36,14 +36,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 
 # Subprojects config
-add_subdirectory(dlEngine)
-add_subdirectory(dlSandbox)
- 
-# Tests setup
-if (ENABLE_TESTS)
-    enable_testing()
-    add_subdirectory(dlUnitTests)
-endif()
+add_subdirectory(source)
 
 # Install setup
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Install.cmake)

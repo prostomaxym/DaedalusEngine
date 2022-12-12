@@ -4,6 +4,7 @@
 
 #include "Daedalus/Core/Application.h"
 #include "Daedalus/Core/Input.h"
+#include "Daedalus/Core/HighPerformanceRequest.h"
 #include "Daedalus/Core/KeyCodes.h"
 #include "Daedalus/Core/Layer.h"
 #include "Daedalus/Core/Log.h"

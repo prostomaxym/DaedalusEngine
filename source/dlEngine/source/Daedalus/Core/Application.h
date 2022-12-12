@@ -38,7 +38,7 @@ private:
 	bool OnWindowClosed(WindowCloseEvent& event);
 
 	std::unique_ptr<Window> m_window;
-	ImGuiLayer* m_imgui_layer;
+	ImGuiLayer* m_imgui_layer; // LayerStack owns imgui_layer
 	LayerStack m_layer_stack;
 	
 	bool m_running = true;

@@ -48,6 +48,8 @@ set(PROJECT_FILES
 
     source/Daedalus/Renderer/GraphicsContext.h
     source/Daedalus/Renderer/GraphicsContext.cpp
+    source/Daedalus/Renderer/Shader.h
+    source/Daedalus/Renderer/Shader.cpp
     
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp

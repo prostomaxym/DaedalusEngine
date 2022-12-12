@@ -48,8 +48,20 @@ set(PROJECT_FILES
 
     source/Daedalus/Renderer/GraphicsContext.h
     source/Daedalus/Renderer/GraphicsContext.cpp
+    source/Daedalus/Renderer/IndexBuffer.h
+    source/Daedalus/Renderer/IndexBuffer.cpp
     source/Daedalus/Renderer/Shader.h
     source/Daedalus/Renderer/Shader.cpp
+    source/Daedalus/Renderer/RenderCommand.h
+    source/Daedalus/Renderer/RenderCommand.cpp
+    source/Daedalus/Renderer/Renderer.h
+    source/Daedalus/Renderer/Renderer.cpp
+    source/Daedalus/Renderer/RendererAPI.h
+    source/Daedalus/Renderer/RendererAPI.cpp
+    source/Daedalus/Renderer/VertexArray.h
+    source/Daedalus/Renderer/VertexArray.cpp
+    source/Daedalus/Renderer/VertexBuffer.h
+    source/Daedalus/Renderer/VertexBuffer.cpp
     
     source/Daedalus/ImGui/ImGuiLayer.h
     source/Daedalus/ImGui/ImGuiLayer.cpp
@@ -64,6 +76,16 @@ set(PROJECT_FILES
 
     source/Platform/OpenGL/OpenGLContext.h
     source/Platform/OpenGL/OpenGLContext.cpp
+    source/Platform/OpenGL/OpenGLIndexBuffer.h
+    source/Platform/OpenGL/OpenGLIndexBuffer.cpp
+    source/Platform/OpenGL/OpenGLRendererAPI.h
+    source/Platform/OpenGL/OpenGLRendererAPI.cpp
+    source/Platform/OpenGL/OpenGLShader.h
+    source/Platform/OpenGL/OpenGLShader.cpp
+    source/Platform/OpenGL/OpenGLVertexArray.h
+    source/Platform/OpenGL/OpenGLVertexArray.cpp
+    source/Platform/OpenGL/OpenGLVertexBuffer.h
+    source/Platform/OpenGL/OpenGLVertexBuffer.cpp
 
     source/Platform/Windows/WindowsInput.h
     source/Platform/Windows/WindowsWindow.h

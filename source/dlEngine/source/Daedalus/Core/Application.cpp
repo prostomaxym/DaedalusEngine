@@ -45,11 +45,11 @@ Application::~Application()
 
 void Application::Run()
 {
-	//auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.vert", "C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.frag");
-	//test_shader->SaveBinary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
+	auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.vert", "C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.frag");
+	test_shader->SaveBinary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
 
-	auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
-	test_shader->Bind();
+	//auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
+	//test_shader->Bind();
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,

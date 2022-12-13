@@ -9,8 +9,8 @@ namespace Daedalus {
 class VertexBuffer
 {
 public:
-	static std::unique_ptr<VertexBuffer> Create(uint32_t size);
-	static std::unique_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
+	static std::shared_ptr<VertexBuffer> Create(uint32_t size);
+	static std::shared_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
 
 	virtual ~VertexBuffer() = default;
 

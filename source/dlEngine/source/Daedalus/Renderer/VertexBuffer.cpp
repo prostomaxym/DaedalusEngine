@@ -7,7 +7,7 @@
 
 using namespace Daedalus;
 
-std::unique_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
+std::shared_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 {
 	switch (Renderer::GetAPI())
 	{
@@ -19,7 +19,7 @@ std::unique_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	return nullptr;
 }
 
-std::unique_ptr<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+std::shared_ptr<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 {
 	switch (Renderer::GetAPI())
 	{

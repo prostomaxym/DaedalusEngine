@@ -6,7 +6,7 @@
 
 namespace Daedalus {
 
-	std::unique_ptr<VertexArray> VertexArray::Create()
+	std::shared_ptr<VertexArray> VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
 		{

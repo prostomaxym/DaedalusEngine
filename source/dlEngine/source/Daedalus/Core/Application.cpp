@@ -59,11 +59,10 @@ void Application::Run()
 
 	auto VBO = VertexBuffer::Create(vertices, sizeof(vertices));
 	auto VAO = VertexArray::Create();
-	VBO->Bind();
-	VAO->Bind();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("in_vert"), true } });
+	VAO->AddVertexBuffer(VBO);
+	VAO->Bind();
 
 	while (m_running)
 	{

@@ -28,6 +28,7 @@ set(PROJECT_FILES
     source/Daedalus/Events/MouseEvent.h
     source/Daedalus/Events/GamepadEvent.h
 
+    source/Daedalus/Renderer/BufferLayout.h
     source/Daedalus/Renderer/GraphicsContext.h
     source/Daedalus/Renderer/GraphicsContext.cpp
     source/Daedalus/Renderer/IndexBuffer.h

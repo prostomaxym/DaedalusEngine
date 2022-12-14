@@ -5,8 +5,6 @@ on:
 
 env:
   BUILD_TYPE: Release
-  PRODUCT_NAME: 'Daedalus Development Sandbox'
-  VERSION_NUMBER: '0.0.0'
 
 jobs:
 
@@ -39,8 +37,8 @@ jobs:
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
         Write-Host "Product Version: $VersionNumber"
         Write-Host "Product Name: $ProductName"
-        Write-Output "##vso[task.setvariable env.PRODUCT_NAME=ProductName;]$ProductName"
-        Write-Output "##vso[task.setvariable env.VERSION_NUMBER=VersionNumber;]$VersionNumber"
+        Write-Output "##vso[task.setvariable variable=ProductName;]$ProductName"
+        Write-Output "##vso[task.setvariable variable=VersionNumber;]$VersionNumber"
 
         cd build
         cpack
@@ -48,7 +46,7 @@ jobs:
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: '${{ env.PRODUCT_NAME }}'
-        tag-name: '${{ env.VERSION_NUMBER }}'
-        asset-name: '${{ env.PRODUCT_NAME }}.exe'
-        file: '${{github.workspace}}/install/${{ env.PRODUCT_NAME }}.exe'
+        release-name: '$(ProductName)'
+        tag-name: '$$(VersionNumber)'
+        asset-name: '$(ProductName).exe'
+        file: '${{github.workspace}}/install/$(ProductName).exe'

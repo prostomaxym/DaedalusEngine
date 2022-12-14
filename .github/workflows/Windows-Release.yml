@@ -5,8 +5,6 @@ on:
 
 env:
   BUILD_TYPE: Release
-  PRODUCT_VERSION: '0.0.0'
-  PRODUCT_NAME: 'Daedalus Development Sandbox'
 
 jobs:
 
@@ -41,20 +39,20 @@ jobs:
         Write-Host "Product Name: $ProductName"
         echo "$VersionNumber" >> $GITHUB_ENV
         echo "$ProductName" >> $GITHUB_ENV
+        echo "VERSION_NUMBER=$VersionNumber" >> $GITHUB_ENV
+        echo "PRODUCT_NAME=$ProductName" >> $GITHUB_ENV
 
         cd build
         cpack
 
     - name: Check variable
       run: |
-        echo $ProductName
-        echo $(ProductName)
-        echo {$(ProductName)}
+        echo ${{ env.PRODUCT_NAME }}
 
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: $ProductName
-        tag-name: $VersionNumber
-        asset-name: '$(ProductName).exe'
-        file: '${{github.workspace}}/install/$ProductName.exe'
+        release-name: ${{ env.PRODUCT_NAME }}
+        tag-name: ${{ env.VERSION_NUMBER }}
+        asset-name: '${{ env.PRODUCT_NAME }}.exe'
+        file: '${{github.workspace}}/install/${{ env.PRODUCT_NAME }}.exe'

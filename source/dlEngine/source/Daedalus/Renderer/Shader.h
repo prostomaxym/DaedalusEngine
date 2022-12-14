@@ -13,7 +13,6 @@ namespace Daedalus {
 			PATH,
 			SOURCE,
 			BINARY
-
 		};
 		struct ShaderBinaryData
 		{
@@ -23,8 +22,8 @@ namespace Daedalus {
 		};
 
 	public:
-		static std::unique_ptr<Shader> Create(const std::string& compiled_shader_path);
-		static std::unique_ptr<Shader> Create(const std::string& vert_code, const std::string& frag_code, InputType input_type = InputType::PATH);
+		static std::shared_ptr<Shader> Create(const std::string& compiled_shader_path);
+		static std::shared_ptr<Shader> Create(const std::string& vert_code, const std::string& frag_code, InputType input_type = InputType::PATH);
 
 		virtual ~Shader() = default;
 

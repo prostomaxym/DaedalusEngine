@@ -5,6 +5,7 @@
 #include "Daedalus/Events/EventDispatcher.h"
 #include "Platform/Platform.h"
 
+
 #include <glad/glad.h>
 #include "Daedalus/Renderer/VertexBuffer.h"
 #include "Daedalus/Renderer/VertexArray.h"
@@ -35,12 +36,15 @@ Application::Application() :
 	Platform::InitInputSystem();
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
+	Renderer::Init();
+
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);
 }
 
 Application::~Application()
 {
+	Renderer::Shutdown();
 }
 
 void Application::Run()
@@ -51,26 +55,49 @@ void Application::Run()
 	//auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
 	//test_shader->Bind();
 
+	float buffer[] = {
+	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+	 0.5f, -0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 1.0f,
+	 0.0f,  0.5f, 0.0f, 0.0f,  0.0f, 1.0f, 1.0f
+	};
+
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,  
 		 0.5f, -0.5f, 0.0f,
 		 0.0f,  0.5f, 0.0f
 	};
 
-	auto VBO = VertexBuffer::Create(vertices, sizeof(vertices));
-	auto VAO = VertexArray::Create();
+	float colour[] = {
+	 1.0f,	0.0f, 0.0f, 1.0f,
+	 0.0f,  1.0f, 0.0f, 1.0f,
+	 0.0f,  0.0f, 1.0f, 1.0f
+	};
 
-	VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("in_vert"), true } });
-	VAO->AddVertexBuffer(VBO);
-	VAO->Bind();
+	unsigned int indexes[] = {
+		0,1,2
+	};
+
+	auto vert_VBO = VertexBuffer::Create(vertices, sizeof(vertices));
+	vert_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vert"), true }, 
+		BufferElement{ ShaderDataType::Float4, std::string("v_colour"), true } });
+
+	//auto vert_VBO = VertexBuffer::Create(vertices, sizeof(vertices));
+	//vert_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vert"), true } });
+
+	//auto colour_VBO = VertexBuffer::Create(colour, sizeof(vertices));
+	//colour_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float4, std::string("v_colour"), true } });
+
+	auto VAO = VertexArray::Create();
+	auto EBO = IndexBuffer::Create(indexes, sizeof(indexes) / sizeof(indexes[0]));
+
+	//VAO->AddVertexBuffer(vert_VBO);
+	//VAO->AddVertexBuffer(colour_VBO);
+
+	VAO->SetIndexBuffer(EBO);
+	
 
 	while (m_running)
 	{
-		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
 		for (auto layer : m_layer_stack)
 		{
 			layer->OnUpdate();
@@ -78,8 +105,14 @@ void Application::Run()
 
 		m_window->OnUpdate();
 
-		m_imgui_layer->Begin();
-		m_imgui_layer->End();
+		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
+		RenderCommand::Clear();
+		//m_imgui_layer->Begin();
+		//m_imgui_layer->End();
+
+		Renderer::BeginScene();
+		Renderer::Submit(test_shader, VAO);
+		Renderer::EndScene();
 	}
 }
 

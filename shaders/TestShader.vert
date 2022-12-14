@@ -1,9 +1,10 @@
 #version 330 core
-layout (location = 0) in vec3 aPos; // the position variable has attribute position 0
+layout (location = 0) in vec3 v_pos;
+layout (location = 1) in vec4 v_colour;
   
-out vec4 vertexColor; // specify a color output to the fragment shader
+out vec4 f_colour;
 
 void main()
 {
-    gl_Position = vec4(aPos, 1.0); // see how we directly give a vec3 to vec4's constructor
+    gl_Position = vec4(v_pos, 1.0);
 }

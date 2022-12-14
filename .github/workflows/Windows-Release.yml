@@ -37,8 +37,10 @@ jobs:
       run: |
         $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
-        Write-Host "##vso[env.PRODUCT_NAME]$ProductName"
-        Write-Host "##vso[env.VERSION_NUMBER]$VersionNumber"
+        Write-Host "Product Version: $VersionNumber"
+        Write-Host "Product Name: $ProductName"
+        Write-Output "##vso[task.setvariable env.PRODUCT_NAME=ProductName;]$ProductName"
+        Write-Output "##vso[task.setvariable env.VERSION_NUMBER=VersionNumber;]$VersionNumber"
 
         cd build
         cpack

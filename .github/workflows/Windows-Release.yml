@@ -35,13 +35,8 @@ jobs:
       run: |
         $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
-        $ProductPath = "${{github.workspace}}/install/" + $ProductName + ".exe"
-        Write-Host "ProductName: $ProductName"
-        Write-Host "ProductPath: $ProductPath"
-        Write-Host "VersionNumber: $VersionNumber"
-        Write-Output "##vso[task.setvariable variable=ProductName]$ProductName"
-        Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
-        Write-Output "##vso[task.setvariable variable=ProductPath]$ProductPath"
+        Write-Host "##vso[task.ProductName]$ProductName"
+        Write-Host "##vso[task.VersionNumber]$VersionNumber"
 
         cd build
         cpack
@@ -49,7 +44,7 @@ jobs:
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: "Daedalus Development Sandbox"
-        tag-name: 'v0.1.2'
-        asset-name: 'Daedalus Development Sandbox-0.1.2-win64.exe'
-        file: '${{github.workspace}}/install/Daedalus Development Sandbox-0.1.2-win64.exe'
+        release-name: '${{ task.ProductName }}'
+        tag-name: '${{ task.VersionNumber }}'
+        asset-name: '${{ task.ProductName }}.exe'
+        file: '${{github.workspace}}/install/${{ task.ProductName }}.exe'

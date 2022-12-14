@@ -5,6 +5,8 @@ on:
 
 env:
   BUILD_TYPE: Release
+  PRODUCT_NAME: 'Daedalus Development Sandbox'
+  VERSION_NUMBER: '0.0.0'
 
 jobs:
 
@@ -35,8 +37,8 @@ jobs:
       run: |
         $VersionNumber = powershell -ExecutionPolicy Bypass -File WinScripts/GetVersionNumber.ps1
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
-        Write-Host "##vso[task.ProductName]$ProductName"
-        Write-Host "##vso[task.VersionNumber]$VersionNumber"
+        Write-Host "##vso[env.PRODUCT_NAME]$ProductName"
+        Write-Host "##vso[env.VERSION_NUMBER]$VersionNumber"
 
         cd build
         cpack
@@ -44,7 +46,7 @@ jobs:
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: '${{ task.ProductName }}'
-        tag-name: '${{ task.VersionNumber }}'
-        asset-name: '${{ task.ProductName }}.exe'
-        file: '${{github.workspace}}/install/${{ task.ProductName }}.exe'
+        release-name: '${{ env.PRODUCT_NAME }}'
+        tag-name: '${{ env.VERSION_NUMBER }}'
+        asset-name: '${{ env.PRODUCT_NAME }}.exe'
+        file: '${{github.workspace}}/install/${{ env.PRODUCT_NAME }}.exe'

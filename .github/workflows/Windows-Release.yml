@@ -47,14 +47,14 @@ jobs:
 
     - name: Check variable
       run: |
-        echo '$ProductName'
-        echo '$(ProductName)'
-        echo '{$(ProductName)}'
+        echo $ProductName
+        echo $(ProductName)
+        echo {$(ProductName)}
 
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: '$(env.PRODUCT_NAME)'
-        tag-name: '$(env.PRODUCT_VERSION)'
-        asset-name: '$(env.PRODUCT_NAME).exe'
-        file: '${{github.workspace}}/install/$(env.PRODUCT_NAME).exe'
+        release-name: $ProductName
+        tag-name: $VersionNumber
+        asset-name: '$(ProductName).exe'
+        file: '${{github.workspace}}/install/$ProductName.exe'

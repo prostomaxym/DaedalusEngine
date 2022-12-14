@@ -39,17 +39,17 @@ jobs:
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
         Write-Host "Product Version: $VersionNumber"
         Write-Host "Product Name: $ProductName"
-        echo "PRODUCT_VERSION=$VersionNumber" >> $GITHUB_ENV
-        echo "PRODUCT_NAME=$VersionNumber" >> $GITHUB_ENV
+        echo "$VersionNumber" >> $GITHUB_ENV
+        echo "$ProductName" >> $GITHUB_ENV
 
         cd build
         cpack
 
     - name: Check variable
       run: |
-        echo '$env.PRODUCT_NAME'
-        echo '$(env.PRODUCT_NAME)'
-        echo '${{env.PRODUCT_NAME}}'
+        echo '$ProductName'
+        echo '$(ProductName)'
+        echo '{$(ProductName)}'
 
     - uses: djnicholson/release-action@v2.11
       with:

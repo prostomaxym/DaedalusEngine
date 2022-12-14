@@ -5,8 +5,6 @@
 #include "Daedalus/Events/EventDispatcher.h"
 #include "Platform/Platform.h"
 
-
-#include <glad/glad.h>
 #include "Daedalus/Renderer/VertexBuffer.h"
 #include "Daedalus/Renderer/VertexArray.h"
 #include "Daedalus/Renderer/IndexBuffer.h"
@@ -53,7 +51,7 @@ void Application::Run()
 	test_shader->SaveBinary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
 
 	//auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
-	//test_shader->Bind();
+	test_shader->Bind();
 
 	float buffer[] = {
 	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -61,40 +59,22 @@ void Application::Run()
 	 0.0f,  0.5f, 0.0f, 0.0f,  0.0f, 1.0f, 1.0f
 	};
 
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,  
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
-	};
-
-	float colour[] = {
-	 1.0f,	0.0f, 0.0f, 1.0f,
-	 0.0f,  1.0f, 0.0f, 1.0f,
-	 0.0f,  0.0f, 1.0f, 1.0f
-	};
-
 	unsigned int indexes[] = {
 		0,1,2
 	};
 
-	auto vert_VBO = VertexBuffer::Create(vertices, sizeof(vertices));
-	vert_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vert"), true }, 
-		BufferElement{ ShaderDataType::Float4, std::string("v_colour"), true } });
-
-	//auto vert_VBO = VertexBuffer::Create(vertices, sizeof(vertices));
-	//vert_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vert"), true } });
-
-	//auto colour_VBO = VertexBuffer::Create(colour, sizeof(vertices));
-	//colour_VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float4, std::string("v_colour"), true } });
-
 	auto VAO = VertexArray::Create();
+	VAO->Bind();
+
+	auto VBO = VertexBuffer::Create(buffer, sizeof(buffer));
+	VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vert"), false }, 
+		BufferElement{ ShaderDataType::Float4, std::string("v_color"), false } });
+
 	auto EBO = IndexBuffer::Create(indexes, sizeof(indexes) / sizeof(indexes[0]));
 
-	//VAO->AddVertexBuffer(vert_VBO);
-	//VAO->AddVertexBuffer(colour_VBO);
-
+	VAO->AddVertexBuffer(VBO);
 	VAO->SetIndexBuffer(EBO);
-	
+	VAO->Unbind();
 
 	while (m_running)
 	{
@@ -103,16 +83,17 @@ void Application::Run()
 			layer->OnUpdate();
 		}
 
-		m_window->OnUpdate();
-
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
 		RenderCommand::Clear();
-		//m_imgui_layer->Begin();
-		//m_imgui_layer->End();
 
 		Renderer::BeginScene();
 		Renderer::Submit(test_shader, VAO);
 		Renderer::EndScene();
+
+		m_imgui_layer->Begin();
+		m_imgui_layer->End();
+
+		m_window->OnUpdate();
 	}
 }
 

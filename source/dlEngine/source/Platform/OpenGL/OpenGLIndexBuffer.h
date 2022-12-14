@@ -10,6 +10,11 @@ public:
 	OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
 	virtual ~OpenGLIndexBuffer();
 
+	OpenGLIndexBuffer(const OpenGLIndexBuffer&) = delete;
+	OpenGLIndexBuffer(OpenGLIndexBuffer&&) = delete;
+	OpenGLIndexBuffer& operator=(const OpenGLIndexBuffer&) = delete;
+	OpenGLIndexBuffer& operator=(OpenGLIndexBuffer&&) = delete;
+
 	virtual void Bind() const;
 	virtual void Unbind() const;
 

@@ -10,6 +10,11 @@ namespace Daedalus {
 		OpenGLVertexArray();
 		virtual ~OpenGLVertexArray();
 
+		OpenGLVertexArray(const OpenGLVertexArray&) = delete;
+		OpenGLVertexArray(OpenGLVertexArray&&) = delete;
+		OpenGLVertexArray& operator=(const OpenGLVertexArray&) = delete;
+		OpenGLVertexArray& operator=(OpenGLVertexArray&&) = delete;
+
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 

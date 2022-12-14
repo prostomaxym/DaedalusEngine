@@ -10,6 +10,11 @@ namespace Daedalus {
 		OpenGLVertexBuffer(uint32_t size);
 		OpenGLVertexBuffer(float* vertices, uint32_t size);
 
+		OpenGLVertexBuffer(const OpenGLVertexBuffer&) = delete;
+		OpenGLVertexBuffer(OpenGLVertexBuffer&&) = delete;
+		OpenGLVertexBuffer& operator=(const OpenGLVertexBuffer&) = delete;
+		OpenGLVertexBuffer& operator=(OpenGLVertexBuffer&&) = delete;
+
 		virtual ~OpenGLVertexBuffer();
 
 		virtual void Bind() const override;

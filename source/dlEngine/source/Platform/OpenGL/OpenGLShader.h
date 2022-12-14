@@ -27,6 +27,17 @@ namespace Daedalus {
 		void Bind() const override;
 		void Unbind() const override;
 
+		virtual void SetInt(const std::string& name, int value) override;
+		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
+		virtual void SetFloat(const std::string& name, float value) override;
+		virtual void SetFloat2(const std::string& name, const glm::vec2& value) override;
+		virtual void SetFloat3(const std::string& name, const glm::vec3& value) override;
+		virtual void SetFloat4(const std::string& name, const glm::vec4& value) override;
+		virtual void SetMat3(const std::string& name, const glm::mat3& value) override;
+		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
+
+		virtual const std::string& GetName() const override { return m_name; }
+
 	private:
 		std::pair<GLuint, GLuint> Compile(const GLchar* vert_source, const GLchar* frag_source) const;
 		void Link(GLuint vert_shader_id, GLuint frag_shader_id);
@@ -34,6 +45,8 @@ namespace Daedalus {
 		void Pack(const std::string& file_name, const ShaderBinaryData& data) const;
 		ShaderBinaryData Unpack(const std::string& file_name) const;
 
+	private:
 		uint32_t m_rendererID;
+		std::string m_name;
 	};
 }

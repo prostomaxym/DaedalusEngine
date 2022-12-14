@@ -45,6 +45,12 @@ jobs:
         cd build
         cpack
 
+    - name: Check variable
+      run: |
+        echo '$env.PRODUCT_NAME'
+        echo '$(env.PRODUCT_NAME)'
+        echo '${{env.PRODUCT_NAME}}'
+
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

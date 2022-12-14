@@ -9,7 +9,7 @@ set(PROJECT_FILES
     source/Daedalus/Core/Application.cpp
     source/Daedalus/Core/Core.h
     source/Daedalus/Core/EntryPoint.h
-    source/Daedalus/COre/HighPerformanceRequest.h
+    source/Daedalus/Core/HighPerformanceRequest.h
     source/Daedalus/Core/Input.h
     source/Daedalus/Core/KeyCodes.h
     source/Daedalus/Core/Layer.h

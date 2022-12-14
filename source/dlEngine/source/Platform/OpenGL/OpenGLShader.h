@@ -37,6 +37,7 @@ namespace Daedalus {
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
 
 		virtual const std::string& GetName() const override { return m_name; }
+		virtual void SetName(const std::string& name) override { m_name = name; }
 
 	private:
 		std::pair<GLuint, GLuint> Compile(const GLchar* vert_source, const GLchar* frag_source) const;

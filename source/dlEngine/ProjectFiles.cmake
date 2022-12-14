@@ -35,6 +35,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/IndexBuffer.cpp
     source/Daedalus/Renderer/Shader.h
     source/Daedalus/Renderer/Shader.cpp
+    source/Daedalus/Renderer/ShaderLibrary.h
+    source/Daedalus/Renderer/ShaderLibrary.cpp
     source/Daedalus/Renderer/RenderCommand.h
     source/Daedalus/Renderer/RenderCommand.cpp
     source/Daedalus/Renderer/Renderer.h
@@ -65,6 +67,8 @@ set(PROJECT_FILES
     source/Platform/OpenGL/OpenGLRendererAPI.cpp
     source/Platform/OpenGL/OpenGLShader.h
     source/Platform/OpenGL/OpenGLShader.cpp
+    source/Platform/OpenGL/OpenGLShaderLibrary.h
+    source/Platform/OpenGL/OpenGLShaderLibrary.cpp
     source/Platform/OpenGL/OpenGLVertexArray.h
     source/Platform/OpenGL/OpenGLVertexArray.cpp
     source/Platform/OpenGL/OpenGLVertexBuffer.h

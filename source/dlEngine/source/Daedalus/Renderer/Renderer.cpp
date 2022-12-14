@@ -4,6 +4,7 @@
 using namespace Daedalus;
 
 std::unique_ptr<Renderer::SceneData> Renderer::s_scene_data = std::make_unique<Renderer::SceneData>();
+std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 
 void Renderer::Init()
 {
@@ -13,6 +14,11 @@ void Renderer::Init()
 void Renderer::Shutdown()
 {
 
+}
+
+void Renderer::LoadShaderLibrary(const std::string& path, bool recompile)
+{
+	s_shader_library = RenderCommand::LoadShaderLibrary(path, recompile);
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)

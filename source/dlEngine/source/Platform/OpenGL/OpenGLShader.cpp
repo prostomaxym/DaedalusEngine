@@ -77,13 +77,18 @@ void OpenGLShader::LoadBinary(const ShaderBinaryData& data)
 	{
 		GLint max_length = 0;
 		glGetProgramiv(m_rendererID, GL_INFO_LOG_LENGTH, &max_length);
-
-		std::vector<GLchar> info_log(max_length);
-		glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
-
 		glDeleteProgram(m_rendererID);
 
-		throw std::runtime_error(info_log.data());
+		if (max_length > 0)
+		{
+			std::vector<GLchar> info_log(max_length);
+			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			throw std::runtime_error(info_log.data());
+		}
+		else
+		{
+			throw std::runtime_error("Empty shader building error");
+		}
 	}
 }
 
@@ -110,12 +115,18 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 	{
 		GLint max_length = 0;
 		glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &max_length);
+		glDeleteProgram(m_rendererID);
 
-		std::vector<GLchar> info_log(max_length);
-		glGetShaderInfoLog(vertex_shader, max_length, &max_length, &info_log[0]);
-		glDeleteShader(vertex_shader);
-
-		throw std::runtime_error(info_log.data());
+		if (max_length > 0)
+		{
+			std::vector<GLchar> info_log(max_length);
+			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			throw std::runtime_error(info_log.data());
+		}
+		else
+		{
+			throw std::runtime_error("Empty shader building error");
+		}
 	}
 
 	GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -128,14 +139,18 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 	{
 		GLint max_length = 0;
 		glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &max_length);
+		glDeleteProgram(m_rendererID);
 
-		std::vector<GLchar> info_log(max_length);
-		glGetShaderInfoLog(fragment_shader, max_length, &max_length, &info_log[0]);
-
-		glDeleteShader(fragment_shader);
-		glDeleteShader(vertex_shader);
-
-		throw std::runtime_error(info_log.data());
+		if (max_length > 0)
+		{
+			std::vector<GLchar> info_log(max_length);
+			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			throw std::runtime_error(info_log.data());
+		}
+		else
+		{
+			throw std::runtime_error("Empty shader building error");
+		}
 	}
 
 	return { vertex_shader, fragment_shader };
@@ -156,15 +171,18 @@ void OpenGLShader::Link(GLuint vert_shader_id, GLuint frag_shader_id)
 	{
 		GLint max_length = 0;
 		glGetProgramiv(m_rendererID, GL_INFO_LOG_LENGTH, &max_length);
-
-		std::vector<GLchar> info_log(max_length);
-		glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
-
 		glDeleteProgram(m_rendererID);
-		glDeleteShader(vert_shader_id);
-		glDeleteShader(frag_shader_id);
 
-		throw std::runtime_error(info_log.data());
+		if (max_length > 0)
+		{
+			std::vector<GLchar> info_log(max_length);
+			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			throw std::runtime_error(info_log.data());
+		}
+		else
+		{
+			throw std::runtime_error("Empty shader building error");
+		}
 	}
 
 	glDetachShader(m_rendererID, vert_shader_id);

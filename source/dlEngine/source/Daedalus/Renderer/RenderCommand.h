@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Daedalus/Renderer/RendererAPI.h"
+#include "Daedalus/Renderer/ShaderLibrary.h"
 
 #include <memory>
 
@@ -10,6 +11,7 @@ class RenderCommand
 {
 public:
 	static void Init();
+	static std::unique_ptr<ShaderLibrary> LoadShaderLibrary(const std::string& path, bool recompile = false);
 	static void Clear();
 
 	static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);

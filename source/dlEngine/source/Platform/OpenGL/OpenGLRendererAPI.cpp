@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Platform/OpenGL/OpenGLShaderLibrary.h"
 
 #include <glad/glad.h>
 
@@ -43,6 +44,11 @@ void OpenGLRendererAPI::Init()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LINE_SMOOTH);
+}
+
+std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::string& path, bool recompile)
+{ 
+	return std::make_unique<OpenGLShaderLibrary>(path, recompile);
 }
 
 void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

@@ -3,7 +3,6 @@
 
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
-#include "Platform/Platform.h"
 
 #include "Daedalus/Renderer/VertexBuffer.h"
 #include "Daedalus/Renderer/VertexArray.h"
@@ -11,6 +10,8 @@
 #include "Daedalus/Renderer/Renderer.h"
 #include "Daedalus/Renderer/RendererAPI.h"
 #include "Daedalus/Renderer/Shader.h"
+
+#include "Platform/Platform.h"
 
 using namespace Daedalus;
 
@@ -35,6 +36,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
+	Renderer::LoadShaderLibrary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/");
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);
@@ -47,10 +49,7 @@ Application::~Application()
 
 void Application::Run()
 {
-	auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.vert", "C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/TestShader.frag");
-	test_shader->SaveBinary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
-
-	//auto test_shader = Shader::Create("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/Cache/TestShader.dlshader");
+	auto test_shader = Renderer::s_shader_library->Get("TestShader");
 	test_shader->Bind();
 
 	float buffer[] = {

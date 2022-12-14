@@ -39,8 +39,8 @@ jobs:
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
         Write-Host "Product Version: $VersionNumber"
         Write-Host "Product Name: $ProductName"
-        echo "PRODUCT_VERSION=$(VersionNumber)" >> $GITHUB_ENV
-        echo "PRODUCT_NAME=$(VersionNumber)" >> $GITHUB_ENV
+        echo "PRODUCT_VERSION=$VersionNumber" >> $GITHUB_ENV
+        echo "PRODUCT_NAME=$VersionNumber" >> $GITHUB_ENV
 
         cd build
         cpack

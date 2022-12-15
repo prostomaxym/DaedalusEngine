@@ -12,7 +12,7 @@ public:
 	OpenGLShaderLibrary(const std::string& path, bool recompile);
 
 private:
-	void RecompileAllShaders(const std::vector<std::string>& shader_names, const std::string& path);
+	void RecompileAllShaders(const std::set<std::string>& shader_names, const std::string& path);
 	void LoadCachedShaders(const std::vector<std::string>& cached_shader_names, const std::string& path);
 	void LoadNotCachedShaders(const std::set<std::string>& all_shader_names, const std::vector<std::string>& cached_shader_names, const std::string& path);
 

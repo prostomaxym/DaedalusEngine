@@ -17,7 +17,7 @@ OpenGLShaderLibrary::OpenGLShaderLibrary(const std::string& path, bool recompile
 
 	if (recompile)
 	{
-
+		RecompileAllShaders(shader_names, path);
 	}
 	else
 	{
@@ -26,7 +26,7 @@ OpenGLShaderLibrary::OpenGLShaderLibrary(const std::string& path, bool recompile
 	}
 }
 
-void OpenGLShaderLibrary::RecompileAllShaders(const std::vector<std::string>& shader_names, const std::string& path)
+void OpenGLShaderLibrary::RecompileAllShaders(const std::set<std::string>& shader_names, const std::string& path)
 {
 	for (auto& shader_name : shader_names)
 	{

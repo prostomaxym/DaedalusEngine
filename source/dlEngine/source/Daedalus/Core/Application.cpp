@@ -36,7 +36,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary("C:/Users/ershi/source/repos/prostomaxym/Daedalus/shaders/");
+	Renderer::LoadShaderLibrary("../../../shaders/");
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);

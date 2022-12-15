@@ -44,6 +44,8 @@ void OpenGLRendererAPI::Init()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LINE_SMOOTH);
+
+	DL_CORE_INFO("Renderer inited;");
 }
 
 std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::string& path, bool recompile)

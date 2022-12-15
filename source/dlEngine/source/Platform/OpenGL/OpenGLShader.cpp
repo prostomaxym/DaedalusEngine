@@ -35,12 +35,15 @@ OpenGLShader::OpenGLShader(const std::string& vert_code, const std::string& frag
 		}
 		catch (std::ifstream::failure& e)
 		{
-			// LOG
+			DL_CORE_CRITICAL("Failed to open Shader file: " + vert_code + ", " + frag_code);
+			return;
 		}
 	}
 
 	const auto compile_output = Compile((const GLchar*)vert_source.c_str(), (const GLchar*)frag_source.c_str());
 	Link(compile_output.first, compile_output.second);
+
+	DL_CORE_INFO("Shaders builed: " + vert_code + ", " + frag_code);
 }
 
 OpenGLShader::OpenGLShader(const std::string& compiled_shader_path) :
@@ -48,6 +51,8 @@ OpenGLShader::OpenGLShader(const std::string& compiled_shader_path) :
 {
 	const auto shader_data = Unpack(compiled_shader_path);
 	LoadBinary(shader_data);
+
+	DL_CORE_INFO("Prebuild shader loaded: " + compiled_shader_path);
 }
 
 OpenGLShader::~OpenGLShader()
@@ -83,11 +88,14 @@ void OpenGLShader::LoadBinary(const ShaderBinaryData& data)
 		{
 			std::vector<GLchar> info_log(max_length);
 			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			std::string log_text(info_log.data());
+			DL_CORE_CRITICAL("Shader binary loading error message: " + log_text);
 			throw std::runtime_error(info_log.data());
 		}
 		else
 		{
-			throw std::runtime_error("Empty shader building error");
+			DL_CORE_CRITICAL("Shader binary loading with empty error message;");
+			throw std::runtime_error("Shader binary loading with empty error message;");
 		}
 	}
 }
@@ -121,11 +129,14 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 		{
 			std::vector<GLchar> info_log(max_length);
 			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			std::string log_text(info_log.data());
+			DL_CORE_CRITICAL("Vertex shader compilation error: " + log_text);
 			throw std::runtime_error(info_log.data());
 		}
 		else
 		{
-			throw std::runtime_error("Empty shader building error");
+			DL_CORE_CRITICAL("Vertex shader compilation with empty error message;");
+			throw std::runtime_error("Vertex shader compilation with empty error message;");
 		}
 	}
 
@@ -145,11 +156,13 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 		{
 			std::vector<GLchar> info_log(max_length);
 			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			std::string log_text(info_log.data());
+			DL_CORE_CRITICAL("Fragment shader compilation error: " + log_text);
 			throw std::runtime_error(info_log.data());
 		}
 		else
 		{
-			throw std::runtime_error("Empty shader building error");
+			throw std::runtime_error("Fragment shader compilation with empty error message;");
 		}
 	}
 
@@ -177,11 +190,13 @@ void OpenGLShader::Link(GLuint vert_shader_id, GLuint frag_shader_id)
 		{
 			std::vector<GLchar> info_log(max_length);
 			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			std::string log_text(info_log.data());
+			DL_CORE_CRITICAL("Shader linking error: " + log_text);
 			throw std::runtime_error(info_log.data());
 		}
 		else
 		{
-			throw std::runtime_error("Empty shader building error");
+			throw std::runtime_error("Shader linking error with empty error message;");
 		}
 	}
 
@@ -200,6 +215,7 @@ void OpenGLShader::Pack(const std::string& file_name, const ShaderBinaryData& da
 	}
 	catch (std::ifstream::failure& e)
 	{
+		DL_CORE_CRITICAL("Failed to pack shader: " + file_name);
 		throw std::runtime_error("Failed to pack shader data");
 	}
 }
@@ -218,6 +234,7 @@ Shader::ShaderBinaryData OpenGLShader::Unpack(const std::string& file_name) cons
 	}
 	catch (std::ifstream::failure& e)
 	{
+		DL_CORE_CRITICAL("Failed to unpack shader: " + file_name);
 		throw std::runtime_error("Failed to unpack shader data");
 	}
 

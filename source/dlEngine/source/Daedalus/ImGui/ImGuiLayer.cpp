@@ -52,6 +52,8 @@ void ImGuiLayer::OnAttach()
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450");
+
+	DL_CORE_INFO("ImGui Layer is attached;");
 }
 
 void ImGuiLayer::OnDetach()
@@ -59,6 +61,8 @@ void ImGuiLayer::OnDetach()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
+	DL_CORE_INFO("ImGui Layer is detached;");
 }
 
 void ImGuiLayer::OnEvent(Event& evt)

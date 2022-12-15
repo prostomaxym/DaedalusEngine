@@ -8,13 +8,13 @@
 
 namespace Daedalus {
 
-	class OpenGLShader : public Shader
+	class OpenGLShader final : public Shader
 	{
 	public:
 
 		OpenGLShader(const std::string& vert_code, const std::string& frag_code, InputType input_type = InputType::PATH);
 		OpenGLShader(const std::string& compiled_shader_path);
-		virtual ~OpenGLShader();
+		~OpenGLShader();
 
 		OpenGLShader(const OpenGLShader&) = delete;
 		OpenGLShader(OpenGLShader&&) = delete;
@@ -27,17 +27,17 @@ namespace Daedalus {
 		void Bind() const override;
 		void Unbind() const override;
 
-		virtual void SetInt(const std::string& name, int value) override;
-		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
-		virtual void SetFloat(const std::string& name, float value) override;
-		virtual void SetFloat2(const std::string& name, const glm::vec2& value) override;
-		virtual void SetFloat3(const std::string& name, const glm::vec3& value) override;
-		virtual void SetFloat4(const std::string& name, const glm::vec4& value) override;
-		virtual void SetMat3(const std::string& name, const glm::mat3& value) override;
-		virtual void SetMat4(const std::string& name, const glm::mat4& value) override;
+		void SetInt(const std::string& name, int value) override;
+		void SetIntArray(const std::string& name, int* values, uint32_t count) override;
+		void SetFloat(const std::string& name, float value) override;
+		void SetFloat2(const std::string& name, const glm::vec2& value) override;
+		void SetFloat3(const std::string& name, const glm::vec3& value) override;
+		void SetFloat4(const std::string& name, const glm::vec4& value) override;
+		void SetMat3(const std::string& name, const glm::mat3& value) override;
+		void SetMat4(const std::string& name, const glm::mat4& value) override;
 
-		virtual const std::string& GetName() const override { return m_name; }
-		virtual void SetName(const std::string& name) override { m_name = name; }
+		const std::string& GetName() const override { return m_name; }
+		void SetName(const std::string& name) override { m_name = name; }
 
 	private:
 		std::pair<GLuint, GLuint> Compile(const GLchar* vert_source, const GLchar* frag_source) const;

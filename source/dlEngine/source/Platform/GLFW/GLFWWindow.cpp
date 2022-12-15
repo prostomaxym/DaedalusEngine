@@ -18,6 +18,7 @@ static void GLFWErrorCallback(int error_code, const char* message)
 GLFWWindow::GLFWWindow(const WindowProps& props)
 {
 	Init(props);
+	DL_CORE_INFO("Window is created;");
 }
 
 GLFWWindow::~GLFWWindow()

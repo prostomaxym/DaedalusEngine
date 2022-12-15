@@ -10,6 +10,14 @@ using namespace Daedalus;
 
 OpenGLShaderLibrary::OpenGLShaderLibrary(const std::string& path, bool recompile)
 {
+	DL_CORE_INFO("Loading shader library;");
+
+	if (!std::filesystem::exists(path + "cache"))
+	{
+		if(!std::filesystem::create_directory(path + "cache"))
+			DL_CORE_ERROR("Failed to create cached shaders directory");
+	}
+
 	const auto source_filenames = QueryFileNames(path);
 	const auto shader_names = FilterSourceFileNames(source_filenames);
 	const auto binary_shaders = QueryFileNames(path + "cache", true);
@@ -24,6 +32,8 @@ OpenGLShaderLibrary::OpenGLShaderLibrary(const std::string& path, bool recompile
 		LoadCachedShaders(ready_to_load_shaders, path);
 		LoadNotCachedShaders(shader_names, ready_to_load_shaders, path);
 	}
+
+	DL_CORE_INFO("Shader library loaded successfully;");
 }
 
 void OpenGLShaderLibrary::RecompileAllShaders(const std::set<std::string>& shader_names, const std::string& path)

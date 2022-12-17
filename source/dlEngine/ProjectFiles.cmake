@@ -33,6 +33,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Camera.cpp
     source/Daedalus/Renderer/GraphicsContext.h
     source/Daedalus/Renderer/GraphicsContext.cpp
+    source/Daedalus/Renderer/FrameBuffer.h
+    source/Daedalus/Renderer/FrameBuffer.cpp
     source/Daedalus/Renderer/IndexBuffer.h
     source/Daedalus/Renderer/IndexBuffer.cpp
     source/Daedalus/Renderer/OrthographicCamera.h
@@ -49,6 +51,10 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/RendererAPI.cpp
     source/Daedalus/Renderer/PerspectiveCamera.h
     source/Daedalus/Renderer/PerspectiveCamera.cpp
+    source/Daedalus/Renderer/Texture.h
+    source/Daedalus/Renderer/Texture.cpp
+    source/Daedalus/Renderer/UniformBuffer.h
+    source/Daedalus/Renderer/UniformBuffer.cpp
     source/Daedalus/Renderer/VertexArray.h
     source/Daedalus/Renderer/VertexArray.cpp
     source/Daedalus/Renderer/VertexBuffer.h
@@ -67,6 +73,8 @@ set(PROJECT_FILES
 
     source/Platform/OpenGL/OpenGLContext.h
     source/Platform/OpenGL/OpenGLContext.cpp
+    source/Platform/OpenGL/OpenGLFramebuffer.h
+    source/Platform/OpenGL/OpenGLFramebuffer.cpp
     source/Platform/OpenGL/OpenGLIndexBuffer.h
     source/Platform/OpenGL/OpenGLIndexBuffer.cpp
     source/Platform/OpenGL/OpenGLRendererAPI.h
@@ -75,6 +83,10 @@ set(PROJECT_FILES
     source/Platform/OpenGL/OpenGLShader.cpp
     source/Platform/OpenGL/OpenGLShaderLibrary.h
     source/Platform/OpenGL/OpenGLShaderLibrary.cpp
+    source/Platform/OpenGL/OpenGLTexture.h
+    source/Platform/OpenGL/OpenGLTexture.cpp
+    source/Platform/OpenGL/OpenGLUniformBuffer.h
+    source/Platform/OpenGL/OpenGLUniformBuffer.cpp
     source/Platform/OpenGL/OpenGLVertexArray.h
     source/Platform/OpenGL/OpenGLVertexArray.cpp
     source/Platform/OpenGL/OpenGLVertexBuffer.h

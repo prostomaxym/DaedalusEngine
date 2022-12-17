@@ -8,6 +8,8 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
+find_package(assimp CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -40,6 +42,8 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/sou
 target_include_directories(${PROJECT_NAME}
     PUBLIC 
 	    ${CMAKE_CURRENT_SOURCE_DIR}/source/
+    PRIVATE 
+        ${STB_INCLUDE_DIRS}
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -52,4 +56,5 @@ target_link_libraries(${PROJECT_NAME}
         glad::glad
         glfw
         glm::glm
+        assimp::assimp
     )

@@ -29,10 +29,14 @@ set(PROJECT_FILES
     source/Daedalus/Events/GamepadEvent.h
 
     source/Daedalus/Renderer/BufferLayout.h
+    source/Daedalus/Renderer/Camera.h
+    source/Daedalus/Renderer/Camera.cpp
     source/Daedalus/Renderer/GraphicsContext.h
     source/Daedalus/Renderer/GraphicsContext.cpp
     source/Daedalus/Renderer/IndexBuffer.h
     source/Daedalus/Renderer/IndexBuffer.cpp
+    source/Daedalus/Renderer/OrthographicCamera.h
+    source/Daedalus/Renderer/OrthographicCamera.cpp
     source/Daedalus/Renderer/Shader.h
     source/Daedalus/Renderer/Shader.cpp
     source/Daedalus/Renderer/ShaderLibrary.h
@@ -43,6 +47,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Renderer.cpp
     source/Daedalus/Renderer/RendererAPI.h
     source/Daedalus/Renderer/RendererAPI.cpp
+    source/Daedalus/Renderer/PerspectiveCamera.h
+    source/Daedalus/Renderer/PerspectiveCamera.cpp
     source/Daedalus/Renderer/VertexArray.h
     source/Daedalus/Renderer/VertexArray.cpp
     source/Daedalus/Renderer/VertexBuffer.h

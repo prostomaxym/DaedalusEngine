@@ -75,6 +75,9 @@ void Application::Run()
 	VAO->SetIndexBuffer(EBO);
 	VAO->Unbind();
 
+	OrthographicCamera camera(-1.f, 1.f, -1.f, 1.f);
+	camera.SetPosition(glm::vec3(0.f, 0.f, 0.f));
+
 	while (m_running)
 	{
 		for (auto layer : m_layer_stack)
@@ -85,7 +88,7 @@ void Application::Run()
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
 		RenderCommand::Clear();
 
-		Renderer::BeginScene();
+		Renderer::BeginScene(camera);
 		Renderer::Submit(test_shader, VAO);
 		Renderer::EndScene();
 

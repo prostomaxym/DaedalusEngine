@@ -10,6 +10,7 @@
 #include "Daedalus/Renderer/Renderer.h"
 #include "Daedalus/Renderer/RendererAPI.h"
 #include "Daedalus/Renderer/Shader.h"
+#include "Daedalus/Renderer/PerspectiveCamera.h"
 
 #include "Platform/Platform.h"
 
@@ -76,8 +77,10 @@ void Application::Run()
 	VAO->Unbind();
 
 	OrthographicCamera camera(-1.f, 1.f, -1.f, 1.f);
-	camera.SetPosition(glm::vec3(0.f, 0.f, 0.f));
+	camera.SetPosition(glm::vec3(0.f, 0.f, -1.f));
 
+	PerspectiveCamera pcamera(glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f);
+	
 	while (m_running)
 	{
 		for (auto layer : m_layer_stack)
@@ -89,7 +92,7 @@ void Application::Run()
 		RenderCommand::Clear();
 
 		Renderer::BeginScene(camera);
-		Renderer::Submit(test_shader, VAO);
+		Renderer::Submit(test_shader, VAO, pcamera.GetViewMatrix());
 		Renderer::EndScene();
 
 		m_imgui_layer->Begin();

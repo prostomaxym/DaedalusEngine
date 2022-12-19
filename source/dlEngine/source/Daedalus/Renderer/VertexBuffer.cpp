@@ -19,7 +19,7 @@ std::shared_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	return nullptr;
 }
 
-std::shared_ptr<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
+std::shared_ptr<VertexBuffer> VertexBuffer::Create(const float* vertices, uint32_t size)
 {
 	switch (Renderer::GetAPI())
 	{

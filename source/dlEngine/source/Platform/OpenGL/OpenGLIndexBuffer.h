@@ -7,7 +7,7 @@ namespace Daedalus {
 class OpenGLIndexBuffer final : public IndexBuffer
 {
 public:
-	OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+	OpenGLIndexBuffer(const uint32_t* indices, uint32_t count);
 	~OpenGLIndexBuffer();
 
 	OpenGLIndexBuffer(const OpenGLIndexBuffer&) = delete;

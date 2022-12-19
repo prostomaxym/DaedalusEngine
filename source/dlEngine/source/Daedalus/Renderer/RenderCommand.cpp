@@ -31,9 +31,14 @@ void RenderCommand::Clear()
 	s_RendererAPI->Clear();
 }
 
-void RenderCommand::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
+void RenderCommand::DrawIndexed(const std::shared_ptr<VertexArray>& vertex_array, uint32_t index_count)
 {
-	s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+	s_RendererAPI->DrawIndexed(vertex_array, index_count);
+}
+
+void RenderCommand::DrawUnindexed(const std::shared_ptr<VertexArray>& vertex_array, uint32_t vertex_count)
+{
+	s_RendererAPI->DrawUnindexed(vertex_array, vertex_count);
 }
 
 void RenderCommand::DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount)

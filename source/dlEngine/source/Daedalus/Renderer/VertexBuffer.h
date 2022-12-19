@@ -10,7 +10,7 @@ class VertexBuffer
 {
 public:
 	static std::shared_ptr<VertexBuffer> Create(uint32_t size);
-	static std::shared_ptr<VertexBuffer> Create(float* vertices, uint32_t size);
+	static std::shared_ptr<VertexBuffer> Create(const float* vertices, uint32_t size);
 
 	virtual ~VertexBuffer() = default;
 

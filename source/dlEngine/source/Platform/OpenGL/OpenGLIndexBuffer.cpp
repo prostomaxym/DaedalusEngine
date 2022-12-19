@@ -5,7 +5,7 @@
 
 using namespace Daedalus;
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) :
+OpenGLIndexBuffer::OpenGLIndexBuffer(const uint32_t* indices, uint32_t count) :
 	m_count(count)
 {
 	glCreateBuffers(1, &m_rendererID);

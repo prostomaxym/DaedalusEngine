@@ -4,12 +4,11 @@
 
 #include "Daedalus/Core/Application.h"
 #include "Daedalus/Core/Input.h"
-#include "Daedalus/Core/HighPerformanceRequest.h"
-#include "Daedalus/Core/KeyCodes.h"
 #include "Daedalus/Core/Layer.h"
-#include "Daedalus/Core/Log.h"
-
-#include "Daedalus/ImGui/ImGuiLayer.h"
+#include "Daedalus/Debug/Log.h"
+#include "Daedalus/UI/ImGui/ImGuiLayer.h"
+#include "Daedalus/Utils/HighPerformanceRequest.h"
+#include "Daedalus/Utils/KeyCodes.h"
 
 // ---Entry Point------------------------
 #include "Daedalus/Core/EntryPoint.h"

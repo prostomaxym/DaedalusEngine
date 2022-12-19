@@ -8,7 +8,7 @@ namespace Daedalus {
 	{
 	public:
 		OpenGLVertexBuffer(uint32_t size);
-		OpenGLVertexBuffer(float* vertices, uint32_t size);
+		OpenGLVertexBuffer(const float* vertices, uint32_t size);
 
 		OpenGLVertexBuffer(const OpenGLVertexBuffer&) = delete;
 		OpenGLVertexBuffer(OpenGLVertexBuffer&&) = delete;

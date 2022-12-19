@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Core/Log.h"
+#include "Daedalus/Debug/Log.h"
 
 namespace Daedalus {
 

@@ -9,17 +9,16 @@ set(PROJECT_FILES
     source/Daedalus/Core/Application.cpp
     source/Daedalus/Core/Core.h
     source/Daedalus/Core/EntryPoint.h
-    source/Daedalus/Core/HighPerformanceRequest.h
     source/Daedalus/Core/Input.h
-    source/Daedalus/Core/KeyCodes.h
     source/Daedalus/Core/Layer.h
     source/Daedalus/Core/Layer.cpp
     source/Daedalus/Core/LayerStack.h
     source/Daedalus/Core/LayerStack.cpp
-    source/Daedalus/Core/Log.h
-    source/Daedalus/Core/Log.cpp
     source/Daedalus/Core/Window.h  
     
+    source/Daedalus/Debug/Log.h
+    source/Daedalus/Debug/Log.cpp
+
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
     source/Daedalus/Events/EventDispatcher.h
@@ -39,6 +38,10 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/IndexBuffer.cpp
     source/Daedalus/Renderer/OrthographicCamera.h
     source/Daedalus/Renderer/OrthographicCamera.cpp
+    source/Daedalus/Renderer/Mesh.h
+    source/Daedalus/Renderer/Mesh.cpp
+    source/Daedalus/Renderer/Model.h
+    source/Daedalus/Renderer/Model.cpp
     source/Daedalus/Renderer/Shader.h
     source/Daedalus/Renderer/Shader.cpp
     source/Daedalus/Renderer/ShaderLibrary.h
@@ -60,8 +63,11 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/VertexBuffer.h
     source/Daedalus/Renderer/VertexBuffer.cpp
     
-    source/Daedalus/ImGui/ImGuiLayer.h
-    source/Daedalus/ImGui/ImGuiLayer.cpp
+    source/Daedalus/UI/ImGui/ImGuiLayer.h
+    source/Daedalus/UI/ImGui/ImGuiLayer.cpp
+
+    source/Daedalus/Utils/HighPerformanceRequest.h
+    source/Daedalus/Utils/KeyCodes.h
     
     source/Platform/Platform.h
     source/Platform/Platform.cpp

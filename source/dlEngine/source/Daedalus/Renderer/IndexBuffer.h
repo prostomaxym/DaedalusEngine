@@ -7,7 +7,7 @@ namespace Daedalus {
 class IndexBuffer
 {
 public:
-	static std::shared_ptr<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+	static std::shared_ptr<IndexBuffer> Create(const uint32_t* indices, uint32_t count);
 
 	virtual ~IndexBuffer() = default;
 

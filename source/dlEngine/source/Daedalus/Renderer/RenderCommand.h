@@ -19,6 +19,7 @@ public:
 	static void SetLineWidth(float width);
 
 	static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0);
+	static void DrawUnindexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertex_count);
 	static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount);
 
 private:

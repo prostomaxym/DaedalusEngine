@@ -19,6 +19,9 @@
 
 
 // Evil macros
+
+#define DL_DEBUG
+
 #ifdef SIGTRAP
 #define PLATFORM_DEBUG_BREAK raise(SIGTRAP)
 #else

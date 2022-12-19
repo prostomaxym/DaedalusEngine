@@ -6,7 +6,7 @@
 
 using namespace Daedalus;
 
-std::shared_ptr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
+std::shared_ptr<IndexBuffer> IndexBuffer::Create(const uint32_t* indices, uint32_t count)
 {
 	switch (Renderer::GetAPI())
 	{

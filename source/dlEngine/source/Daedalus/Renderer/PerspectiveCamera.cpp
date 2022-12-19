@@ -4,37 +4,43 @@
 
 using namespace Daedalus;
 
-PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) :
-    m_front(glm::vec3(0.0f, 0.0f, -1.0f))
-    , m_movement_speed(3.f)
-    , m_mouse_sensitivity(0.25f)
-    , m_zoom(45.f)
+PerspectiveCamera::PerspectiveCamera(CameraProjectionProps proj_props, CameraPositionProps pos_props) :
+    m_proj_props (proj_props)
+    , m_position (pos_props.position)
+    , m_world_up (pos_props.up)
+    , m_yaw (pos_props.yaw)
+    , m_pitch (pos_props.pitch)
 {
-    m_position = position;
-    m_world_up = up;
-    m_yaw = yaw;
-    m_pitch = pitch;
-
     Update();
 }
 
-PerspectiveCamera::PerspectiveCamera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) :
-    m_front(glm::vec3(0.0f, 0.0f, -1.0f))
-    , m_movement_speed(3.f)
-    , m_mouse_sensitivity(0.25f)
-    , m_zoom(45.f)
-{
-    m_position = glm::vec3(posX, posY, posZ);
-    m_world_up = glm::vec3(upX, upY, upZ);
-    m_yaw = yaw;
-    m_pitch = pitch;
-
-    Update();
-}
-
-glm::mat4 PerspectiveCamera::GetViewMatrix()
+glm::mat4 PerspectiveCamera::GetViewMatrix() const
 {
     return glm::lookAt(m_position, m_position + m_front, m_up);
+}
+
+glm::mat4 PerspectiveCamera::GetProjectionMatrix() const
+{
+    return glm::perspective(m_proj_props.fov, m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
+}
+
+glm::mat4 PerspectiveCamera::GetProjectionViewMatrix() const
+{
+    return glm::perspective(m_proj_props.fov, m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far) *
+        glm::lookAt(m_position, m_position + m_front, m_up);
+}
+
+void PerspectiveCamera::SetPosition(glm::vec3 position)
+{
+    m_position = position;
+
+    Update();
+}
+
+void PerspectiveCamera::SetRotation(float xoffset, float yoffset)
+{
+    m_yaw = xoffset;
+    m_pitch = yoffset;
 }
 
 void PerspectiveCamera::ProcessKeyboard(CameraMovement direction, float delta_time)
@@ -48,6 +54,12 @@ void PerspectiveCamera::ProcessKeyboard(CameraMovement direction, float delta_ti
         m_position -= m_right * velocity;
     if (direction == RIGHT)
         m_position += m_right * velocity;
+    if (direction == UP)
+        m_position += m_world_up * velocity;
+    if (direction == DOWN)
+        m_position -= m_world_up * velocity;
+
+    Update();
 }
 
 void PerspectiveCamera::ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch)
@@ -77,7 +89,36 @@ void PerspectiveCamera::ProcessMouseScroll(float yoffset)
         m_zoom = 1.0f;
     if (m_zoom >= 45.0f)
         m_zoom = 45.0f;
+
+    Update();
 }
+
+void PerspectiveCamera::MoveCamera(CameraMovement direction, float distance)
+{
+    if (direction == FORWARD)
+        m_position += m_front * distance;
+    if (direction == BACKWARD)
+        m_position -= m_front * distance;
+    if (direction == LEFT)
+        m_position -= m_right * distance;
+    if (direction == RIGHT)
+        m_position += m_right * distance;
+    if (direction == UP)
+        m_position += m_world_up * distance;
+    if (direction == DOWN)
+        m_position -= m_world_up * distance;
+
+    Update();
+}
+
+void PerspectiveCamera::RotateCamera(float xoffset, float yoffset)
+{
+    m_yaw += xoffset;
+    m_pitch += yoffset;
+
+    Update();
+}
+
 void PerspectiveCamera::Update()
 {
     glm::vec3 front;

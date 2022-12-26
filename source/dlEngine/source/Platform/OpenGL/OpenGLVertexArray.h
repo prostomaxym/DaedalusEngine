@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/VertexArray.h"
+#include "Daedalus/Renderer/Primitives/VertexArray.h"
 
 namespace Daedalus {
 

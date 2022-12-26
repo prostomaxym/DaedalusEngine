@@ -27,41 +27,44 @@ set(PROJECT_FILES
     source/Daedalus/Events/MouseEvent.h
     source/Daedalus/Events/GamepadEvent.h
 
-    source/Daedalus/Renderer/BufferLayout.h
-    source/Daedalus/Renderer/Camera.h
-    source/Daedalus/Renderer/Camera.cpp
-    source/Daedalus/Renderer/GraphicsContext.h
-    source/Daedalus/Renderer/GraphicsContext.cpp
-    source/Daedalus/Renderer/FrameBuffer.h
-    source/Daedalus/Renderer/FrameBuffer.cpp
-    source/Daedalus/Renderer/IndexBuffer.h
-    source/Daedalus/Renderer/IndexBuffer.cpp
-    source/Daedalus/Renderer/OrthographicCamera.h
-    source/Daedalus/Renderer/OrthographicCamera.cpp
-    source/Daedalus/Renderer/Mesh.h
-    source/Daedalus/Renderer/Mesh.cpp
-    source/Daedalus/Renderer/Model.h
-    source/Daedalus/Renderer/Model.cpp
-    source/Daedalus/Renderer/Shader.h
-    source/Daedalus/Renderer/Shader.cpp
-    source/Daedalus/Renderer/ShaderLibrary.h
-    source/Daedalus/Renderer/ShaderLibrary.cpp
-    source/Daedalus/Renderer/RenderCommand.h
-    source/Daedalus/Renderer/RenderCommand.cpp
-    source/Daedalus/Renderer/Renderer.h
-    source/Daedalus/Renderer/Renderer.cpp
-    source/Daedalus/Renderer/RendererAPI.h
-    source/Daedalus/Renderer/RendererAPI.cpp
-    source/Daedalus/Renderer/PerspectiveCamera.h
-    source/Daedalus/Renderer/PerspectiveCamera.cpp
-    source/Daedalus/Renderer/Texture.h
-    source/Daedalus/Renderer/Texture.cpp
-    source/Daedalus/Renderer/UniformBuffer.h
-    source/Daedalus/Renderer/UniformBuffer.cpp
-    source/Daedalus/Renderer/VertexArray.h
-    source/Daedalus/Renderer/VertexArray.cpp
-    source/Daedalus/Renderer/VertexBuffer.h
-    source/Daedalus/Renderer/VertexBuffer.cpp
+    source/Daedalus/Renderer/API/RenderCommand.h
+    source/Daedalus/Renderer/API/RenderCommand.cpp
+    source/Daedalus/Renderer/API/Renderer.h
+    source/Daedalus/Renderer/API/Renderer.cpp
+    source/Daedalus/Renderer/API/RendererAPI.h
+    source/Daedalus/Renderer/API/RendererAPI.cpp
+
+    source/Daedalus/Renderer/Objects/Camera.h
+    source/Daedalus/Renderer/Objects/Camera.cpp
+    source/Daedalus/Renderer/Objects/OrthographicCamera.h
+    source/Daedalus/Renderer/Objects/OrthographicCamera.cpp
+    source/Daedalus/Renderer/Objects/PerspectiveCamera.h
+    source/Daedalus/Renderer/Objects/PerspectiveCamera.cpp
+
+    source/Daedalus/Renderer/Primitives/BufferLayout.h
+    source/Daedalus/Renderer/Primitives/GraphicsContext.h
+    source/Daedalus/Renderer/Primitives/GraphicsContext.cpp
+    source/Daedalus/Renderer/Primitives/FrameBuffer.h
+    source/Daedalus/Renderer/Primitives/FrameBuffer.cpp
+    source/Daedalus/Renderer/Primitives/IndexBuffer.h
+    source/Daedalus/Renderer/Primitives/IndexBuffer.cpp
+    source/Daedalus/Renderer/Primitives/UniformBuffer.h
+    source/Daedalus/Renderer/Primitives/UniformBuffer.cpp
+    source/Daedalus/Renderer/Primitives/VertexArray.h
+    source/Daedalus/Renderer/Primitives/VertexArray.cpp
+    source/Daedalus/Renderer/Primitives/VertexBuffer.h
+    source/Daedalus/Renderer/Primitives/VertexBuffer.cpp
+
+    source/Daedalus/Renderer/Resourses/Mesh.h
+    source/Daedalus/Renderer/Resourses/Mesh.cpp
+    source/Daedalus/Renderer/Resourses/Model.h
+    source/Daedalus/Renderer/Resourses/Model.cpp
+    source/Daedalus/Renderer/Resourses/Shader.h
+    source/Daedalus/Renderer/Resourses/Shader.cpp
+    source/Daedalus/Renderer/Resourses/ShaderLibrary.h
+    source/Daedalus/Renderer/Resourses/ShaderLibrary.cpp
+    source/Daedalus/Renderer/Resourses/Texture.h
+    source/Daedalus/Renderer/Resourses/Texture.cpp
     
     source/Daedalus/UI/ImGui/ImGuiLayer.h
     source/Daedalus/UI/ImGui/ImGuiLayer.cpp

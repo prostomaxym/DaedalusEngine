@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/Texture.h"
+#include "Daedalus/Renderer/Resourses/Texture.h"
 
 #include <glad/glad.h>
 

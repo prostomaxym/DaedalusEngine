@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ShaderLibrary.h"
-#include "VertexArray.h"
+#include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
+#include "Daedalus/Renderer/Primitives/VertexArray.h"
 
 #include <glm/vec4.hpp>
 

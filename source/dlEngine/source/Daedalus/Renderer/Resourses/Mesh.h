@@ -1,8 +1,8 @@
 #pragma once
 
-#include "IndexBuffer.h"
-#include "VertexArray.h"
-#include "VertexBuffer.h"
+#include "Daedalus/Renderer/Primitives/IndexBuffer.h"
+#include "Daedalus/Renderer/Primitives/VertexArray.h"
+#include "Daedalus/Renderer/Primitives/VertexBuffer.h"
 
 #include <glm/glm.hpp>
 

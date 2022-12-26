@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Daedalus/Renderer/RendererAPI.h"
-#include "Daedalus/Renderer/ShaderLibrary.h"
+#include "Daedalus/Renderer/API/RendererAPI.h"
+#include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
 
 #include <memory>
 

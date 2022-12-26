@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/UniformBuffer.h"
+#include "Daedalus/Renderer/Primitives/UniformBuffer.h"
 
 namespace Daedalus {
 

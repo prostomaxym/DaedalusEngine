@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Window.h"
-#include "Daedalus/Renderer/GraphicsContext.h"
+#include "Daedalus/Renderer/Primitives/GraphicsContext.h"
 
 #include <memory>
 #include <string>

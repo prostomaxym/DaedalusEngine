@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Mesh.h"
-#include "OrthographicCamera.h"
 #include "RenderCommand.h"
-#include "Shader.h"
-#include "ShaderLibrary.h"
-#include "PerspectiveCamera.h"
+#include "Daedalus/Renderer/Resourses/Mesh.h"
+#include "Daedalus/Renderer/Resourses/Shader.h"
+#include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
+#include "Daedalus/Renderer/Objects/OrthographicCamera.h"
+#include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 
 #include <glm/glm.hpp>
 

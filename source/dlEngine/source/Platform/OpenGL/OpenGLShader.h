@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/Shader.h"
+#include "Daedalus/Renderer/Resourses/Shader.h"
 
 #include <string>
 

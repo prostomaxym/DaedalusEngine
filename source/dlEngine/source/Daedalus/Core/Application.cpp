@@ -4,11 +4,11 @@
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 
-#include "Daedalus/Renderer/Model.h"
-#include "Daedalus/Renderer/Shader.h"
-#include "Daedalus/Renderer/Renderer.h"
-#include "Daedalus/Renderer/RendererAPI.h"
-#include "Daedalus/Renderer/PerspectiveCamera.h"
+#include "Daedalus/Renderer/Resourses/Model.h"
+#include "Daedalus/Renderer/Resourses/Shader.h"
+#include "Daedalus/Renderer/API/Renderer.h"
+#include "Daedalus/Renderer/API/RendererAPI.h"
+#include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Utils/KeyCodes.h"
 
 #include "Platform/Platform.h"

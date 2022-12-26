@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/GraphicsContext.h"
+#include "Daedalus/Renderer/Primitives/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Core.h"
-#include "Daedalus/Renderer/Framebuffer.h"
+#include "Daedalus/Renderer/Primitives/Framebuffer.h"
 
 namespace Daedalus {
 

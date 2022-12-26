@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "UniformBuffer.h"
 
-#include "daedalus/Renderer/Renderer.h"
+#include "Daedalus/Renderer/API/Renderer.h"
 #include "Platform/OpenGL/OpenGLUniformBuffer.h"
 
 using namespace Daedalus;

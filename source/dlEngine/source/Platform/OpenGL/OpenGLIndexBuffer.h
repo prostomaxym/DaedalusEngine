@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/IndexBuffer.h"
+#include "Daedalus/Renderer/Primitives/IndexBuffer.h"
 
 namespace Daedalus {
 

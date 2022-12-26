@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "VertexArray.h"
 
-#include "Renderer.h"
+#include "Daedalus/Renderer/API/Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
 
 namespace Daedalus {

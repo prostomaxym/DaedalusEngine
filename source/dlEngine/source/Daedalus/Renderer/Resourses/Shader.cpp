@@ -1,6 +1,6 @@
 ﻿#include "Shader.h"
 
-#include "Renderer.h"
+#include "Daedalus/Renderer/API/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 
 using namespace Daedalus;

@@ -1,7 +1,7 @@
 #include "dlpch.h"
-#include "Daedalus/Renderer/Texture.h"
+#include "Texture.h"
 
-#include "Daedalus/Renderer/Renderer.h"
+#include "Daedalus/Renderer/API/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 
 using namespace Daedalus;

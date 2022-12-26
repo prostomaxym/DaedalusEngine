@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "IndexBuffer.h"
 
-#include "Renderer.h"
+#include "Daedalus/Renderer/API/Renderer.h"
 #include "Platform/OpenGL/OpenGLIndexBuffer.h"
 
 using namespace Daedalus;

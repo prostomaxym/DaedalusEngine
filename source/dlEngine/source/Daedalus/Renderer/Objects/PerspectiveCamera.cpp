@@ -46,17 +46,17 @@ void PerspectiveCamera::SetRotation(float xoffset, float yoffset)
 void PerspectiveCamera::ProcessKeyboard(CameraMovement direction, float delta_time)
 {
     float velocity = m_movement_speed * delta_time;
-    if (direction == FORWARD)
+    if (direction == CameraMovement::FORWARD)
         m_position += m_front * velocity;
-    if (direction == BACKWARD)
+    if (direction == CameraMovement::BACKWARD)
         m_position -= m_front * velocity;
-    if (direction == LEFT)
+    if (direction == CameraMovement::LEFT)
         m_position -= m_right * velocity;
-    if (direction == RIGHT)
+    if (direction == CameraMovement::RIGHT)
         m_position += m_right * velocity;
-    if (direction == UP)
+    if (direction == CameraMovement::UP)
         m_position += m_world_up * velocity;
-    if (direction == DOWN)
+    if (direction == CameraMovement::DOWN)
         m_position -= m_world_up * velocity;
 
     Update();
@@ -95,17 +95,17 @@ void PerspectiveCamera::ProcessMouseScroll(float yoffset)
 
 void PerspectiveCamera::MoveCamera(CameraMovement direction, float distance)
 {
-    if (direction == FORWARD)
+    if (direction == CameraMovement::FORWARD)
         m_position += m_front * distance;
-    if (direction == BACKWARD)
+    if (direction == CameraMovement::BACKWARD)
         m_position -= m_front * distance;
-    if (direction == LEFT)
+    if (direction == CameraMovement::LEFT)
         m_position -= m_right * distance;
-    if (direction == RIGHT)
+    if (direction == CameraMovement::RIGHT)
         m_position += m_right * distance;
-    if (direction == UP)
+    if (direction == CameraMovement::UP)
         m_position += m_world_up * distance;
-    if (direction == DOWN)
+    if (direction == CameraMovement::DOWN)
         m_position -= m_world_up * distance;
 
     Update();

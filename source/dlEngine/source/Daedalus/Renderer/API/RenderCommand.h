@@ -7,7 +7,7 @@
 
 namespace Daedalus {
 
-class RenderCommand
+class DAEDALUS_API RenderCommand
 {
 public:
 	static void Init();
@@ -18,9 +18,9 @@ public:
 	static void SetClearColor(const glm::vec4& color);
 	static void SetLineWidth(float width);
 
-	static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0);
-	static void DrawUnindexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertex_count);
-	static void DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount);
+	static void DrawIndexed(const VertexArray* vertexArray, uint32_t indexCount = 0);
+	static void DrawUnindexed(const VertexArray* vertexArray, uint32_t vertex_count);
+	static void DrawLines(const VertexArray* vertexArray, uint32_t vertexCount);
 
 private:
 	static std::unique_ptr<RendererAPI> s_RendererAPI;

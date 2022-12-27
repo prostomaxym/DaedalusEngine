@@ -2,6 +2,7 @@
 
 #include "RenderCommand.h"
 #include "Daedalus/Renderer/Resourses/Mesh.h"
+#include "Daedalus/Renderer/Resourses/Model.h"
 #include "Daedalus/Renderer/Resourses/Shader.h"
 #include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
@@ -13,7 +14,7 @@
 
 namespace Daedalus {
 
-class Renderer
+class DAEDALUS_API Renderer
 {
 public:
 	static void Init();
@@ -22,12 +23,13 @@ public:
 
 	static void OnWindowResize(uint32_t width, uint32_t height);
 
-	static void BeginScene(OrthographicCamera& camera);
-	static void BeginScene(PerspectiveCamera& camera);
+	static void BeginScene(const OrthographicCamera& camera);
+	static void BeginScene(const PerspectiveCamera& camera);
 	static void EndScene();
 
-	static void Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertex_array, const glm::mat4& transform = glm::mat4(1.0f));
-	static void Submit(const std::shared_ptr<Shader>& shader, const Mesh* mesh);
+	static void Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform = glm::mat4(1.0f));
+	static void Submit(const Shader* shader, const Mesh* mesh);
+	static void Submit(const Shader* shader, const Model* model);
 
 	static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 

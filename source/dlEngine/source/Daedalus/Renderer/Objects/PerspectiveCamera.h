@@ -7,7 +7,7 @@
 
 namespace Daedalus {
 
-enum CameraMovement
+enum class DAEDALUS_API CameraMovement
 {
     FORWARD,
     BACKWARD,
@@ -17,7 +17,7 @@ enum CameraMovement
     DOWN
 };
 
-struct CameraProjectionProps
+struct DAEDALUS_API CameraProjectionProps
 {
     float fov = 70.f;
     float aspect_ratio = 16.f / 9.f;
@@ -33,7 +33,7 @@ struct CameraProjectionProps
     }
 };
 
-struct CameraPositionProps
+struct DAEDALUS_API CameraPositionProps
 {
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -49,7 +49,7 @@ struct CameraPositionProps
     }
 };
 
-class PerspectiveCamera
+class DAEDALUS_API PerspectiveCamera
 {
 public:
     PerspectiveCamera(CameraProjectionProps proj_props, CameraPositionProps pos_props);

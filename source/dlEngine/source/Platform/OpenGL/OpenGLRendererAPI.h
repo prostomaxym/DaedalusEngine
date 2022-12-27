@@ -14,9 +14,9 @@ namespace Daedalus {
 		void SetClearColor(const glm::vec4& color) override;
 		void Clear() override;
 
-		void DrawIndexed(const std::shared_ptr<VertexArray>& vertex_array, uint32_t index_count = 0) override;
-		void DrawUnindexed(const std::shared_ptr<VertexArray>& vertex_array, uint32_t vertex_count) override;
-		void DrawLines(const std::shared_ptr<VertexArray>& vertex_array, uint32_t vertex_count) override;
+		void DrawIndexed(const VertexArray* vertex_array, uint32_t index_count = 0) override;
+		void DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count) override;
+		void DrawLines(const VertexArray* vertex_array, uint32_t vertex_count) override;
 
 		void SetLineWidth(float width) override;
 	};

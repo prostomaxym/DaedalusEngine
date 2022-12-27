@@ -52,29 +52,6 @@ void Application::Run()
 	auto test_shader = Renderer::s_shader_library->Get("TestShader");
 	test_shader->Bind();
 
-	//float buffer[] = {
-	//-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-	// 0.5f, -0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 1.0f,
-	// 0.0f,  0.5f, 0.0f, 0.0f,  0.0f, 1.0f, 1.0f
-	//};
-
-	//unsigned int indexes[] = {
-	//	0,1,2
-	//};
-
-	//auto VAO = VertexArray::Create();
-	//VAO->Bind();
-
-	//auto VBO = VertexBuffer::Create(buffer, sizeof(buffer));
-	//VBO->SetLayout(BufferLayout{ BufferElement{ ShaderDataType::Float3, std::string("v_vertices"), false }, 
-	//	BufferElement{ ShaderDataType::Float4, std::string("v_color"), false } });
-
-	//auto EBO = IndexBuffer::Create(indexes, sizeof(indexes) / sizeof(indexes[0]));
-
-	//VAO->AddVertexBuffer(VBO);
-	//VAO->SetIndexBuffer(EBO);
-	//VAO->Unbind();
-
 	PerspectiveCamera pcamera(CameraProjectionProps(45.f * 3.14f / 180.f, 16.f/9.f, 0.1f, 1000.f), CameraPositionProps());
 	pcamera.SetPosition(glm::vec3(-1.f, 0.f, 0.f));
 
@@ -122,9 +99,7 @@ void Application::Run()
 		RenderCommand::Clear();
 
 		Renderer::BeginScene(pcamera);
-		const auto& meshes = model->GetMeshes();
-		for (const auto& mesh : meshes)
-			Renderer::Submit(test_shader, mesh.get()->GetVertexArray());
+		Renderer::Submit(test_shader.get(), model.get());
 
 		Renderer::EndScene();
 

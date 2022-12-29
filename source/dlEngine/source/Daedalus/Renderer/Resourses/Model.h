@@ -57,12 +57,13 @@ inline ModelParserFlags& operator|= (ModelParserFlags& a, ModelParserFlags b) { 
 inline ModelParserFlags& operator&= (ModelParserFlags& a, ModelParserFlags b) { return (ModelParserFlags&)((int&)a &= (int)b); }
 inline ModelParserFlags& operator^= (ModelParserFlags& a, ModelParserFlags b) { return (ModelParserFlags&)((int&)a ^= (int)b); }
 
-class Model
+class DAEDALUS_API Model
 {
 public:
+	Model() = default;
 	Model(const std::string& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);
 
-	const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const;
+	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
 	const std::vector<std::string>& GetMaterialNames() const;
 	const BoundingSphere GetBoundingSphere() const;
 
@@ -70,23 +71,23 @@ private:
 	void ComputeBoundingSphere();
 
 private:
-	std::vector<std::unique_ptr<Mesh>> m_meshes;
+	std::vector<std::shared_ptr<Mesh>> m_meshes;
 	std::vector<std::string> m_material_names;
 
 	BoundingSphere m_bounding_sphere;
 };
 
-class AssimpParser
+class DAEDALUS_API AssimpParser
 {
 public:
 	static bool LoadModel(const std::string& fileName
-		, std::vector<std::unique_ptr<Mesh>>& meshes
+		, std::vector<std::shared_ptr<Mesh>>& meshes
 		, std::vector<std::string>& materials
 		, ModelParserFlags parser_flags);
 
 private:
 	static void ProcessMaterials(const struct aiScene* scene, std::vector<std::string>& materials);;
-	static void ProcessNode(void* p_transform, struct aiNode* node, const struct aiScene* scene, std::vector<std::unique_ptr<Mesh>>& meshes);
+	static void ProcessNode(void* p_transform, struct aiNode* node, const struct aiScene* scene, std::vector<std::shared_ptr<Mesh>>& meshes);
 	static void ProcessMesh(void* p_transform, struct aiMesh* mesh, const struct aiScene* scene, std::vector<Vertex>& out_vertices, std::vector<uint32_t>& out_indices);
 };
 

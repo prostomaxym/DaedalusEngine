@@ -52,7 +52,7 @@ struct DAEDALUS_API CameraPositionProps
 class DAEDALUS_API PerspectiveCamera
 {
 public:
-    PerspectiveCamera(CameraProjectionProps proj_props, CameraPositionProps pos_props);
+    PerspectiveCamera(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps());
 
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix() const;

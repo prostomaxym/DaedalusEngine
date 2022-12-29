@@ -56,7 +56,7 @@ void Model::ComputeBoundingSphere()
 	}
 }
 
-const std::vector<std::unique_ptr<Mesh>>& Model::GetMeshes() const
+const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 {
 	return m_meshes;
 }
@@ -71,7 +71,7 @@ const BoundingSphere Model::GetBoundingSphere() const
 	return m_bounding_sphere;
 }
 
-bool  AssimpParser::LoadModel(const std::string& file_name, std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<std::string>& materials, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::string& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::string>& materials, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(file_name, static_cast<unsigned int>(parser_flags));
@@ -102,7 +102,7 @@ void AssimpParser::ProcessMaterials(const aiScene * scene, std::vector<std::stri
 	}
 }
 
-void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* scene, std::vector<std::unique_ptr<Mesh>>& meshes)
+void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* scene, std::vector<std::shared_ptr<Mesh>>& meshes)
 {
 	aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 

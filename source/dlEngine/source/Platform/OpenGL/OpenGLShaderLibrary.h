@@ -6,7 +6,7 @@
 
 namespace Daedalus {
 
-class OpenGLShaderLibrary final: public ShaderLibrary
+class DAEDALUS_API OpenGLShaderLibrary final: public ShaderLibrary
 {
 public:
 	OpenGLShaderLibrary(const std::string& path, bool recompile);

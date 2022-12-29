@@ -7,7 +7,7 @@
 
 namespace Daedalus {
 
-	class Shader
+	class DAEDALUS_API Shader
 	{
 	public:
 		enum class InputType

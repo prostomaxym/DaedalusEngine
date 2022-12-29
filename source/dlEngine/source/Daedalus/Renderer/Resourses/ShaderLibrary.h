@@ -6,7 +6,7 @@
 
 namespace Daedalus {
 
-class ShaderLibrary 
+class DAEDALUS_API ShaderLibrary 
 {
 public:
 	virtual ~ShaderLibrary() = default;

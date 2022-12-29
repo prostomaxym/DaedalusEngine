@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Core.h"
+#include "Daedalus/Utils/KeyCodes.h"
 
 #include <tuple>
 

@@ -16,7 +16,6 @@ void ExampleLayer::OnUpdate()
 	const auto model_transform = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
 
 	auto test_shader = Daedalus::Renderer::s_shader_library->Get("TestShader");
-	test_shader->Bind();
 
 	if (Daedalus::Input::IsKeyPressed(DL_KEY_W))
 		m_camera.MoveCamera(Daedalus::CameraMovement::FORWARD, 0.02f);

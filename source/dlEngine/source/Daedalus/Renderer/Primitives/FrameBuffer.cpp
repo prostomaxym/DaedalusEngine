@@ -1,9 +1,8 @@
 #include "dlpch.h"
-#include "Daedalus/Renderer/Primitives/Framebuffer.h"
+#include "Daedalus/Renderer/Primitives/FrameBuffer.h"
 
 #include "Daedalus/Renderer/API/Renderer.h"
-
-#include "Platform/OpenGL/OpenGLFramebuffer.h"
+#include "Platform/OpenGL/OpenGLFrameBuffer.h"
 
 using namespace Daedalus;
 	

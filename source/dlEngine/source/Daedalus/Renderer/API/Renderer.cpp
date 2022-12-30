@@ -48,6 +48,9 @@ void Renderer::Submit(const Shader* shader, const VertexArray* vertex_array, con
 
 	vertex_array->Bind();
 	RenderCommand::DrawIndexed(vertex_array);
+
+	vertex_array->Unbind();
+	shader->Unbind();
 }
 
 void Renderer::Submit(const Shader* shader, const Mesh* mesh)

@@ -3,13 +3,7 @@
 
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
-
-#include "Daedalus/Renderer/Resourses/Model.h"
-#include "Daedalus/Renderer/Resourses/Shader.h"
 #include "Daedalus/Renderer/API/Renderer.h"
-#include "Daedalus/Renderer/API/RendererAPI.h"
-#include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
-#include "Daedalus/Utils/KeyCodes.h"
 
 #include "Platform/Platform.h"
 
@@ -36,7 +30,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary("../../../shaders/");
+	Renderer::LoadShaderLibrary("../../../shaders/", true);
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);

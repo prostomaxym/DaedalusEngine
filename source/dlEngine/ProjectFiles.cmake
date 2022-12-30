@@ -82,8 +82,8 @@ set(PROJECT_FILES
 
     source/Platform/OpenGL/OpenGLContext.h
     source/Platform/OpenGL/OpenGLContext.cpp
-    source/Platform/OpenGL/OpenGLFramebuffer.h
-    source/Platform/OpenGL/OpenGLFramebuffer.cpp
+    source/Platform/OpenGL/OpenGLFrameBuffer.h
+    source/Platform/OpenGL/OpenGLFrameBuffer.cpp
     source/Platform/OpenGL/OpenGLIndexBuffer.h
     source/Platform/OpenGL/OpenGLIndexBuffer.cpp
     source/Platform/OpenGL/OpenGLRendererAPI.h

@@ -32,8 +32,8 @@ void ImGuiLayer::OnAttach()
 	float fontSize = 18.0f;// *2.0f;
 
 	// Temp untill working directory not implemented
-	io.Fonts->AddFontFromFileTTF("../../../assets/Fonts/calibrib.ttf", fontSize);
-	io.FontDefault = io.Fonts->AddFontFromFileTTF("../../../assets/Fonts/calibri.ttf", fontSize);
+	io.Fonts->AddFontFromFileTTF("../../../assets/fonts/calibrib.ttf", fontSize);
+	io.FontDefault = io.Fonts->AddFontFromFileTTF("../../../assets/fonts/calibri.ttf", fontSize);
 
 	ImGui::StyleColorsDark();
 

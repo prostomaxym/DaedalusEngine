@@ -8,7 +8,7 @@ void ExampleLayer::OnAttach()
 	m_camera = Daedalus::PerspectiveCamera(Daedalus::CameraProjectionProps(80.f * 3.14f / 180.f, 16.f / 9.f, 0.1f, 1000.f), Daedalus::CameraPositionProps());
 	m_camera.SetPosition(glm::vec3(-1.f, 0.f, 0.f));
 
-	m_model = Daedalus::Model("C:/maxym/objects/Kratos/Kratos.obj");
+	m_model = Daedalus::Model("../../../assets/models/Kratos/Kratos.obj");
 }
 
 void ExampleLayer::OnUpdate()

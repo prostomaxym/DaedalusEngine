@@ -1,8 +1,5 @@
 #include "ExampleLayer.h"
 
-#include "Daedalus/Core/Input.h"
-#include "Daedalus/Renderer/API/Renderer.h"
-
 void ExampleLayer::OnAttach()
 {
 	m_camera = Daedalus::PerspectiveCamera(Daedalus::CameraProjectionProps(80.f * 3.14f / 180.f, 16.f / 9.f, 0.1f, 1000.f), Daedalus::CameraPositionProps());

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Daedalus/Core/Layer.h"
-#include "Daedalus/Renderer/Resourses/Model.h"
-#include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
+#include <Daedalus.h>
 
 class ExampleLayer final : public Daedalus::Layer
 {

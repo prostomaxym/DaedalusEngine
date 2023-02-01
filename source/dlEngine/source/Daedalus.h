@@ -12,9 +12,4 @@
 
 #include "Daedalus/UI/ImGui/ImGuiLayer.h"
 
-#include "Daedalus/Utils/HighPerformanceRequest.h"
 #include "Daedalus/Utils/KeyCodes.h"
-
-// ---Entry Point------------------------
-#include "Daedalus/Core/EntryPoint.h"
-// --------------------------------------

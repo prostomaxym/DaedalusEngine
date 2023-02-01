@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Application.h"
+
 extern Daedalus::Application* Daedalus::CreateApplication();
 
 int main(int argc, char** argv)

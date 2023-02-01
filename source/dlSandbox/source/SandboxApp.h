@@ -1,5 +1,13 @@
 #pragma once
+
+// ---Entry Point------------------------
+#include "Daedalus/Core/EntryPoint.h"
+// --------------------------------------
+
+#include "Daedalus/Utils/HighPerformanceRequest.h"
+
 #include <Daedalus.h>
+
 
 class Sandbox : public Daedalus::Application
 {

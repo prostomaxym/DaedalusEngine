@@ -48,7 +48,7 @@ void OpenGLRendererAPI::Init()
 	DL_CORE_INFO("Renderer inited;");
 }
 
-std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::string& path, bool recompile)
+std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 { 
 	return std::make_unique<OpenGLShaderLibrary>(path, recompile);
 }

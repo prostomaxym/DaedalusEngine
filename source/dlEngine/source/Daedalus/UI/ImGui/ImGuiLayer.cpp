@@ -1,15 +1,16 @@
 #include "dlpch.h"
 #include "ImGuiLayer.h"
 
-#include "Daedalus/Core/Application.h"
-#include "Daedalus/Core/Core.h"
-#include "Daedalus/Events/EventDispatcher.h"
-
 #include <GLFW/glfw3.h>
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
-#include<ImGuizmo.h>
+#include <ImGuizmo.h>
+
+#include "Daedalus/Core/Application.h"
+#include "Daedalus/Core/Core.h"
+#include "Daedalus/Events/EventDispatcher.h"
+#include "Daedalus/Utils/WorkingDirectory.h"
 
 using namespace Daedalus;
 
@@ -31,9 +32,10 @@ void ImGuiLayer::OnAttach()
 
 	float fontSize = 18.0f;// *2.0f;
 
-	// Temp untill working directory not implemented
-	io.Fonts->AddFontFromFileTTF("../../../assets/fonts/calibrib.ttf", fontSize);
-	io.FontDefault = io.Fonts->AddFontFromFileTTF("../../../assets/fonts/calibri.ttf", fontSize);
+	const auto font_filename = (WorkingDirectory::GetAssetsDirectory() / "fonts/calibrib.ttf").string();
+
+	io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
+	io.FontDefault = io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
 
 	ImGui::StyleColorsDark();
 

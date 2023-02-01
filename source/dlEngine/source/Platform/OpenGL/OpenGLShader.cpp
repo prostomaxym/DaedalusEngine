@@ -43,7 +43,7 @@ OpenGLShader::OpenGLShader(const std::string& vert_code, const std::string& frag
 	const auto compile_output = Compile((const GLchar*)vert_source.c_str(), (const GLchar*)frag_source.c_str());
 	Link(compile_output.first, compile_output.second);
 
-	DL_CORE_INFO("Shaders builed: " + vert_code + ", " + frag_code);
+	DL_CORE_INFO("Shaders built " + vert_code + ", " + frag_code);
 }
 
 OpenGLShader::OpenGLShader(const std::string& compiled_shader_path) :
@@ -52,7 +52,7 @@ OpenGLShader::OpenGLShader(const std::string& compiled_shader_path) :
 	const auto shader_data = Unpack(compiled_shader_path);
 	LoadBinary(shader_data);
 
-	DL_CORE_INFO("Prebuild shader loaded: " + compiled_shader_path);
+	DL_CORE_INFO("Prebuilt shader loaded: " + compiled_shader_path);
 }
 
 OpenGLShader::~OpenGLShader()

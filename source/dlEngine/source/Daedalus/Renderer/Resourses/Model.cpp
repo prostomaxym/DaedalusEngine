@@ -8,16 +8,16 @@
 
 using namespace Daedalus;
 
-Model::Model(const std::string& path, ModelParserFlags parser_flags)
+Model::Model(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
 	if (!AssimpParser::LoadModel(path, m_meshes, m_material_names, parser_flags))
 	{
-		DL_ERROR("Model failed to load: " + path);
-		throw std::runtime_error("Model failed to load: " + path);
+		DL_ERROR("Model failed to load: " + path.string());
+		throw std::runtime_error("Model failed to load: " + path.string());
 	}
 
 	ComputeBoundingSphere();
-	DL_INFO("Model loaded: " + path);
+	DL_INFO("Model loaded: " + path.string());
 }
 
 void Model::ComputeBoundingSphere()
@@ -71,10 +71,10 @@ const BoundingSphere Model::GetBoundingSphere() const
 	return m_bounding_sphere;
 }
 
-bool AssimpParser::LoadModel(const std::string& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::string>& materials, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::string>& materials, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
-	const aiScene* scene = import.ReadFile(file_name, static_cast<unsigned int>(parser_flags));
+	const aiScene* scene = import.ReadFile(file_name.string(), static_cast<unsigned int>(parser_flags));
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		return false;

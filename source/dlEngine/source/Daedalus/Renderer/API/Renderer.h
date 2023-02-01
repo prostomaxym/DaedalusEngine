@@ -19,7 +19,7 @@ class DAEDALUS_API Renderer
 public:
 	static void Init();
 	static void Shutdown();
-	static void LoadShaderLibrary(const std::string& path, bool recompile = false);
+	static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
 
 	static void OnWindowResize(uint32_t width, uint32_t height);
 

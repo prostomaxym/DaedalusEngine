@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 #include "Daedalus/Renderer/API/Renderer.h"
+#include "Daedalus/Utils/WorkingDirectory.h"
 
 #include "Platform/Platform.h"
 
@@ -30,7 +31,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary("../../../shaders/", true);
+	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory());
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);

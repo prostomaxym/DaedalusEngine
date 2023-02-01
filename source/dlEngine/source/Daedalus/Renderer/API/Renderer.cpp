@@ -1,4 +1,7 @@
 #include "dlpch.h"
+
+#include <filesystem>
+
 #include "Renderer.h"
 
 using namespace Daedalus;
@@ -16,7 +19,7 @@ void Renderer::Shutdown()
 
 }
 
-void Renderer::LoadShaderLibrary(const std::string& path, bool recompile)
+void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
 	s_shader_library = RenderCommand::LoadShaderLibrary(path, recompile);
 }

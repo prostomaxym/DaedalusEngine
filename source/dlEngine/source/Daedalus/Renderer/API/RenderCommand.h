@@ -11,7 +11,7 @@ class DAEDALUS_API RenderCommand
 {
 public:
 	static void Init();
-	static std::unique_ptr<ShaderLibrary> LoadShaderLibrary(const std::string& path, bool recompile = false);
+	static std::unique_ptr<ShaderLibrary> LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
 	static void Clear();
 
 	static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);

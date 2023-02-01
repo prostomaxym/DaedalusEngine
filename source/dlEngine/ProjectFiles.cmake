@@ -71,6 +71,8 @@ set(PROJECT_FILES
 
     source/Daedalus/Utils/HighPerformanceRequest.h
     source/Daedalus/Utils/KeyCodes.h
+    source/Daedalus/Utils/WorkingDirectory.h
+    source/Daedalus/Utils/WorkingDirectory.cpp
     
     source/Platform/Platform.h
     source/Platform/Platform.cpp

@@ -61,7 +61,7 @@ class DAEDALUS_API Model
 {
 public:
 	Model() = default;
-	Model(const std::string& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);
+	Model(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);
 
 	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
 	const std::vector<std::string>& GetMaterialNames() const;
@@ -80,7 +80,7 @@ private:
 class DAEDALUS_API AssimpParser
 {
 public:
-	static bool LoadModel(const std::string& fileName
+	static bool LoadModel(const std::filesystem::path& fileName
 		, std::vector<std::shared_ptr<Mesh>>& meshes
 		, std::vector<std::string>& materials
 		, ModelParserFlags parser_flags);

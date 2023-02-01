@@ -11,7 +11,7 @@ void RenderCommand::Init()
 }
 
 
-std::unique_ptr<ShaderLibrary> RenderCommand::LoadShaderLibrary(const std::string& path, bool recompile)
+std::unique_ptr<ShaderLibrary> RenderCommand::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
 	return s_RendererAPI->LoadShaderLibrary(path, recompile);
 }

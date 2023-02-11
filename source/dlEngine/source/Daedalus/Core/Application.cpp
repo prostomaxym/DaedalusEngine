@@ -58,6 +58,7 @@ void Application::Run()
 	}
 }
 
+
 void Application::OnEvent(Event& event)
 {
 	EventDispatcher dispatcher(event);

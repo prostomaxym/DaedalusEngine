@@ -26,7 +26,7 @@ namespace Daedalus {
 		case ShaderDataType::Bool:     return 1;
 		}
 
-		DL_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown ShaderDataType!");
 		return 0;
 	}
 
@@ -62,7 +62,7 @@ namespace Daedalus {
 			case ShaderDataType::Bool:    return 1;
 			}
 
-			DL_CORE_ASSERT(false, "Unknown ShaderDataType!");
+			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown ShaderDataType!");
 			return 0;
 		}
 	};

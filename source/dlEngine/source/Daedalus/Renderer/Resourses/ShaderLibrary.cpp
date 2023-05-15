@@ -14,7 +14,7 @@ void ShaderLibrary::Remove(const std::string& name)
 
 std::shared_ptr<Shader> ShaderLibrary::Get(const std::string& name) const
 {
-	DL_ASSERT(Exists(name), "Cant find shader " + name + "in ShaderLibrary");
+	DL_ASSERT(Exists(name), Log::Categories::Renderer, "Cant find shader " + name + "in ShaderLibrary");
 	return m_shaders.at(name);
 }
 

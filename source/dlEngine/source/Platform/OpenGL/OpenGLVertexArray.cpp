@@ -24,7 +24,7 @@ namespace {
 		case ShaderDataType::Bool:     return GL_BOOL;
 		}
 
-		DL_CORE_ASSERT(false, "Unknown ShaderDataType!");
+		DL_ASSERT(false, Log::Categories::Renderer, "Unknown ShaderDataType!");
 		return 0;
 	}
 }
@@ -53,7 +53,7 @@ void OpenGLVertexArray::Unbind() const
 
 void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertex_buffer)
 {
-	DL_CORE_ASSERT(vertex_buffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
+	DL_ASSERT(vertex_buffer->GetLayout().GetElements().size(), Log::Categories::Renderer, "Vertex Buffer has no layout!");
 
 	glBindVertexArray(m_rendererID);
 	vertex_buffer->Bind();
@@ -112,7 +112,7 @@ void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& ver
 			break;
 		}
 		default:
-			DL_CORE_ASSERT(false, "Unknown ShaderDataType!");
+			DL_ASSERT(false, Log::Categories::Renderer, "Unknown ShaderDataType!");
 		}
 	}
 

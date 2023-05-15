@@ -19,10 +19,10 @@ void OpenGLMessageCallback(
 {
 	switch (severity)
 	{
-	case GL_DEBUG_SEVERITY_HIGH:         DL_CORE_CRITICAL(message); return;
-	case GL_DEBUG_SEVERITY_MEDIUM:       DL_CORE_ERROR(message); return;
-	case GL_DEBUG_SEVERITY_LOW:          DL_CORE_WARN(message); return;
-	case GL_DEBUG_SEVERITY_NOTIFICATION: DL_CORE_TRACE(message); return;
+	case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::Renderer, message); return;
+	case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::Renderer, message); return;
+	case GL_DEBUG_SEVERITY_LOW:         Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message); return;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message); return;
 	}
 
 }
@@ -45,7 +45,7 @@ void OpenGLRendererAPI::Init()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LINE_SMOOTH);
 
-	DL_CORE_INFO("Renderer inited;");
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Renderer inited;");
 }
 
 std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)

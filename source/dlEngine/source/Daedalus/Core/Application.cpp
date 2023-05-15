@@ -64,7 +64,8 @@ void Application::OnEvent(Event& event)
 	EventDispatcher dispatcher(event);
 	dispatcher.Dispatch<WindowCloseEvent>(DL_BIND_EVENT_FN(Application::OnWindowClosed));
 
-	DL_CORE_TRACE("{0}", event);
+	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
+
 	for (auto it = m_layer_stack.end(); it != m_layer_stack.begin();)
 	{
 		if (event.IsHandled())

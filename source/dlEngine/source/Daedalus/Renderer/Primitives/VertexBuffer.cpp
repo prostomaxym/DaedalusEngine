@@ -11,11 +11,11 @@ std::shared_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 {
 	switch (Renderer::GetAPI())
 	{
-	case RendererAPI::API::None:    DL_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 	case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(size);
 	}
 
-	DL_CORE_ASSERT(false, "Unknown RendererAPI!");
+	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 	return nullptr;
 }
 
@@ -23,10 +23,10 @@ std::shared_ptr<VertexBuffer> VertexBuffer::Create(const float* vertices, uint32
 {
 	switch (Renderer::GetAPI())
 	{
-	case RendererAPI::API::None:    DL_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 	case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(vertices, size);
 	}
 
-	DL_CORE_ASSERT(false, "Unknown RendererAPI!");
+	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 	return nullptr;
 }

@@ -10,11 +10,6 @@ public:
 	void OnAttach() override;
 	void OnUpdate() override;
 
-	void OnEvent(Daedalus::Event& event) override
-	{
-		DL_TRACE("{0}", event);
-	}
-
 private:
 	Daedalus::PerspectiveCamera m_camera;
 	Daedalus::Model m_model;

@@ -75,7 +75,7 @@ OpenGLTexture2D::~OpenGLTexture2D()
 void OpenGLTexture2D::SetData(void* data, uint32_t size)
 {
 	uint32_t bpp = m_data_format == GL_RGBA ? 4 : 3;
-	DL_CORE_ASSERT(size == m_width * m_height * bpp, "Data must be entire texture!");
+	DL_ASSERT(size == m_width * m_height * bpp, Log::Categories::Renderer, "Data must be entire texture!");
 	glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, m_data_format, GL_UNSIGNED_BYTE, data);
 }
 

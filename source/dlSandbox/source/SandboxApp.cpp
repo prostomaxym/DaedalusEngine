@@ -11,5 +11,6 @@ Daedalus::Application* Daedalus::CreateApplication()
 
 Sandbox::Sandbox()
 {
+	Daedalus::Log::DisableCategory(Daedalus::Log::Categories::Events);
 	PushLayer(new ExampleLayer());
 }

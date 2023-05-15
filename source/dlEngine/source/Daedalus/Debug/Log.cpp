@@ -5,15 +5,31 @@
 
 using namespace Daedalus;
 
-std::shared_ptr<spdlog::logger> Log::m_core_logger;
-std::shared_ptr<spdlog::logger> Log::m_client_logger;
+std::shared_ptr<spdlog::logger> Log::s_core_logger;
+int Log::s_allowed_categories = 0;
 
 void Log::Init()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 
-	m_core_logger = spdlog::stdout_color_mt("ENGINE");
-	m_core_logger->set_level(spdlog::level::trace);
-	m_client_logger = spdlog::stdout_color_mt("APP");
-	m_client_logger->set_level(spdlog::level::trace);
+	s_core_logger = spdlog::stdout_color_mt("ENGINE");
+	s_core_logger->set_level(spdlog::level::trace);
+
+	EnableAllCategories();
+}
+
+void Log::ToggleCategory(Categories category, bool enable)
+{
+	if (enable)
+		s_allowed_categories |= category;
+	else
+		s_allowed_categories &= category;
+}
+
+void Log::EnableAllCategories()
+{
+	EnableCategory(Categories::EngineCore);
+	EnableCategory(Categories::Events);
+	EnableCategory(Categories::Platform);
+	EnableCategory(Categories::Renderer);
 }

@@ -12,12 +12,12 @@ Model::Model(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
 	if (!AssimpParser::LoadModel(path, m_meshes, m_material_names, parser_flags))
 	{
-		DL_ERROR("Model failed to load: " + path.string());
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Model failed to load: " + path.string());
 		throw std::runtime_error("Model failed to load: " + path.string());
 	}
 
 	ComputeBoundingSphere();
-	DL_INFO("Model loaded: " + path.string());
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Model loaded: " + path.string());
 }
 
 void Model::ComputeBoundingSphere()

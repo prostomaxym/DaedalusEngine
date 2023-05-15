@@ -84,7 +84,7 @@ namespace {
 			case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
 		}
 
-		DL_CORE_ASSERT(false, "Unsupported FramebufferTextureFormat");
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unsupported FramebufferTextureFormat");
 		return 0;
 	}
 
@@ -163,7 +163,7 @@ void OpenGLFramebuffer::Invalidate()
 
 	if (m_color_attachments.size() > 1)
 	{
-		DL_CORE_ASSERT(m_color_attachments.size() <= 4, "incorrect color attachment size");
+		DL_ASSERT(m_color_attachments.size() <= 4, Log::Categories::Renderer, "incorrect color attachment size");
 		GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 		glDrawBuffers(m_color_attachments.size(), buffers);
 	}
@@ -173,7 +173,7 @@ void OpenGLFramebuffer::Invalidate()
 		glDrawBuffer(GL_NONE);
 	}
 
-	DL_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+	DL_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, Log::Categories::Renderer, "Framebuffer is incomplete!");
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -193,7 +193,7 @@ void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 {
 	if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
 	{
-		DL_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
+		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Attempted to rezize framebuffer to {0}, {1}", width, height);
 		return;
 	}
 	m_specification.Width = width;
@@ -204,7 +204,7 @@ void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 
 int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 {
-	DL_CORE_ASSERT(attachmentIndex < m_color_attachments.size(), "Incorret attachment index");
+	DL_ASSERT(attachmentIndex < m_color_attachments.size(), Log::Renderer, "Incorret attachment index");
 
 	glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 	int pixelData;
@@ -215,7 +215,7 @@ int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 
 void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 {
-	DL_CORE_ASSERT(attachmentIndex < m_color_attachments.size(), "Incorret attachment index");
+	DL_ASSERT(attachmentIndex < m_color_attachments.size(), Log::Renderer, "Incorret attachment index");
 
 	auto& spec = m_color_attachment_specifications[attachmentIndex];
 	glClearTexImage(m_color_attachments[attachmentIndex], 0,

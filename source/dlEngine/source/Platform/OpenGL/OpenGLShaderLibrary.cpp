@@ -15,13 +15,13 @@ namespace
 
 OpenGLShaderLibrary::OpenGLShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
-	DL_CORE_INFO("Loading shader library;");
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading shader library;");
 	const auto test1 = path;
 	const auto test = path / cache_dir;
 	if (!std::filesystem::exists(path / cache_dir))
 	{
 		if(!std::filesystem::create_directory(path / cache_dir))
-			DL_CORE_ERROR("Failed to create cached shaders directory");
+			Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to create cached shaders directory");
 	}
 
 	const auto source_filenames = QueryFileNames(path);
@@ -39,7 +39,7 @@ OpenGLShaderLibrary::OpenGLShaderLibrary(const std::filesystem::path& path, bool
 		LoadNotCachedShaders(shader_names, ready_to_load_shaders, path);
 	}
 
-	DL_CORE_INFO("Shader library loaded successfully;");
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shader library loaded successfully;");
 }
 
 void OpenGLShaderLibrary::RecompileAllShaders(const std::set<std::string>& shader_names, const std::filesystem::path& path)

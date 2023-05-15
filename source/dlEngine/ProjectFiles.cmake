@@ -16,6 +16,8 @@ set(PROJECT_FILES
     source/Daedalus/Core/LayerStack.cpp
     source/Daedalus/Core/Window.h  
     
+    source/Daedalus/Debug/ILog.h
+    source/Daedalus/Debug/ILog.cpp
     source/Daedalus/Debug/Log.h
     source/Daedalus/Debug/Log.cpp
 

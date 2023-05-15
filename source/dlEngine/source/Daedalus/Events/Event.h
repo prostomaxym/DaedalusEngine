@@ -29,8 +29,7 @@ public:
 	inline bool IsHandled() { return m_handled; }
 
 protected:
-	bool m_handled = false;
-	
+	bool m_handled = false;	
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Event& e)

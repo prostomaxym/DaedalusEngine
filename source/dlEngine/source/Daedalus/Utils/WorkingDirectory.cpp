@@ -52,12 +52,12 @@ std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
 	if (dir_depth == max_depth)
 	{
 		constexpr auto err_msg = "Root application directory not found";
-		DL_CORE_CRITICAL(err_msg);
+		Log::Write(Log::Levels::Error, Log::Categories::EngineCore, err_msg);
 		throw std::runtime_error(err_msg);
 	}
 		
 	const auto current_path = std::filesystem::current_path();
 	const auto msg = "Root application directory set - " + current_path.string();
-	DL_CORE_INFO(msg);
+	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, msg);
 	return current_path;
 }

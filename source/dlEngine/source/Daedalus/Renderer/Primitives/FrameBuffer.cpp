@@ -10,11 +10,11 @@ std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification&
 {
 	switch (Renderer::GetAPI())
 	{
-		case RendererAPI::API::None:    DL_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 		case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLFramebuffer>(spec);
 	}
 
-	DL_CORE_ASSERT(false, "Unknown RendererAPI!");
+	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 	return nullptr;
 }
 

@@ -1,0 +1,50 @@
+# CMake generation dependency list for this directory.
+C:/Program Files/CMake/share/cmake-3.26/Modules/CMakeFindDependencyMacro.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/CheckCXXSourceCompiles.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/CheckIncludeFileCXX.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/CheckLibraryExists.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/FindOpenGL.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/FindThreads.cmake
+C:/Program Files/CMake/share/cmake-3.26/Modules/Internal/CheckSourceCompiles.cmake
+C:/Users/ershi/source/repos/daedalus_engine/source/dlEngine/CMakeLists.txt
+C:/Users/ershi/source/repos/daedalus_engine/source/dlEngine/ProjectFiles.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/assimp/assimpConfig.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/assimp/assimpConfigVersion.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/assimp/assimpTargets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/assimp/assimpTargets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/assimp/assimpTargets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/fmt/fmt-config-version.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/fmt/fmt-config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/fmt/fmt-targets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/fmt/fmt-targets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/fmt/fmt-targets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glad/gladConfig.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glad/gladConfigVersion.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glad/gladTargets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glad/gladTargets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glad/gladTargets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glfw3/glfw3ConfigVersion.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/glm/glm-config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imgui/imgui-config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imgui/imgui-targets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imgui/imgui-targets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imgui/imgui-targets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imguizmo/imguizmo-config-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imguizmo/imguizmo-config-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/imguizmo/imguizmo-config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/pugixml/pugixml-config-version.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/pugixml/pugixml-config.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/pugixml/pugixml-targets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/pugixml/pugixml-targets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/pugixml/pugixml-targets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/spdlog/spdlogConfig.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/spdlog/spdlogConfigTargets-debug.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/spdlog/spdlogConfigTargets-release.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/spdlog/spdlogConfigTargets.cmake
+C:/Users/ershi/source/repos/daedalus_engine/vcpkg_installed/x64-windows/share/spdlog/spdlogConfigVersion.cmake

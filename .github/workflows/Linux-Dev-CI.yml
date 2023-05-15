@@ -21,11 +21,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd LinuxScripts
-        sudo sh InstallDependencies.sh
+        cd ThirdParty/vcpkg
+        ./bootstrap-vcpkg.sh
+        ./vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
         
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DCMAKE_TOOLCHAIN_FILE=ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}

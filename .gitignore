@@ -4,6 +4,7 @@ bin-int/
 build/
 install/
 Testing/
+vcpkg_installed/
 .vs/
 
 # Specific files

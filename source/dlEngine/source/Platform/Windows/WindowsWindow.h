@@ -6,11 +6,11 @@
 
 namespace Daedalus {
 
-class WindowsWindow final : public GLFWWindow
-{
-public:
-	WindowsWindow(const WindowProps& props);
-	~WindowsWindow() = default;
-};
+	class WindowsWindow final : public GLFWWindow
+	{
+	public:
+		WindowsWindow(const WindowProps& props);
+		~WindowsWindow() = default;
+	};
 }
 #endif // DL_PLATFORM_WINDOWS

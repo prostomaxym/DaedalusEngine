@@ -16,8 +16,6 @@ set(PROJECT_FILES
     source/Daedalus/Core/LayerStack.cpp
     source/Daedalus/Core/Window.h  
     
-    source/Daedalus/Debug/ILog.h
-    source/Daedalus/Debug/ILog.cpp
     source/Daedalus/Debug/Log.h
     source/Daedalus/Debug/Log.cpp
 
@@ -28,6 +26,8 @@ set(PROJECT_FILES
     source/Daedalus/Events/KeyEvent.h
     source/Daedalus/Events/MouseEvent.h
     source/Daedalus/Events/GamepadEvent.h
+    source/Daedalus/Events/EventsEngine.h
+    source/Daedalus/Events/EventsEngine.cpp
 
     source/Daedalus/Renderer/API/RenderCommand.h
     source/Daedalus/Renderer/API/RenderCommand.cpp

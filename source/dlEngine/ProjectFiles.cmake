@@ -21,6 +21,7 @@ set(PROJECT_FILES
 
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
+    source/Daedalus/Events/Event.cpp
     source/Daedalus/Events/EventDispatcher.h
     source/Daedalus/Events/EventTable.h
     source/Daedalus/Events/KeyEvent.h

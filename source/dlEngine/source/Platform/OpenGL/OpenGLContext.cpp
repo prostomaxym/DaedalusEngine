@@ -11,7 +11,7 @@ void Daedalus::OpenGLContext::Init()
 {
 	glfwMakeContextCurrent(m_window_handle);
 	const auto status = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-	DL_ASSERT(status, "Failed to initialize GLAD");
+	DL_ASSERT(status, Log::Categories::Renderer, "Failed to initialize GLAD");
 }
 
 void Daedalus::OpenGLContext::SwapBuffers()

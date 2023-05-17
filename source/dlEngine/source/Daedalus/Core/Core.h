@@ -19,6 +19,9 @@
 
 
 // Evil macros
+
+#define DL_DEBUG
+
 #ifdef SIGTRAP
 #define PLATFORM_DEBUG_BREAK raise(SIGTRAP)
 #else
@@ -26,11 +29,9 @@
 #endif // SIGTRAP
 
 #ifdef DL_ENABLE_ASSERTS
-#define DL_ASSERT(x, ...) { if(!(x)) { DL_ERROR("Assertion Failed: {0}", __VA_ARGS__); PLATFORM_DEBUG_BREAK;; } }
-#define DL_CORE_ASSERT(x, ...) { if(!(x)) { DL_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); PLATFORM_DEBUG_BREAK;; } }
+#define DL_ASSERT(x, category, ...) { if(!(x)) { Log::Write(Log::Levels::Error, category, "Assertion Failed: {0}", __VA_ARGS__); PLATFORM_DEBUG_BREAK;; } }
 #else
 #define DL_ASSERT(x, ...)
-#define DL_CORE_ASSERT(x, ...)
 #endif
 
 

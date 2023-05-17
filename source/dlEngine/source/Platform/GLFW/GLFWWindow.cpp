@@ -12,12 +12,13 @@ static bool s_GLFWInitialized = false;
 
 static void GLFWErrorCallback(int error_code, const char* message)
 {
-	DL_CORE_ERROR("GLFW Error ({0}): {1}", error_code, message);
+	Log::Write(Log::Levels::Error, Log::Categories::Platform, "GLFW Error ({0}): {1}", error_code, message);
 }
 
 GLFWWindow::GLFWWindow(const WindowProps& props)
 {
 	Init(props);
+	Log::Write(Log::Levels::Info, Log::Categories::Platform, "Window is created;");
 }
 
 GLFWWindow::~GLFWWindow()
@@ -31,12 +32,12 @@ void GLFWWindow::Init(const WindowProps& props)
 	m_data.width = props.width;
 	m_data.height = props.height;
 
-	DL_CORE_INFO("Creating window {0} ({1}, {2})", props.title, props.width, props.height);
+	Log::Write(Log::Levels::Info, Log::Categories::Platform,"Creating window {0} ({1}, {2})", props.title, props.width, props.height);
 
 	if (!s_GLFWInitialized)
 	{
 		const auto success = glfwInit();
-		DL_CORE_ASSERT(success, "Could not intialize GLFW!");
+		DL_ASSERT(success, Log::Categories::Platform, "Could not intialize GLFW!");
 		glfwSetErrorCallback(GLFWErrorCallback);
 
 		s_GLFWInitialized = true;

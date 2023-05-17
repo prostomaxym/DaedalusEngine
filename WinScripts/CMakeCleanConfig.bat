@@ -11,5 +11,5 @@ if exist build\ (
   pause
 ) else (
  cd WinScripts/
-  call GenerateProjects.bat
+  call CMakeConfigAndPackages.bat
 )

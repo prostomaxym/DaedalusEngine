@@ -4,10 +4,13 @@ bin-int/
 build/
 install/
 Testing/
+vcpkg_installed/
 .vs/
 
 # Specific files
 TODO.txt
+*.dlshader
+*.ini
 
 # Prerequisites
 *.d

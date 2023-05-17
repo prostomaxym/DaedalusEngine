@@ -7,11 +7,11 @@
 
 namespace Daedalus {
 
-class Platform
-{
-public:
-	static std::unique_ptr<Window> createWindow();
-	static void InitInputSystem();
-};
+	class Platform
+	{
+	public:
+		static std::unique_ptr<Window> createWindow();
+		static void InitInputSystem();
+	};
 
 }

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Daedalus/Renderer/GraphicsContext.h"
+#include "Daedalus/Renderer/Primitives/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 
 namespace Daedalus {
 
-	class OpenGLContext : public GraphicsContext
+	class OpenGLContext final : public GraphicsContext
 	{
 	public:
 		OpenGLContext(GLFWwindow* window_handle);

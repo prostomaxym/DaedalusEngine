@@ -3,49 +3,49 @@
 #include "Core.h"
 #include "Daedalus/Events/Event.h"
 #include "Daedalus/Events/ApplicationEvent.h"
-#include "Daedalus/ImGui/ImGuiLayer.h"
+#include "Daedalus/UI/ImGui/ImGuiLayer.h"
 #include "Window.h"
 #include "LayerStack.h"
 
 namespace Daedalus {
 
-class DAEDALUS_API Application
-{
-public:
-	static Application* GetInstance();
-	virtual ~Application();
+	class DAEDALUS_API Application
+	{
+	public:
+		static Application* GetInstance();
+		virtual ~Application();
 
-	Application(const Application&) = delete;
-	Application(const Application&&) = delete;
-	Application& operator=(const Application&) = delete;
-	Application& operator=(const Application&&) = delete;
+		Application(const Application&) = delete;
+		Application(const Application&&) = delete;
+		Application& operator=(const Application&) = delete;
+		Application& operator=(const Application&&) = delete;
 
-	inline Window& GetWindow() { return *m_window; }
+		inline Window& GetWindow() { return *m_window; }
 
-	void Run();
+		void Run();
 
-	void OnEvent(Event& event);
+		void OnEvent(Event& event);
 
-	void PushLayer(Layer* layer);
-	void PushOverlay(Layer* overlay);
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* overlay);
 
-protected:
-	Application();
+	protected:
+		Application();
 
-	static Application* s_instance;
+		static Application* s_instance;
 
-private:
-	bool OnWindowClosed(WindowCloseEvent& event);
+	private:
+		bool OnWindowClosed(WindowCloseEvent& event);
 
-	std::unique_ptr<Window> m_window;
-	ImGuiLayer* m_imgui_layer;
-	LayerStack m_layer_stack;
-	
-	bool m_running = true;
-};
+		std::unique_ptr<Window> m_window;
+		ImGuiLayer* m_imgui_layer; // LayerStack owns imgui_layer
+		LayerStack m_layer_stack;
 
-//Define in client
-Application* CreateApplication();
+		bool m_running = true;
+	};
+
+	//Define in client
+	Application* CreateApplication();
 }
 
 

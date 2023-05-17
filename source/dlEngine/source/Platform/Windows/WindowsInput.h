@@ -5,6 +5,6 @@
 
 namespace Daedalus {
 
-	class WindowsInput : public GLFWInput {};
+	class WindowsInput final : public GLFWInput {};
 }
 #endif

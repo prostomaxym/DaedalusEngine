@@ -7,6 +7,9 @@ project(
   )
 
 set(PROJECT_FILES
+  source/ExampleLayer.h
+  source/ExampleLayer.cpp
+  source/SandboxApp.h
 	source/SandboxApp.cpp)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})

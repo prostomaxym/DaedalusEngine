@@ -13,32 +13,20 @@ Game Engine. Personal project. Under early stage of development
 ## How to Build
 
 #### Windows:
-- Install dependencies
-
-From project root:
-````console
-    cd ThirdParty/vcpkg
-    ./bootstrap-vcpkg.bat
-````
-or run InstallVCPKG.ps1 from WinScripts folder
+- Install dependencies (only for first time building)<br>
+ run InstallVCPKG.ps1 from WinScripts folder<br>
+ run UpdatePackages.bat from WinScripts folder
 <br>
 <br>
 
-- Config cmake project
-
-From project root:
-````console
-mkdir build
-cd build
-cmake ../ -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-windows
-````
-or run CMakeConfig.bat from WinScripts folder
+- Config cmake project<br>
+first time building: run CMakeConfigAndPackages.bat from WinScripts folder<br>
+regular building: run CMakeConfig.bat from WinScripts folder
 <br>
 <br>
 
-- Build sources:
-
-Build from IDE or `cmake ../ --build .` from build folder
+- Build sources:<br>
+Build from IDE or CMakeBuildRelease.bat to build without IDE
 <br>
 <br>
 
@@ -47,15 +35,10 @@ Build from IDE or `cmake ../ --build .` from build folder
 
 From project root:
 ````console
-sudo apt update
-sudo apt-get install libgl1-mesa-dev
-sudo apt-get install mesa-utils
-sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
-
-cd ThirdParty/vcpkg
-./bootstrap-vcpkg.sh
+        cd LinuxScripts
+        sudo sh InstallDependencies.sh
+        sudo vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
 ````
-or run InstallDependencies.sh from LinuxScripts folder
 <br>
 <br>
 
@@ -63,15 +46,13 @@ or run InstallDependencies.sh from LinuxScripts folder
 
 From project root:
 ````console
-mkdir build
-cd build
-cmake ../ -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux
+cmake -B $PROJECT_ROOT/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DCMAKE_TOOLCHAIN_FILE="$PROJECT_ROOT/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
 ````
 <br>
 <br>
 
 - Build sources:
 
-Build from IDE or `cmake ../ --build .` from build folder
+Build from IDE or `cmake --build $PROJECT_ROOT/build --config Release` from build folder
 <br>
 <br>

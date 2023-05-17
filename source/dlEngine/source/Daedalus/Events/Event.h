@@ -39,7 +39,7 @@ namespace Daedalus {
 
 		//Used for quenue, not used for blocking events
 		std::chrono::milliseconds m_time_to_live{ 50 };
-		std::chrono::steady_clock::time_point m_begin_time{};
+		std::chrono::high_resolution_clock::time_point m_begin_time{};
 	};
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e)

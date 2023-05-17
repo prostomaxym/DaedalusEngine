@@ -23,7 +23,7 @@ jobs:
       run: |
         cd LinuxScripts
         sudo sh InstallDependencies.sh
-        ./vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
+        sudo vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
         
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DCMAKE_TOOLCHAIN_FILE="${{github.workspace}}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"

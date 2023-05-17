@@ -21,8 +21,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd ThirdParty/vcpkg
-        ./bootstrap-vcpkg.sh
+        cd LinuxScripts
+        sudo sh InstallDependencies.sh
         ./vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
         
     - name: Configure CMake

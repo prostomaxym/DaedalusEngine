@@ -8,6 +8,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <sstream>
 #include <vector>

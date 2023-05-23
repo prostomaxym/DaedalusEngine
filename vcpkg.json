@@ -10,8 +10,8 @@
         {"name": "imguizmo"},
         {"name": "glm"},
         {"name": "stb"},
-        {"name": "assimp"}
-
+        {"name": "assimp"},
+        {"name": "entt"}
     ],
     "builtin-baseline":"cf1fda5443f2acfa976d5bda70c50fa22c26fe80",
     "overrides": [

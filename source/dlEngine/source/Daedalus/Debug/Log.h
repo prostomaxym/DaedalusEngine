@@ -15,9 +15,10 @@ namespace Daedalus {
 		enum Categories
 		{
 			EngineCore = BITMASK(0),
-			Renderer = BITMASK(1),
-			Events = BITMASK(2),
-			Platform = BITMASK(3)
+			ECS = BITMASK(1),
+			Renderer = BITMASK(2),
+			Events = BITMASK(3),
+			Platform = BITMASK(4)
 		};
 
 		enum class Levels

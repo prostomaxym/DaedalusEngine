@@ -19,6 +19,13 @@ set(PROJECT_FILES
     source/Daedalus/Debug/Log.h
     source/Daedalus/Debug/Log.cpp
 
+    source/Daedalus/ECS/Components.h
+    source/Daedalus/ECS/Entity.h
+    source/Daedalus/ECS/Entity.cpp
+    source/Daedalus/ECS/Scene.h
+    source/Daedalus/ECS/Scene.cpp
+    source/Daedalus/ECS/UUID.h
+
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
     source/Daedalus/Events/Event.cpp
@@ -77,6 +84,8 @@ set(PROJECT_FILES
 
     source/Daedalus/Utils/HighPerformanceRequest.h
     source/Daedalus/Utils/KeyCodes.h
+    source/Daedalus/Utils/Random.h
+    source/Daedalus/Utils/Random.cpp
     source/Daedalus/Utils/WorkingDirectory.h
     source/Daedalus/Utils/WorkingDirectory.cpp
     

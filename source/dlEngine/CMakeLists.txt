@@ -11,6 +11,7 @@ find_package(imguizmo CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 find_package(assimp CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 
 
 #------------------ Project config ------------------------------#
@@ -36,6 +37,7 @@ target_compile_definitions(${PROJECT_NAME}
         $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
     PRIVATE 
         DL_BUILD_DLL
+        NOMINMAX
         )
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
@@ -58,4 +60,5 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         glm::glm
         assimp::assimp
+        EnTT::EnTT
     )

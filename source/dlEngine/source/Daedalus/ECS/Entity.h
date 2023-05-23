@@ -45,7 +45,7 @@ namespace Daedalus
 		template<typename T>
 		bool HasComponent()
 		{
-			return m_scene->m_registry.has<T>(m_entity_handle);
+			return m_scene->m_registry.any_of<T>(m_entity_handle);
 		}
 
 		template<typename T>

@@ -13,7 +13,7 @@
         {"name": "assimp"},
         {"name": "entt"}
     ],
-    "builtin-baseline":"cf1fda5443f2acfa976d5bda70c50fa22c26fe80",
+    "builtin-baseline":"b1c5f22661c457db80a83abacbb47fb5c8c0f67a",
     "overrides": [
     {"name": "fmt", "version-string": "8.1.1"}
     ]

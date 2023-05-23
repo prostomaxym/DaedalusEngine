@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Core.h"
+#include "Window.h"
+#include "LayerStack.h"
+
 #include "Daedalus/Events/Event.h"
 #include "Daedalus/Events/ApplicationEvent.h"
 #include "Daedalus/UI/ImGui/ImGuiLayer.h"
-#include "Window.h"
-#include "LayerStack.h"
+#include "Daedalus/Events/EventsEngine.h"
 
 namespace Daedalus {
 
@@ -21,6 +23,7 @@ namespace Daedalus {
 		Application& operator=(const Application&&) = delete;
 
 		inline Window& GetWindow() { return *m_window; }
+		EventEngine& GetEventEngine() { return m_event_engine; }
 
 		void Run();
 
@@ -40,6 +43,7 @@ namespace Daedalus {
 		std::unique_ptr<Window> m_window;
 		ImGuiLayer* m_imgui_layer; // LayerStack owns imgui_layer
 		LayerStack m_layer_stack;
+		EventEngine m_event_engine;
 
 		bool m_running = true;
 	};

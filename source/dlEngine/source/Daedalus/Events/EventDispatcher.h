@@ -2,6 +2,7 @@
 
 #include "Event.h"
 #include "EventsEngine.h"
+#include "Daedalus/Core/Application.h"
 
 #include <memory>
 
@@ -38,18 +39,14 @@ namespace Daedalus {
 	class EventDispatcher
 	{
 	public:
-		EventDispatcher(Event& event)
-			: m_event(event)
-		{
-		}
 
 		// @brief Blocking processing of events
 		template<typename T, typename F>
-		bool ProcessEvent(const F& func)
+		static bool ProcessEvent(Event& event, const F& func)
 		{
-			if (m_event.GetEventType() == T::GetStaticType())
+			if (event.GetEventType() == T::GetStaticType())
 			{
-				m_event.AddHandle(func(static_cast<T&>(m_event)));
+				event.AddHandle(func(static_cast<T&>(event)));
 				return true;
 			}
 			return false;
@@ -57,16 +54,13 @@ namespace Daedalus {
 
 		// @brief Pass event to EventEngine to process event async in separate thread
 		template<typename T, typename F>
-		void QueueEvent(const F& func)
+		static void QueueEvent(Event& event, const F& func)
 		{
-			if (m_event.GetEventType() == T::GetStaticType())
+			if (event.GetEventType() == T::GetStaticType())
 			{
 				std::function<bool(T&)> func_obj(func);
-				EventEngine::AddEvent(std::make_unique<EventWrapper<T>>(func_obj));
+				Application::GetInstance()->GetEventEngine().AddEvent(std::make_unique<EventWrapper<T>>(func_obj));
 			}
 		}
-
-	private:
-		Event& m_event;
 	};
 }

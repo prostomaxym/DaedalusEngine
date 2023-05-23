@@ -8,6 +8,6 @@ if not exist build\ (
 
 cd build
 
-cmake .. -DENABLE_TESTS=ON -DCMAKE_TOOLCHAIN_FILE=ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake .. -DENABLE_TESTS=ON
 
 PAUSE

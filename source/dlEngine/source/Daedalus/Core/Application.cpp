@@ -27,7 +27,7 @@ Application::Application() :
 {
 	s_instance = this;
 
-	EventEngine::Start();
+	m_event_engine.Start();
 	Platform::InitInputSystem();
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
@@ -41,7 +41,6 @@ Application::Application() :
 Application::~Application()
 {
 	Renderer::Shutdown();
-	EventEngine::Stop();
 }
 
 void Application::Run()
@@ -60,12 +59,10 @@ void Application::Run()
 	}
 }
 
-
 void Application::OnEvent(Event& event)
 {
-	EventDispatcher dispatcher(event);
-	//dispatcher.ProcessEvent<WindowCloseEvent>(DL_BIND_EVENT_FN(Application::OnWindowClosed));
-	dispatcher.QueueEvent<WindowCloseEvent>(DL_BIND_EVENT_FN(Application::OnWindowClosed));
+	EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
+	//EventDispatcher::QueueEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
 
 	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
 

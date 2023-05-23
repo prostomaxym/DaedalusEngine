@@ -1,34 +1,38 @@
 #pragma once
 
 #include "Event.h"
+#include "Daedalus/Threads/ThreadRunner.h"
 
 #include <deque>
-#include <functional>
+#include <memory>
+#include <atomic>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace Daedalus
 {
-	class EventEngine
+	class EventEngine : public ThreadRunner
 	{
 	public:
-		static void CleanQueue();
+		EventEngine() : ThreadRunner() {}
+		~EventEngine() { Stop(); }
+		
+		void CleanQueue();
 
-		static void Start();
-		static void Stop();
-		static bool IsRunning() { return s_running; }
+	private:
+		void ProcessEvents();
+		void StartJob() override;
+		void StopJob() override;
 
+		std::deque<std::unique_ptr<Event>> m_event_queue; //replace shared ptr if event queue will be needed outside of this class\thread
+
+	public:
 		template<typename EventT>
-		static void AddEvent(std::unique_ptr<EventT> event)
+		void AddEvent(std::unique_ptr<EventT> event)
 		{
 			event->StartTimer();
-			s_event_queue.emplace_back(std::move(event));
+			m_event_queue.emplace_back(std::move(event));
 		}
-			
-	private:
-		static void ProcessEvents();
-
-		static std::deque<std::unique_ptr<Event>> s_event_queue;
-		static bool s_running;
-		static std::thread s_thread;
 	};
 }

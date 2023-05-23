@@ -12,7 +12,7 @@
 
 namespace Daedalus
 {
-	class EventEngine : public ThreadRunner
+	class DAEDALUS_API EventEngine : public ThreadRunner
 	{
 	public:
 		EventEngine() : ThreadRunner() {}
@@ -22,8 +22,10 @@ namespace Daedalus
 
 	private:
 		void ProcessEvents();
-		void StartJob() override;
-		void StopJob() override;
+
+		virtual void OnStart() override;
+		virtual void OnStop() override;
+		virtual void OnResume() override;
 
 		std::deque<std::unique_ptr<Event>> m_event_queue; //replace shared ptr if event queue will be needed outside of this class\thread
 

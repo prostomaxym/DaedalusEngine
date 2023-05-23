@@ -61,8 +61,8 @@ void Application::Run()
 
 void Application::OnEvent(Event& event)
 {
-	EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
-	//EventDispatcher::QueueEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
+	//EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
+	EventDispatcher::QueueEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
 
 	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
 

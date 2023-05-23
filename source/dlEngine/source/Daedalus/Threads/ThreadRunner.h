@@ -10,7 +10,7 @@
 namespace Daedalus
 {
 	// @brief class for running some process/engine on separate thread
-	class ThreadRunner
+	class DAEDALUS_API ThreadRunner
 	{
 	public:
 		ThreadRunner() : m_running(false), m_paused(false) {}
@@ -22,9 +22,11 @@ namespace Daedalus
 		void Resume();
 
 	protected:
-		// use m_runner_thread = std::thread(job) in child classes to specify job function
-		virtual void StartJob() = 0;
-		virtual void StopJob() = 0;
+		// Override in child to specify needed behavior 
+		virtual void OnStart() {};
+		virtual void OnStop() {};
+		virtual void OnPause() {};
+		virtual void OnResume() {};
 
 		std::atomic<bool> m_running;
 		std::atomic<bool> m_paused;

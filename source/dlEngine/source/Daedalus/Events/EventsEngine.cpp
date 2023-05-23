@@ -35,12 +35,18 @@ void EventEngine::ProcessEvents()
 	}
 }
 
-void Daedalus::EventEngine::StartJob()
+void Daedalus::EventEngine::OnStart()
 {
 	m_runner_thread = std::thread(&EventEngine::ProcessEvents, this);
 }
 
-void Daedalus::EventEngine::StopJob()
+void Daedalus::EventEngine::OnStop()
 {
 	CleanQueue();
+}
+
+void Daedalus::EventEngine::OnResume()
+{
+	for (auto& event : m_event_queue)
+		event->StartTimer();
 }

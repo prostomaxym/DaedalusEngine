@@ -1,12 +1,15 @@
 #pragma once
 
 #include "EventTable.h"
+#include "Daedalus/Utils/DeltaTime.h"
+#include "Daedalus/Utils/Timer.h"
 
 #include <chrono>
 #include <ostream>
 #include <string>
 
-namespace Daedalus {
+namespace Daedalus 
+{
 
 	class EventDispatcher;
 
@@ -30,16 +33,16 @@ namespace Daedalus {
 		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
 		inline bool IsHandled() { return m_handled; }
 
-		std::chrono::milliseconds GetTimeToLive() const { return m_time_to_live; }
-		std::chrono::milliseconds GetEllapsedTime() const;
-		void StartTimer();
+		DeltaTime GetTimeToLive() const { return m_time_to_live; }
+		DeltaTime GetEllapsedTime() const { return m_timer.GetEllapsedTime(); }
+		void StartTimer() { m_timer.StartTimer(); }
 
 	protected:
 		bool m_handled{ false };
 
-		//Used for quenue, not used for blocking events
-		std::chrono::milliseconds m_time_to_live{ 50 };
-		std::chrono::high_resolution_clock::time_point m_begin_time{};
+		//Used for queue, not used for blocking events
+		DeltaTime m_time_to_live{};
+		Timer m_timer{};
 	};
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e)

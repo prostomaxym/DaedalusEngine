@@ -1,7 +1,6 @@
 #pragma once
 
 #include <random>
-#include <optional>
 
 #include "Daedalus/Core/Core.h"
 
@@ -11,18 +10,17 @@ namespace Daedalus
 	{
 	public:
 		template<typename T>
-		static T UniformDistribution(std::optional<T> from = std::nullopt, std::optional<T> to = std::nullopt)
+		static T UniformDistribution()
 		{
-			if (from.has_value() && to.has_value())
-			{
-				std::uniform_int_distribution<T> distribution(from.value(), to.value());
-				return distribution(s_engine);
-			}
-			else
-			{
-				std::uniform_int_distribution<T> distribution;
-				return distribution(s_engine);
-			}
+			std::uniform_int_distribution<T> distribution;
+			return distribution(s_engine);
+		}
+
+		template<typename T>
+		static T UniformDistribution(T from = std::nullopt, T to = std::nullopt)
+		{
+			std::uniform_int_distribution<T> distribution(from.value(), to.value());
+			return distribution(s_engine);
 		}
 
 	private:

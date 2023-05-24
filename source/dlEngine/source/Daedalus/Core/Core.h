@@ -20,7 +20,8 @@
 
 // Evil macros
 
-#define DL_DEBUG
+#define DL_DEBUG_BUILD //TODO: define it from project config
+#define DL_DEV_BUILD //TODO: define it from project config
 
 #ifdef SIGTRAP
 #define PLATFORM_DEBUG_BREAK raise(SIGTRAP)

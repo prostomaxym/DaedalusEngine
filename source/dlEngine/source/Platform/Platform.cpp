@@ -15,9 +15,9 @@ std::unique_ptr<Window> Daedalus::Platform::createWindow()
 	return std::make_unique<WindowsWindow>(WindowProps());
 #elif defined DL_PLATFORM_LINUX
 	return std::make_unique<LinuxWindow>(WindowProps());
-#endif 
-	
-	throw std::runtime_error("Unsupported Platform");
+#else
+	static_assert(false, "Unsupported Platfrom")
+#endif
 }
 
 void Daedalus::Platform::InitInputSystem()
@@ -26,5 +26,7 @@ void Daedalus::Platform::InitInputSystem()
 	Input::CreateInstance(new WindowsInput());
 #elif defined DL_PLATFORM_LINUX
 	Input::CreateInstance(new LinuxInput());
-#endif 
+#else
+	static_assert(false, "Unsupported Platfrom")
+#endif
 }

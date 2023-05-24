@@ -1,6 +1,6 @@
 #include "dlpch.h"
 
-#include "Daedalus/ECS/Entity.h"
+#include "Entity.h"
 
 using namespace Daedalus;
 

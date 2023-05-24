@@ -24,11 +24,11 @@ set(PROJECT_FILES
     source/Daedalus/ECS/Entity.cpp
     source/Daedalus/ECS/Scene.h
     source/Daedalus/ECS/Scene.cpp
+    source/Daedalus/ECS/ScriptableEntity.h
     source/Daedalus/ECS/UUID.h
 
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
-    source/Daedalus/Events/Event.cpp
     source/Daedalus/Events/EventDispatcher.h
     source/Daedalus/Events/EventTable.h
     source/Daedalus/Events/KeyEvent.h
@@ -82,10 +82,12 @@ set(PROJECT_FILES
     source/Daedalus/UI/ImGui/ImGuiLayer.h
     source/Daedalus/UI/ImGui/ImGuiLayer.cpp
 
+    source/Daedalus/Utils/DeltaTime.h
     source/Daedalus/Utils/HighPerformanceRequest.h
     source/Daedalus/Utils/KeyCodes.h
     source/Daedalus/Utils/Random.h
     source/Daedalus/Utils/Random.cpp
+    source/Daedalus/Utils/Timer.h
     source/Daedalus/Utils/WorkingDirectory.h
     source/Daedalus/Utils/WorkingDirectory.cpp
     

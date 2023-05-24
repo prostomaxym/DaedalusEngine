@@ -17,7 +17,7 @@ namespace Daedalus
 		}
 
 		template<typename T>
-		static T UniformDistribution(T from = std::nullopt, T to = std::nullopt)
+		static T UniformDistribution(T from, T to)
 		{
 			std::uniform_int_distribution<T> distribution(from.value(), to.value());
 			return distribution(s_engine);

@@ -37,7 +37,7 @@ namespace Daedalus {
 
 		static void EnableAllCategories();
 		static void EnableCategory(Categories category) { s_allowed_categories |= category; }
-		static void DisableCategory(Categories category) { s_allowed_categories &= category; }
+		static void DisableCategory(Categories category) { s_allowed_categories ^= category; }
 		static void ToggleCategory(Categories category, bool enable);
 		static bool IsEnabled(Categories category) { return category & s_allowed_categories; }
 

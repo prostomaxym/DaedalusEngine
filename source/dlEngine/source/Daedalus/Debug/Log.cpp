@@ -29,7 +29,8 @@ void Log::ToggleCategory(Categories category, bool enable)
 void Log::EnableAllCategories()
 {
 	EnableCategory(Categories::EngineCore);
-	EnableCategory(Categories::Events);
-	EnableCategory(Categories::Platform);
+	EnableCategory(Categories::ECS);
+	EnableCategory(Categories::Events);	
 	EnableCategory(Categories::Renderer);
+	EnableCategory(Categories::Platform);
 }

@@ -64,7 +64,7 @@ namespace Daedalus
 
 	struct NativeScriptComponent
 	{
-		ScriptableEntity* Instance = nullptr;
+		ScriptableEntity* instance = nullptr;
 
 		ScriptableEntity* (*InstantiateScript)();
 		void (*DestroyScript)(NativeScriptComponent*);
@@ -73,7 +73,7 @@ namespace Daedalus
 		void Bind()
 		{
 			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
-			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
+			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->instance; nsc->instance = nullptr; };
 		}
 	};
 }

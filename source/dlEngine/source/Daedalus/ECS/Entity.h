@@ -9,7 +9,7 @@
 
 #include <entt/entt.hpp>
 
-namespace Daedalus 
+namespace Daedalus
 {
 	class Entity
 	{
@@ -74,7 +74,7 @@ namespace Daedalus
 
 	private:
 		entt::entity m_entity_handle{ entt::null };
-		Scene* m_scene = nullptr;
+		Scene* m_scene{ nullptr };
 	};
 
 }

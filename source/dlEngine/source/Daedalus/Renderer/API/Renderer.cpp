@@ -56,9 +56,11 @@ void Renderer::Submit(const Shader* shader, const VertexArray* vertex_array, con
 	shader->Unbind();
 }
 
-void Renderer::Submit(const Shader* shader, const Mesh* mesh)
+void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
 {
 	shader->Bind();
+	shader->SetMat4("u_projection_view", s_scene_data->ProjectionViewMatrix);
+	shader->SetMat4("u_transform", transform);
 
 	if (mesh->GetIndexCount() > 0)
 	{
@@ -72,9 +74,16 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh)
 	}
 }
 
-void Renderer::Submit(const Shader* shader, const Model* model)
+void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
 	const auto& meshes = model->GetMeshes();
+	const auto& textures = model->GetTextures();
+	auto i = 0;
+
 	for (const auto& mesh : meshes)
-		Renderer::Submit(shader, mesh.get()->GetVertexArray().get());
+	{
+		textures[i]->Bind();
+		Renderer::Submit(shader, mesh.get()->GetVertexArray().get(), transform);	
+		i++;
+	}	
 }

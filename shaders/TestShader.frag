@@ -1,8 +1,11 @@
 #version 330 core
 
-out vec4 out_color;
+uniform sampler2D tex;
+
+in vec2 fin_uv;
+out vec4 fout_color;
 
 void main()
 {
-    out_color = vec4(0.0, 0.6, 0.0, 1.0);
+    fout_color = vec4(texture(tex, fin_uv).rgb, 1.0);
 } 

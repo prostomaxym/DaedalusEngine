@@ -28,8 +28,8 @@ namespace Daedalus {
 		static void EndScene();
 
 		static void Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform = glm::mat4(1.0f));
-		static void Submit(const Shader* shader, const Mesh* mesh);
-		static void Submit(const Shader* shader, const Model* model);
+		static void Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform = glm::mat4(1.0f));
+		static void Submit(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 

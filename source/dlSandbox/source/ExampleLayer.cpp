@@ -5,13 +5,14 @@ void ExampleLayer::OnAttach()
 	m_camera = Daedalus::PerspectiveCamera(Daedalus::CameraProjectionProps(80.f * 3.14f / 180.f, 16.f / 9.f, 0.1f, 1000.f), Daedalus::CameraPositionProps());
 	m_camera.SetPosition(glm::vec3(-1.f, 0.f, 0.f));
 
+	//const auto test_model = Daedalus::WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj";
 	const auto test_model = Daedalus::WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj";
 	m_model = Daedalus::Model(test_model);
 }
 
 void ExampleLayer::OnUpdate()
 {
-	const auto model_transform = glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+	const auto model_transform = glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
 
 	auto test_shader = Daedalus::Renderer::s_shader_library->Get("TestShader");
 
@@ -49,7 +50,7 @@ void ExampleLayer::OnUpdate()
 	Daedalus::RenderCommand::Clear();
 
 	Daedalus::Renderer::BeginScene(m_camera);
-	Daedalus::Renderer::Submit(test_shader.get(), &m_model);
+	Daedalus::Renderer::Submit(test_shader.get(), &m_model, model_transform);
 	Daedalus::Renderer::EndScene();
 
 	test_shader->Unbind();

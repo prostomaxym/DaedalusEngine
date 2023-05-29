@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Model.h"
+#include "Texture.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -10,7 +11,7 @@ using namespace Daedalus;
 
 Model::Model(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
-	if (!AssimpParser::LoadModel(path, m_meshes, m_material_names, parser_flags))
+	if (!AssimpParser::LoadModel(path, m_meshes, m_textures, m_material_names, parser_flags))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Model failed to load: " + path.string());
 		throw std::runtime_error("Model failed to load: " + path.string());
@@ -61,6 +62,11 @@ const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 	return m_meshes;
 }
 
+const std::vector<std::shared_ptr<Texture>>& Model::GetTextures() const
+{
+	return m_textures;
+}
+
 const std::vector<std::string>& Model::GetMaterialNames() const
 {
 	return m_material_names;
@@ -71,7 +77,7 @@ const BoundingSphere Model::GetBoundingSphere() const
 	return m_bounding_sphere;
 }
 
-bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::string>& materials, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>& materials, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(file_name.string(), static_cast<unsigned int>(parser_flags));
@@ -79,7 +85,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		return false;
 
-	ProcessMaterials(scene, materials);
+	ProcessMaterials(scene, textures, materials, file_name);
 
 	aiMatrix4x4 identity;
 
@@ -88,7 +94,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	return true;
 }
 
-void AssimpParser::ProcessMaterials(const aiScene * scene, std::vector<std::string>&materials)
+void AssimpParser::ProcessMaterials(const aiScene * scene, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>&materials, const std::filesystem::path& file_name)
 {
 	for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
 	{
@@ -98,6 +104,22 @@ void AssimpParser::ProcessMaterials(const aiScene * scene, std::vector<std::stri
 			aiString name;
 			aiGetMaterialString(material, AI_MATKEY_NAME, &name);
 			materials.push_back(name.C_Str());
+
+			//// Process textures
+			for (uint32_t j = aiTextureType::aiTextureType_NONE; j < aiTextureType::aiTextureType_TRANSMISSION; ++j)
+			{
+				aiTextureType textureType = static_cast<aiTextureType>(j);
+				for (uint32_t k = 0; k < material->GetTextureCount(textureType); ++k)
+				{
+					aiString texturePath;
+					if (material->GetTexture(textureType, k, &texturePath) == AI_SUCCESS)
+					{
+						std::string fullPath = file_name.parent_path().string() + "/" + texturePath.C_Str(); // Construct the full path to the texture file
+						auto texture = Texture2D::Create(fullPath);
+						textures.push_back(texture);
+					}
+				}
+			}
 		}
 	}
 }

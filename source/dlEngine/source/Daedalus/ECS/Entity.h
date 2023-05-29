@@ -52,7 +52,7 @@ namespace Daedalus
 		void RemoveComponent()
 		{
 			DL_ASSERT(HasComponent<T>(), Log::Categories::ECS, "Entity does not have component!");
-			m_scene->m_registry.remove<T>(m_EntityHandle);
+			m_scene->m_registry.remove<T>(m_entity_handle);
 		}
 
 		operator bool() const { return m_entity_handle != entt::null; }

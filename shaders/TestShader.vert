@@ -13,5 +13,6 @@ out vec2 vout_uv;
 
 void main()
 {
+    vout_uv = vin_texcoord;
     gl_Position = u_projection_view * u_transform * vec4(vin_vertices, 1.0);
 }

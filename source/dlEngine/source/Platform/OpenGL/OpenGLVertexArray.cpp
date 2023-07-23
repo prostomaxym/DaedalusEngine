@@ -67,14 +67,14 @@ void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& ver
 		case ShaderDataType::Float2:
 		case ShaderDataType::Float3:
 		case ShaderDataType::Float4:
-		{
+		{	
 			glEnableVertexAttribArray(m_vertex_buffer_index);
 			glVertexAttribPointer(m_vertex_buffer_index,
 				element.GetComponentCount(),
 				ShaderDataTypeToOpenGLBaseType(element.type),
 				element.normalized ? GL_TRUE : GL_FALSE,
 				layout.GetStride(),
-				(const void*)element.offset);
+				(const void*)element.offset);				
 			m_vertex_buffer_index++;
 			break;
 		}

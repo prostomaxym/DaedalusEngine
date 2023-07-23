@@ -14,8 +14,8 @@ namespace Daedalus {
 		int height;
 
 		explicit WindowProps(const std::string& title_ = "Daedalus Engine",
-			int width_ = 1280,
-			int height_ = 720)
+			int width_ = 1920,
+			int height_ = 1080)
 			: title(title_), width(width_), height(height_)
 		{
 		}

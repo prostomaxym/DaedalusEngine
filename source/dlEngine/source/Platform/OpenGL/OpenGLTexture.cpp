@@ -1,6 +1,5 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -40,7 +39,7 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		GLenum internalFormat = 0, dataFormat = 0;
 		if (channels == 4)
 		{
-			internalFormat = GL_RGBA8;
+			internalFormat = GL_RGBA;
 			dataFormat = GL_RGBA;
 		}
 		else if (channels == 3)

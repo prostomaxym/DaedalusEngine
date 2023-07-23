@@ -78,12 +78,10 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 {
 	const auto& meshes = model->GetMeshes();
 	const auto& textures = model->GetTextures();
-	auto i = 0;
 
 	for (const auto& mesh : meshes)
 	{
-		textures[i]->Bind();
+		textures[mesh.get()->GetMaterialIndex() - 1]->Bind();
 		Renderer::Submit(shader, mesh.get()->GetVertexArray().get(), transform);	
-		i++;
 	}	
 }

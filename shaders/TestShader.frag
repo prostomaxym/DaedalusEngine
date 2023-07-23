@@ -2,10 +2,10 @@
 
 uniform sampler2D tex;
 
-in vec2 fin_uv;
+in vec2 vout_uv;
 out vec4 fout_color;
 
 void main()
 {
-    fout_color = vec4(texture(tex, fin_uv).rgb, 1.0);
+    fout_color = vec4(texture(tex, vout_uv).rgb, 1.0);
 } 

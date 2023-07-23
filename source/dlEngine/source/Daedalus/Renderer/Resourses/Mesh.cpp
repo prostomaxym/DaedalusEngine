@@ -78,11 +78,11 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 	m_VBO = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
 	m_VBO->SetLayout(BufferLayout
 		{ 
-			BufferElement{ ShaderDataType::Float3, std::string("v_vertices"), false },
-			BufferElement{ ShaderDataType::Float2, std::string("v_texcoord"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("v_normals"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("v_tangent"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("v_bitangent"), false },
+			BufferElement{ ShaderDataType::Float3, std::string("vin_vertices"), false },
+			BufferElement{ ShaderDataType::Float2, std::string("vin_texcoord"), false },
+			BufferElement{ ShaderDataType::Float3, std::string("vin_normals"), false },
+			BufferElement{ ShaderDataType::Float3, std::string("vin_tangent"), false },
+			BufferElement{ ShaderDataType::Float3, std::string("vin_bitangent"), false },
 		});
 
 	m_EBO = IndexBuffer::Create(indices.data(), indices.size());

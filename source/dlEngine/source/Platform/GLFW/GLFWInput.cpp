@@ -32,7 +32,7 @@ std::pair<float, float> GLFWInput::GetMousePosImpl()
 	return std::make_pair<float, float>(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
-bool Daedalus::GLFWInput::IsGpadKeyPresseImpl(int keycode)
+bool Daedalus::GLFWInput::IsGpadKeyPressedImpl(int keycode)
 {
 	GLFWgamepadstate state;
 	if (!glfwGetGamepadState(0, &state))

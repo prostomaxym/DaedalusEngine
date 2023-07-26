@@ -10,6 +10,9 @@
 
 #include "Daedalus/Renderer/API/Renderer.h"
 
+#include "Daedalus/ECS/Scene.h"
+#include "Daedalus/ECS/Entity.h"
+
 #include "Daedalus/UI/ImGui/ImGuiLayer.h"
 
 #include "Daedalus/Utils/KeyCodes.h"

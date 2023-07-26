@@ -8,9 +8,9 @@ public:
 	ExampleLayer() : Layer("Example") {}
 
 	void OnAttach() override;
+	void OnDetach() override;
 	void OnUpdate() override;
 
 private:
-	Daedalus::PerspectiveCamera m_camera;
-	Daedalus::Model m_model;
+	Daedalus::Scene m_scene;
 };

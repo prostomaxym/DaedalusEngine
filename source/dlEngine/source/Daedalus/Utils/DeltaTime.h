@@ -30,6 +30,10 @@ namespace Daedalus
             return std::chrono::duration_cast<std::chrono::seconds>(m_time).count();
         }
 
+        static DeltaTime Lock60FPS()
+        {
+            return DeltaTime(std::chrono::nanoseconds(16666666));
+        }
 
         //------------------------------- Operators --------------------------
     public:

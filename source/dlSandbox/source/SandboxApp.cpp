@@ -2,7 +2,6 @@
 
 #include "ExampleLayer.h"
 
-
 Daedalus::Application* Daedalus::CreateApplication()
 {
 	// Entry point is defined in engine

@@ -2,6 +2,7 @@
 
 #include "UUID.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
+#include "Daedalus/Renderer/Resourses/Model.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -43,20 +44,31 @@ namespace Daedalus
 
 		glm::mat4 GetTransform() const
 		{
-			glm::mat4 rotation = glm::toMat4(glm::quat(rotation));
+			glm::mat4 rotation_mat = glm::toMat4(glm::quat(rotation));
 
 			return glm::translate(glm::mat4(1.0f), translation)
-				* rotation
+				* rotation_mat
 				* glm::scale(glm::mat4(1.0f), scale);
 		}
 	};
 
+	struct RenderableObjectComponent
+	{
+		Model model;
+
+		RenderableObjectComponent() = default;	
+		RenderableObjectComponent(const RenderableObjectComponent&) = default;
+		RenderableObjectComponent(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE) : model(path, parser_flags) {}
+	};
+
 	struct CameraComponent
 	{
-		PerspectiveCamera Camera;
+		PerspectiveCamera camera;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
+		CameraComponent(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps()) :
+			camera(proj_props, pos_props) {}
 	};
 
 

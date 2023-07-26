@@ -13,7 +13,7 @@ namespace Daedalus {
 		virtual std::pair<float, float> GetMousePosImpl() override;
 
 		//Gamepad input
-		virtual bool IsGpadKeyPresseImpl(int keycode) override;
+		virtual bool IsGpadKeyPressedImpl(int keycode) override;
 		virtual std::pair<float, float> GetStickPosImpl(StickType type) override;
 		virtual float GetBumperPosImpl(BamperType type) override;
 

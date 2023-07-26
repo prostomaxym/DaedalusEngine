@@ -32,7 +32,7 @@ namespace Daedalus {
 			Right
 		};
 
-		inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPresseImpl(keycode); }
+		inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPressedImpl(keycode); }
 		inline std::pair<float, float> GetStickPos(StickType type) { return s_instance->GetStickPosImpl(type); }
 		inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
 
@@ -45,7 +45,7 @@ namespace Daedalus {
 		virtual std::pair<float, float> GetMousePosImpl() = 0;
 
 		//Gamepad input
-		virtual bool IsGpadKeyPresseImpl(int keycode) = 0;
+		virtual bool IsGpadKeyPressedImpl(int keycode) = 0;
 		virtual std::pair<float, float> GetStickPosImpl(StickType type) = 0;
 		virtual float GetBumperPosImpl(BamperType type) = 0;
 

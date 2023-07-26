@@ -11,7 +11,7 @@
 
 namespace Daedalus
 {
-	class Entity
+	DAEDALUS_API class Entity
 	{
 	public:
 		Entity() = default;
@@ -36,14 +36,14 @@ namespace Daedalus
 		}
 
 		template<typename T>
-		T& GetComponent()
+		T& GetComponent() const
 		{
 			DL_ASSERT(HasComponent<T>(), Log::Categories::ECS, "Entity does not have component!");
 			return m_scene->m_registry.get<T>(m_entity_handle);
 		}
 
 		template<typename T>
-		bool HasComponent()
+		bool HasComponent() const 
 		{
 			return m_scene->m_registry.any_of<T>(m_entity_handle);
 		}
@@ -60,7 +60,7 @@ namespace Daedalus
 		operator uint32_t() const { return (uint32_t)m_entity_handle; }
 
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
-		const std::string& GetName() { return GetComponent<TagComponent>().tag; }
+		const std::string& GetName() const { return GetComponent<TagComponent>().tag; }
 
 		bool operator==(const Entity& other) const
 		{

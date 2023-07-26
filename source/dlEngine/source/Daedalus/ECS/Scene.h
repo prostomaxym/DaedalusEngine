@@ -9,7 +9,7 @@ namespace Daedalus
 {
 	class Entity;
 
-	class Scene
+	class DAEDALUS_API Scene
 	{
 	public:
 		Scene() = default;

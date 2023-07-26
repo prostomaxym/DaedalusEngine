@@ -61,6 +61,8 @@ namespace Daedalus {
 		void SetPosition(glm::vec3 position);
 		void SetRotation(float xoffset, float yoffset);
 
+		glm::vec3 GetPosition() { return m_position; }
+
 		void ProcessKeyboard(CameraMovement direction, float delta_time);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);
 		void ProcessMouseScroll(float yoffset);

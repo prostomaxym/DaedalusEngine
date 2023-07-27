@@ -48,15 +48,15 @@ install(TARGETS dlSandbox
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/version.txt
         DESTINATION .)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION .
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/runtime/shaders DESTINATION .
 
         PATTERN "cache" EXCLUDE
-        PATTERN ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+        PATTERN ${CMAKE_CURRENT_SOURCE_DIR}/runtime/shaders
 
         PERMISSIONS OWNER_WRITE
 )
 
 install(DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        ${CMAKE_CURRENT_SOURCE_DIR}/runtime/assets
         DESTINATION .
         )

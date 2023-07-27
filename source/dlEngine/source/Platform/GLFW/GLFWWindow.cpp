@@ -4,7 +4,7 @@
 #include "Daedalus/Events/ApplicationEvent.h"
 #include "Daedalus/Events/MouseEvent.h"
 #include "Daedalus/Events/KeyEvent.h"
-#include "Platform/OpenGL/OpenGLContext.h"
+#include "Daedalus/Renderer/Primitives/GraphicsContext.h"
 
 using namespace Daedalus;
 
@@ -31,8 +31,7 @@ void GLFWWindow::Init(const WindowProps& props)
 	m_data.title = props.title;
 	m_data.width = props.width;
 	m_data.height = props.height;
-
-	Log::Write(Log::Levels::Info, Log::Categories::Platform,"Creating window {0} ({1}, {2})", props.title, props.width, props.height);
+	m_fullscreen = props.full_screen;
 
 	if (!s_GLFWInitialized)
 	{
@@ -43,12 +42,25 @@ void GLFWWindow::Init(const WindowProps& props)
 		s_GLFWInitialized = true;
 	}
 
-	m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
-	m_context = std::make_unique<OpenGLContext>(m_window);
+	if (props.full_screen)
+	{
+		const auto monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+		Log::Write(Log::Levels::Info, Log::Categories::Platform, "Creating window {0} ({1}, {2})", props.title, mode->width, mode->height);
+		m_window = glfwCreateWindow(mode->width, mode->height, m_data.title.c_str(), monitor, nullptr);
+	}
+	else
+	{
+		Log::Write(Log::Levels::Info, Log::Categories::Platform, "Creating window {0} ({1}, {2})", props.title, props.width, props.height);
+		m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
+	}
+
+	m_context = GraphicsContext::Create(m_window);
 	m_context->Init();
 
 	glfwSetWindowUserPointer(m_window, &m_data);
-	SetVSync(false);
+	SetVSync(props.vsync);
 
 	SetupCallbacks();
 }
@@ -147,6 +159,20 @@ void GLFWWindow::SetupCallbacks()
 			MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
 			data.EventCallback(event);
 		});
+
+	glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused)
+		{
+			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+			data.focused = focused;
+
+			// If the window is not focused, disable VSync to avoid potential freezing issues
+			data.VSync = !focused ? false : data.VSync;
+
+			if (data.VSync)
+				glfwSwapInterval(1);
+			else
+				glfwSwapInterval(0);
+		});
 }
 
 void GLFWWindow::OnUpdate()
@@ -168,4 +194,42 @@ void GLFWWindow::SetVSync(bool enabled)
 bool GLFWWindow::IsVSync() const
 {
 	return m_data.VSync;
+}
+
+bool GLFWWindow::IsFullscreen() const
+{
+	return m_fullscreen;
+}
+
+void GLFWWindow::SetFullscreen(bool enable)
+{
+	if (IsFullscreen() == enable)
+		return;
+
+	m_fullscreen = enable;
+
+	static int pos_x = 0, pos_y = 0, width = 0, height = 0;
+
+	if (enable)
+	{
+		const auto monitor = glfwGetPrimaryMonitor();
+
+		// backup window position and window size
+		glfwGetWindowPos(m_window, &pos_x, &pos_y);
+		glfwGetWindowSize(m_window, &width, &height);
+
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+		glfwSetWindowMonitor(m_window, nullptr, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+
+		m_context->SetViewport(0, 0, mode->width, mode->height);
+	}
+	else
+	{
+		glfwSetWindowMonitor(m_window, nullptr, pos_x, pos_y, width, height, GLFW_DONT_CARE);
+		m_context->SetViewport(pos_x, pos_y, width, height);
+	}
+
+	SetVSync(m_data.VSync);
+	glfwMakeContextCurrent(m_window);
 }

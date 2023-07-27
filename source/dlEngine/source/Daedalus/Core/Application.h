@@ -39,6 +39,7 @@ namespace Daedalus {
 
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
+		bool OnWindowResized(WindowResizeEvent& event);
 
 		std::unique_ptr<Window> m_window;
 		ImGuiLayer* m_imgui_layer; // LayerStack owns imgui_layer

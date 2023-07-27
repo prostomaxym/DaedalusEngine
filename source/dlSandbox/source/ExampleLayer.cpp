@@ -79,6 +79,11 @@ void ExampleLayer::OnUpdate()
 
 	const auto pos = camera.GetPosition();
 	const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
-	Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message);
+	Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
+
+	auto& miranda_rot = m_scene.FindEntityByName("Miranda").GetComponent<TransformComponent>().rotation;
+
+	miranda_rot.y += 0.3f;
+
 	m_scene.OnUpdateRuntime(DeltaTime::Lock60FPS());
 }

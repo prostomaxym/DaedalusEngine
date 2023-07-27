@@ -26,6 +26,9 @@ namespace Daedalus {
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
 
+		bool IsFullscreen() const override;
+		void SetFullscreen(bool enable) override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
@@ -40,12 +43,14 @@ namespace Daedalus {
 		{
 			std::string title;
 			unsigned int width = 0u, height = 0u;
-			bool VSync = true;
+			bool VSync{ false };
+			bool focused{ true };
 
 			EventCallbackFn EventCallback;
 		};
 
 		WindowData m_data;
-	};
 
+		bool m_fullscreen{ false };
+	};
 }

@@ -62,6 +62,7 @@ void Application::Run()
 void Application::OnEvent(Event& event)
 {
 	EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
+	EventDispatcher::ProcessEvent<WindowResizeEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowResized));
 
 	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
 
@@ -87,5 +88,12 @@ void Application::PushOverlay(Layer* overlay)
 bool Application::OnWindowClosed(WindowCloseEvent& event)
 {
 	m_running = false;
+	return true;
+}
+
+bool Application::OnWindowResized(WindowResizeEvent& event)
+{
+	RenderCommand::SetViewport(0,0, event.GetWidth(), event.GetHeight());
+
 	return true;
 }

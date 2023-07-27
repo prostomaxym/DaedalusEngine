@@ -18,7 +18,8 @@ namespace Daedalus {
 			ECS = BITMASK(1),
 			Renderer = BITMASK(2),
 			Events = BITMASK(3),
-			Platform = BITMASK(4)
+			Platform = BITMASK(4),
+			Application = BITMASK(5)
 		};
 
 		enum class Levels

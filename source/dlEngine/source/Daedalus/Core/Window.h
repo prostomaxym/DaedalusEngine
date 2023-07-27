@@ -12,11 +12,14 @@ namespace Daedalus {
 		std::string title;
 		int width;
 		int height;
+		bool full_screen;
+		bool vsync;
 
-		explicit WindowProps(const std::string& title_ = "Daedalus Engine",
-			int width_ = 1920,
-			int height_ = 1080)
-			: title(title_), width(width_), height(height_)
+		explicit WindowProps(const std::string& title_ = "Daedalus Engine", int width_ = 1920, int height_ = 1080, bool full_screen_ = true, bool vsync_ = false) :
+			title(title_), width(width_),
+			height(height_),
+			full_screen(full_screen_),
+			vsync(vsync_)
 		{
 		}
 	};
@@ -37,6 +40,9 @@ namespace Daedalus {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
+
+		virtual bool IsFullscreen() const = 0;
+		virtual void SetFullscreen(bool enable) = 0;
 	};
 
 }

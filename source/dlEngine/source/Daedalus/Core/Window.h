@@ -8,17 +8,25 @@
 namespace Daedalus {
 
 	struct WindowProps
-	{
+	{	
 		std::string title;
 		int width;
 		int height;
-		bool full_screen;
 		bool vsync;
 
-		explicit WindowProps(const std::string& title_ = "Daedalus Engine", int width_ = 1920, int height_ = 1080, bool full_screen_ = true, bool vsync_ = false) :
+		enum class ScreenMode
+		{
+			windowed,
+			windowed_fullscreen,
+			fullscreen
+		};
+
+		ScreenMode screenmode;
+
+		explicit WindowProps(const std::string& title_ = "Daedalus Engine", int width_ = 1920, int height_ = 1080, ScreenMode screenmode_ = ScreenMode::windowed_fullscreen, bool vsync_ = false) :
 			title(title_), width(width_),
 			height(height_),
-			full_screen(full_screen_),
+			screenmode(screenmode_),
 			vsync(vsync_)
 		{
 		}
@@ -42,7 +50,6 @@ namespace Daedalus {
 		virtual bool IsVSync() const = 0;
 
 		virtual bool IsFullscreen() const = 0;
-		virtual void SetFullscreen(bool enable) = 0;
+		virtual void SetWindowMode(WindowProps::ScreenMode screenmode) = 0;
 	};
-
 }

@@ -45,6 +45,9 @@ void ExampleLayer::OnDetach()
 
 void ExampleLayer::OnUpdate()
 {
+	static Timer timer;
+	timer.StartTimer();
+
 	auto& camera = m_scene.FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
 
 	if (Input::IsKeyPressed(DL_KEY_W))
@@ -85,5 +88,5 @@ void ExampleLayer::OnUpdate()
 
 	miranda_rot.y += 0.3f;
 
-	m_scene.OnUpdateRuntime(DeltaTime::Lock60FPS());
+	m_scene.OnUpdateRuntime(timer.GetEllapsedTime());
 }

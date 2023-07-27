@@ -31,7 +31,7 @@ void GLFWWindow::Init(const WindowProps& props)
 	m_data.title = props.title;
 	m_data.width = props.width;
 	m_data.height = props.height;
-	m_fullscreen = props.full_screen;
+	m_screenmode = props.screenmode;
 
 	if (!s_GLFWInitialized)
 	{
@@ -42,16 +42,24 @@ void GLFWWindow::Init(const WindowProps& props)
 		s_GLFWInitialized = true;
 	}
 
-	if (props.full_screen)
+	if (props.screenmode != WindowProps::ScreenMode::windowed)
 	{
 		const auto monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
 		Log::Write(Log::Levels::Info, Log::Categories::Platform, "Creating window {0} ({1}, {2})", props.title, mode->width, mode->height);
-		m_window = glfwCreateWindow(mode->width, mode->height, m_data.title.c_str(), monitor, nullptr);
+
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+
+		if (props.screenmode == WindowProps::ScreenMode::fullscreen)
+			m_window = glfwCreateWindow(mode->width, mode->height, m_data.title.c_str(), monitor, nullptr);
+		else
+			m_window = glfwCreateWindow(mode->width, mode->height, m_data.title.c_str(), nullptr, nullptr);		
 	}
 	else
 	{
+		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+
 		Log::Write(Log::Levels::Info, Log::Categories::Platform, "Creating window {0} ({1}, {2})", props.title, props.width, props.height);
 		m_window = glfwCreateWindow(props.width, props.height, m_data.title.c_str(), nullptr, nullptr);
 	}
@@ -198,19 +206,19 @@ bool GLFWWindow::IsVSync() const
 
 bool GLFWWindow::IsFullscreen() const
 {
-	return m_fullscreen;
+	return m_screenmode != WindowProps::ScreenMode::windowed;
 }
 
-void GLFWWindow::SetFullscreen(bool enable)
+void GLFWWindow::SetWindowMode(WindowProps::ScreenMode screenmode)
 {
-	if (IsFullscreen() == enable)
+	if (screenmode == m_screenmode)
 		return;
 
-	m_fullscreen = enable;
+	m_screenmode = screenmode;
 
 	static int pos_x = 0, pos_y = 0, width = 0, height = 0;
 
-	if (enable)
+	if (m_screenmode != WindowProps::ScreenMode::windowed)
 	{
 		const auto monitor = glfwGetPrimaryMonitor();
 
@@ -220,13 +228,18 @@ void GLFWWindow::SetFullscreen(bool enable)
 
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-		glfwSetWindowMonitor(m_window, nullptr, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+		if(m_screenmode == WindowProps::ScreenMode::fullscreen)
+			glfwSetWindowMonitor(m_window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+		else
+			glfwSetWindowMonitor(m_window, nullptr, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
 
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 		m_context->SetViewport(0, 0, mode->width, mode->height);
 	}
 	else
 	{
 		glfwSetWindowMonitor(m_window, nullptr, pos_x, pos_y, width, height, GLFW_DONT_CARE);
+		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 		m_context->SetViewport(pos_x, pos_y, width, height);
 	}
 

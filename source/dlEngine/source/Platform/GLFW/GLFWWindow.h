@@ -27,7 +27,7 @@ namespace Daedalus {
 		bool IsVSync() const override;
 
 		bool IsFullscreen() const override;
-		void SetFullscreen(bool enable) override;
+		virtual void SetWindowMode(WindowProps::ScreenMode screenmode) override;
 
 	private:
 		virtual void Init(const WindowProps& props);
@@ -51,6 +51,6 @@ namespace Daedalus {
 
 		WindowData m_data;
 
-		bool m_fullscreen{ false };
+		WindowProps::ScreenMode m_screenmode {WindowProps::ScreenMode::fullscreen};
 	};
 }

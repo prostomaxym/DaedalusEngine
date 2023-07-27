@@ -40,10 +40,35 @@ std::filesystem::path WorkingDirectory::GetShaderDirectory()
 std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
 {
 	int dir_depth = 0;
-	constexpr auto max_depth = 4; //Explicitly limit number of CDs to avoid problems if not found
-	for (; dir_depth < 5; ++dir_depth)
+	constexpr auto max_depth = 5; //Explicitly limit number of CDs to avoid problems if not found
+	bool found = false;
+
+	for (; dir_depth < max_depth; ++dir_depth)
 	{
 		if (std::filesystem::exists(bin_dir))
+		{
+			break;
+		}
+
+		std::filesystem::path current_path = std::filesystem::current_path();
+
+		for (const auto& entry : std::filesystem::directory_iterator(current_path))
+		{
+			if (std::filesystem::is_directory(entry))
+			{
+				std::filesystem::path subDirPath = entry.path();
+				std::filesystem::path targetFolderPath = subDirPath / bin_dir;
+
+				if (std::filesystem::exists(targetFolderPath))
+				{
+					std::filesystem::current_path(subDirPath);
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if (found)
 			break;
 
 		std::filesystem::current_path(changedir_back);

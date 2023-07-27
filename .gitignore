@@ -1,10 +1,7 @@
 # Folders
-assets/
-bin/
-bin-int/
+runtime/
 build/
 install/
-Testing/
 vcpkg_installed/
 .vs/
 

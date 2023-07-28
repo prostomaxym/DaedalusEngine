@@ -50,9 +50,9 @@ std::pair<float, float> Daedalus::GLFWInput::GetStickPosImpl(StickType type)
 	switch (type)
 	{
 	case Input::StickType::Left:
-		return { state.axes[0], state.axes[1] };
+		return { state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
 	case Input::StickType::Right:
-		return { state.axes[2], state.axes[3] };
+		return { state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] };
 	default:
 		break;
 	}
@@ -69,9 +69,9 @@ float Daedalus::GLFWInput::GetBumperPosImpl(BamperType type)
 	switch (type)
 	{
 	case Input::BamperType::Left:
-		return state.axes[4];
+		return state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
 	case Input::BamperType::Right:
-		return state.axes[5];
+		return state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	default:
 		break;
 	}

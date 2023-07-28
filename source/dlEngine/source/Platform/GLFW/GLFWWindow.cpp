@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "GLFWWindow.h"
 
+#include "Daedalus/Core/Input.h"
 #include "Daedalus/Events/ApplicationEvent.h"
 #include "Daedalus/Events/MouseEvent.h"
 #include "Daedalus/Events/KeyEvent.h"
@@ -71,6 +72,10 @@ void GLFWWindow::Init(const WindowProps& props)
 
 	glfwSetWindowUserPointer(m_window, &m_data);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	if (glfwJoystickPresent(0))
+		Input::EnableGamepadInput(true);
+
 	SetVSync(props.vsync);
 
 	SetupCallbacks();
@@ -182,6 +187,11 @@ void GLFWWindow::SetupCallbacks()
 				glfwSwapInterval(1);
 			else
 				glfwSwapInterval(0);
+		});
+
+	glfwSetJoystickCallback([](int joystick_id, int event)
+		{
+			Input::EnableGamepadInput(event == GLFW_CONNECTED);
 		});
 }
 

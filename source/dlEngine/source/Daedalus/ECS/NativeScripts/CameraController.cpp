@@ -45,5 +45,28 @@ void CameraController::OnUpdate(DeltaTime ts)
 
 	camera.ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
 	//TODO: add zoom
+
+	if (Input::IsGamepadInputEnabled())
+	{
+		const auto [xAxeLeft, yAxeLeft] = Input::GetStickPos(Input::StickType::Left);
+
+		if(yAxeLeft != 0.f)
+			camera.MoveCamera(CameraMovement::FORWARD, -yAxeLeft * dt * 10.f);
+
+		if(xAxeLeft != 0.f)
+			camera.MoveCamera(CameraMovement::RIGHT, xAxeLeft * dt * 10.f);
+
+		const auto [xAxeRight, yAxeRight] = Input::GetStickPos(Input::StickType::Right);
+
+		float xoffset = 0.f, yoffset = 0.f;
+
+		if (xAxeRight != 0.f)
+			xoffset = xAxeRight * dt * 100.f;
+
+		if (yAxeRight != 0.f)
+			yoffset  = -yAxeRight * dt * 100.f;
+
+		camera.ProcessMouseMovement(xoffset, yoffset);
+	}
 }
 

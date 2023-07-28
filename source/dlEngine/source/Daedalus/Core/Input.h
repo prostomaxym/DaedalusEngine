@@ -13,6 +13,14 @@ namespace Daedalus {
 	{
 		friend Platform;
 	public:
+		//Input configuration
+		inline static void EnableKeyboardInput(bool enable) { m_keyboard_connected = enable; } //TODO: not implemented
+		inline static void EnableGamepadInput(bool enable) { m_gamepad_connected = enable; }
+		inline static void SetSticksDeadZone(float perc) { m_sticks_deadzone = perc; }
+
+		inline static bool IsKeyboardInputEnabled() { return m_keyboard_connected; }
+		inline static bool IsGamepadInputEnabled() { return m_gamepad_connected; }
+
 		// Keyboard + mouse input
 		inline static bool IsKeyPressed(int keycode) { return s_instance->IsKeyPressedImpl(keycode); }
 
@@ -34,7 +42,7 @@ namespace Daedalus {
 		};
 
 		inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPressedImpl(keycode); }
-		inline std::pair<float, float> GetStickPos(StickType type) { return s_instance->GetStickPosImpl(type); }
+		inline static std::pair<float, float> GetStickPos(StickType type);
 		inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
 
 	protected:
@@ -52,6 +60,8 @@ namespace Daedalus {
 
 	private:
 		static Input* s_instance;
+		static bool m_keyboard_connected;
+		static bool m_gamepad_connected;
+		static float m_sticks_deadzone;
 	};
-
 }

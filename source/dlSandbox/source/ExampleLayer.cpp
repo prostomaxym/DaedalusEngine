@@ -56,7 +56,7 @@ void ExampleLayer::OnUpdate()
 	miranda_rot.y += 0.1f * dt.GetMilliseconds();
 
 	m_scene.OnUpdateRuntime(dt);
-	FPSLocker::LockFps(144, timer);	
+	FPSLocker::LockFps(500, timer);	
 
 	const auto& camera = m_scene.FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
 	const auto pos = camera.GetPosition();

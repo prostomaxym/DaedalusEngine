@@ -36,6 +36,7 @@ namespace Daedalus {
 		virtual void SetupCallbacks();
 
 	private:
+
 		std::unique_ptr<GraphicsContext> m_context;
 		GLFWwindow* m_window;
 
@@ -50,7 +51,6 @@ namespace Daedalus {
 		};
 
 		WindowData m_data;
-
 		WindowProps::ScreenMode m_screenmode {WindowProps::ScreenMode::fullscreen};
 	};
 }

@@ -64,7 +64,7 @@ namespace Daedalus {
 		void SetSensivitity(float senc) { m_mouse_sensitivity = senc; }
 		void SetZoomSpeed(float speed) { m_zoom_speed = speed; }
 
-		glm::vec3 GetPosition() { return m_position; }
+		glm::vec3 GetPosition() const { return m_position; }
 
 		void ProcessKeyboard(CameraMovement direction, float delta_time);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);

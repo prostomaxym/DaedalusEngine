@@ -42,6 +42,8 @@ void GLFWWindow::Init(const WindowProps& props)
 		s_GLFWInitialized = true;
 	}
 
+	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
+	
 	if (props.screenmode != WindowProps::ScreenMode::windowed)
 	{
 		const auto monitor = glfwGetPrimaryMonitor();
@@ -68,6 +70,7 @@ void GLFWWindow::Init(const WindowProps& props)
 	m_context->Init();
 
 	glfwSetWindowUserPointer(m_window, &m_data);
+	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	SetVSync(props.vsync);
 
 	SetupCallbacks();
@@ -163,7 +166,6 @@ void GLFWWindow::SetupCallbacks()
 	glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos)
 		{
 			WindowData& data = *static_cast<WindowData*>(glfwGetWindowUserPointer(window));
-
 			MouseMovedEvent event(static_cast<float>(xPos), static_cast<float>(yPos));
 			data.EventCallback(event);
 		});

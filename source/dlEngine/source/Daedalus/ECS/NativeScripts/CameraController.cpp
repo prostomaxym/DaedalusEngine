@@ -29,7 +29,6 @@ void CameraController::OnUpdate(DeltaTime ts)
 	if (Input::IsKeyPressed(DL_KEY_C))
 		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
 
-
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
 	if (!xPrevious.has_value() || !yPrevious.has_value())
@@ -45,10 +44,6 @@ void CameraController::OnUpdate(DeltaTime ts)
 	yPrevious = yCurrent;
 
 	camera.ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
-	camera.ProcessZoom(Input::);
-
-	const auto pos = camera.GetPosition();
-	const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
-	Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
+	//TODO: add zoom
 }
 

@@ -13,7 +13,7 @@ namespace Daedalus
 		Timer() { StartTimer(); }
 
 		// Reset time and start counting
-		void StartTimer() { m_begin_time = std::chrono::high_resolution_clock::now(); }
+		void StartTimer() { m_begin_time = std::chrono::steady_clock::now(); }
 
 		DeltaTime GetEllapsedTime() const
 		{
@@ -21,6 +21,6 @@ namespace Daedalus
 		}
 
 	private:
-		std::chrono::high_resolution_clock::time_point m_begin_time{};
+		std::chrono::steady_clock::time_point m_begin_time{};
 	};
 }

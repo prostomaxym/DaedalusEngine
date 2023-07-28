@@ -19,6 +19,7 @@ namespace Daedalus {
 		inline static bool IsMouseButtonPressed(int button) { return s_instance->IsMouseButtonPressedImpl(button); }
 		inline static std::pair<float, float> GetMousePos() { return s_instance->GetMousePosImpl(); }
 
+
 		//Gamepad input
 		enum class StickType
 		{
@@ -51,8 +52,6 @@ namespace Daedalus {
 
 	private:
 		static Input* s_instance;
-		bool m_has_mouse_keyboard = false;
-		bool m_has_gamepad = false;
 	};
 
 }

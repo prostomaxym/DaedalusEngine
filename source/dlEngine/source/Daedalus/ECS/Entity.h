@@ -11,7 +11,7 @@
 
 namespace Daedalus
 {
-	DAEDALUS_API class Entity
+	class DAEDALUS_API Entity
 	{
 	public:
 		Entity() = default;

@@ -73,20 +73,17 @@ namespace Daedalus
 	};
 
 
-	class ScriptableEntity; //To avoid circular dependency
+	class NativeScript; //To avoid circular dependency
 
 	struct NativeScriptComponent
 	{
-		ScriptableEntity* instance = nullptr;
+		std::function<std::unique_ptr<NativeScript>(Entity entity)> InstantiateScript;
+		std::unique_ptr<NativeScript> instance;
 
-		ScriptableEntity* (*InstantiateScript)();
-		void (*DestroyScript)(NativeScriptComponent*);
-
-		template<typename T>
-		void Bind()
+		template<typename T, typename... Args>
+		void Bind(Args... args)
 		{
-			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
-			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->instance; nsc->instance = nullptr; };
+			InstantiateScript = [args...](Entity entity) { return std::make_unique<T>(entity, args...); };
 		}
 	};
 }

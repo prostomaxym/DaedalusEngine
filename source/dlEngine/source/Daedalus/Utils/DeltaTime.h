@@ -12,27 +12,27 @@ namespace Daedalus
 
         float GetNanoseconds() const
         {
-            return std::chrono::duration_cast<std::chrono::nanoseconds>(m_time).count();
+            return m_time.count();
         }
 
         float GetMicroseconds() const
         {
-            return std::chrono::duration_cast<std::chrono::microseconds>(m_time).count();
+            return m_time.count() / 1000.f;
         }
 
         float GetMilliseconds() const
         {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(m_time).count();
+            return m_time.count() / 1000000.f;
         }
 
         float GetSeconds() const
         {
-            return std::chrono::duration_cast<std::chrono::seconds>(m_time).count();
+            return  m_time.count() / 1000000000.f;;
         }
 
-        static DeltaTime Lock60FPS()
+        std::chrono::nanoseconds GetTime() const
         {
-            return DeltaTime(std::chrono::nanoseconds(16666666));
+            return m_time;
         }
 
         //------------------------------- Operators --------------------------

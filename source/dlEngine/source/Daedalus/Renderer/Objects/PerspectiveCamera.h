@@ -60,12 +60,15 @@ namespace Daedalus {
 
 		void SetPosition(glm::vec3 position);
 		void SetRotation(float xoffset, float yoffset);
+		void SetMovementSpeed(float speed) { m_movement_speed = speed; }
+		void SetSensivitity(float senc) { m_mouse_sensitivity = senc; }
+		void SetZoomSpeed(float speed) { m_zoom_speed = speed; }
 
 		glm::vec3 GetPosition() { return m_position; }
 
 		void ProcessKeyboard(CameraMovement direction, float delta_time);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);
-		void ProcessMouseScroll(float yoffset);
+		void ProcessZoom(float yoffset);
 
 		void MoveCamera(CameraMovement direction, float distance);
 		void RotateCamera(float xoffset, float yoffset);
@@ -85,8 +88,9 @@ namespace Daedalus {
 		float m_pitch = 0.f;
 
 		float m_movement_speed = 3.f;
-		float m_mouse_sensitivity = 0.25f;
-		float m_zoom = 45.f;
+		float m_mouse_sensitivity = 2.f;
+		float m_zoom = 1.f;
+		float m_zoom_speed = 1.f;
 	};
 
 }

@@ -33,4 +33,5 @@ void Log::EnableAllCategories()
 	EnableCategory(Categories::Events);	
 	EnableCategory(Categories::Renderer);
 	EnableCategory(Categories::Platform);
+	EnableCategory(Categories::Application);
 }

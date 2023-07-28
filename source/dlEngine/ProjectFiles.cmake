@@ -24,8 +24,10 @@ set(PROJECT_FILES
     source/Daedalus/ECS/Entity.cpp
     source/Daedalus/ECS/Scene.h
     source/Daedalus/ECS/Scene.cpp
-    source/Daedalus/ECS/ScriptableEntity.h
+    source/Daedalus/ECS/NativeScript.h
     source/Daedalus/ECS/UUID.h
+    source/Daedalus/ECS/NativeScripts/CameraController.h
+    source/Daedalus/ECS/NativeScripts/CameraController.cpp
 
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h
@@ -84,6 +86,7 @@ set(PROJECT_FILES
 
     source/Daedalus/Utils/DeltaTime.h
     source/Daedalus/Utils/HighPerformanceRequest.h
+    source/Daedalus/Utils/FPSLocker.h
     source/Daedalus/Utils/KeyCodes.h
     source/Daedalus/Utils/Random.h
     source/Daedalus/Utils/Random.cpp

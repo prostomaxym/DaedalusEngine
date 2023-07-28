@@ -58,8 +58,6 @@ void PerspectiveCamera::ProcessKeyboard(CameraMovement direction, float delta_ti
 		m_position += m_world_up * velocity;
 	if (direction == CameraMovement::DOWN)
 		m_position -= m_world_up * velocity;
-
-	Update();
 }
 
 void PerspectiveCamera::ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch)
@@ -81,16 +79,10 @@ void PerspectiveCamera::ProcessMouseMovement(float xoffset, float yoffset, bool 
 	Update();
 }
 
-void PerspectiveCamera::ProcessMouseScroll(float yoffset)
+void PerspectiveCamera::ProcessZoom(float offset)
 {
-	if (m_zoom >= 1.0f && m_zoom <= 45.0f)
-		m_zoom -= yoffset;
-	if (m_zoom <= 1.0f)
-		m_zoom = 1.0f;
-	if (m_zoom >= 45.0f)
-		m_zoom = 45.0f;
-
-	Update();
+	m_zoom = std::clamp(m_zoom + offset * m_zoom_speed, 1.f, 2.f);
+	m_proj_props.fov *= m_zoom;
 }
 
 void PerspectiveCamera::MoveCamera(CameraMovement direction, float distance)
@@ -107,8 +99,6 @@ void PerspectiveCamera::MoveCamera(CameraMovement direction, float distance)
 		m_position += m_world_up * distance;
 	if (direction == CameraMovement::DOWN)
 		m_position -= m_world_up * distance;
-
-	Update();
 }
 
 void PerspectiveCamera::RotateCamera(float xoffset, float yoffset)

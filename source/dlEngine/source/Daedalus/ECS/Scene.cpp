@@ -4,7 +4,7 @@
 
 #include "Daedalus/Renderer/API/Renderer.h"
 #include "Entity.h"
-#include "ScriptableEntity.h"
+#include "NativeScript.h"
 
 using namespace Daedalus;
 
@@ -28,9 +28,7 @@ void Scene::OnUpdateRuntime(DeltaTime ts)
 				{
 					if (!nsc.instance)
 					{
-						nsc.instance = nsc.InstantiateScript();
-						nsc.instance->m_entity = Entity{ entity, this };
-						nsc.instance->OnCreate();
+						nsc.instance = nsc.InstantiateScript({ entity, this });
 					}
 
 					nsc.instance->OnUpdate(ts);
@@ -44,28 +42,28 @@ void Scene::OnUpdateRuntime(DeltaTime ts)
 	}
 
 	// Graphics
-
-	auto test_shader = Renderer::s_shader_library->Get("TestShader");
-
-	RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
-	RenderCommand::Clear();
-
-	Renderer::BeginScene(FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera);
-
-	for (auto& handle : m_entity_map)
 	{
-		const auto entity = GetEntityByUUID(handle.first);
+		auto test_shader = Renderer::s_shader_library->Get("TestShader");
 
-		if (entity.HasComponent<RenderableObjectComponent>())
+		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
+		RenderCommand::Clear();
+
+		Renderer::BeginScene(FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera);
+
+		for (auto& handle : m_entity_map)
 		{
-			Renderer::Submit(test_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
+			const auto entity = GetEntityByUUID(handle.first);
+
+			if (entity.HasComponent<RenderableObjectComponent>())
+			{
+				Renderer::Submit(test_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
+			}
 		}
+
+		Renderer::EndScene();
+
+		test_shader->Unbind();
 	}
-	
-	Renderer::EndScene();
-
-	test_shader->Unbind();
-
 }
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height)

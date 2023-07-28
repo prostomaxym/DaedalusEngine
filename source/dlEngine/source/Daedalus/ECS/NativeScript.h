@@ -5,10 +5,11 @@
 
 namespace Daedalus 
 {
-	class ScriptableEntity
+	class NativeScript
 	{
 	public:
-		virtual ~ScriptableEntity() {}
+		NativeScript(Entity entity) : m_entity(entity) {}
+		virtual ~NativeScript() = default;
 
 		template<typename T>
 		T& GetComponent()
@@ -17,12 +18,9 @@ namespace Daedalus
 		}
 
 	protected:
-		virtual void OnCreate() {}
-		virtual void OnDestroy() {}
-		virtual void OnUpdate(DeltaTime dt) {}
+		virtual void OnUpdate(DeltaTime ts) {}
 
-	private:
-		Entity m_entity{};
+		Entity m_entity;
 		friend class Scene;
 	};
 }

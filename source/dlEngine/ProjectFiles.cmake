@@ -79,8 +79,13 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Resourses/Texture.h
     source/Daedalus/Renderer/Resourses/Texture.cpp
     
+    source/Daedalus/Threads/DaedalusThreads.h
+    source/Daedalus/Threads/ThreadJoiner.h
+    source/Daedalus/Threads/ThreadJoiner.cpp
     source/Daedalus/Threads/ThreadRunner.h
     source/Daedalus/Threads/ThreadRunner.cpp
+    source/Daedalus/Threads/ThreadPool.h
+    source/Daedalus/Threads/ThreadPool.cpp
 
     source/Daedalus/UI/ImGui/ImGuiLayer.h
     source/Daedalus/UI/ImGui/ImGuiLayer.cpp

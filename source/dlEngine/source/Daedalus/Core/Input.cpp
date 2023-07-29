@@ -6,7 +6,7 @@ using namespace Daedalus;
 
 bool Input::m_keyboard_connected = true;
 bool Input::m_gamepad_connected = false;
-float Input::m_sticks_deadzone = 0.05f;
+float Input::m_sticks_deadzone = 0.15f; //TODO: fix this workaround - something is causing drifting
 
 inline std::pair<float, float> Input::GetStickPos(StickType type)
 {

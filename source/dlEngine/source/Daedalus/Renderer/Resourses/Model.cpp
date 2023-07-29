@@ -177,3 +177,45 @@ void AssimpParser::ProcessMesh(void* transform, aiMesh* mesh, const aiScene* sce
 			out_indices.push_back(face.mIndices[indexID]);
 	}
 }
+
+Model::Model(const Model& other)
+	: m_meshes(other.m_meshes),
+	m_textures(other.m_textures),
+	m_material_names(other.m_material_names),
+	m_bounding_sphere(other.m_bounding_sphere)
+{
+}
+
+Model::Model(Model&& other) noexcept
+	: m_meshes(std::move(other.m_meshes)),
+	m_textures(std::move(other.m_textures)),
+	m_material_names(std::move(other.m_material_names)),
+	m_bounding_sphere(std::move(other.m_bounding_sphere))
+{
+}
+
+Model& Model::operator=(const Model& other)
+{
+	if (this != &other)
+	{
+		m_meshes = other.m_meshes;
+		m_textures = other.m_textures;
+		m_material_names = other.m_material_names;
+		m_bounding_sphere = other.m_bounding_sphere;
+	}
+
+	return *this;
+}
+
+Model& Model::operator=(Model&& other) noexcept
+{
+	if (this != &other)
+	{
+		m_meshes = std::move(other.m_meshes);
+		m_textures = std::move(other.m_textures);
+		m_material_names = std::move(other.m_material_names);
+		m_bounding_sphere = std::move(other.m_bounding_sphere);
+	}
+
+	return *this;
+}

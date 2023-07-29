@@ -64,6 +64,11 @@ namespace Daedalus {
 		Model() = default;
 		Model(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);
 
+		Model(const Model& other);
+		Model(Model&& other) noexcept;
+		Model& operator=(const Model& other);
+		Model& operator=(Model&& other) noexcept;
+
 		const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
 		const std::vector<std::shared_ptr<Texture>>& GetTextures() const;
 		const std::vector<std::string>& GetMaterialNames() const;

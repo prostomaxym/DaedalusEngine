@@ -13,6 +13,8 @@
 #include "Daedalus/ECS/Scene.h"
 #include "Daedalus/ECS/Entity.h"
 
+#include "Daedalus/Threads/DaedalusThreads.h"
+
 #include "Daedalus/UI/ImGui/ImGuiLayer.h"
 
 #include "Daedalus/Utils/DeltaTime.h"

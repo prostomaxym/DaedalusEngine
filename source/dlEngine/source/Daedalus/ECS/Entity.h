@@ -27,6 +27,14 @@ namespace Daedalus
 			return component;
 		}
 
+		template<typename T>
+		void MoveComponent(T&& component)
+		{
+			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
+			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(component));
+			m_scene->OnComponentAdded<T>(*this, component);
+		}
+
 		template<typename T, typename... Args>
 		T& AddOrReplaceComponent(Args&&... args)
 		{

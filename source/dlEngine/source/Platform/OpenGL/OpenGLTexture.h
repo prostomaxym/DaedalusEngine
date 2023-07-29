@@ -10,7 +10,8 @@ namespace Daedalus {
 	{
 	public:
 		OpenGLTexture2D(uint32_t width, uint32_t height);
-		OpenGLTexture2D(const std::string& path);
+		OpenGLTexture2D(const std::string& path);	
+		OpenGLTexture2D(unsigned char* data, int width, int heith, int channels);
 		~OpenGLTexture2D();
 
 		uint32_t GetWidth() const override { return m_width; }
@@ -33,9 +34,9 @@ namespace Daedalus {
 	private:
 		std::string m_path;
 		bool m_is_loaded = false;
-		uint32_t m_width, m_height;
-		uint32_t m_rendererID;
-		GLenum m_internal_format, m_data_format;
+		uint32_t m_width{ 0 }, m_height{ 0 };
+		uint32_t m_rendererID{ 0 };
+		GLenum m_internal_format{ 0 }, m_data_format{ 0 };
 	};
 
 }

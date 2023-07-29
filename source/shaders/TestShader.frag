@@ -7,5 +7,5 @@ out vec4 fout_color;
 
 void main()
 {
-    fout_color = vec4(texture(tex, vout_uv).rgb, 1.0);
+    fout_color = vec4(texture(tex, vout_uv).rgba);
 } 

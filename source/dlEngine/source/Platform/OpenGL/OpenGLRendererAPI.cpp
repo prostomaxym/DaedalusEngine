@@ -21,8 +21,8 @@ void OpenGLMessageCallback(
 	{
 	case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::Renderer, message); return;
 	case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::Renderer, message); return;
-	case GL_DEBUG_SEVERITY_LOW:         Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message); return;
-	case GL_DEBUG_SEVERITY_NOTIFICATION: Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message); return;
+	case GL_DEBUG_SEVERITY_LOW:         /*Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message);*/ return;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: /*Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message);*/ return;
 	}
 
 }
@@ -36,7 +36,12 @@ void OpenGLRendererAPI::Init()
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(OpenGLMessageCallback, nullptr);
 
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_WINDOW_SYSTEM, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	//glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	//glDebugMessageControl(GL_DEBUG_SOURCE_OTHER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
 
 	glEnable(GL_BLEND);

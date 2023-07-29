@@ -7,6 +7,7 @@
 #include <assimp/scene.h>
 #include <assimp/matrix4x4.h>
 #include <assimp/postprocess.h>
+#include <stb_image.h>
 
 using namespace Daedalus;
 
@@ -97,7 +98,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 
 void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>& materials, const std::filesystem::path& file_name)
 {
-	std::vector<std::future<std::shared_ptr<Texture2D>>> futures;
+	std::vector<std::future<std::tuple<unsigned char*, int, int, int>>> futures;
 
 	for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
 	{
@@ -118,8 +119,14 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 					{
 						std::string fullPath = file_name.parent_path().string() + "/" + texturePath.C_Str();
 
-						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath]()->std::shared_ptr<Texture2D> {
-							return Texture2D::Create(fullPath);
+						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath]()->std::tuple<unsigned char*, int, int, int >
+							{
+
+								int width, height, channels;
+								stbi_set_flip_vertically_on_load(1);
+								stbi_uc* data = stbi_load(fullPath.c_str(), &width, &height, &channels, 0);
+
+								return { data, width, height, channels };
 							}));
 					}
 				}
@@ -130,7 +137,11 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 	for (auto& fut : futures)
 	{
 		fut.wait();
-		textures.push_back(fut.get());
+		const auto& future = fut.get();
+
+		textures.push_back(Texture2D::Create(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future)));
+
+		stbi_image_free(std::get<0>(future));
 	}
 }
 

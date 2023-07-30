@@ -43,26 +43,22 @@ void Scene::OnUpdateRuntime(DeltaTime ts)
 
 	// Graphics
 	{
-		auto test_shader = Renderer::s_shader_library->Get("TestShader");
+		const auto test_shader = Renderer::s_shader_library->Get("TestShader");
 
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
 		RenderCommand::Clear();
 
 		Renderer::BeginScene(FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera);
 
-		for (auto& handle : m_entity_map)
+		const auto view = m_registry.view<RenderableObjectComponent>();
+		for (auto e : view)
 		{
-			const auto entity = GetEntityByUUID(handle.first);
+			Entity entity = { e, this };
 
-			if (entity.HasComponent<RenderableObjectComponent>())
-			{
-				Renderer::Submit(test_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
-			}
+			Renderer::Submit(test_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
 		}
 
 		Renderer::EndScene();
-
-		test_shader->Unbind();
 	}
 }
 

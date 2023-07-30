@@ -17,7 +17,7 @@ namespace Daedalus
 
 		DeltaTime GetEllapsedTime() const
 		{
-			return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - m_begin_time);
+			return DeltaTime(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - m_begin_time));
 		}
 
 	private:

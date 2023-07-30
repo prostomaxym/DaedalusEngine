@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Timer.h"
+#include "DeltaTime.h"
 
 #include <thread>
 
@@ -10,11 +10,10 @@ namespace Daedalus {
 	{
 	public:
 
-		static void LockFps(int desired_fps, const Timer& timer)
+		static void LockFps(int desired_fps, const DeltaTime& elapsed_time)
 		{
 			const auto desired_frametime = GetLockedFrameTime(desired_fps);
 
-			const auto elapsed_time = timer.GetEllapsedTime();
 			const auto sleep_time = desired_frametime - elapsed_time;
 
 			const auto sleep_nanos = sleep_time.GetTime();

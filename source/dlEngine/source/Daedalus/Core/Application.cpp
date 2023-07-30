@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "Daedalus/Events/EventDispatcher.h"
 #include "Daedalus/Renderer/API/Renderer.h"
+#include "Daedalus/Utils/FPSLocker.h"
 #include "Daedalus/Utils/WorkingDirectory.h"
 
 #include "Platform/Platform.h"
@@ -32,7 +33,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
+	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory());
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);
@@ -45,8 +46,12 @@ Application::~Application()
 
 void Application::Run()
 {
+	Timer timer;
+
 	while (m_running)
-	{
+	{	
+		timer.StartTimer();
+
 		for (auto layer : m_layer_stack)
 		{
 			layer->OnUpdate();
@@ -56,6 +61,8 @@ void Application::Run()
 		m_imgui_layer->End();
 
 		m_window->OnUpdate();
+
+		FPSLocker::LockFps(180, timer.GetEllapsedTime());
 	}
 }
 

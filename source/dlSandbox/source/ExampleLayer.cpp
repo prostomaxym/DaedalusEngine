@@ -25,6 +25,37 @@ namespace
 	}
 
 	//CreateEntitiesForOBJFiles("C:/maxym/objects/Anor Londo/", m_scene, model_transform);
+
+	class RorationModelScript : public NativeScript
+	{
+	public:
+		RorationModelScript(Entity entity, float speed) : NativeScript(entity), m_speed(speed) {}
+
+	protected:
+
+		virtual void OnUpdate(DeltaTime ts) override
+		{
+			m_entity.GetComponent<TransformComponent>().rotation.y += m_speed * ts.GetMilliseconds();
+		}
+
+		float m_speed{ 0.f };
+	};
+
+	class LogPositionScript : public NativeScript
+	{
+	public:
+		LogPositionScript(Entity entity) : NativeScript(entity) {}
+
+	protected:
+
+		virtual void OnUpdate(DeltaTime ts) override
+		{
+			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
+			const auto pos = camera.GetPosition();
+			const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
+			Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
+		}
+	};
 }
 
 void ExampleLayer::OnAttach()
@@ -37,8 +68,8 @@ void ExampleLayer::OnAttach()
 	pers_camera.SetMovementSpeed(15.f);
 	pers_camera.SetSensivitity(5.f);
 	pers_camera.SetZoomSpeed(1.f);
-	camera.AddComponent<NativeScriptComponent>();
-	camera.GetComponent<NativeScriptComponent>().Bind<CameraController>();
+	camera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+	camera.AddComponent<NativeScriptComponent>().Bind<LogPositionScript>();
 
 	TransformComponent model_transform;
 	model_transform.scale = glm::vec3(2.f, 2.f, 2.f);
@@ -65,6 +96,7 @@ void ExampleLayer::OnAttach()
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miranda_transform.translation = glm::vec3(-10.f, -2.8f, -20.f);
 	miranda_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
+	miranda_model.AddComponent<NativeScriptComponent>().Bind<RorationModelScript>(0.1f);
 
 	auto tank_model = m_scene.CreateEntity("Tank");
 	tank_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj");
@@ -87,14 +119,5 @@ void ExampleLayer::OnUpdate()
 	const auto dt = timer.GetEllapsedTime();
 	timer.StartTimer();
 
-	auto& miranda_rot = m_scene.FindEntityByName("Miranda").GetComponent<TransformComponent>().rotation;
-	miranda_rot.y += 0.1f * dt.GetMilliseconds();
-
 	m_scene.OnUpdateRuntime(dt);
-	FPSLocker::LockFps(144, timer);	
-
-	const auto& camera = m_scene.FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
-	const auto pos = camera.GetPosition();
-	const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
-	Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
 }

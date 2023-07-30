@@ -26,12 +26,8 @@ void Scene::OnUpdateRuntime(DeltaTime ts)
 		{
 			m_registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
-					if (!nsc.instance)
-					{
-						nsc.instance = nsc.InstantiateScript({ entity, this });
-					}
-
-					nsc.instance->OnUpdate(ts);
+					for(auto& script : nsc.native_scripts)
+						script.second->OnUpdate(ts);
 				});
 		}
 

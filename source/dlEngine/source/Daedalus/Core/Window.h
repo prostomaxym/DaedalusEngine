@@ -44,6 +44,7 @@ namespace Daedalus {
 		virtual void* GetNativeWindow() const = 0;
 		virtual int GetWidth() const = 0;
 		virtual int GetHeight() const = 0;
+		virtual float GetAspectRatio() const = 0;
 
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;

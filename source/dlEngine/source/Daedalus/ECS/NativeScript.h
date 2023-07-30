@@ -18,7 +18,7 @@ namespace Daedalus
 		}
 
 	protected:
-		virtual void OnUpdate(DeltaTime ts) {}
+		virtual void OnUpdate(DeltaTime dt) {}
 
 		Entity m_entity;
 		friend class Scene;

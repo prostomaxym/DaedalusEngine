@@ -18,7 +18,7 @@ void Scene::OnRuntimeStop()
 	m_is_running = false;
 }
 
-void Scene::OnUpdateRuntime(DeltaTime ts)
+void Scene::OnUpdateRuntime(DeltaTime dt)
 {
 	if (!m_is_paused)
 	{
@@ -27,7 +27,7 @@ void Scene::OnUpdateRuntime(DeltaTime ts)
 			m_registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
 					for(auto& script : nsc.native_scripts)
-						script.second->OnUpdate(ts);
+						script.second->OnUpdate(dt);
 				});
 		}
 

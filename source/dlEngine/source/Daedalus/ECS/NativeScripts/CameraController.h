@@ -12,7 +12,7 @@ namespace Daedalus {
 
     protected:
 
-        virtual void OnUpdate(DeltaTime ts) override;
+        virtual void OnUpdate(DeltaTime dt) override;
 
        std::optional<float> xPrevious{ std::nullopt };
        std::optional<float> yPrevious{ std::nullopt };

@@ -21,6 +21,7 @@ namespace Daedalus {
 		inline void* GetNativeWindow() const override { return m_window; }
 		inline int GetWidth() const override { return m_data.width; }
 		inline int GetHeight() const override { return m_data.height; }
+		inline float GetAspectRatio() const override { return static_cast<float>(m_data.width) / static_cast<float>(m_data.height); }
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;

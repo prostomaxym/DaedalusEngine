@@ -247,12 +247,18 @@ void GLFWWindow::SetWindowMode(WindowProps::ScreenMode screenmode)
 
 		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 		m_context->SetViewport(0, 0, mode->width, mode->height);
+		
+		m_data.width = mode->width;
+		m_data.height = mode->height;
 	}
 	else
 	{
 		glfwSetWindowMonitor(m_window, nullptr, pos_x, pos_y, width, height, GLFW_DONT_CARE);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 		m_context->SetViewport(pos_x, pos_y, width, height);
+
+		m_data.width = width;
+		m_data.height = height;
 	}
 
 	SetVSync(m_data.VSync);

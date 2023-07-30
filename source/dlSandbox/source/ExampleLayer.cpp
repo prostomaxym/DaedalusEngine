@@ -5,26 +5,29 @@ using namespace Daedalus;
 
 namespace
 {
-	//void CreateEntitiesForOBJFiles(const std::string& folderPath, Scene& scene, const TransformComponent& transform)
-	//{
-	//	namespace fs = std::filesystem;
+	//Create complex level from multiple related obj files
+	void CreateEntitiesForOBJFiles(const std::string& folderPath, Scene& scene, const TransformComponent& transform)
+	{
+		namespace fs = std::filesystem;
 
-	//	for (const auto& entry : fs::directory_iterator(folderPath))
-	//	{
-	//		if (entry.path().extension() == ".obj")
-	//		{
-	//			std::string filename = entry.path().stem().string();
+		for (const auto& entry : fs::directory_iterator(folderPath))
+		{
+			if (entry.path().extension() == ".obj")
+			{
+				std::string filename = entry.path().stem().string();
 
-	//			auto model_entity = scene.CreateEntity(filename);
-	//			model_entity.AddComponent<RenderableObjectComponent>(entry.path().string());
+				auto model_entity = scene.CreateEntity(filename);
+				model_entity.AddComponent<RenderableObjectComponent>(entry.path().string());
 
-	//			auto& model_transform = model_entity.GetComponent<TransformComponent>();
-	//			model_transform = transform;
-	//		}
-	//	}
-	//}
-
+				auto& model_transform = model_entity.GetComponent<TransformComponent>();
+				model_transform = transform;
+			}
+		}
+	}
 	//CreateEntitiesForOBJFiles("C:/maxym/objects/Anor Londo/", m_scene, model_transform);
+
+
+	// Just some examples of basic scripts
 
 	class RorationModelScript : public NativeScript
 	{
@@ -33,9 +36,9 @@ namespace
 
 	protected:
 
-		virtual void OnUpdate(DeltaTime ts) override
+		virtual void OnUpdate(DeltaTime dt) override
 		{
-			m_entity.GetComponent<TransformComponent>().rotation.y += m_speed * ts.GetMilliseconds();
+			m_entity.GetComponent<TransformComponent>().rotation.y += m_speed * dt.GetMilliseconds();
 		}
 
 		float m_speed{ 0.f };
@@ -48,7 +51,7 @@ namespace
 
 	protected:
 
-		virtual void OnUpdate(DeltaTime ts) override
+		virtual void OnUpdate(DeltaTime dt) override
 		{
 			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
 			const auto pos = camera.GetPosition();
@@ -56,12 +59,77 @@ namespace
 			Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
 		}
 	};
+
+	class TankMovementScript : public NativeScript
+	{
+	public:
+		TankMovementScript(Entity entity) : NativeScript(entity) {}
+
+	protected:
+
+		virtual void OnUpdate(DeltaTime dt) override
+		{
+			auto& transform = m_entity.GetComponent<TransformComponent>();
+
+			auto delta_movement = dt.GetSeconds() * 5.f;
+			auto delta_rotation = dt.GetSeconds() * 180.f * 0.3f;
+
+			if (m_current_length_pos <= 50.f && !is_rotating && moving_upwards)
+			{
+				delta_movement = std::min(delta_movement, 50.f - m_current_length_pos);
+				m_current_length_pos += delta_movement;
+				transform.translation.x += delta_movement;
+				if (m_current_length_pos >= 50.f)
+				{
+					is_rotating = true;
+				}
+			}
+			else if (m_current_length_pos >=0 && !is_rotating && !moving_upwards)
+			{
+				delta_movement = std::min(delta_movement, m_current_length_pos);
+				m_current_length_pos -= delta_movement;
+				transform.translation.x -= delta_movement;
+				if (m_current_length_pos <= 0.f)
+				{
+					is_rotating = true;
+				}
+			}
+
+			if (m_current_length_pos >= 50.f && is_rotating)
+			{
+				delta_rotation = std::min(delta_rotation, 180.f - m_current_angle);
+				m_current_angle += delta_rotation;
+				transform.rotation.y -= delta_rotation;
+				if (m_current_angle >= 180.f)
+				{
+					is_rotating = false;
+					moving_upwards = false;
+				}
+			}
+			else if (m_current_length_pos <= 0.f && is_rotating)
+			{
+				delta_rotation = std::min(delta_rotation, m_current_angle);
+				m_current_angle -= delta_rotation;
+				transform.rotation.y += delta_rotation;
+				if (m_current_angle <= 0.f)
+				{
+					is_rotating = false;
+					moving_upwards = true;
+				}
+			}
+		}
+
+		bool is_rotating{ false };
+		bool moving_upwards{ true };
+		float m_current_length_pos{ 0.f };
+		float m_current_angle{ 0.f };
+	};
 }
 
 void ExampleLayer::OnAttach()
 {
 	auto camera_entity = m_scene.CreateEntity("Main Camera");
-	camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f * 3.14f / 180.f, 16.f / 9.f, 0.1f, 1000.f));
+	camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 1000.f));
 	auto& camera = camera_entity.GetComponent<CameraComponent>().camera;
 	camera.SetPosition(glm::vec3(0.f, 0.f, 0.f));
 	camera.RotateCamera(-90.f, 0.f);
@@ -106,6 +174,8 @@ void ExampleLayer::OnAttach()
 	tank_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	tank_transform.translation = glm::vec3(-20.f, -2.8f, -25.f);
 	tank_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
+	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();
+	tank_scripts.AddScript<TankMovementScript>(tank_entity);
 
 	m_scene.OnRuntimeStart();
 }

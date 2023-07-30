@@ -21,12 +21,12 @@ glm::mat4 PerspectiveCamera::GetViewMatrix() const
 
 glm::mat4 PerspectiveCamera::GetProjectionMatrix() const
 {
-	return glm::perspective(m_proj_props.fov, m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
+	return glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
 }
 
 glm::mat4 PerspectiveCamera::GetProjectionViewMatrix() const
 {
-	return glm::perspective(m_proj_props.fov, m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far) *
+	return glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far) *
 		glm::lookAt(m_position, m_position + m_front, m_up);
 }
 

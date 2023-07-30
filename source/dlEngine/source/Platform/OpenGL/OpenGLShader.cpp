@@ -128,7 +128,7 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 		if (max_length > 0)
 		{
 			std::vector<GLchar> info_log(max_length);
-			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			glGetShaderInfoLog(vertex_shader, max_length, &max_length, &info_log[0]);
 			std::string log_text(info_log.data());
 			Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Vertex shader compilation error: " + log_text);
 			throw std::runtime_error(info_log.data());
@@ -155,7 +155,7 @@ std::pair<GLuint, GLuint> OpenGLShader::Compile(const GLchar* vert_source, const
 		if (max_length > 0)
 		{
 			std::vector<GLchar> info_log(max_length);
-			glGetProgramInfoLog(m_rendererID, max_length, &max_length, &info_log[0]);
+			glGetShaderInfoLog(fragment_shader, max_length, &max_length, &info_log[0]);
 			std::string log_text(info_log.data());
 			Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Fragment shader compilation error: " + log_text);
 			throw std::runtime_error(info_log.data());

@@ -9,6 +9,7 @@ project(
 set(PROJECT_FILES
   source/ExampleLayer.h
   source/ExampleLayer.cpp
+  source/ExampleScripts.h
   source/SandboxApp.h
 	source/SandboxApp.cpp)
 

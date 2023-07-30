@@ -35,10 +35,8 @@ void main()
 
     // specular
     vec3 viewDir = normalize(viewPos - ex_pos);
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = 0.0;
     vec3 halfwayDir = normalize(lightDir + viewDir);  
-    spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
     vec3 specular = specStrength * spec; // assuming bright white light color
 
     color = vec4(ambient + diffuse * lightPower/distance + specular * lightPower/distance, 1.0);

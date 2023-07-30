@@ -16,7 +16,7 @@ void main()
 	const vec3 tex_color = vec3(texture(tex, vout_uv).rgb);
 	const vec3 ambient = u_ambient_strength * tex_color;
     const vec3 diffuse = vout_diff * tex_color;
-    const float tex_alpha = texture(tex, vout_uv).a;
+    //const float tex_alpha = texture(tex, vout_uv).a;
     
-    fout_color = vec4(ambient + diffuse * u_light_power / vout_distance + vout_specular, tex_alpha);
+    fout_color = vec4(ambient + diffuse * u_light_power / vout_distance + vout_specular, 1.0);
 } 

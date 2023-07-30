@@ -53,7 +53,7 @@ void ExampleLayer::OnAttach()
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
 	auto light_entity = m_scene.CreateEntity("Main Light");
-	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get("TestShader"), glm::vec3(-60000.f, 100000.f, 80000.f), glm::vec3(1.f, 0.85f, 0.8f), 0.1f, 0.3f, 16.f, 175000.f);
+	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get("TestShader"), glm::vec3(-60000.f, 100000.f, 80000.f), glm::vec3(0.95f, 0.8f, 0.6f), 0.1f, 0.3f, 16.f, 175000.f);
 
 	auto nuke_entity = m_scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", enhance_model_flags);
@@ -81,7 +81,7 @@ void ExampleLayer::OnAttach()
 	auto tank_entity = m_scene.CreateEntity("Tank");
 	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", enhance_model_flags);
 	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
-	tank_transform.scale = glm::vec3(2.f, 2.f, 2.f);
+	tank_transform.scale = glm::vec3(3.f, 3.f, 3.f);
 	tank_transform.translation = glm::vec3(-20.f, -2.8f, -25.f);
 	tank_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
 	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();

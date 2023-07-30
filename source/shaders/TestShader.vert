@@ -22,17 +22,17 @@ out float vout_distance;
 
 void main()
 {
-    vec4 world_pos = u_transform * vec4(vin_vertices, 1.0);
+    const vec4 world_pos = u_transform * vec4(vin_vertices, 1.0);
 
-    vec3 normals = mat3(transpose(inverse(u_transform))) * vin_normals; //Expensive - can be optimized
+    const vec3 normals = mat3(transpose(inverse(u_transform))) * vin_normals; //Expensive - can be optimized
 
     vec3 light_dir = u_light_pos - world_pos.xyz;
 	vout_distance = length(light_dir);
 	light_dir = normalize(light_dir);
-    vec3 normal = normalize(normals);
+    const vec3 normal = normalize(normals);
    
-    vec3 view_dir = normalize(u_view_pos - world_pos.xyz);
-    vec3 halfway_dir = normalize(light_dir + view_dir);  
+    const vec3 view_dir = normalize(u_view_pos - world_pos.xyz);
+    const vec3 halfway_dir = normalize(light_dir + view_dir);  
     float spec = pow(max(dot(normal, halfway_dir), 0.0), u_shininess);
 
     vout_uv = vin_texcoord;

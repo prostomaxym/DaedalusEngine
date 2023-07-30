@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UUID.h"
+#include "Daedalus/Renderer/Objects/LightSource.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Renderer/Resourses/Model.h"
 
@@ -73,6 +74,17 @@ namespace Daedalus
 		CameraComponent(const CameraComponent&) = default;
 		CameraComponent(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps()) :
 			camera(proj_props, pos_props) {}
+	};
+
+	struct LightComponent
+	{
+		LightSource light;
+
+		LightComponent() = default;
+		LightComponent(const LightComponent&) = default;
+		LightComponent(std::shared_ptr<Shader> shader) : light(shader) {};
+		LightComponent(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& light_color, float ambient_strength, float spec_strength, float shininess_strength, float light_power) :
+			light(shader, light_pos, light_color, ambient_strength, spec_strength, shininess_strength, light_power) {};
 	};
 
 

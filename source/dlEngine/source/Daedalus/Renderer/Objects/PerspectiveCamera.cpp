@@ -120,3 +120,10 @@ void PerspectiveCamera::Update()
 	m_right = glm::normalize(glm::cross(m_front, m_world_up));
 	m_up = glm::normalize(glm::cross(m_right, m_front));
 }
+
+void PerspectiveCamera::UpdatePositionUniform(std::shared_ptr<Shader> shader, const std::string& uniform_name) const
+{
+	shader->Bind();
+	shader->SetFloat3(uniform_name, GetPosition());
+	shader->Unbind();
+}

@@ -53,6 +53,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Objects/OrthographicCamera.cpp
     source/Daedalus/Renderer/Objects/PerspectiveCamera.h
     source/Daedalus/Renderer/Objects/PerspectiveCamera.cpp
+    source/Daedalus/Renderer/Objects/LightSource.h
+    source/Daedalus/Renderer/Objects/LightSource.cpp
 
     source/Daedalus/Renderer/Primitives/BufferLayout.h
     source/Daedalus/Renderer/Primitives/GraphicsContext.h

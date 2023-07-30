@@ -47,14 +47,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		auto& main_camera = FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
 		Renderer::BeginScene(main_camera);
 
-		test_shader->Bind();
-		test_shader->SetFloat3("u_view_pos", main_camera.GetPosition());
-		test_shader->SetFloat3("u_light_pos", glm::vec3(-60000.f, 100000.f, 80000.f));
-		test_shader->SetFloat3("u_light_color", glm::vec3(1.f, 0.85f, 0.8f));
-		test_shader->SetFloat3("u_ambient_strength", glm::vec3(0.1f, 0.1f, 0.1f));
-		test_shader->SetFloat("u_spec_strength", 0.3f);
-		test_shader->SetFloat("u_light_power", 175000.f);
-		test_shader->SetFloat("u_shininess", 16.f);
+		main_camera.UpdatePositionUniform(test_shader, "u_view_pos");
 
 		const auto view = m_registry.view<RenderableObjectComponent>();
 		for (auto e : view)

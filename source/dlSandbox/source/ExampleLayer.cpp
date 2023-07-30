@@ -52,10 +52,8 @@ void ExampleLayer::OnAttach()
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
-	TransformComponent model_transform;
-	model_transform.scale = glm::vec3(2.f, 2.f, 2.f);
-	model_transform.translation = glm::vec3(1300.f, -300.f, 500.f);
-	model_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
+	auto light_entity = m_scene.CreateEntity("Main Light");
+	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get("TestShader"), glm::vec3(-60000.f, 100000.f, 80000.f), glm::vec3(1.f, 0.85f, 0.8f), 0.1f, 0.3f, 16.f, 175000.f);
 
 	auto nuke_entity = m_scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", enhance_model_flags);

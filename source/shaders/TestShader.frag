@@ -6,7 +6,7 @@ in float vout_diff;
 in float vout_distance;
 
 uniform sampler2D tex;
-uniform vec3 u_ambient_strength;
+uniform float u_ambient_strength;
 uniform float u_light_power;
 
 out vec4 fout_color;

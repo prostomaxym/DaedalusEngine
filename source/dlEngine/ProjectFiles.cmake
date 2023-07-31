@@ -40,6 +40,7 @@ set(PROJECT_FILES
     source/Daedalus/Events/EventsEngine.h
     source/Daedalus/Events/EventsEngine.cpp
 
+    source/Daedalus/Renderer/API/RenderConstants.h
     source/Daedalus/Renderer/API/RenderCommand.h
     source/Daedalus/Renderer/API/RenderCommand.cpp
     source/Daedalus/Renderer/API/Renderer.h
@@ -70,6 +71,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Primitives/VertexBuffer.h
     source/Daedalus/Renderer/Primitives/VertexBuffer.cpp
 
+    source/Daedalus/Renderer/Resourses/Material.h
+    source/Daedalus/Renderer/Resourses/Material.cpp
     source/Daedalus/Renderer/Resourses/Mesh.h
     source/Daedalus/Renderer/Resourses/Mesh.cpp
     source/Daedalus/Renderer/Resourses/Model.h

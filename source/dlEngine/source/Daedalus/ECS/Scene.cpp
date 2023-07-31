@@ -2,6 +2,7 @@
 
 #include "Scene.h"
 
+#include "Daedalus/Renderer/API/RenderConstants.h"
 #include "Daedalus/Renderer/API/Renderer.h"
 #include "Entity.h"
 #include "NativeScript.h"
@@ -39,7 +40,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 	// Graphics
 	{
-		const auto test_shader = Renderer::s_shader_library->Get("TestShader");
+		const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
 		RenderCommand::Clear();
@@ -47,14 +48,14 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		auto& main_camera = FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
 		Renderer::BeginScene(main_camera);
 
-		main_camera.UpdatePositionUniform(test_shader, "u_view_pos");
+		main_camera.UpdatePositionUniform(standard_shader, ShaderConstants::SceneViewPos);
 
 		const auto view = m_registry.view<RenderableObjectComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
 
-			Renderer::Submit(test_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
+			Renderer::Submit(standard_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
 		}
 
 		Renderer::EndScene();

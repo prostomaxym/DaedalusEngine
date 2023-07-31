@@ -46,6 +46,11 @@ void RenderCommand::DrawLines(const VertexArray* vertexArray, uint32_t vertexCou
 	s_RendererAPI->DrawLines(vertexArray, vertexCount);
 }
 
+void RenderCommand::UnbindTextureSlot(uint32_t slot_num)
+{
+	s_RendererAPI->UnbindTextureSlot(slot_num);
+}
+
 void RenderCommand::SetLineWidth(float width)
 {
 	s_RendererAPI->SetLineWidth(width);

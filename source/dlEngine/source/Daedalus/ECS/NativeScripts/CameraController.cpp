@@ -69,4 +69,3 @@ void CameraController::OnUpdate(DeltaTime ts)
 		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
 }
-

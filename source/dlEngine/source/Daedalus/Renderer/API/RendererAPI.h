@@ -36,6 +36,8 @@ namespace Daedalus {
 
 		virtual void SetLineWidth(float width) = 0;
 
+		virtual void UnbindTextureSlot(uint32_t slot_number) = 0;
+
 	private:
 		static API s_API;
 	};

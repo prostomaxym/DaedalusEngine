@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Material.h"
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -70,8 +71,7 @@ namespace Daedalus {
 		Model& operator=(Model&& other) noexcept;
 
 		const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
-		const std::vector<std::shared_ptr<Texture>>& GetTextures() const;
-		const std::vector<std::string>& GetMaterialNames() const;
+		const std::vector<Material>& GetMaterials() const;
 		const BoundingSphere GetBoundingSphere() const;
 
 	private:
@@ -79,8 +79,7 @@ namespace Daedalus {
 
 	private:
 		std::vector<std::shared_ptr<Mesh>> m_meshes;
-		std::vector<std::shared_ptr<Texture>> m_textures;
-		std::vector<std::string> m_material_names;
+		std::vector<Material> m_material_data;
 
 		BoundingSphere m_bounding_sphere;
 	};
@@ -90,12 +89,11 @@ namespace Daedalus {
 	public:
 		static bool LoadModel(const std::filesystem::path& fileName
 			, std::vector<std::shared_ptr<Mesh>>& meshes
-			, std::vector<std::shared_ptr<Texture>>& textures
-			, std::vector<std::string>& materials			
+			, std::vector<Material>& material_data
 			, ModelParserFlags parser_flags);
 
 	private:
-		static void ProcessMaterials(const struct aiScene* scene, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>& materials, const std::filesystem::path& file_name);
+		static void ProcessMaterials(const struct aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name);
 		static void ProcessNode(void* p_transform, struct aiNode* node, const struct aiScene* scene, std::vector<std::shared_ptr<Mesh>>& meshes);
 		static void ProcessMesh(void* p_transform, struct aiMesh* mesh, const struct aiScene* scene, std::vector<Vertex>& out_vertices, std::vector<uint32_t>& out_indices);
 	};

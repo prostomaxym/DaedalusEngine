@@ -3,6 +3,7 @@
 #include <csignal>
 
 #include <algorithm>
+#include <array>
 #include <filesystem>
 #include <functional>
 #include <iostream>

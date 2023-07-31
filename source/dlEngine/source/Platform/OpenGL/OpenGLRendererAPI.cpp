@@ -79,22 +79,30 @@ void OpenGLRendererAPI::DrawIndexed(const VertexArray* vertex_array, uint32_t in
 	vertex_array->Bind();
 	uint32_t count = index_count ? index_count : vertex_array->GetIndexBuffer()->GetCount();
 	glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+	vertex_array->Unbind();
 }
 
 void OpenGLRendererAPI::DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count)
 {
 	vertex_array->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+	vertex_array->Unbind();
 }
 
 
-void OpenGLRendererAPI::DrawLines(const VertexArray* vertexArray, uint32_t vertexCount)
+void OpenGLRendererAPI::DrawLines(const VertexArray* vertex_array, uint32_t vertexCount)
 {
-	vertexArray->Bind();
+	vertex_array->Bind();
 	glDrawArrays(GL_LINES, 0, vertexCount);
+	vertex_array->Unbind();
 }
 
 void OpenGLRendererAPI::SetLineWidth(float width)
 {
 	glLineWidth(width);
+}
+
+void OpenGLRendererAPI::UnbindTextureSlot(uint32_t slot_number)
+{
+	glBindTextureUnit(slot_number, 0);
 }

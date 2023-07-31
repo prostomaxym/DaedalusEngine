@@ -13,7 +13,7 @@ using namespace Daedalus;
 
 Model::Model(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
-	if (!AssimpParser::LoadModel(path, m_meshes, m_textures, m_material_names, parser_flags))
+	if (!AssimpParser::LoadModel(path, m_meshes, m_material_data, parser_flags))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Model failed to load: " + path.string());
 		throw std::runtime_error("Model failed to load: " + path.string());
@@ -64,14 +64,9 @@ const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 	return m_meshes;
 }
 
-const std::vector<std::shared_ptr<Texture>>& Model::GetTextures() const
+const std::vector<Material>& Daedalus::Model::GetMaterials() const
 {
-	return m_textures;
-}
-
-const std::vector<std::string>& Model::GetMaterialNames() const
-{
-	return m_material_names;
+	return m_material_data;
 }
 
 const BoundingSphere Model::GetBoundingSphere() const
@@ -79,7 +74,7 @@ const BoundingSphere Model::GetBoundingSphere() const
 	return m_bounding_sphere;
 }
 
-bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>& materials, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<Material>& material_data, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(file_name.string(), static_cast<unsigned int>(parser_flags));
@@ -87,7 +82,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		return false;
 
-	ProcessMaterials(scene, textures, materials, file_name);
+	ProcessMaterials(scene, material_data, file_name);
 
 	aiMatrix4x4 identity;
 
@@ -96,9 +91,11 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	return true;
 }
 
-void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::shared_ptr<Texture>>& textures, std::vector<std::string>& materials, const std::filesystem::path& file_name)
+void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name)
 {
-	std::vector<std::future<std::tuple<unsigned char*, int, int, int>>> futures;
+	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
+
+	material_data.resize(scene->mNumMaterials);
 
 	for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
 	{
@@ -106,31 +103,47 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 		if (material)
 		{
 			aiString name;
-			aiGetMaterialString(material, AI_MATKEY_NAME, &name);
-			materials.push_back(name.C_Str());
+			aiColor3D ambientColor, diffuseColor, specularColor;
+			float shininess;
 
-			for (uint32_t j = aiTextureType::aiTextureType_NONE; j < aiTextureType::aiTextureType_TRANSMISSION; ++j)
+			material->Get(AI_MATKEY_NAME, name);
+			material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor);
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+			material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
+			material->Get(AI_MATKEY_SHININESS, shininess);
+
+			material_data[i] = Material(name.C_Str()
+				, glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b)
+				, glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b)
+				, glm::vec3(specularColor.r, specularColor.g, specularColor.b)
+				, shininess);
+
+			std::array<aiTextureType, 3> texture_types{ aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_NORMALS };
+
+			for(auto tex_type : texture_types)
 			{
-				aiTextureType textureType = static_cast<aiTextureType>(j);
-				for (uint32_t k = 0; k < material->GetTextureCount(textureType); ++k)
+				for (uint32_t k = 0; k < material->GetTextureCount(tex_type); ++k)
 				{
 					aiString texturePath;
-					if (material->GetTexture(textureType, k, &texturePath) == AI_SUCCESS)
+					if (material->GetTexture(tex_type, k, &texturePath) == AI_SUCCESS)
 					{
 						std::string fullPath = file_name.parent_path().string() + "/" + texturePath.C_Str();
 
-						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath]()->std::tuple<unsigned char*, int, int, int >
+						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath, mat_num = i, tex_type]()->std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>
 							{
-
 								int width, height, channels;
 								stbi_set_flip_vertically_on_load(1);
 								stbi_uc* data = stbi_load(fullPath.c_str(), &width, &height, &channels, 0);
 
-								return { data, width, height, channels };
+								return { data, width, height, channels, mat_num, tex_type };
 							}));
 					}
 				}
 			}
+		}
+		else
+		{
+			material_data[i] = Material();
 		}
 	}
 
@@ -139,7 +152,26 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 		fut.wait();
 		const auto& future = fut.get();
 
-		textures.push_back(Texture2D::Create(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future)));
+		const aiTextureType tex_type = static_cast<aiTextureType>(std::get<5>(future));
+		const auto material_index = std::get<4>(future);
+
+		switch (tex_type)
+		{
+		case aiTextureType_DIFFUSE:
+			material_data[material_index].SetDiffuseMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+
+		case aiTextureType_SPECULAR:
+			material_data[material_index].SetSpecularMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+
+		case aiTextureType_NORMALS:
+			material_data[material_index].SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+
+		default:
+			break;
+		}
 
 		stbi_image_free(std::get<0>(future));
 	}
@@ -201,16 +233,14 @@ void AssimpParser::ProcessMesh(void* transform, aiMesh* mesh, const aiScene* sce
 
 Model::Model(const Model& other)
 	: m_meshes(other.m_meshes),
-	m_textures(other.m_textures),
-	m_material_names(other.m_material_names),
+	m_material_data(other.m_material_data),
 	m_bounding_sphere(other.m_bounding_sphere)
 {
 }
 
 Model::Model(Model&& other) noexcept
 	: m_meshes(std::move(other.m_meshes)),
-	m_textures(std::move(other.m_textures)),
-	m_material_names(std::move(other.m_material_names)),
+	m_material_data(std::move(other.m_material_data)),
 	m_bounding_sphere(std::move(other.m_bounding_sphere))
 {
 }
@@ -220,8 +250,7 @@ Model& Model::operator=(const Model& other)
 	if (this != &other)
 	{
 		m_meshes = other.m_meshes;
-		m_textures = other.m_textures;
-		m_material_names = other.m_material_names;
+		m_material_data = other.m_material_data;
 		m_bounding_sphere = other.m_bounding_sphere;
 	}
 
@@ -233,8 +262,7 @@ Model& Model::operator=(Model&& other) noexcept
 	if (this != &other)
 	{
 		m_meshes = std::move(other.m_meshes);
-		m_textures = std::move(other.m_textures);
-		m_material_names = std::move(other.m_material_names);
+		m_material_data = std::move(other.m_material_data);
 		m_bounding_sphere = std::move(other.m_bounding_sphere);
 	}
 

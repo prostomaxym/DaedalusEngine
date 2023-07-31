@@ -10,6 +10,7 @@ namespace Daedalus {
 	{
 	public:
 
+		//TODO: fix locking. Incorrect frame number
 		static void LockFps(int desired_fps, const DeltaTime& elapsed_time)
 		{
 			const auto desired_frametime = GetLockedFrameTime(desired_fps);

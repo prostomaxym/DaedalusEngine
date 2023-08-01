@@ -40,7 +40,7 @@ namespace Daedalus
 	class TankMovementScript : public NativeScript
 	{
 	public:
-		TankMovementScript(Entity entity) : NativeScript(entity) {}
+		TankMovementScript(Entity entity, glm::vec3 forward_dir, float distance) : NativeScript(entity), m_forward_dir(forward_dir), m_max_distance(distance) {}
 
 	protected:
 
@@ -51,12 +51,12 @@ namespace Daedalus
 			auto delta_movement = dt.GetSeconds() * 5.f;
 			auto delta_rotation = dt.GetSeconds() * 180.f * 0.3f;
 
-			if (m_current_length_pos <= 50.f && !is_rotating && moving_upwards)
+			if (m_current_length_pos <= m_max_distance && !is_rotating && moving_upwards)
 			{
-				delta_movement = std::min(delta_movement, 50.f - m_current_length_pos);
+				delta_movement = std::min(delta_movement, m_max_distance - m_current_length_pos);
 				m_current_length_pos += delta_movement;
-				transform.translation.x += delta_movement;
-				if (m_current_length_pos >= 50.f)
+				transform.translation += delta_movement * m_forward_dir;
+				if (m_current_length_pos >= m_max_distance)
 				{
 					is_rotating = true;
 				}
@@ -65,14 +65,14 @@ namespace Daedalus
 			{
 				delta_movement = std::min(delta_movement, m_current_length_pos);
 				m_current_length_pos -= delta_movement;
-				transform.translation.x -= delta_movement;
+				transform.translation -= delta_movement * m_forward_dir;
 				if (m_current_length_pos <= 0.f)
 				{
 					is_rotating = true;
 				}
 			}
 
-			if (m_current_length_pos >= 50.f && is_rotating)
+			if (m_current_length_pos >= m_max_distance && is_rotating)
 			{
 				delta_rotation = std::min(delta_rotation, 180.f - m_current_angle);
 				m_current_angle += delta_rotation;
@@ -96,9 +96,11 @@ namespace Daedalus
 			}
 		}
 
-		bool is_rotating{ false };
-		bool moving_upwards{ true };
+		glm::vec3 m_forward_dir;
 		float m_current_length_pos{ 0.f };
 		float m_current_angle{ 0.f };
+		float m_max_distance{ 0.f };
+		bool is_rotating{ false };
+		bool moving_upwards{ true };
 	};
 }

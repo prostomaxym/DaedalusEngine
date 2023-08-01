@@ -8,22 +8,24 @@
 
 #include <Daedalus.h>
 
-
-class Sandbox : public Daedalus::Application
+namespace Daedalus
 {
-public:
-	static Application* GetInstance()
+	class Sandbox : public Application
 	{
-		if (!s_instance)
+	public:
+		static Application* GetInstance()
 		{
-			s_instance = new Sandbox();
+			if (!s_instance)
+			{
+				s_instance = new Sandbox();
+			}
+
+			return s_instance;
 		}
 
-		return s_instance;
-	}
+		~Sandbox() = default;
 
-	~Sandbox() = default;
-
-private:
-	Sandbox();
-};
+	private:
+		Sandbox();
+	};
+}

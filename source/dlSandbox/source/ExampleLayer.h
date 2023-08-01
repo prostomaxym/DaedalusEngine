@@ -2,15 +2,18 @@
 
 #include <Daedalus.h>
 
-class ExampleLayer final : public Daedalus::Layer
+namespace Daedalus 
 {
-public:
-	ExampleLayer() : Layer("Example") {}
+	class ExampleLayer final : public Layer
+	{
+	public:
+		ExampleLayer() : Layer("Example") {}
 
-	void OnAttach() override;
-	void OnDetach() override;
-	void OnUpdate() override;
+		void OnAttach() override;
+		void OnDetach() override;
+		void OnUpdate() override;
 
-private:
-	Daedalus::Scene m_scene;
-};
+	private:
+		Scene m_scene;
+	};
+}

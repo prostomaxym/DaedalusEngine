@@ -2,7 +2,9 @@
 
 #include "ExampleLayer.h"
 
-Daedalus::Application* Daedalus::CreateApplication()
+using namespace Daedalus;
+
+Application* ::CreateApplication()
 {
 	// Entry point is defined in engine
 	return Sandbox::GetInstance();
@@ -10,6 +12,6 @@ Daedalus::Application* Daedalus::CreateApplication()
 
 Sandbox::Sandbox()
 {
-	Daedalus::Log::DisableCategory(Daedalus::Log::Categories::Events);
+	Log::DisableCategory(Log::Categories::Events);
 	PushLayer(new ExampleLayer());
 }

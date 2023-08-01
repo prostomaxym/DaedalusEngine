@@ -51,7 +51,7 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 	standard_shader->Bind();
-	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 1);
+	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 0);
 	standard_shader->Unbind();
 }
 

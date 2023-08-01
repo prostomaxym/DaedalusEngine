@@ -10,7 +10,7 @@ namespace Daedalus
 	{
 	public:
 		LightSource(std::shared_ptr<Shader> shader) : m_shader(shader) {};
-		LightSource(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color);
+		LightSource(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power);
 		void SetLightPosition(const glm::vec3& position);
 
 	private:
@@ -19,5 +19,6 @@ namespace Daedalus
 		glm::vec3 m_ambient_color{ 1.f, 1.f, 1.f };
 		glm::vec3 m_diffuse_color{ 1.f, 1.f, 1.f };
 		glm::vec3 m_specular_color{ 1.f, 1.f, 1.f };
+		float m_light_power{ 1.f }; // 0...1 range
 	};
 }

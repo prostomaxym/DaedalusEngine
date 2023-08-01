@@ -83,8 +83,8 @@ namespace Daedalus
 		LightComponent() = default;
 		LightComponent(const LightComponent&) = default;
 		LightComponent(std::shared_ptr<Shader> shader) : light(shader) {};
-		LightComponent(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color) :
-			light(shader, light_pos, ambient_color, diffuse_color, specular_color) {};
+		LightComponent(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power) :
+			light(shader, light_pos, ambient_color, diffuse_color, specular_color, light_power) {};
 	};
 
 

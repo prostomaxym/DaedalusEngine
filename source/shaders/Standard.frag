@@ -22,11 +22,11 @@ struct Material
 
 struct Light 
 {
-    vec3 power; 
     vec3 position; 
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+    float power; 
 };
 
 struct Scene
@@ -59,7 +59,7 @@ void main()
 
 
     // Diffuse lighting
-    const vec3 light_dir = u_light.position - fs_in.frag_pos;
+    const vec3 light_dir = normalize(u_light.position);
     const vec3 diffuse_color = max(dot(fs_in.normals, light_dir), 0.0) * u_material.k_diffuse;
     vec3 diffuse = u_light.diffuse * diffuse_color * diffuse_tex;
 
@@ -72,13 +72,12 @@ void main()
     vec3 specular = u_light.specular * specular_color * spec_tex;    
 
     // Attenuation
-    float distance = length(u_light.position - fs_in.frag_pos);
-    float attenuation = 80000.0 / (u_config.gamma_correction_used == 1? distance * distance : distance);
+    const float attenuation = u_light.power;
 
     diffuse *= attenuation;
     specular *= attenuation;
 
     const vec3 light_color = ambient + diffuse + specular; 
 
-    fout_color = u_config.gamma_correction_used == 1 ? vec4(pow(light_color, vec3(1.0/2.2)), tex_alpha) : vec4(light_color, tex_alpha); 
+    fout_color = u_config.gamma_correction_used == 1 ? vec4(pow(light_color, vec3(2.0/2.2)), tex_alpha) : vec4(light_color, tex_alpha); 
 }

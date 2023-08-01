@@ -54,7 +54,8 @@ void ExampleLayer::OnAttach()
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
 	auto light_entity = m_scene.CreateEntity("Main Light");
-	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get(ShaderConstants::StandardShader), glm::vec3(-60000.f, 100000.f, 80000.f), glm::vec3(0.95f, 0.8f, 0.6f), glm::vec3(0.95f, 0.85f, 0.65f), glm::vec3(0.95f, 0.85f, 0.65f));
+	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get(ShaderConstants::StandardShader), glm::vec3(-60000.f, 100000.f, 80000.f),
+		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 3.f);
 
 	auto nuke_entity = m_scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", enhance_model_flags);

@@ -5,6 +5,7 @@ in VS_OUT
     in vec3 frag_pos;
     in vec2 uv;
     in vec3 normals;
+    in mat3 TBN;
 }fs_in;
 
 out vec4 fout_color;
@@ -38,10 +39,10 @@ struct Scene
 
 struct ShaderConfig
 {
-    int diffuse_map_used;
-    int specular_map_used;
-    int normal_map_used;
-    int gamma_correction_used;
+    int enable_diffuse_map;
+    int enable_specular_map;
+    int enable_normal_map;
+    int enable_gamma_correction;
 };
 
 uniform Material u_material; 
@@ -51,24 +52,36 @@ uniform ShaderConfig u_config;
 
 void main()
 {
-    const float tex_alpha = u_config.diffuse_map_used == 1 ? texture(u_material.tex_diffuse, fs_in.uv).a : 1.0;
-    const vec3 diffuse_tex = u_config.diffuse_map_used == 1 ? texture(u_material.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
+    const float tex_alpha = u_config.enable_diffuse_map == 1 ? texture(u_material.tex_diffuse, fs_in.uv).a : 1.0;
+
+    // TODO: implement better way to show transparent objects in front of opaque objects
+    if (tex_alpha < 0.99)
+        discard;
+
+    const vec3 diffuse_tex = u_config.enable_diffuse_map == 1 ? texture(u_material.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
+
+    const vec3 light_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * u_light.position : u_light.position;
+    const vec3 view_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * u_scene.view_pos : u_scene.view_pos;
+    const vec3 frag_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * fs_in.frag_pos : fs_in.frag_pos;
+
+    const vec3 normal = u_config.enable_normal_map == 1 ?
+        normalize(vec3(texture(u_material.tex_normal, fs_in.uv).rgb) * 2.0 - 1.0) : fs_in.normals;
 
     // Ambient light
 	const vec3 ambient = u_light.ambient * u_material.k_ambient * diffuse_tex;
 
 
     // Diffuse lighting
-    const vec3 light_dir = normalize(u_light.position);
-    const vec3 diffuse_color = max(dot(fs_in.normals, light_dir), 0.0) * u_material.k_diffuse;
+    const vec3 light_dir = normalize(light_pos);
+    const vec3 diffuse_color = max(dot(normal, light_dir), 0.0) * u_material.k_diffuse;
     vec3 diffuse = u_light.diffuse * diffuse_color * diffuse_tex;
 
 
     // Specular lighting
-    const vec3 spec_tex = u_config.diffuse_map_used == 1 ? vec3(texture(u_material.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
-    const vec3 view_dir = normalize(u_scene.view_pos - fs_in.frag_pos);
+    const vec3 spec_tex = u_config.enable_specular_map == 1 ? vec3(texture(u_material.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
+    const vec3 view_dir = normalize(view_pos - frag_pos);
     const vec3 halfway_dir = normalize(view_dir + light_dir);  
-    const vec3 specular_color = pow(max(dot(fs_in.normals, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
+    const vec3 specular_color = pow(max(dot(normal, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
     vec3 specular = u_light.specular * specular_color * spec_tex;    
 
     // Attenuation
@@ -79,5 +92,7 @@ void main()
 
     const vec3 light_color = ambient + diffuse + specular; 
 
-    fout_color = u_config.gamma_correction_used == 1 ? vec4(pow(light_color, vec3(2.0/2.2)), tex_alpha) : vec4(light_color, tex_alpha); 
+    fout_color = u_config.enable_gamma_correction == 1 ? 
+        vec4(pow(light_color, vec3(2.0/2.2)), tex_alpha) : 
+        vec4(light_color, tex_alpha); 
 }

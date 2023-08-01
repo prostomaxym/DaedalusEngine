@@ -11,6 +11,7 @@ namespace Daedalus {
 	{
 	public:
 		static void Init();
+		static void SetupGraphicSettings();
 		static std::unique_ptr<ShaderLibrary> LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
 		static void Clear();
 

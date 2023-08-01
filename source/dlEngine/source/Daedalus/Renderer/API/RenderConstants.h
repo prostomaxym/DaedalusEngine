@@ -27,9 +27,9 @@ namespace Daedalus
 		inline constexpr auto MaterialKSpecular{ "u_material.k_specular" };
 		inline constexpr auto MaterialShininess{ "u_material.shininess" };
 
-		inline constexpr auto ConfigDiffuseMapUsed{ "u_config.diffuse_map_used" };
-		inline constexpr auto ConfigSpecularMapUsed{ "u_config.specular_map_used" };
-		inline constexpr auto ConfigNormalMapUsed{ "u_config.normal_map_used" };
-		inline constexpr auto GammaCorrectionUsed{ "u_config.gamma_correction_used" };
+		inline constexpr auto ConfigDiffuseMapUsed{ "u_config.enable_diffuse_map" };
+		inline constexpr auto ConfigSpecularMapUsed{ "u_config.enable_specular_map" };
+		inline constexpr auto ConfigNormalMapUsed{ "u_config.enable_normal_map" };
+		inline constexpr auto GammaCorrectionUsed{ "u_config.enable_gamma_correction" };
 	}
 }

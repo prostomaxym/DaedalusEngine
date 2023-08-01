@@ -1,6 +1,8 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/OpenGL/OpenGLShaderLibrary.h"
+#include "Daedalus/Renderer/API/Renderer.h"
+#include "Daedalus/Renderer/API/RenderConstants.h"
 
 #include <glad/glad.h>
 
@@ -24,7 +26,6 @@ void OpenGLMessageCallback(
 	case GL_DEBUG_SEVERITY_LOW:         /*Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message);*/ return;
 	case GL_DEBUG_SEVERITY_NOTIFICATION: /*Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message);*/ return;
 	}
-
 }
 
 }
@@ -35,19 +36,12 @@ OpenGLRendererAPI::OpenGLRendererAPI()
 
 void OpenGLRendererAPI::Init()
 {
-#ifdef DL_DEBUG_BUILD
-	glEnable(GL_DEBUG_OUTPUT);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	glDebugMessageCallback(OpenGLMessageCallback, nullptr);
+	ConfigLogging();
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Renderer inited;");
+}
 
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_WINDOW_SYSTEM, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	//glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	//glDebugMessageControl(GL_DEBUG_SOURCE_OTHER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-#endif
-
+void OpenGLRendererAPI::SetupGraphicSettings()
+{
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -55,7 +49,10 @@ void OpenGLRendererAPI::Init()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Renderer inited;");
+	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+	standard_shader->Bind();
+	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 1);
+	standard_shader->Unbind();
 }
 
 std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
@@ -122,4 +119,20 @@ void OpenGLRendererAPI::UnbindTextureSlot(uint32_t slot_number)
 	{
 		blank_texture->Bind(slot_number);
 	}
+}
+
+void OpenGLRendererAPI::ConfigLogging()
+{
+#ifdef DL_DEBUG_BUILD
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(OpenGLMessageCallback, nullptr);
+
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_WINDOW_SYSTEM, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	//glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	//glDebugMessageControl(GL_DEBUG_SOURCE_OTHER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+#endif
 }

@@ -10,6 +10,10 @@ void RenderCommand::Init()
 	s_RendererAPI->Init();
 }
 
+void RenderCommand::SetupGraphicSettings()
+{
+	s_RendererAPI->SetupGraphicSettings();
+}
 
 std::unique_ptr<ShaderLibrary> RenderCommand::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {

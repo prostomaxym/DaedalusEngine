@@ -14,7 +14,8 @@ namespace
 		ModelParserFlags::GEN_SMOOTH_NORMALS |
 		ModelParserFlags::SPLIT_LARGE_MESHES |
 		ModelParserFlags::OPTIMIZE_MESHES |
-		ModelParserFlags::OPTIMIZE_GRAPH;
+		ModelParserFlags::OPTIMIZE_GRAPH |
+		ModelParserFlags::CALC_TANGENT_SPACE;
 
 	//Create complex level from multiple related obj files
 	void CreateEntitiesForOBJFiles(const std::string& folderPath, Scene& scene, const TransformComponent& transform)

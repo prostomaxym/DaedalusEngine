@@ -11,6 +11,7 @@ out VS_OUT
     out vec3 frag_pos;
     out vec2 uv;
     out vec3 normals;
+    out mat3 TBN;
 }vs_out;
 
 struct Scene
@@ -20,13 +21,37 @@ struct Scene
     vec3 view_pos;
 };
 
+struct ShaderConfig
+{
+    int enable_diffuse_map;
+    int enable_specular_map;
+    int enable_normal_map;
+    int enable_gamma_correction;
+};
+
 uniform Scene u_scene;
+uniform ShaderConfig u_config;
 
 void main()
 {
     vs_out.frag_pos = vec3((u_scene.model * vec4(vin_vertices, 1.0)).xyz);
     vs_out.uv = vin_texcoord;
-    vs_out.normals = mat3(transpose(inverse(u_scene.model))) * vin_normals;
+    mat3 normal_matrix = transpose(inverse(mat3(u_scene.model)));
+    vs_out.normals = normal_matrix * vin_normals;
+
+    if(u_config.enable_normal_map == 1)
+    {
+        vec3 T = normalize(normal_matrix * vin_tangent);
+        vec3 N = normalize(normal_matrix * vin_normals);
+        T = normalize(T - dot(T, N) * N);
+        vec3 B = cross(N, T);
+    
+        vs_out.TBN = transpose(mat3(T, B, N));    
+    }
+    else
+    {
+        vs_out.TBN = mat3(vec3(0.0,0.0,0.0), vec3(0.0,0.0,0.0), vec3(0.0,0.0,0.0));
+    }
 
     gl_Position = u_scene.projection_view * vec4(vs_out.frag_pos, 1.0);
 }

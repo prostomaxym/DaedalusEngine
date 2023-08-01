@@ -20,6 +20,11 @@ void Renderer::Shutdown()
 
 }
 
+void Renderer::SetupGraphicSettings()
+{
+	RenderCommand::SetupGraphicSettings();
+}
+
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
 	s_shader_library = RenderCommand::LoadShaderLibrary(path, recompile);
@@ -99,7 +104,6 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 			shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 1);
 			shader->SetInt(ShaderConstants::MaterialTexDiffuse, 0);
 		}
-
 		else
 		{
 			RenderCommand::UnbindTextureSlot(0);
@@ -118,7 +122,7 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 			shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 0);
 		}
 
-		if (const auto& normal_map = material.GetDiffuseMap(); normal_map)
+		if (const auto& normal_map = material.GetNormalMap(); normal_map)
 		{
 			normal_map->Bind(2);
 			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 1);

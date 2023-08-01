@@ -22,6 +22,7 @@ struct Material
 
 struct Light 
 {
+    vec3 power; 
     vec3 position; 
     vec3 ambient;
     vec3 diffuse;
@@ -40,6 +41,7 @@ struct ShaderConfig
     int diffuse_map_used;
     int specular_map_used;
     int normal_map_used;
+    int gamma_correction_used;
 };
 
 uniform Material u_material; 
@@ -49,55 +51,34 @@ uniform ShaderConfig u_config;
 
 void main()
 {
-    float tex_alpha;
-    vec3 diffuse_tex;
-
-    switch(u_config.diffuse_map_used)
-    {
-    case 0:
-        {
-            tex_alpha = 1.0;
-            diffuse_tex = vec3(1.0, 1.0, 1.0);
-            break;
-        }
-    case 1:
-        {
-            tex_alpha = texture(u_material.tex_diffuse, fs_in.uv).a;
-            if (tex_alpha < 0.1)
-                discard;
-
-            diffuse_tex = texture(u_material.tex_diffuse, fs_in.uv).rgb;
-            break;
-        }
-    }
+    const float tex_alpha = u_config.diffuse_map_used == 1 ? texture(u_material.tex_diffuse, fs_in.uv).a : 1.0;
+    const vec3 diffuse_tex = u_config.diffuse_map_used == 1 ? texture(u_material.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
 
     // Ambient light
 	const vec3 ambient = u_light.ambient * u_material.k_ambient * diffuse_tex;
 
 
     // Diffuse lighting
-    const vec3 light_dir = normalize(u_light.position - fs_in.frag_pos);
+    const vec3 light_dir = u_light.position - fs_in.frag_pos;
     const vec3 diffuse_color = max(dot(fs_in.normals, light_dir), 0.0) * u_material.k_diffuse;
-    const vec3 diffuse = u_light.diffuse * diffuse_color * diffuse_tex;
+    vec3 diffuse = u_light.diffuse * diffuse_color * diffuse_tex;
 
 
     // Specular lighting
-    vec3 spec_tex;
-
-    switch(u_config.diffuse_map_used)
-    {
-    case 0:
-        spec_tex = vec3(1.0, 1.0, 1.0);
-        break;
-    case 1:
-        spec_tex = vec3(texture(u_material.tex_specular, fs_in.uv));
-        break;
-    }
-
+    const vec3 spec_tex = u_config.diffuse_map_used == 1 ? vec3(texture(u_material.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
     const vec3 view_dir = normalize(u_scene.view_pos - fs_in.frag_pos);
     const vec3 halfway_dir = normalize(view_dir + light_dir);  
     const vec3 specular_color = pow(max(dot(fs_in.normals, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
-    const vec3 specular = u_light.specular * specular_color * spec_tex;    
+    vec3 specular = u_light.specular * specular_color * spec_tex;    
 
-    fout_color = vec4(ambient + diffuse + specular, tex_alpha); 
-} 
+    // Attenuation
+    float distance = length(u_light.position - fs_in.frag_pos);
+    float attenuation = 80000.0 / (u_config.gamma_correction_used == 1? distance * distance : distance);
+
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    const vec3 light_color = ambient + diffuse + specular; 
+
+    fout_color = u_config.gamma_correction_used == 1 ? vec4(pow(light_color, vec3(1.0/2.2)), tex_alpha) : vec4(light_color, tex_alpha); 
+}

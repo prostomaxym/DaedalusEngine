@@ -13,6 +13,7 @@ namespace Daedalus
 		inline constexpr auto LightAmbient{ "u_light.ambient" };
 		inline constexpr auto LightDiffuse{ "u_light.diffuse" };
 		inline constexpr auto LightSpecular{ "u_light.specular" };
+		inline constexpr auto LightPower{ "u_light.power" };
 
 		inline constexpr auto SceneProjectionView{ "u_scene.projection_view" };
 		inline constexpr auto SceneModel{ "u_scene.model" };
@@ -29,5 +30,6 @@ namespace Daedalus
 		inline constexpr auto ConfigDiffuseMapUsed{ "u_config.diffuse_map_used" };
 		inline constexpr auto ConfigSpecularMapUsed{ "u_config.specular_map_used" };
 		inline constexpr auto ConfigNormalMapUsed{ "u_config.normal_map_used" };
+		inline constexpr auto GammaCorrectionUsed{ "u_config.gamma_correction_used" };
 	}
 }

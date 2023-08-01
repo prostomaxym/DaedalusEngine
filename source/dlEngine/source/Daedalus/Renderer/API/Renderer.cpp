@@ -91,7 +91,7 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 		shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());
 		shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material.GetDiffuseK());
 		shader->SetFloat3(ShaderConstants::MaterialKSpecular,material.GetSpecularK());
-		shader->SetFloat(ShaderConstants::MaterialKAmbient, material.GetShininess());
+		shader->SetFloat(ShaderConstants::MaterialShininess, material.GetShininess());
 
 		if (const auto& diffuse_map = material.GetDiffuseMap(); diffuse_map)
 		{

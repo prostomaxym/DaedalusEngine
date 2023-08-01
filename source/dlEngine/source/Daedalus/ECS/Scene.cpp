@@ -11,6 +11,12 @@ using namespace Daedalus;
 
 void Scene::OnRuntimeStart()
 {
+	//TODO: move it to better place
+	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+	standard_shader->Bind();
+	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 1);
+	standard_shader->Unbind();
+
 	m_is_running = true;
 }
 

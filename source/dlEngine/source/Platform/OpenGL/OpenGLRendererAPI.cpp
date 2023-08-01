@@ -29,6 +29,10 @@ void OpenGLMessageCallback(
 
 }
 
+OpenGLRendererAPI::OpenGLRendererAPI()
+{
+}
+
 void OpenGLRendererAPI::Init()
 {
 #ifdef DL_DEBUG_BUILD
@@ -104,5 +108,18 @@ void OpenGLRendererAPI::SetLineWidth(float width)
 
 void OpenGLRendererAPI::UnbindTextureSlot(uint32_t slot_number)
 {
-	glBindTextureUnit(slot_number, 0);
+	// Using blank texture to get rid of warning when unbinding texture at all
+
+	static std::shared_ptr<Texture> blank_texture{nullptr};
+
+	if (!blank_texture)
+	{
+		unsigned char black_pixel[] = { 255, 255, 255, 255 };
+		blank_texture = Texture2D::Create(black_pixel, 1, 1, 4);
+		blank_texture->Bind(slot_number);
+	}
+	else
+	{
+		blank_texture->Bind(slot_number);
+	}
 }

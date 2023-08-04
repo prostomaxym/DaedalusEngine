@@ -33,7 +33,7 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory());
+	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
 	Renderer::SetupGraphicSettings();
 
 	m_imgui_layer = new ImGuiLayer();

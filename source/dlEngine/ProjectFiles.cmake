@@ -52,10 +52,16 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Objects/Camera.cpp
     source/Daedalus/Renderer/Objects/OrthographicCamera.h
     source/Daedalus/Renderer/Objects/OrthographicCamera.cpp
+    source/Daedalus/Renderer/Objects/LightUBO.h
+    source/Daedalus/Renderer/Objects/LightUBO.cpp
     source/Daedalus/Renderer/Objects/PerspectiveCamera.h
     source/Daedalus/Renderer/Objects/PerspectiveCamera.cpp
-    source/Daedalus/Renderer/Objects/LightSource.h
-    source/Daedalus/Renderer/Objects/LightSource.cpp
+    source/Daedalus/Renderer/Objects/DirectionalLightSource.h
+    source/Daedalus/Renderer/Objects/DirectionalLightSource.cpp
+    source/Daedalus/Renderer/Objects/SpotLightSource.h
+    source/Daedalus/Renderer/Objects/SpotLightSource.cpp
+    source/Daedalus/Renderer/Objects/PointLightSource.h
+    source/Daedalus/Renderer/Objects/PointLightSource.cpp
 
     source/Daedalus/Renderer/Primitives/BufferLayout.h
     source/Daedalus/Renderer/Primitives/GraphicsContext.h

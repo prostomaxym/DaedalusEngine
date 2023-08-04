@@ -28,7 +28,23 @@ struct Light
     vec3 diffuse;
     vec3 specular;
     float power; 
+    float constant;
+	float linear;
+	float quadratic;
+    float cutoff_angle;
+    int type; // 0 - directional, 1 - point, 2 - spot
 };
+
+layout (std140, binding = 0) uniform StaticLightUBO
+{
+    Light ubo_static_lights[];
+};
+
+layout (std140, binding = 1) uniform DynamicLightUBO
+{
+    Light ubo_dynamic_lights[];
+};
+
 
 struct Scene
 {
@@ -49,6 +65,13 @@ uniform Material u_material;
 uniform Light u_light; 
 uniform Scene u_scene;
 uniform ShaderConfig u_config;
+
+const float g_gamma_value = 2.2;
+
+vec3 ApplyGamma(vec3 color, float gamma_value) 
+{
+    return pow(color, vec3(1.0 / gamma_value));
+}
 
 void main()
 {
@@ -84,15 +107,14 @@ void main()
     const vec3 specular_color = pow(max(dot(normal, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
     vec3 specular = u_light.specular * specular_color * spec_tex;    
 
-    // Attenuation
-    const float attenuation = u_light.power;
+    // Attenuation or Gain
+    const float attenuation = ubo_static_lights[0].power;
 
     diffuse *= attenuation;
     specular *= attenuation;
-
     const vec3 light_color = ambient + diffuse + specular; 
 
     fout_color = u_config.enable_gamma_correction == 1 ? 
-        vec4(pow(light_color, vec3(2.0/2.2)), tex_alpha) : 
+        vec4(ApplyGamma(light_color, g_gamma_value), tex_alpha) : 
         vec4(light_color, tex_alpha); 
 }

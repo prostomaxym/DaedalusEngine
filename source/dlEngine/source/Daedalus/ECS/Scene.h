@@ -36,8 +36,10 @@ namespace Daedalus
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+		void PrepareScene();
+		void UpdateStaticLighting();
+		void UpdateDynamicLighting();
 
-	private:
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 

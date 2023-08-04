@@ -38,6 +38,58 @@ namespace
 	}
 	//CreateEntitiesForOBJFiles("C:/maxym/objects/Anor Londo/", m_scene, model_transform);
 
+
+	void InstanceDummyLights(Scene& scene)
+	{
+		auto light_entity1 = scene.CreateEntity("Main Light 1");
+		light_entity1.AddComponent<DirectionalLightComponent>(glm::vec3(1.8f, 1.f, 0.6f),
+			glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 0.5f, false);
+
+		auto light_entity2 = scene.CreateEntity("Main Light 2");
+		light_entity2.AddComponent<DirectionalLightComponent>(glm::vec3(2.8f, 1.f, 0.6f),
+			glm::vec3(2.f, 1.f, 1.f), glm::vec3(1.f, 2.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 2.f, false);
+
+		auto light_entity3 = scene.CreateEntity("Main Light 3 ");
+		light_entity3.AddComponent<DirectionalLightComponent>(glm::vec3(3.8f, 1.f, 0.6f),
+			glm::vec3(3.f, 1.f, 1.f), glm::vec3(1.f, 3.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 3.f, false);
+
+		auto light_entity4 = scene.CreateEntity("Main Light 4");
+		light_entity4.AddComponent<DirectionalLightComponent>(glm::vec3(4.8f, 1.f, 0.6f),
+			glm::vec3(4.f, 1.f, 1.f), glm::vec3(1.f, 4.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 4.f, false);
+
+		auto light_entity5 = scene.CreateEntity("Main Light 5 ");
+		light_entity5.AddComponent<PointLightComponent>(glm::vec3(5.8f, 1.f, 0.6f),
+			glm::vec3(5.f, 1.f, 1.f), glm::vec3(1.f, 5.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 5.f, 10.f, false);
+
+		auto light_entity6 = scene.CreateEntity("Main Light 6");
+		light_entity6.AddComponent<PointLightComponent>(glm::vec3(6.8f, 1.f, 0.6f),
+			glm::vec3(6.f, 1.f, 1.f), glm::vec3(1.f, 6.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 6.f, 15.f, false);
+
+		auto light_entity7 = scene.CreateEntity("Main Light 7");
+		light_entity7.AddComponent<SpotLightComponent>(glm::vec3(7.8f, 1.f, 0.6f),
+			glm::vec3(7.f, 1.f, 1.f), glm::vec3(1.f, 7.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 7.f, 13.f, 70.f, false);
+
+		auto light_entity8 = scene.CreateEntity("Main Light 8");
+		light_entity8.AddComponent<SpotLightComponent>(glm::vec3(8.8f, 1.f, 0.6f),
+			glm::vec3(8.f, 1.f, 1.f), glm::vec3(1.f, 8.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 8.f, 15.f, 15.f, false);
+
+		auto light_entity9 = scene.CreateEntity("Main Light 9");
+		light_entity9.AddComponent<SpotLightComponent>(glm::vec3(9.8f, 1.f, 0.6f),
+			glm::vec3(9.f, 1.f, 1.f), glm::vec3(1.f, 9.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 9.f, 23.f, 39.f, false);
+
+		auto light_entity10 = scene.CreateEntity("Main Light 10");
+		light_entity10.AddComponent<SpotLightComponent>(glm::vec3(10.8f, 1.f, 0.6f),
+			glm::vec3(10.f, 1.f, 1.f), glm::vec3(1.f, 10.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 10.f, 27.f, 42.f, false);
+
+		auto light_entity11 = scene.CreateEntity("Main Light 11");
+		light_entity11.AddComponent<SpotLightComponent>(glm::vec3(11.8f, 1.f, 0.6f),
+			glm::vec3(11.f, 1.f, 1.f), glm::vec3(1.f, 11.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 11.f, 34.f, 43.f, false);
+
+		auto light_entity12 = scene.CreateEntity("Main Light 12");
+		light_entity12.AddComponent<SpotLightComponent>(glm::vec3(12.8f, 1.f, 0.6f),
+			glm::vec3(12.f, 1.f, 1.f), glm::vec3(1.f, 12.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 12.f, 45.f, 42.f, false);
+	}
+
 }
 
 void PrepareNukeScene(Scene& scene);
@@ -45,8 +97,8 @@ void PrepareAnorLondoScene(Scene& scene);
 
 void ExampleLayer::OnAttach()
 {
-	//PrepareNukeScene(m_scene);
-	PrepareAnorLondoScene(m_scene);
+	PrepareNukeScene(m_scene);
+	//PrepareAnorLondoScene(m_scene);
 
 	m_scene.OnRuntimeStart();
 }
@@ -79,9 +131,20 @@ void PrepareNukeScene(Scene& scene)
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
+	InstanceDummyLights(scene);
 	auto light_entity = scene.CreateEntity("Main Light");
-	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get(ShaderConstants::StandardShader), glm::vec3(80000.f, 100000.f, 60000.f),
-		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 3.f);
+	const auto& light_component = light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.8f, 1.f, 0.6f),
+		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 3.f, false);
+
+	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+	standard_shader->Bind();
+
+	const auto& params = light_component.light.GetShaderUBO();
+	standard_shader->SetFloat3(ShaderConstants::LightPos, glm::vec3(params.position[0], params.position[1], params.position[2]));
+	standard_shader->SetFloat3(ShaderConstants::LightAmbient, glm::vec3(params.ambient_color[0], params.ambient_color[1], params.ambient_color[2]));
+	standard_shader->SetFloat3(ShaderConstants::LightDiffuse, glm::vec3(params.diffuse_color[0], params.diffuse_color[1], params.diffuse_color[2]));
+	standard_shader->SetFloat3(ShaderConstants::LightSpecular, glm::vec3(params.specular_color[0], params.specular_color[1], params.specular_color[2]));
+	standard_shader->SetFloat(ShaderConstants::LightPower, params.power);
 
 	auto nuke_entity = scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", enhance_model_flags);
@@ -131,8 +194,8 @@ void PrepareAnorLondoScene(Scene& scene)
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
 	auto light_entity = scene.CreateEntity("Main Light");
-	light_entity.AddComponent<LightComponent>(Renderer::s_shader_library->Get(ShaderConstants::StandardShader), glm::vec3(30000.f, 100000.f, 120000.f),
-		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 3.f);
+	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.3f, 1.f, 1.2f),
+		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 1.f, false);
 
 	TransformComponent transform;
 	transform.scale = glm::vec3(2.f, 2.f, 2.f);

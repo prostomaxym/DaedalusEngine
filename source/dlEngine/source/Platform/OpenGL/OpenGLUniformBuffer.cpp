@@ -5,11 +5,16 @@
 
 using namespace Daedalus;
 
-OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding)
+OpenGLUniformBuffer::OpenGLUniformBuffer(uint32_t size, uint32_t binding, Type type)
 {
 	glCreateBuffers(1, &m_rendererID);
-	glNamedBufferData(m_rendererID, size, nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, m_rendererID);
 	glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_rendererID);
+
+	if (type == Type::Static)
+		glNamedBufferData(m_rendererID, size, nullptr, GL_STATIC_DRAW);
+	else
+		glNamedBufferData(m_rendererID, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
 OpenGLUniformBuffer::~OpenGLUniformBuffer()

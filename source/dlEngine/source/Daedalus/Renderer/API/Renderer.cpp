@@ -9,6 +9,8 @@ using namespace Daedalus;
 
 std::unique_ptr<Renderer::SceneData> Renderer::s_scene_data = std::make_unique<Renderer::SceneData>();
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
+std::shared_ptr<UniformBuffer> Renderer::s_UBO_static_lighting = nullptr;
+std::shared_ptr<UniformBuffer> Renderer::s_UBO_dynamic_lighting = nullptr;
 
 void Renderer::Init()
 {
@@ -40,7 +42,7 @@ void Renderer::BeginScene(const OrthographicCamera& camera)
 	s_scene_data->ProjectionViewMatrix = camera.GetViewProjectionMatrix();
 }
 
-void Daedalus::Renderer::BeginScene(const PerspectiveCamera& camera)
+void Renderer::BeginScene(const PerspectiveCamera& camera)
 {
 	s_scene_data->ProjectionViewMatrix = camera.GetProjectionViewMatrix();
 }
@@ -139,4 +141,18 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 	}
 
 	shader->Unbind();
+}
+
+void Renderer::UpdateStaticLightUBO(const std::vector<LightUBO>& light_UBOs)
+{
+	const auto UBO_size_in_bytes = light_UBOs.size() * sizeof(LightUBO);
+	s_UBO_static_lighting = UniformBuffer::Create(UBO_size_in_bytes, 0, UniformBuffer::Type::Static);
+	s_UBO_static_lighting->SetData(light_UBOs.data(), UBO_size_in_bytes, 0);
+}
+
+void Renderer::UpdateDynamicLightUBO(const std::vector<LightUBO>& light_UBOs)
+{
+	const auto UBO_size_in_bytes = light_UBOs.size() * sizeof(LightUBO);
+	s_UBO_dynamic_lighting = UniformBuffer::Create(UBO_size_in_bytes, 1, UniformBuffer::Type::Dynamic);
+	s_UBO_dynamic_lighting->SetData(light_UBOs.data(), UBO_size_in_bytes, 0);
 }

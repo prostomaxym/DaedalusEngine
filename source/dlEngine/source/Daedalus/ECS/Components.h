@@ -1,7 +1,9 @@
 #pragma once
 
 #include "UUID.h"
-#include "Daedalus/Renderer/Objects/LightSource.h"
+#include "Daedalus/Renderer/Objects/DirectionalLightSource.h"
+#include "Daedalus/Renderer/Objects/PointLightSource.h"
+#include "Daedalus/Renderer/Objects/SpotLightSource.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Renderer/Resourses/Model.h"
 
@@ -76,17 +78,38 @@ namespace Daedalus
 			camera(proj_props, pos_props) {}
 	};
 
-	struct LightComponent
+	struct DirectionalLightComponent
 	{
-		LightSource light;
+		DirectionalLightSource light;
+		bool is_dynamic{ false };
 
-		LightComponent() = default;
-		LightComponent(const LightComponent&) = default;
-		LightComponent(std::shared_ptr<Shader> shader) : light(shader) {};
-		LightComponent(std::shared_ptr<Shader> shader, const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power) :
-			light(shader, light_pos, ambient_color, diffuse_color, specular_color, light_power) {};
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+		DirectionalLightComponent(const glm::vec3& light_dir, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power, bool is_dyn) :
+			light(light_dir, ambient_color, diffuse_color, specular_color, light_power), is_dynamic(is_dyn) {};
 	};
 
+	struct PointLightComponent
+	{
+		PointLightSource light;
+		bool is_dynamic{ false };
+
+		PointLightComponent() = default;
+		PointLightComponent(const PointLightComponent&) = default;
+		PointLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power, float max_distance, bool is_dyn) :
+			light(light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance), is_dynamic(is_dyn) {};
+	};
+
+	struct SpotLightComponent
+	{
+		SpotLightSource light;
+		bool is_dynamic{ false };
+
+		SpotLightComponent() = default;
+		SpotLightComponent(const SpotLightComponent&) = default;
+		SpotLightComponent(const glm::vec3& light_dir, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power, float max_distance, float theta_angle, bool is_dyn) :
+			light(light_dir, ambient_color, diffuse_color, specular_color, light_power, max_distance, theta_angle), is_dynamic(is_dyn) {};
+	};
 
 	class NativeScript; //To avoid circular dependency
 

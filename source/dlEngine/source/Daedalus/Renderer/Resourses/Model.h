@@ -72,7 +72,7 @@ namespace Daedalus {
 
 		const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
 		const std::vector<Material>& GetMaterials() const;
-		const BoundingSphere GetBoundingSphere() const;
+		BoundingSphere GetBoundingSphere() const;
 
 	private:
 		void ComputeBoundingSphere();

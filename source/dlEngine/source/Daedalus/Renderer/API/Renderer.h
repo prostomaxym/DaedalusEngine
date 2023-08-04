@@ -7,6 +7,10 @@
 #include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
+#include "Daedalus/Renderer/Objects/DirectionalLightSource.h"
+#include "Daedalus/Renderer/Objects/PointLightSource.h"
+#include "Daedalus/Renderer/Objects/SpotLightSource.h"
+#include "Daedalus/Renderer/Primitives/UniformBuffer.h"
 
 #include <glm/glm.hpp>
 
@@ -33,6 +37,9 @@ namespace Daedalus {
 		static void Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 
+		static void UpdateStaticLightUBO(const std::vector<LightUBO>& light_UBOs);
+		static void UpdateDynamicLightUBO(const std::vector<LightUBO>& light_UBOs);
+
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
 	public:
@@ -43,7 +50,9 @@ namespace Daedalus {
 		{
 			glm::mat4 ProjectionViewMatrix;
 		};
-		static std::unique_ptr<SceneData> s_scene_data;
-	};
 
+		static std::unique_ptr<SceneData> s_scene_data;
+		static std::shared_ptr<UniformBuffer> s_UBO_static_lighting;
+		static std::shared_ptr<UniformBuffer> s_UBO_dynamic_lighting;
+	};
 }

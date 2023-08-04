@@ -69,7 +69,7 @@ const std::vector<Material>& Daedalus::Model::GetMaterials() const
 	return m_material_data;
 }
 
-const BoundingSphere Model::GetBoundingSphere() const
+BoundingSphere Model::GetBoundingSphere() const
 {
 	return m_bounding_sphere;
 }

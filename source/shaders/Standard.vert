@@ -47,16 +47,16 @@ void main()
     vs_out.frag_pos = vec3((u_object.model_mat * vec4(vin_vertices, 1.0)).xyz);
     vs_out.uv = vin_texcoord;
     mat3 normal_matrix = transpose(inverse(mat3(u_object.model_mat)));
-    vs_out.normals = normal_matrix * vin_normals;
+    vs_out.normals = normalize(normal_matrix * vin_normals);
 
     if(u_object.enable_normal_map == 1)
     {
-        vec3 T = normalize(normal_matrix * vin_tangent);
-        vec3 N = normalize(normal_matrix * vin_normals);
-        T = normalize(T - dot(T, N) * N);
-        vec3 B = cross(N, T);
-    
-        vs_out.TBN = transpose(mat3(T, B, N));    
+        vs_out.TBN = mat3
+        (
+            normalize(vec3(u_object.model_mat * vec4(vin_tangent, 0.0))),
+            normalize(vec3(u_object.model_mat * vec4(vin_bitangent, 0.0))),
+            normalize(vec3(u_object.model_mat * vec4(vin_normals, 0.0)))
+        );   
     }
     else
     {

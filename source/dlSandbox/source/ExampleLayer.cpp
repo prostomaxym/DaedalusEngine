@@ -74,8 +74,9 @@ void PrepareNukeScene(Scene& scene)
 	auto& camera_scripts = camera_entity.AddComponent<NativeScriptComponent>();
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
-	camera_entity.AddComponent<PointLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 10.f, 100.f, true);
+	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
+	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 2.f, 100.f, glm::vec3{ 0.f,0.f,1.f }, 20.f, 45.f, true);
 
 	//auto light_entity = scene.CreateEntity("Main Light");
 	//light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.8f, 1.f, 0.6f),
@@ -92,14 +93,14 @@ void PrepareNukeScene(Scene& scene)
 	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
-	kratos_transform.translation = glm::vec3(0.f, -2.8f, -20.f);
+	kratos_transform.translation = glm::vec3(0.f, -2.8f, -18.f);
 	kratos_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 
 	auto miranda_entity = scene.CreateEntity("Miranda");
 	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
-	miranda_transform.translation = glm::vec3(-10.f, -2.8f, -20.f);
+	miranda_transform.translation = glm::vec3(-10.f, -2.8f, -18.f);
 	miranda_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 	auto& miranda_scripts = miranda_entity.AddComponent<NativeScriptComponent>();
 	miranda_scripts.AddScript<RotationModelScript>(miranda_entity, 0.1f);
@@ -108,7 +109,7 @@ void PrepareNukeScene(Scene& scene)
 	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", enhance_model_flags);
 	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
 	tank_transform.scale = glm::vec3(3.f, 3.f, 3.f);
-	tank_transform.translation = glm::vec3(-20.f, -2.8f, -25.f);
+	tank_transform.translation = glm::vec3(-25.f, -2.8f, -23.f);
 	tank_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
 	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();
 	tank_scripts.AddScript<TankMovementScript>(tank_entity, glm::vec3(1.0f, 0.f, 0.0f), 50.f);

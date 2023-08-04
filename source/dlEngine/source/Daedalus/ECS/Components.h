@@ -107,9 +107,9 @@ namespace Daedalus
 
 		SpotLightComponent() = default;
 		SpotLightComponent(const SpotLightComponent&) = default;
-		SpotLightComponent(const glm::vec3& light_dir, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, 
+		SpotLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, 
 			float light_power, float max_distance, const glm::vec3& direction, float theta_angle, float outer_cutoff, bool is_dyn) :
-			light(light_dir, ambient_color, diffuse_color, specular_color, light_power, max_distance, direction, theta_angle, outer_cutoff), is_dynamic(is_dyn) {};
+			light(light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance, direction, theta_angle, outer_cutoff), is_dynamic(is_dyn) {};
 	};
 
 	class NativeScript; //To avoid circular dependency

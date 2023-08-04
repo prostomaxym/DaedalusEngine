@@ -103,4 +103,21 @@ namespace Daedalus
 		bool is_rotating{ false };
 		bool moving_upwards{ true };
 	};
+
+
+	class MovingSpotLightScript : public NativeScript
+	{
+	public:
+		MovingSpotLightScript(Entity entity) : NativeScript(entity) {}
+
+	protected:
+
+		virtual void OnUpdate(DeltaTime dt) override
+		{
+			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
+			auto& light = m_entity.GetComponent<SpotLightComponent>().light;
+			light.SetPosition(camera.GetPosition());
+			light.SetDirection(camera.GetDirection());
+		}
+	};
 }

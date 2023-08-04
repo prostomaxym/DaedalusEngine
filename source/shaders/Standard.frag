@@ -127,7 +127,7 @@ vec3 CalculateSpotLight(Light p_light)
 
     const float theta           = dot(light_direction, normalize(-p_light.direction)); 
     const float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
-    const float spot_intensity   = clamp((theta - p_light.outer_cutoff_angle) / epsilon, 0.0, 1.0);
+    const float spot_intensity = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
     
      return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
 }
@@ -145,8 +145,8 @@ void main()
     if (g_alpha_tex < 0.99)
         discard;
 
-    g_view_pos = u_object.enable_normal_map == 1 ? fs_in.TBN * ubo_scene.view_pos : ubo_scene.view_pos;
-    g_frag_pos = u_object.enable_normal_map == 1 ? fs_in.TBN * fs_in.frag_pos : fs_in.frag_pos;
+    g_view_pos = ubo_scene.view_pos;
+    g_frag_pos = fs_in.frag_pos;
 
     g_diffuse_tex = u_object.enable_diffuse_map == 1 ? texture(u_object.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
     g_diffuse_tex *= u_object.k_diffuse;
@@ -155,7 +155,17 @@ void main()
     g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
     g_view_dir = normalize(g_view_pos - g_frag_pos);
-    g_normal = u_object.enable_normal_map == 1 ? normalize(vec3(texture(u_object.tex_normal, fs_in.uv).rgb) * 2.0 - 1.0) : fs_in.normals;
+
+    if(u_object.enable_normal_map == 1)
+    {
+        g_normal = texture(u_object.tex_normal, fs_in.uv).rgb;
+        g_normal = normalize(g_normal * 2.0 - 1.0);   
+        g_normal = normalize(fs_in.TBN * g_normal);
+    }
+    else
+    {
+        g_normal = fs_in.normals;
+    }
 
     vec3 light_sum = vec3(0.0);
 

@@ -68,8 +68,4 @@ void CameraController::OnUpdate(DeltaTime ts)
 
 		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
-
-	auto& light = m_entity.GetComponent<PointLightComponent>().light;
-
-	light.SetPosition(camera.GetPosition());
 }

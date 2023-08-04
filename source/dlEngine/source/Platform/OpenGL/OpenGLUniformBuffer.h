@@ -10,7 +10,8 @@ namespace Daedalus {
 		OpenGLUniformBuffer(uint32_t size, uint32_t binding, Type type);
 		~OpenGLUniformBuffer();
 
-		void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
+		void SetData(const void* data, uint32_t size, uint32_t offset = 0) const override;
+		void Bind(uint32_t binding) const override;
 
 	private:
 		uint32_t m_rendererID = 0;

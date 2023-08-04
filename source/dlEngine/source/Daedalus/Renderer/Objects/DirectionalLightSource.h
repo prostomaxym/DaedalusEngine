@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Core.h"
-#include "Daedalus/Renderer/Objects/LightUBO.h"
+#include "Daedalus/Renderer/Objects/LightSSBO.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,9 +17,9 @@ namespace Daedalus
 		void SetDirection(glm::vec3 direction) { m_params.position = direction; }
 		void SetPower(float lpower) { m_params.power = lpower; }
 
-		const LightUBO& GetShaderUBO() const { return m_params; }
+		const LightSSBO& GetShaderSSBO() const { return m_params; }
 
 	private:
-		LightUBO m_params{};
+		LightSSBO m_params{};
 	};
 }

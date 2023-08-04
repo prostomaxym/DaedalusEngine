@@ -35,12 +35,12 @@ struct Light
     int type; // 0 - directional, 1 - point, 2 - spot
 };
 
-layout (std140, binding = 0) uniform StaticLightUBO
+layout (std430, binding = 0) buffer StaticLightUBO
 {
     Light ubo_static_lights[];
 };
 
-layout (std140, binding = 1) uniform DynamicLightUBO
+layout (std430, binding = 1) buffer DynamicLightUBO
 {
     Light ubo_dynamic_lights[];
 };
@@ -107,8 +107,18 @@ void main()
     const vec3 specular_color = pow(max(dot(normal, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
     vec3 specular = u_light.specular * specular_color * spec_tex;    
 
+    float attenuation = 0.0;
     // Attenuation or Gain
-    const float attenuation = ubo_static_lights[0].power;
+     for (int i = 0; i < ubo_static_lights.length(); ++i)
+        {
+            attenuation = ubo_static_lights[i].power;
+        }
+
+    for (int i = 0; i < ubo_dynamic_lights.length(); ++i)
+    {
+        attenuation = ubo_dynamic_lights[i].power;
+    }
+    //const float attenuation = ubo_static_lights[3].power;
 
     diffuse *= attenuation;
     specular *= attenuation;

@@ -22,7 +22,12 @@ OpenGLUniformBuffer::~OpenGLUniformBuffer()
 	glDeleteBuffers(1, &m_rendererID);
 }
 
-void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
+void OpenGLUniformBuffer::Bind(uint32_t binding) const
+{
+	glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_rendererID);
+}
+
+void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset) const
 {
 	glNamedBufferSubData(m_rendererID, offset, size, data);
 }

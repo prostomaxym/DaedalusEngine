@@ -48,7 +48,10 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+}
 
+void OpenGLRendererAPI::SetupShaderSettings()
+{
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 	standard_shader->Bind();
 	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 0);

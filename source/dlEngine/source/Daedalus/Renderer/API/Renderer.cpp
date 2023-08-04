@@ -9,8 +9,8 @@ using namespace Daedalus;
 
 std::unique_ptr<Renderer::SceneData> Renderer::s_scene_data = std::make_unique<Renderer::SceneData>();
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
-std::shared_ptr<UniformBuffer> Renderer::s_UBO_static_lighting = nullptr;
-std::shared_ptr<UniformBuffer> Renderer::s_UBO_dynamic_lighting = nullptr;
+std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
+std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
 
 void Renderer::Init()
 {
@@ -25,6 +25,11 @@ void Renderer::Shutdown()
 void Renderer::SetupGraphicSettings()
 {
 	RenderCommand::SetupGraphicSettings();
+}
+
+void Renderer::SetupShaderSettings()
+{
+	RenderCommand::SetupShaderSettings();
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
@@ -143,16 +148,20 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 	shader->Unbind();
 }
 
-void Renderer::UpdateStaticLightUBO(const std::vector<LightUBO>& light_UBOs)
+void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
-	const auto UBO_size_in_bytes = light_UBOs.size() * sizeof(LightUBO);
-	s_UBO_static_lighting = UniformBuffer::Create(UBO_size_in_bytes, 0, UniformBuffer::Type::Static);
-	s_UBO_static_lighting->SetData(light_UBOs.data(), UBO_size_in_bytes, 0);
+	const auto test = light_SSBOs.data();
+	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
+	s_SSBO_static_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Static);
+	s_SSBO_static_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateDynamicLightUBO(const std::vector<LightUBO>& light_UBOs)
+void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
-	const auto UBO_size_in_bytes = light_UBOs.size() * sizeof(LightUBO);
-	s_UBO_dynamic_lighting = UniformBuffer::Create(UBO_size_in_bytes, 1, UniformBuffer::Type::Dynamic);
-	s_UBO_dynamic_lighting->SetData(light_UBOs.data(), UBO_size_in_bytes, 0);
+	if (light_SSBOs.empty())
+		return;
+
+	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
+	s_SSBO_dynamic_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
+	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }

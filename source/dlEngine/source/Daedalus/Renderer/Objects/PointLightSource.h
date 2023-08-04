@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Core.h"
-#include "Daedalus/Renderer/Objects/LightUBO.h"
+#include "Daedalus/Renderer/Objects/LightSSBO.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,10 +17,10 @@ namespace Daedalus
 		void SetPower(float power) { m_params.power = power; }
 		void SetMaxDistance(float distance);
 
-		const LightUBO& GetShaderUBO() const { return m_params; }
+		const LightSSBO& GetShaderSSBO() const { return m_params; }
 
 	private:
-		LightUBO m_params{};
+		LightSSBO m_params{};
 		float m_max_distance{ 100.f };
 	};
 }

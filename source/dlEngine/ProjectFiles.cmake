@@ -52,8 +52,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Objects/Camera.cpp
     source/Daedalus/Renderer/Objects/OrthographicCamera.h
     source/Daedalus/Renderer/Objects/OrthographicCamera.cpp
-    source/Daedalus/Renderer/Objects/LightUBO.h
-    source/Daedalus/Renderer/Objects/LightUBO.cpp
+    source/Daedalus/Renderer/Objects/LightSSBO.h
+    source/Daedalus/Renderer/Objects/LightSSBO.cpp
     source/Daedalus/Renderer/Objects/PerspectiveCamera.h
     source/Daedalus/Renderer/Objects/PerspectiveCamera.cpp
     source/Daedalus/Renderer/Objects/DirectionalLightSource.h
@@ -70,6 +70,8 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Primitives/FrameBuffer.cpp
     source/Daedalus/Renderer/Primitives/IndexBuffer.h
     source/Daedalus/Renderer/Primitives/IndexBuffer.cpp
+    source/Daedalus/Renderer/Primitives/ShaderStorageBuffer.h
+    source/Daedalus/Renderer/Primitives/ShaderStorageBuffer.cpp
     source/Daedalus/Renderer/Primitives/UniformBuffer.h
     source/Daedalus/Renderer/Primitives/UniformBuffer.cpp
     source/Daedalus/Renderer/Primitives/VertexArray.h
@@ -131,6 +133,8 @@ set(PROJECT_FILES
     source/Platform/OpenGL/OpenGLShader.cpp
     source/Platform/OpenGL/OpenGLShaderLibrary.h
     source/Platform/OpenGL/OpenGLShaderLibrary.cpp
+    source/Platform/OpenGL/OpenGLShaderStorageBuffer.h
+    source/Platform/OpenGL/OpenGLShaderStorageBuffer.cpp
     source/Platform/OpenGL/OpenGLTexture.h
     source/Platform/OpenGL/OpenGLTexture.cpp
     source/Platform/OpenGL/OpenGLUniformBuffer.h

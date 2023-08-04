@@ -108,12 +108,8 @@ void ExampleLayer::OnDetach()
 	m_scene.OnRuntimeStop();
 }
 
-void ExampleLayer::OnUpdate()
+void ExampleLayer::OnUpdate(DeltaTime dt)
 {
-	static Timer timer;
-	const auto dt = timer.GetEllapsedTime();
-	timer.StartTimer();
-
 	m_scene.OnUpdateRuntime(dt);
 }
 
@@ -139,7 +135,7 @@ void PrepareNukeScene(Scene& scene)
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 	standard_shader->Bind();
 
-	const auto& params = light_component.light.GetShaderUBO();
+	const auto& params = light_component.light.GetShaderSSBO();
 	standard_shader->SetFloat3(ShaderConstants::LightPos, glm::vec3(params.position[0], params.position[1], params.position[2]));
 	standard_shader->SetFloat3(ShaderConstants::LightAmbient, glm::vec3(params.ambient_color[0], params.ambient_color[1], params.ambient_color[2]));
 	standard_shader->SetFloat3(ShaderConstants::LightDiffuse, glm::vec3(params.diffuse_color[0], params.diffuse_color[1], params.diffuse_color[2]));

@@ -11,7 +11,7 @@ namespace Daedalus
 
 		void OnAttach() override;
 		void OnDetach() override;
-		void OnUpdate() override;
+		void OnUpdate(DeltaTime dt) override;
 
 	private:
 		Scene m_scene;

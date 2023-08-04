@@ -120,7 +120,7 @@ void Scene::PrepareScene()
 
 void Scene::UpdateStaticLighting()
 {
-	std::vector<LightUBO> light_UBOs;
+	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (auto e : dir_view)
 	{
@@ -128,7 +128,7 @@ void Scene::UpdateStaticLighting()
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (!light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
@@ -139,7 +139,7 @@ void Scene::UpdateStaticLighting()
 		const auto& light_component = entity.GetComponent<PointLightComponent>();
 
 		if (!light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
 	const auto spot_view = m_registry.view<SpotLightComponent>();
@@ -149,15 +149,15 @@ void Scene::UpdateStaticLighting()
 		const auto& light_component = entity.GetComponent<SpotLightComponent>();
 
 		if (!light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateStaticLightUBO(light_UBOs);
+	Renderer::UpdateStaticLightSSBO(light_SSBOs);
 }
 
 void Scene::UpdateDynamicLighting()
 {
-	std::vector<LightUBO> light_UBOs;
+	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (auto e : dir_view)
 	{
@@ -165,7 +165,7 @@ void Scene::UpdateDynamicLighting()
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
@@ -175,7 +175,7 @@ void Scene::UpdateDynamicLighting()
 		const auto& light_component = entity.GetComponent<PointLightComponent>();
 
 		if (light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
 	const auto spot_view = m_registry.view<SpotLightComponent>();
@@ -185,8 +185,8 @@ void Scene::UpdateDynamicLighting()
 		const auto& light_component = entity.GetComponent<SpotLightComponent>();
 
 		if (light_component.is_dynamic)
-			light_UBOs.emplace_back(light_component.light.GetShaderUBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateDynamicLightUBO(light_UBOs);
+	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }

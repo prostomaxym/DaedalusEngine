@@ -15,7 +15,7 @@ namespace Daedalus {
 
 		virtual void OnAttach() {};
 		virtual void OnDetach() {};
-		virtual void OnUpdate() {};
+		virtual void OnUpdate(DeltaTime dt) {};
 		virtual void OnEvent(Event& event) {};
 
 		inline const std::string& GetName() const { return m_debug_name; }

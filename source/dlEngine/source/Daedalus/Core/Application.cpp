@@ -33,8 +33,9 @@ Application::Application() :
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
 	Renderer::SetupGraphicSettings();
+	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
+	Renderer::SetupShaderSettings();
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);
@@ -51,12 +52,12 @@ void Application::Run()
 
 	while (m_running)
 	{	
-		timer.StartTimer();
-
 		for (auto layer : m_layer_stack)
 		{
-			layer->OnUpdate();
+			layer->OnUpdate(timer.GetEllapsedTime());
 		}
+
+		timer.StartTimer();
 
 		m_imgui_layer->Begin();
 		m_imgui_layer->End();

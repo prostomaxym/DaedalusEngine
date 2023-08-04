@@ -1,6 +1,6 @@
 #include "dlpch.h"
 
-#include "LightUBO.h"
+#include "LightSSBO.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -68,7 +68,7 @@ namespace
     }
 }
 
-LightUBO::LightUBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float light_power, float max_distance, float cutoff) :
+LightSSBO::LightSSBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float light_power, float max_distance, float cutoff) :
     position(light_pos)
     , ambient_color(ambient)
     , diffuse_color(diffuse)
@@ -86,7 +86,7 @@ LightUBO::LightUBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::
     }
 }
 
-void LightUBO::SetMaxDistance(float distance)
+void LightSSBO::SetMaxDistance(float distance)
 {
     const auto params = GetLightParams(distance);
     constant = params.constant;

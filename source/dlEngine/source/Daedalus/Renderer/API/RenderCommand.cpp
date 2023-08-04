@@ -15,11 +15,6 @@ void RenderCommand::SetupGraphicSettings()
 	s_RendererAPI->SetupGraphicSettings();
 }
 
-void RenderCommand::SetupShaderSettings()
-{
-	s_RendererAPI->SetupShaderSettings();
-}
-
 std::unique_ptr<ShaderLibrary> RenderCommand::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
 	return s_RendererAPI->LoadShaderLibrary(path, recompile);

@@ -1,5 +1,6 @@
 #version 450 core
 
+// -------------------------------------------Inputs/Outputs------------------------------------------------- //
 in VS_OUT
 {
     in vec3 frag_pos;
@@ -10,20 +11,38 @@ in VS_OUT
 
 out vec4 fout_color;
 
-struct Material
+// ----------------------------------------------Structures-------------------------------------------------- //
+struct GraphicConfig
+{
+    int enable_gamma_correction;
+    float gamma_value;
+};
+
+struct ObjectData
 {
     sampler2D tex_diffuse;
     sampler2D tex_specular;
     sampler2D tex_normal;
+    mat4 model_mat;
     vec3 k_ambient;
     vec3 k_diffuse;
     vec3 k_specular;
     float shininess;
+    int enable_diffuse_map;
+    int enable_specular_map;
+    int enable_normal_map;
+};
+
+struct Scene
+{
+    mat4 projection_view;
+    vec3 view_pos;
 };
 
 struct Light 
 {
-    vec3 position; 
+    vec3 position;
+    vec3 direction; 
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -32,99 +51,134 @@ struct Light
 	float linear;
 	float quadratic;
     float cutoff_angle;
+    float outer_cutoff_angle;
     int type; // 0 - directional, 1 - point, 2 - spot
 };
 
-layout (std430, binding = 0) buffer StaticLightUBO
+// ------------------------------------------------Buffers----------------------------------------------------- //
+layout (std140, binding = 0) uniform SceneUBO
 {
-    Light ubo_static_lights[];
+    Scene ubo_scene;
 };
 
-layout (std430, binding = 1) buffer DynamicLightUBO
+layout (std140, binding = 1) uniform GraphicConfigUBO
 {
-    Light ubo_dynamic_lights[];
+    GraphicConfig ubo_graphic_config;
 };
 
-
-struct Scene
+layout (std430, binding = 0) buffer StaticLightSSBO
 {
-    mat4 projection_view;
-    mat4 model;
-    vec3 view_pos;
+    Light ssbo_static_lights[];
 };
 
-struct ShaderConfig
+layout (std430, binding = 1) buffer DynamicLightSSBO
 {
-    int enable_diffuse_map;
-    int enable_specular_map;
-    int enable_normal_map;
-    int enable_gamma_correction;
+    Light ssbo_dynamic_lights[];
 };
 
-uniform Material u_material; 
-uniform Light u_light; 
-uniform Scene u_scene;
-uniform ShaderConfig u_config;
+uniform ObjectData u_object; 
 
-const float g_gamma_value = 2.2;
+// ------------------------------------------------- Globals ------------------------------------------------ //
+vec3 g_ambient_tex;
+vec3 g_diffuse_tex;
+vec3 g_spec_tex;
+vec3 g_view_dir;
+vec3 g_view_pos;
+vec3 g_frag_pos;
+vec3 g_normal;
+float g_alpha_tex;
 
-vec3 ApplyGamma(vec3 color, float gamma_value) 
+// ------------------------------------------------- Functions ------------------------------------------------ //
+vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specular, vec3 p_light_dir, float p_luminosity)
 {
-    return pow(color, vec3(1.0 / gamma_value));
+    const vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
+    const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
+    const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
+
+    return p_luminosity * 
+            (p_light_ambient * g_ambient_tex
+            + p_light_diffuse * diffuse_coef * g_diffuse_tex
+            + p_light_specular * specular_coef * g_spec_tex);
+}
+
+float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)
+{
+    const float distance = length(p_light_position - g_frag_pos);
+    return 1.0 / (p_constant + p_linear * distance + p_quadratic * (distance * distance));
+}
+
+vec3 CalculateDirectionalLight(Light p_light)
+{
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, p_light.direction, p_light.power);
+}
+
+vec3 CalculatePointLight(Light p_light)
+{
+    const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
+    const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
+
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity);
+}
+
+vec3 CalculateSpotLight(Light p_light)
+{
+    const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
+    const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
+
+    const float theta           = dot(light_direction, normalize(-p_light.direction)); 
+    const float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
+    const float spot_intensity   = clamp((theta - p_light.outer_cutoff_angle) / epsilon, 0.0, 1.0);
+    
+     return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
+}
+
+vec3 ApplyGammaCorrection(vec3 color) 
+{
+    return pow(color, vec3(1.0 / ubo_graphic_config.gamma_value));
 }
 
 void main()
 {
-    const float tex_alpha = u_config.enable_diffuse_map == 1 ? texture(u_material.tex_diffuse, fs_in.uv).a : 1.0;
+    g_alpha_tex = u_object.enable_diffuse_map == 1 ? texture(u_object.tex_diffuse, fs_in.uv).a : 1.0;
 
     // TODO: implement better way to show transparent objects in front of opaque objects
-    if (tex_alpha < 0.99)
+    if (g_alpha_tex < 0.99)
         discard;
 
-    const vec3 diffuse_tex = u_config.enable_diffuse_map == 1 ? texture(u_material.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
+    g_view_pos = u_object.enable_normal_map == 1 ? fs_in.TBN * ubo_scene.view_pos : ubo_scene.view_pos;
+    g_frag_pos = u_object.enable_normal_map == 1 ? fs_in.TBN * fs_in.frag_pos : fs_in.frag_pos;
 
-    const vec3 light_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * u_light.position : u_light.position;
-    const vec3 view_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * u_scene.view_pos : u_scene.view_pos;
-    const vec3 frag_pos = u_config.enable_normal_map == 1 ? fs_in.TBN * fs_in.frag_pos : fs_in.frag_pos;
+    g_diffuse_tex = u_object.enable_diffuse_map == 1 ? texture(u_object.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
+    g_diffuse_tex *= u_object.k_diffuse;
+    g_spec_tex = u_object.enable_specular_map == 1 ? vec3(texture(u_object.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
+    g_spec_tex *= u_object.k_specular;
+    g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
-    const vec3 normal = u_config.enable_normal_map == 1 ?
-        normalize(vec3(texture(u_material.tex_normal, fs_in.uv).rgb) * 2.0 - 1.0) : fs_in.normals;
+    g_view_dir = normalize(g_view_pos - g_frag_pos);
+    g_normal = u_object.enable_normal_map == 1 ? normalize(vec3(texture(u_object.tex_normal, fs_in.uv).rgb) * 2.0 - 1.0) : fs_in.normals;
 
-    // Ambient light
-	const vec3 ambient = u_light.ambient * u_material.k_ambient * diffuse_tex;
+    vec3 light_sum = vec3(0.0);
 
-
-    // Diffuse lighting
-    const vec3 light_dir = normalize(light_pos);
-    const vec3 diffuse_color = max(dot(normal, light_dir), 0.0) * u_material.k_diffuse;
-    vec3 diffuse = u_light.diffuse * diffuse_color * diffuse_tex;
-
-
-    // Specular lighting
-    const vec3 spec_tex = u_config.enable_specular_map == 1 ? vec3(texture(u_material.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
-    const vec3 view_dir = normalize(view_pos - frag_pos);
-    const vec3 halfway_dir = normalize(view_dir + light_dir);  
-    const vec3 specular_color = pow(max(dot(normal, halfway_dir), 0.0), u_material.shininess) * u_material.k_specular;
-    vec3 specular = u_light.specular * specular_color * spec_tex;    
-
-    float attenuation = 0.0;
-    // Attenuation or Gain
-     for (int i = 0; i < ubo_static_lights.length(); ++i)
-        {
-            attenuation = ubo_static_lights[i].power;
-        }
-
-    for (int i = 0; i < ubo_dynamic_lights.length(); ++i)
+    for (int i = 0; i < ssbo_static_lights.length(); ++i)
     {
-        attenuation = ubo_dynamic_lights[i].power;
+        switch(ssbo_static_lights[i].type)
+        {
+            case 0: light_sum += CalculateDirectionalLight(ssbo_static_lights[i]);   break;
+            case 1: light_sum += CalculatePointLight(ssbo_static_lights[i]);         break;
+            case 2: light_sum += CalculateSpotLight(ssbo_static_lights[i]);          break;
+        }
     }
-    //const float attenuation = ubo_static_lights[3].power;
 
-    diffuse *= attenuation;
-    specular *= attenuation;
-    const vec3 light_color = ambient + diffuse + specular; 
+    for (int i = 0; i < ssbo_dynamic_lights.length(); ++i)
+    {
+        switch(ssbo_dynamic_lights[i].type)
+        {
+            case 0: light_sum += CalculateDirectionalLight(ssbo_dynamic_lights[i]);   break;
+            case 1: light_sum += CalculatePointLight(ssbo_dynamic_lights[i]);          break;
+            case 2: light_sum += CalculateSpotLight(ssbo_dynamic_lights[i]);          break;
+        }
+    }
 
-    fout_color = u_config.enable_gamma_correction == 1 ? 
-        vec4(ApplyGamma(light_color, g_gamma_value), tex_alpha) : 
-        vec4(light_color, tex_alpha); 
+    fout_color = ubo_graphic_config.enable_gamma_correction == 1 ? 
+        vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex); 
 }

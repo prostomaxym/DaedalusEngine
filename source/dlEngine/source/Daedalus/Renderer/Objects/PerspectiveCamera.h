@@ -75,8 +75,6 @@ namespace Daedalus {
 		void MoveCamera(CameraMovement direction, float distance);
 		void RotateCamera(float xoffset, float yoffset);
 
-		void UpdatePositionUniform(std::shared_ptr<Shader> shader, const std::string& uniform_name) const;
-
 	private:
 		void Update();
 

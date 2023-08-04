@@ -10,8 +10,10 @@ SpotLightSource::SpotLightSource(glm::vec3 light_pos
 	, glm::vec3 specular_color
 	, float light_power
 	, float max_distance
-	, float cutoff_angle) :
-    m_params(2, light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance, cutoff_angle)
+	, glm::vec3 direction
+	, float cutoff_angle
+	, float outer_cutoff) :
+    m_params(2, light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance, direction, cutoff_angle, outer_cutoff)
 	, m_max_distance(max_distance)
 {}
 

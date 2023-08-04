@@ -50,14 +50,6 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 	glCullFace(GL_BACK);
 }
 
-void OpenGLRendererAPI::SetupShaderSettings()
-{
-	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-	standard_shader->Bind();
-	standard_shader->SetInt(ShaderConstants::GammaCorrectionUsed, 0);
-	standard_shader->Unbind();
-}
-
 std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 { 
 	return std::make_unique<OpenGLShaderLibrary>(path, recompile);

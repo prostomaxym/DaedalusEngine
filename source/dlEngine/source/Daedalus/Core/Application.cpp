@@ -35,7 +35,6 @@ Application::Application() :
 	Renderer::Init();
 	Renderer::SetupGraphicSettings();
 	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
-	Renderer::SetupShaderSettings();
 
 	m_imgui_layer = new ImGuiLayer();
 	PushOverlay(m_imgui_layer);

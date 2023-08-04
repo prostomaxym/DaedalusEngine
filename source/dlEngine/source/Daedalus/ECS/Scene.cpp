@@ -51,8 +51,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		Renderer::BeginScene(main_camera);
 
 		UpdateDynamicLighting();
-				
-		main_camera.UpdatePositionUniform(standard_shader, ShaderConstants::SceneViewPos);
+		
 
 		const auto view = m_registry.view<RenderableObjectComponent>();
 		for (auto e : view)

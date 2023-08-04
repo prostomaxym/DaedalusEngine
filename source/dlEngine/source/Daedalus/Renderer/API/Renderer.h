@@ -9,6 +9,7 @@
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Renderer/Primitives/ShaderStorageBuffer.h"
+#include "Daedalus/Renderer/Primitives/UniformBuffer.h"
 
 #include <glm/glm.hpp>
 
@@ -23,7 +24,6 @@ namespace Daedalus {
 		static void Shutdown();
 
 		static void SetupGraphicSettings();
-		static void SetupShaderSettings();
 		static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
@@ -45,13 +45,9 @@ namespace Daedalus {
 		static std::unique_ptr<ShaderLibrary> s_shader_library;
 
 	private:
-		struct SceneData
-		{
-			glm::mat4 ProjectionViewMatrix;
-		};
-
-		static std::unique_ptr<SceneData> s_scene_data;
+		static std::shared_ptr<UniformBuffer> s_UBO_scene_data;
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_static_lighting;
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_dynamic_lighting;
+		static std::shared_ptr<UniformBuffer> s_UBO_graphic_config;	
 	};
 }

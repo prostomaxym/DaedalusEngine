@@ -36,8 +36,8 @@ Application::Application() :
 	Renderer::SetupGraphicSettings();
 	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
 
-	m_imgui_layer = new ImGuiLayer();
-	PushOverlay(m_imgui_layer);
+	//m_imgui_layer = new ImGuiLayer();
+	//PushOverlay(m_imgui_layer);
 }
 
 Application::~Application()
@@ -58,8 +58,8 @@ void Application::Run()
 
 		timer.StartTimer();
 
-		m_imgui_layer->Begin();
-		m_imgui_layer->End();
+		//m_imgui_layer->Begin();
+		//m_imgui_layer->End();
 
 		m_window->OnUpdate();
 

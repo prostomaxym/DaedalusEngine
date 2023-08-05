@@ -50,6 +50,8 @@ set(PROJECT_FILES
 
     source/Daedalus/Renderer/Objects/Camera.h
     source/Daedalus/Renderer/Objects/Camera.cpp
+    source/Daedalus/Renderer/Objects/Cubemap.h
+    source/Daedalus/Renderer/Objects/Cubemap.cpp
     source/Daedalus/Renderer/Objects/OrthographicCamera.h
     source/Daedalus/Renderer/Objects/OrthographicCamera.cpp
     source/Daedalus/Renderer/Objects/LightSSBO.h

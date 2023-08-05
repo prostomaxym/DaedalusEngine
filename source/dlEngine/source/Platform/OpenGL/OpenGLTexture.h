@@ -39,4 +39,23 @@ namespace Daedalus {
 		GLenum m_internal_format{ 0 }, m_data_format{ 0 };
 	};
 
+
+	class OpenGLTextureCubemap final : public TextureCubemap
+	{
+	public:
+		OpenGLTextureCubemap(std::vector<std::string>& faces);
+		~OpenGLTextureCubemap();
+
+		uint32_t GetRendererID() const override { return m_rendererID; }
+
+		void Bind(uint32_t slot = 0) const override;
+
+		bool operator==(const Texture& other) const override
+		{
+			return m_rendererID == other.GetRendererID();
+		}
+
+	private:
+		uint32_t m_rendererID{ 0 };
+	};
 }

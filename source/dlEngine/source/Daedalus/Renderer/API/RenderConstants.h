@@ -8,6 +8,7 @@ namespace Daedalus
 	namespace ShaderConstants
 	{
 		inline constexpr auto StandardShader{ "Standard" };
+		inline constexpr auto CubemapShader{ "Cubemap" };
 
 		inline constexpr auto SceneModel{ "u_object.model_mat" };
 
@@ -22,5 +23,8 @@ namespace Daedalus
 		inline constexpr auto ConfigDiffuseMapUsed{ "u_object.enable_diffuse_map" };
 		inline constexpr auto ConfigSpecularMapUsed{ "u_object.enable_specular_map" };
 		inline constexpr auto ConfigNormalMapUsed{ "u_object.enable_normal_map" };
+
+		inline constexpr auto CubemapTexture{ "u_cubemap" };
+		inline constexpr auto CubemapProjectionView{ "u_projection_view" };
 	}
 }

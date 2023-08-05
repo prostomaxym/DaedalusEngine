@@ -5,6 +5,7 @@
 #include "Daedalus/Renderer/Resourses/Model.h"
 #include "Daedalus/Renderer/Resourses/Shader.h"
 #include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
+#include "Daedalus/Renderer/Objects/Cubemap.h"
 #include "Daedalus/Renderer/Objects/LightSSBO.h"
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
@@ -35,6 +36,7 @@ namespace Daedalus {
 		static void Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
+		static void Submit(const Shader* shader, const Cubemap* model, const glm::mat4& transform = glm::mat4(1.0f));
 
 		static void UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_UBOs);

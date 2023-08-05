@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UUID.h"
+#include "Daedalus/Renderer/Objects/Cubemap.h"
 #include "Daedalus/Renderer/Objects/DirectionalLightSource.h"
 #include "Daedalus/Renderer/Objects/PointLightSource.h"
 #include "Daedalus/Renderer/Objects/SpotLightSource.h"
@@ -62,10 +63,24 @@ namespace Daedalus
 	struct RenderableObjectComponent
 	{
 		Model model;
+		std::shared_ptr<Shader> shader;
 
 		RenderableObjectComponent() = default;	
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;
-		RenderableObjectComponent(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE) : model(path, parser_flags) {}
+		RenderableObjectComponent(const std::filesystem::path& path, std::shared_ptr<Shader> shader_, ModelParserFlags parser_flags = ModelParserFlags::NONE) 
+			: model(path, parser_flags), shader(shader_){}
+	};
+
+	struct CubemapComponent
+	{
+		Cubemap cubemap;
+		std::shared_ptr<Shader> shader;
+		float rotation_angle{ 0.f };
+
+		CubemapComponent() = default;
+		CubemapComponent(const CubemapComponent&) = default;
+		CubemapComponent(std::vector<std::string>& faces, std::shared_ptr<Shader> shader_, float rotation_ang = 0.f)
+			: cubemap(faces), shader(shader_), rotation_angle(rotation_ang){}
 	};
 
 	struct CameraComponent

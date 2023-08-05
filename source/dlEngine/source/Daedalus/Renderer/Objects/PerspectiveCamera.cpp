@@ -30,6 +30,16 @@ glm::mat4 PerspectiveCamera::GetProjectionViewMatrix() const
 		glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
+glm::mat4 Daedalus::PerspectiveCamera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const
+{
+	glm::mat4 projection_matrix = glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
+	glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::vec3 rotated_vector = glm::vec3(rotation_matrix * glm::vec4(m_front, 0.0f));
+	glm::mat4 view_matrix_without_translation = glm::mat4(glm::mat3(glm::lookAt(m_position, m_position + rotated_vector, m_up)));
+
+	return projection_matrix * view_matrix_without_translation;
+}
+
 void PerspectiveCamera::SetPosition(glm::vec3 position)
 {
 	m_position = position;

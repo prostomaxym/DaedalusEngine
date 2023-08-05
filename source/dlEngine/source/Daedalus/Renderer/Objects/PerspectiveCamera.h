@@ -59,6 +59,7 @@ namespace Daedalus {
 		glm::mat4 GetViewMatrix() const;
 		glm::mat4 GetProjectionMatrix() const;
 		glm::mat4 GetProjectionViewMatrix() const;
+		glm::mat4 GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const;
 		glm::vec3 GetDirection() const { return m_front; }
 
 		void SetPosition(glm::vec3 position);

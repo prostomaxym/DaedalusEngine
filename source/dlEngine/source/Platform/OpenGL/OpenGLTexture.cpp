@@ -94,6 +94,10 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		glGenerateMipmap(GL_TEXTURE_2D);
 		stbi_image_free(data);
 	}
+	else
+	{
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture");
+	}	
 }
 
 OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int channels)
@@ -136,6 +140,10 @@ OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int
 		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
+	else
+	{
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture");
+	}	
 }
 
 OpenGLTexture2D::~OpenGLTexture2D()
@@ -151,6 +159,44 @@ void OpenGLTexture2D::SetData(void* data, uint32_t size)
 }
 
 void OpenGLTexture2D::Bind(uint32_t slot) const
+{
+	glBindTextureUnit(slot, m_rendererID);
+}
+
+OpenGLTextureCubemap::OpenGLTextureCubemap(std::vector<std::string>& faces)
+{
+	glGenTextures(1, &m_rendererID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_rendererID);
+
+	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(0);
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture from path: " + faces[i]);;
+		}
+
+		stbi_image_free(data);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+OpenGLTextureCubemap::~OpenGLTextureCubemap()
+{
+	glDeleteTextures(1, &m_rendererID);
+}
+
+void OpenGLTextureCubemap::Bind(uint32_t slot) const
 {
 	glBindTextureUnit(slot, m_rendererID);
 }

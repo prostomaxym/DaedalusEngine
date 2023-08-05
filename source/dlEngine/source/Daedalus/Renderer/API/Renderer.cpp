@@ -154,9 +154,26 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 	shader->Unbind();
 }
 
+void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
+{
+	shader->Bind();
+	shader->SetMat4(ShaderConstants::CubemapProjectionView, transform);
+
+	const auto& vertex_array = cubemap->GetVertexArray();
+	const auto& cubemap_texture = cubemap->GetCubemapTexture();
+	cubemap_texture->Bind(0);
+	shader->SetInt(ShaderConstants::CubemapTexture, 0);
+
+	RenderCommand::DrawUnindexed(vertex_array.get(), cubemap->GetIndexCount());
+
+	shader->Unbind();
+}
+
 void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
-	const auto test = light_SSBOs.data();
+	if (light_SSBOs.empty())
+		return;
+
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
 	s_SSBO_static_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Static);
 	s_SSBO_static_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);

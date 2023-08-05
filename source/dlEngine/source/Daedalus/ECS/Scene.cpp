@@ -42,8 +42,6 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 	// Graphics
 	{
-		const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
 		RenderCommand::Clear();
 
@@ -52,13 +50,22 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 		UpdateDynamicLighting();
 		
-
-		const auto view = m_registry.view<RenderableObjectComponent>();
-		for (auto e : view)
+		const auto models_view = m_registry.view<RenderableObjectComponent>();
+		for (auto e : models_view)
 		{
 			Entity entity = { e, this };
 
-			Renderer::Submit(standard_shader.get(), &entity.GetComponent<RenderableObjectComponent>().model, entity.GetComponent<TransformComponent>().GetTransform());
+			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+			Renderer::Submit(model_component.shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
+		}
+
+		const auto cubemap_view = m_registry.view<CubemapComponent>();
+		for (auto e : cubemap_view)
+		{
+			Entity entity = { e, this };
+
+			const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
+			Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, main_camera.GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
 		}
 
 		Renderer::EndScene();

@@ -43,6 +43,7 @@ void GLFWWindow::Init(const WindowProps& props)
 		s_GLFWInitialized = true;
 	}
 
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 	
 	if (props.screenmode != WindowProps::ScreenMode::windowed)

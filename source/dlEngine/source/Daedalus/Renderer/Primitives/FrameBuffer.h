@@ -12,39 +12,34 @@ namespace Daedalus {
 		// Color
 		RGBA8,
 		RED_INTEGER,
-
-		// Depth/stencil
-		DEPTH24STENCIL8,
-
-		// Defaults
-		Depth = DEPTH24STENCIL8
+		Depth
 	};
 
 	struct FramebufferTextureSpecification
 	{
 		FramebufferTextureSpecification() = default;
 		FramebufferTextureSpecification(FramebufferTextureFormat format)
-			: TextureFormat(format) {}
+			: texture_format(format) {}
 
-		FramebufferTextureFormat TextureFormat = FramebufferTextureFormat::None;
+		FramebufferTextureFormat texture_format = FramebufferTextureFormat::None;
 	};
 
 	struct FramebufferAttachmentSpecification
 	{
 		FramebufferAttachmentSpecification() = default;
 		FramebufferAttachmentSpecification(std::initializer_list<FramebufferTextureSpecification> attachments)
-			: Attachments(attachments) {}
+			: attachments(attachments) {}
 
-		std::vector<FramebufferTextureSpecification> Attachments;
+		std::vector<FramebufferTextureSpecification> attachments;
 	};
 
 	struct FramebufferSpecification
 	{
-		uint32_t Width = 0, Height = 0;
-		FramebufferAttachmentSpecification Attachments;
-		uint32_t Samples = 1;
+		uint32_t width = 0, height = 0;
+		FramebufferAttachmentSpecification attachments;
+		uint32_t samples = 1;
 
-		bool SwapChainTarget = false;
+		bool swap_chain_target = false;
 	};
 
 	class Framebuffer
@@ -63,6 +58,7 @@ namespace Daedalus {
 		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const = 0;
 
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
+		virtual uint32_t GetDepthAttachmentID() const = 0;
 
 		static std::shared_ptr<Framebuffer> Create(const FramebufferSpecification& spec);
 	};

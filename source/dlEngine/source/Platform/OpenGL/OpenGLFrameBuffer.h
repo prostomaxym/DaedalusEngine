@@ -24,6 +24,7 @@ namespace Daedalus {
 		uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { return m_color_attachments[index]; }
 
 		const FramebufferSpecification& GetSpecification() const override { return m_specification; }
+		uint32_t GetDepthAttachmentID() const { return m_depth_attachment; }
 
 	private:
 		uint32_t m_rendererID = 0;

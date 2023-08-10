@@ -13,7 +13,7 @@ namespace Daedalus {
 		static void Init();
 		static void SetupGraphicSettings();
 		static std::unique_ptr<ShaderLibrary> LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
-		static void Clear();
+		static void Clear(uint32_t clear_mode);
 
 		static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 		static void SetClearColor(const glm::vec4& color);

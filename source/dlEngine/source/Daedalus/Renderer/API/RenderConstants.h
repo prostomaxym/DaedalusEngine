@@ -11,6 +11,9 @@ namespace Daedalus
 		inline constexpr auto CubemapShader{ "Cubemap" };
 
 		inline constexpr auto SceneModel{ "u_object.model_mat" };
+		inline constexpr auto ShadowModel{ "u_model" };
+		inline constexpr auto ShadowLightSpace{ "u_light_space_matrix" };
+		inline constexpr auto ShadowMap{ "u_shadow_map" };
 
 		inline constexpr auto MaterialTexDiffuse{ "u_object.tex_diffuse" };
 		inline constexpr auto MaterialTexSpecular{ "u_object.tex_specular" };

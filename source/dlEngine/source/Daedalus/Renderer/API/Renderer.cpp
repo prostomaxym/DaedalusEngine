@@ -9,15 +9,38 @@ using namespace Daedalus;
 
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data;
+std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
-std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
+std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
 
+
+namespace
+{
+	glm::mat4 GetLightMatrix()
+	{
+		glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 1000.f);
+
+		glm::mat4 lightView = glm::lookAt(glm::vec3(0.78f, 1.0f, 0.6f),
+			glm::vec3(0.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f));
+
+		return lightProjection * lightView;
+	}
+}
 void Renderer::Init()
 {
 	RenderCommand::Init();
 
 	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 20, 0, UniformBuffer::Type::Dynamic);
+
+	FramebufferSpecification specs;
+	specs.width = 2048;
+	specs.height = 2048;
+	specs.samples = 1;
+	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+
+	s_framebuffer_shadows = Framebuffer::Create(specs);
 }
 
 void Renderer::Shutdown()
@@ -96,8 +119,11 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 
 void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
+	glm::mat4 lightSpaceMatrix = GetLightMatrix();
+
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
+	shader->SetMat4(ShaderConstants::ShadowLightSpace, lightSpaceMatrix);
 
 	const auto& meshes = model->GetMeshes();
 	const auto& materials = model->GetMaterials();
@@ -169,6 +195,25 @@ void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::m
 	shader->Unbind();
 }
 
+void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform)
+{
+	glm::mat4 lightSpaceMatrix = GetLightMatrix();
+
+	shader->Bind();
+	shader->SetMat4(ShaderConstants::ShadowModel, transform);
+	shader->SetMat4(ShaderConstants::ShadowLightSpace, lightSpaceMatrix);
+
+	const auto& meshes = model->GetMeshes();
+
+	for (const auto& mesh : meshes)
+	{
+		const auto vertex_array = mesh->GetVertexArray();
+		RenderCommand::DrawIndexed(vertex_array.get());
+	}
+
+	shader->Unbind();
+}
+
 void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
@@ -187,4 +232,12 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
 	s_SSBO_dynamic_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
+}
+
+void Renderer::UpdateShadowMap()
+{
+	auto standard_shader = Renderer::s_shader_library->Get("Standard");
+	standard_shader->Bind();
+	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
+	standard_shader->SetInt(ShaderConstants::ShadowMap, 3);
 }

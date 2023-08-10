@@ -9,6 +9,7 @@ layout (location = 4) in vec3 vin_bitangent;
 out VS_OUT
 {
     out vec3 frag_pos;
+    out vec4 frag_pos_light_space;
     out vec2 uv;
     out vec3 normals;
     out mat3 TBN;
@@ -41,10 +42,12 @@ layout (std140, binding = 0) uniform SceneUBO
 };
 
 uniform ObjectData u_object; 
+uniform mat4 u_light_space_matrix;
 
 void main()
 {
     vs_out.frag_pos = vec3((u_object.model_mat * vec4(vin_vertices, 1.0)).xyz);
+    vs_out.frag_pos_light_space = u_light_space_matrix * vec4(vs_out.frag_pos, 1.0);
     vs_out.uv = vin_texcoord;
     mat3 normal_matrix = transpose(inverse(mat3(u_object.model_mat)));
     vs_out.normals = normalize(normal_matrix * vin_normals);

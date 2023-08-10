@@ -31,6 +31,8 @@ namespace Daedalus {
 		static std::shared_ptr<Texture2D> Create(uint32_t width, uint32_t height);
 		static std::shared_ptr<Texture2D> Create(const std::string& path);
 		static std::shared_ptr<Texture2D> Create(unsigned char* data, int width, int height, int channels);
+
+		static void BindTexture(uint32_t ID, uint32_t slot);
 	};
 
 	class TextureCubemap : public Texture

@@ -7,6 +7,8 @@
 #include "Entity.h"
 #include "NativeScript.h"
 
+#include <glad/glad.h>
+
 using namespace Daedalus;
 
 void Scene::OnRuntimeStart()
@@ -43,14 +45,36 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 	// Graphics
 	{
 		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
-		RenderCommand::Clear();
 
 		auto& main_camera = FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
 		Renderer::BeginScene(main_camera);
 
 		UpdateDynamicLighting();
-		
+
+		const auto shadow_fb = Renderer::GetShadowFramebuffer();
+		shadow_fb->Bind();
+		RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
+		RenderCommand::SetViewport(0, 0, 2048, 2048);
+
+		auto shadow_shader = Renderer::s_shader_library->Get("Shadow");
+
+		glCullFace(GL_FRONT);
+
 		const auto models_view = m_registry.view<RenderableObjectComponent>();
+		for (auto e : models_view)
+		{
+			Entity entity = { e, this };
+
+			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
+		}
+		shadow_fb->Unbind();
+
+
+		Renderer::UpdateShadowMap();
+		RenderCommand::SetViewport(0, 0, 2560, 1440);
+		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
+		glCullFace(GL_BACK);
 		for (auto e : models_view)
 		{
 			Entity entity = { e, this };

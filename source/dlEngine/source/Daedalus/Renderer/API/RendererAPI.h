@@ -17,6 +17,12 @@ namespace Daedalus {
 			None = 0, OpenGL = 1
 		};
 
+		enum ClearMode
+		{
+			DepthBuffer = 0x00000100,
+			ColorBuffer = 0x00004000
+		};
+
 	public:
 		static std::unique_ptr<RendererAPI> Create();
 
@@ -30,7 +36,7 @@ namespace Daedalus {
 
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void SetClearColor(const glm::vec4& color) = 0;
-		virtual void Clear() = 0;
+		virtual void Clear(uint32_t clear_mode) = 0;
 
 		virtual void DrawIndexed(const VertexArray* vertex_array, uint32_t index_count = 0) = 0;
 		virtual void DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count) = 0;

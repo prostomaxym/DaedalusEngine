@@ -134,16 +134,6 @@ void PrepareNukeScene(Scene& scene)
 	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();
 	tank_scripts.AddScript<TankMovementScript>(tank_entity, glm::vec3(1.0f, 0.f, 0.0f), 50.f);
 
-	//std::vector<std::string> faces
-	//{	
-	//	"/skyboxes/Sunny/right.jpg",
-	//	"/skyboxes/Sunny/left.jpg",
-	//	"/skyboxes/Sunny/top.jpg",
-	//	"/skyboxes/Sunny/bottom.jpg",
-	//	"/skyboxes/Sunny/front.jpg",
-	//	"/skyboxes/Sunny/back.jpg"
-	//};
-
 	std::vector<std::string> faces
 	{
 		"/skyboxes/Night/right.jpg",

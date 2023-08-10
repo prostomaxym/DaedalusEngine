@@ -31,6 +31,8 @@ namespace Daedalus {
 			return m_rendererID == other.GetRendererID();
 		}
 
+		static void BindTextureImpl(uint32_t ID, uint32_t slot);
+
 	private:
 		std::string m_path;
 		bool m_is_loaded = false;

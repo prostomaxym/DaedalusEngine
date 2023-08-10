@@ -67,9 +67,9 @@ void OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
 	glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void OpenGLRendererAPI::Clear()
+void OpenGLRendererAPI::Clear(uint32_t clear_mode)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(clear_mode);
 }
 
 void OpenGLRendererAPI::DrawIndexed(const VertexArray* vertex_array, uint32_t index_count)

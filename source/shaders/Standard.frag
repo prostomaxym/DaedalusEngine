@@ -4,6 +4,7 @@
 in VS_OUT
 {
     in vec3 frag_pos;
+    in vec4 frag_pos_light_space;
     in vec2 uv;
     in vec3 normals;
     in mat3 TBN;
@@ -76,7 +77,8 @@ layout (std430, binding = 1) buffer DynamicLightSSBO
     Light ssbo_dynamic_lights[];
 };
 
-uniform ObjectData u_object; 
+uniform ObjectData u_object;
+uniform sampler2D u_shadow_map;
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
 vec3 g_ambient_tex;
@@ -87,6 +89,7 @@ vec3 g_view_pos;
 vec3 g_frag_pos;
 vec3 g_normal;
 float g_alpha_tex;
+float g_shadow; 
 
 // ------------------------------------------------- Functions ------------------------------------------------ //
 vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specular, vec3 p_light_dir, float p_luminosity)
@@ -97,8 +100,8 @@ vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specula
 
     return p_luminosity * 
             (p_light_ambient * g_ambient_tex
-            + p_light_diffuse * diffuse_coef * g_diffuse_tex
-            + p_light_specular * specular_coef * g_spec_tex);
+            + (1.0 - g_shadow) * (p_light_diffuse * diffuse_coef * g_diffuse_tex
+            + p_light_specular * specular_coef * g_spec_tex));
 }
 
 float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)
@@ -132,6 +135,42 @@ vec3 CalculateSpotLight(Light p_light)
      return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
 }
 
+float CalculateShadow(vec4 frag_pos_light_space)
+{
+    vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+    proj_coords = proj_coords * 0.5 + 0.5;
+
+    if (proj_coords.z > 1.0)
+        return 0.0;
+
+    const float closest_depth = texture(u_shadow_map, proj_coords.xy).r; 
+    const float current_depth = proj_coords.z;
+
+    //const float shadow = current_depth > closest_depth  ? 1.0 : 0.0;
+    //const float bias = 0.005;
+    //const float bias = max(0.05 * (1.0 - dot(fs_in.normals, vec3(-0.78, -1.0, -0.6))), 0.005); 
+    //const float shadow = current_depth - bias > closest_depth  ? 1.0 : 0.0;  
+
+
+   float shadow = 0.0;
+   vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
+    
+    for(int x = -2; x <= 2; ++x)
+    {
+        for(int y = -2; y <= 2; ++y)
+        {
+           const float pcf_depth = texture(u_shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
+           const float div = pcf_depth / current_depth;
+           //shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
+           shadow += current_depth > pcf_depth ? 0.7 : 0.0;      
+        }    
+    }
+
+    shadow /= 25.0;
+
+    return shadow;
+}
+
 vec3 ApplyGammaCorrection(vec3 color) 
 {
     return pow(color, vec3(1.0 / ubo_graphic_config.gamma_value));
@@ -155,6 +194,7 @@ void main()
     g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
     g_view_dir = normalize(g_view_pos - g_frag_pos);
+    g_shadow = CalculateShadow(fs_in.frag_pos_light_space);    
 
     if(u_object.enable_normal_map == 1)
     {
@@ -190,5 +230,5 @@ void main()
     }
 
     fout_color = ubo_graphic_config.enable_gamma_correction == 1 ? 
-        vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex); 
+        vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex);
 }

@@ -163,6 +163,11 @@ void OpenGLTexture2D::Bind(uint32_t slot) const
 	glBindTextureUnit(slot, m_rendererID);
 }
 
+void OpenGLTexture2D::BindTextureImpl(uint32_t ID, uint32_t slot)
+{
+	glBindTextureUnit(slot, ID);
+}
+
 OpenGLTextureCubemap::OpenGLTextureCubemap(std::vector<std::string>& faces)
 {
 	glGenTextures(1, &m_rendererID);
@@ -179,7 +184,7 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(std::vector<std::string>& faces)
 		}
 		else
 		{
-			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture from path: " + faces[i]);;
+			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture from path: " + faces[i]);
 		}
 
 		stbi_image_free(data);

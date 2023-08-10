@@ -30,9 +30,9 @@ void RenderCommand::SetClearColor(const glm::vec4& color)
 	s_RendererAPI->SetClearColor(color);
 }
 
-void RenderCommand::Clear()
+void RenderCommand::Clear(uint32_t clear_mode)
 {
-	s_RendererAPI->Clear();
+	s_RendererAPI->Clear(clear_mode);
 }
 
 void RenderCommand::DrawIndexed(const VertexArray* vertex_array, uint32_t index_count)

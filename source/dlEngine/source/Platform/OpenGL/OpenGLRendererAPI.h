@@ -16,7 +16,7 @@ namespace Daedalus {
 		void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
 		void SetClearColor(const glm::vec4& color) override;
-		void Clear() override;
+		void Clear(uint32_t clear_mode) override;
 
 		void DrawIndexed(const VertexArray* vertex_array, uint32_t index_count = 0) override;
 		void DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count) override;

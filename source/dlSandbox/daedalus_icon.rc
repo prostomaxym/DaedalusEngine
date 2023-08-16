@@ -1,0 +1,2 @@
+#include "winuser.h"
+1 ICON "daedalus_icon.ico"

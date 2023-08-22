@@ -135,7 +135,24 @@ vec3 CalculateSpotLight(Light p_light)
      return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
 }
 
-float CalculateShadow(vec4 frag_pos_light_space)
+float BilinearInterpolation(sampler2D shadowMap, vec2 texCoords) 
+{
+    ivec2 texelCoord = ivec2(texCoords * textureSize(shadowMap, 0));
+    vec2 texelOffset = fract(texCoords * textureSize(shadowMap, 0));
+
+    float topLeft = texture(shadowMap, (texelCoord + vec2(0.5, 0.5)) / textureSize(shadowMap, 0)).r;
+    float topRight = texture(shadowMap, (texelCoord + vec2(1.5, 0.5)) / textureSize(shadowMap, 0)).r;
+    float bottomLeft = texture(shadowMap, (texelCoord + vec2(0.5, 1.5)) / textureSize(shadowMap, 0)).r;
+    float bottomRight = texture(shadowMap, (texelCoord + vec2(1.5, 1.5)) / textureSize(shadowMap, 0)).r;
+
+    float topInterpolated = mix(topLeft, topRight, texelOffset.x);
+    float bottomInterpolated = mix(bottomLeft, bottomRight, texelOffset.x);
+
+    return mix(topInterpolated, bottomInterpolated, texelOffset.y);
+}
+
+
+float CalculateShadow(vec4 frag_pos_light_space, float softness) 
 {
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
@@ -146,26 +163,26 @@ float CalculateShadow(vec4 frag_pos_light_space)
     const float closest_depth = texture(u_shadow_map, proj_coords.xy).r; 
     const float current_depth = proj_coords.z;
 
-    //const float shadow = current_depth > closest_depth  ? 1.0 : 0.0;
-    //const float bias = 0.005;
-    //const float bias = max(0.05 * (1.0 - dot(fs_in.normals, vec3(-0.78, -1.0, -0.6))), 0.005); 
-    //const float shadow = current_depth - bias > closest_depth  ? 1.0 : 0.0;  
+    // Enhanced bias calculation
+    //float bias = 0.0;//max(0.05 * (1.0 - dot(fs_in.normals, vec3(0.78, 1.0, 0.6))), 0.001);
+    float bias = 0.005*tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6)))); // cosTheta is dot( n,l ), clamped between 0 and 1
+    bias = clamp(bias, 0.0, 0.01);
 
+    //bias = bias * tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6)))) * softness;
 
-   float shadow = 0.0;
-   vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
+    float shadow = 0.0;
+    const vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
     
-    for(int x = -2; x <= 2; ++x)
-    {
-        for(int y = -2; y <= 2; ++y)
-        {
-           const float pcf_depth = texture(u_shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
-           const float div = pcf_depth / current_depth;
-           //shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-           shadow += current_depth > pcf_depth ? 0.7 : 0.0;      
-        }    
+    for (int x = -2; x <= 2; ++x) {
+        for (int y = -2; y <= 2; ++y) {
+            vec2 offset = vec2(x, y) * texel_size;
+            float sampled_depth = BilinearInterpolation(u_shadow_map, proj_coords.xy + offset);
+            float visibility = current_depth - bias > sampled_depth ? 0.7 : 0.0;
+            shadow += visibility;
+        }
     }
 
+    // Percentage-closer filtering
     shadow /= 25.0;
 
     return shadow;
@@ -194,7 +211,7 @@ void main()
     g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
     g_view_dir = normalize(g_view_pos - g_frag_pos);
-    g_shadow = CalculateShadow(fs_in.frag_pos_light_space);    
+    g_shadow = CalculateShadow(fs_in.frag_pos_light_space, 1.0);    
 
     if(u_object.enable_normal_map == 1)
     {

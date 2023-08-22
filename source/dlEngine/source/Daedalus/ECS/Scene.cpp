@@ -58,7 +58,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 		auto shadow_shader = Renderer::s_shader_library->Get("Shadow");
 
-		glCullFace(GL_FRONT);
+		//glCullFace(GL_FRONT);
 
 		const auto models_view = m_registry.view<RenderableObjectComponent>();
 		for (auto e : models_view)
@@ -74,7 +74,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		Renderer::UpdateShadowMap();
 		RenderCommand::SetViewport(0, 0, 2560, 1440);
 		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
-		glCullFace(GL_BACK);
+		//glCullFace(GL_BACK);
 		for (auto e : models_view)
 		{
 			Entity entity = { e, this };

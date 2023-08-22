@@ -19,7 +19,7 @@ namespace
 {
 	glm::mat4 GetLightMatrix()
 	{
-		glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 1000.f);
+		glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1000.f, 1000.f);
 
 		glm::mat4 lightView = glm::lookAt(glm::vec3(0.78f, 1.0f, 0.6f),
 			glm::vec3(0.0f, 0.0f, 0.0f),

@@ -19,6 +19,7 @@ ELSEIF(UNIX)
   add_compile_definitions(DL_PLATFORM_LINUX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fpermissive")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fpermissive")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN'")
 ENDIF()
 
 # Binaries output dir config

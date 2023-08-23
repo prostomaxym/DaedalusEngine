@@ -50,4 +50,11 @@ namespace Daedalus
 
 		friend class Entity;
 	};
+
+	// MSVC and GCC for some reason have different linking for this part
+	// TODO: investigate and fix it properly
+	#ifdef DL_PLATFORM_WINDOWS
+		template<typename T>
+		inline void Scene::OnComponentAdded(Entity entity, T& component) {}
+	#endif
 }

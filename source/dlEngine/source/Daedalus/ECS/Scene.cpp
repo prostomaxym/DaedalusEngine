@@ -230,58 +230,60 @@ void Scene::UpdateDynamicLighting()
 	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }
 
+#ifdef DL_PLATFORM_LINUX
 template<typename T>
 void Scene::OnComponentAdded(Entity entity, T& component)
 {
     static_assert(sizeof(T) == 0);
 }
 
-	template<>
-	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
+{
+}
 
-    template<>
-	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<RenderableObjectComponent>(Entity entity, RenderableObjectComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<RenderableObjectComponent>(Entity entity, RenderableObjectComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<CubemapComponent>(Entity entity, CubemapComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<CubemapComponent>(Entity entity, CubemapComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<SpotLightComponent>(Entity entity, SpotLightComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<SpotLightComponent>(Entity entity, SpotLightComponent& component)
+{
+}
 
-	template<>
-	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
-	{
-	}
+template<>
+void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+{
+}
+#endif

@@ -65,9 +65,9 @@ namespace Daedalus
 		Model model;
 		std::shared_ptr<Shader> shader;
 
-		RenderableObjectComponent() = default;	
+		RenderableObjectComponent() = default;
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;
-		RenderableObjectComponent(const std::filesystem::path& path, std::shared_ptr<Shader> shader_, ModelParserFlags parser_flags = ModelParserFlags::NONE) 
+		RenderableObjectComponent(const std::filesystem::path& path, std::shared_ptr<Shader> shader_, ModelParserFlags parser_flags = ModelParserFlags::NONE)
 			: model(path, parser_flags), shader(shader_){}
 	};
 
@@ -122,53 +122,8 @@ namespace Daedalus
 
 		SpotLightComponent() = default;
 		SpotLightComponent(const SpotLightComponent&) = default;
-		SpotLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, 
+		SpotLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color,
 			float light_power, float max_distance, const glm::vec3& direction, float theta_angle, float outer_cutoff, bool is_dyn) :
 			light(light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance, direction, theta_angle, outer_cutoff), is_dynamic(is_dyn) {};
-	};
-
-	class NativeScript; //To avoid circular dependency
-
-	struct NativeScriptComponent
-	{
-		template <typename T, typename... Args>
-		T* AddScript(Entity ent, Args&&... args)
-		{
-			static_assert(std::is_base_of_v<NativeScript, T>, "T must be derived from NativeScript");
-			DL_ASSERT(!ScriptExists<T>(), Log::Categories::ECS, "NativeScriptComponent already has this script!");
-
-			native_scripts[typeid(T)] = std::make_shared<T>(ent, std::forward<Args>(args)...);		 
-			return dynamic_cast<T*>(native_scripts[typeid(T)].get());
-		}
-
-		template <typename T>
-		void RemoveScript()
-		{
-			static_assert(std::is_base_of_v<NativeScript, T>, "T must be derived from NativeScript");
-			DL_ASSERT(ScriptExists<T>(), Log::Categories::ECS, "NativeScriptComponent does not have this script!");
-
-			native_scripts.erase(typeid(T));
-		}
-
-		template <typename T>
-		T* GetScript()
-		{
-			static_assert(std::is_base_of_v<NativeScript, T>, "T must be derived from NativeScript");
-
-			const auto it = native_scripts.find(typeid(T));
-			DL_ASSERT(it != native_scripts.end(), Log::Categories::ECS, "NativeScriptComponent does not have this script!");
-			return it != native_scripts.end() ? dynamic_cast<T*>(it->second.get()) : nullptr;
-		}
-
-		template <typename T>
-		bool ScriptExists()
-		{
-			static_assert(std::is_base_of_v<NativeScript, T>, "T must be derived from NativeScript");
-			return native_scripts.find(typeid(T)) != native_scripts.end();
-		}
-
-		// TODO: It is not compiling with unique_ptr, something inside entt tries to copy it.
-		// Review and replace it with unique_ptr or convert to static polymorhism
-		std::unordered_map<std::type_index, std::shared_ptr<NativeScript>> native_scripts;
 	};
 }

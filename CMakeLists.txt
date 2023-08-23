@@ -17,8 +17,8 @@ IF(WIN32)
 ELSEIF(UNIX)
   set(PLATFORM_NAME "linux")
   add_compile_definitions(DL_PLATFORM_LINUX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fpermissive")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fpermissive")
 ENDIF()
 
 # Binaries output dir config

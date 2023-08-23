@@ -6,6 +6,16 @@
 
 using namespace Daedalus;
 
+namespace
+{
+    std::string empty_str;
+}
+
+const std::string& Texture::GetPath() const
+{
+    return empty_str;
+}
+
 std::shared_ptr<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
 {
 	switch (Renderer::GetAPI())

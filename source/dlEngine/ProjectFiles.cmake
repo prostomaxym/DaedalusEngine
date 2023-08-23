@@ -26,6 +26,7 @@ set(PROJECT_FILES
     source/Daedalus/ECS/Scene.h
     source/Daedalus/ECS/Scene.cpp
     source/Daedalus/ECS/NativeScript.h
+    source/Daedalus/ECS/NativeScriptComponent.h
     source/Daedalus/ECS/UUID.h
     source/Daedalus/ECS/NativeScripts/CameraController.h
     source/Daedalus/ECS/NativeScripts/CameraController.cpp

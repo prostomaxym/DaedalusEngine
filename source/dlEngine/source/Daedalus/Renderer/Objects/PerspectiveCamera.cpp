@@ -1,5 +1,3 @@
-#pragma once
-
 #include "PerspectiveCamera.h"
 
 using namespace Daedalus;

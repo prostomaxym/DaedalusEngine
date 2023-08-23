@@ -42,7 +42,7 @@ namespace Daedalus {
 		};
 
 		inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPressedImpl(keycode); }
-		inline static std::pair<float, float> GetStickPos(StickType type);
+		static std::pair<float, float> GetStickPos(StickType type);
 		inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
 
 	protected:

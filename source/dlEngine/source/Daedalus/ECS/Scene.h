@@ -50,8 +50,4 @@ namespace Daedalus
 
 		friend class Entity;
 	};
-
-
-	template<typename T>
-	inline void Scene::OnComponentAdded(Entity entity, T& component) {}
 }

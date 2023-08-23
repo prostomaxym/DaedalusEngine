@@ -12,6 +12,7 @@
 
 #include "Daedalus/ECS/Scene.h"
 #include "Daedalus/ECS/Entity.h"
+#include "Daedalus/ECS/NativeScriptComponent.h"
 
 #include "Daedalus/Threads/DaedalusThreads.h"
 

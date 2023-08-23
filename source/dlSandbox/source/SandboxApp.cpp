@@ -4,7 +4,7 @@
 
 using namespace Daedalus;
 
-Application* ::CreateApplication()
+Application* Daedalus::CreateApplication()
 {
 	// Entry point is defined in engine
 	return Sandbox::GetInstance();

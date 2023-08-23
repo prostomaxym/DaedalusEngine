@@ -2,10 +2,12 @@
 
 #include "Scene.h"
 
+#include "Daedalus/Core/Application.h"
 #include "Daedalus/Renderer/API/RenderConstants.h"
 #include "Daedalus/Renderer/API/Renderer.h"
 #include "Entity.h"
 #include "NativeScript.h"
+#include "NativeScriptComponent.h"
 
 #include <glad/glad.h>
 
@@ -16,6 +18,11 @@ void Scene::OnRuntimeStart()
 	m_is_running = true;
 
 	PrepareScene();
+
+    const auto& wnd = Application::GetInstance()->GetWindow();
+
+    m_viewport_width = wnd.GetWidth();
+    m_viewport_height = wnd.GetHeight();
 }
 
 void Scene::OnRuntimeStop()
@@ -72,7 +79,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 
 		Renderer::UpdateShadowMap();
-		RenderCommand::SetViewport(0, 0, 2560, 1440);
+		RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 		//glCullFace(GL_BACK);
 		for (auto e : models_view)
@@ -98,6 +105,8 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height)
 {
+    m_viewport_width = width;
+    m_viewport_height = height;
 }
 
 Entity Scene::CreateEntity(const std::string& name)
@@ -220,3 +229,59 @@ void Scene::UpdateDynamicLighting()
 
 	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }
+
+template<typename T>
+void Scene::OnComponentAdded(Entity entity, T& component)
+{
+    static_assert(sizeof(T) == 0);
+}
+
+	template<>
+	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
+	{
+	}
+
+    template<>
+	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<RenderableObjectComponent>(Entity entity, RenderableObjectComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<CubemapComponent>(Entity entity, CubemapComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<SpotLightComponent>(Entity entity, SpotLightComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+	{
+	}

@@ -164,15 +164,13 @@ float CalculateShadow(vec4 frag_pos_light_space, float softness)
     const float current_depth = proj_coords.z;
 
     // Enhanced bias calculation
-    //float bias = 0.0;//max(0.05 * (1.0 - dot(fs_in.normals, vec3(0.78, 1.0, 0.6))), 0.001);
-    float bias = 0.005*tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6)))); // cosTheta is dot( n,l ), clamped between 0 and 1
+    float bias = 0.005*tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6))));
     bias = clamp(bias, 0.0, 0.01);
-
-    //bias = bias * tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6)))) * softness;
 
     float shadow = 0.0;
     const vec2 texel_size = 1.0 / textureSize(u_shadow_map, 0);
     
+    // Percentage-closer filtering
     for (int x = -2; x <= 2; ++x) {
         for (int y = -2; y <= 2; ++y) {
             vec2 offset = vec2(x, y) * texel_size;
@@ -182,7 +180,6 @@ float CalculateShadow(vec4 frag_pos_light_space, float softness)
         }
     }
 
-    // Percentage-closer filtering
     shadow /= 25.0;
 
     return shadow;

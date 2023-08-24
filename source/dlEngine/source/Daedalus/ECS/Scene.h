@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UUID.h"
+#include "Systems/RenderSystem.h"
 #include "Daedalus/Utils/DeltaTime.h"
 
 #include <entt/entt.hpp>
@@ -12,7 +13,7 @@ namespace Daedalus
 	class DAEDALUS_API Scene
 	{
 	public:
-		Scene() = default;
+		Scene();
 		~Scene() = default;
 
 		void OnRuntimeStart();
@@ -37,14 +38,12 @@ namespace Daedalus
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 		void PrepareScene();
-		void UpdateStaticLighting();
-		void UpdateDynamicLighting();
 
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 
-		int m_viewport_width{ 0 };
-		int m_viewport_height{ 0 };
+		RenderSystem m_render_system;
+
 		bool m_is_running{ false };
 		bool m_is_paused{ false };
 

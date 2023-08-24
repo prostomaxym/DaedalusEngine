@@ -30,6 +30,8 @@ set(PROJECT_FILES
     source/Daedalus/ECS/UUID.h
     source/Daedalus/ECS/NativeScripts/CameraController.h
     source/Daedalus/ECS/NativeScripts/CameraController.cpp
+    source/Daedalus/ECS/Systems/RenderSystem.h
+    source/Daedalus/ECS/Systems/RenderSystem.cpp
 
     source/Daedalus/Events/ApplicationEvent.h
     source/Daedalus/Events/Event.h

@@ -3,26 +3,19 @@
 #include "Scene.h"
 
 #include "Daedalus/Core/Application.h"
-#include "Daedalus/Renderer/API/RenderConstants.h"
-#include "Daedalus/Renderer/API/Renderer.h"
 #include "Entity.h"
 #include "NativeScript.h"
 #include "NativeScriptComponent.h"
 
-#include <glad/glad.h>
-
 using namespace Daedalus;
+
+Scene::Scene() : m_render_system(m_registry, this) {}
 
 void Scene::OnRuntimeStart()
 {
 	m_is_running = true;
 
 	PrepareScene();
-
-    const auto& wnd = Application::GetInstance()->GetWindow();
-
-    m_viewport_width = wnd.GetWidth();
-    m_viewport_height = wnd.GetHeight();
 }
 
 void Scene::OnRuntimeStop()
@@ -50,63 +43,12 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 	}
 
 	// Graphics
-	{
-		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
-
-		auto& main_camera = FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera;
-		Renderer::BeginScene(main_camera);
-
-		UpdateDynamicLighting();
-
-		const auto shadow_fb = Renderer::GetShadowFramebuffer();
-		shadow_fb->Bind();
-		RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
-		RenderCommand::SetViewport(0, 0, 2048, 2048);
-
-		auto shadow_shader = Renderer::s_shader_library->Get("Shadow");
-
-		//glCullFace(GL_FRONT);
-
-		const auto models_view = m_registry.view<RenderableObjectComponent>();
-		for (auto e : models_view)
-		{
-			Entity entity = { e, this };
-
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
-		}
-		shadow_fb->Unbind();
-
-
-		Renderer::UpdateShadowMap();
-		RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
-		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
-		//glCullFace(GL_BACK);
-		for (auto e : models_view)
-		{
-			Entity entity = { e, this };
-
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			Renderer::Submit(model_component.shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
-		}
-
-		const auto cubemap_view = m_registry.view<CubemapComponent>();
-		for (auto e : cubemap_view)
-		{
-			Entity entity = { e, this };
-
-			const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
-			Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, main_camera.GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
-		}
-
-		Renderer::EndScene();
-	}
+    m_render_system.OnUpdateRuntime(dt);
 }
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height)
 {
-    m_viewport_width = width;
-    m_viewport_height = height;
+    m_render_system.SetViewportSize(width, height);
 }
 
 Entity Scene::CreateEntity(const std::string& name)
@@ -154,80 +96,10 @@ Entity Scene::GetEntityByUUID(UUID uuid)
 
 void Scene::PrepareScene()
 {
-	UpdateStaticLighting();
-}
-
-void Scene::UpdateStaticLighting()
-{
-	std::vector<LightSSBO> light_SSBOs;
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (auto e : dir_view)
-	{
-		Entity entity = { e, this };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
-
-		if (!light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	const auto point_view = m_registry.view<PointLightComponent>();
-	for (auto e : point_view)
-	{
-		Entity entity = { e, this };
-
-		const auto& light_component = entity.GetComponent<PointLightComponent>();
-
-		if (!light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	const auto spot_view = m_registry.view<SpotLightComponent>();
-	for (auto e : spot_view)
-	{
-		Entity entity = { e, this };
-		const auto& light_component = entity.GetComponent<SpotLightComponent>();
-
-		if (!light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	Renderer::UpdateStaticLightSSBO(light_SSBOs);
-}
-
-void Scene::UpdateDynamicLighting()
-{
-	std::vector<LightSSBO> light_SSBOs;
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (auto e : dir_view)
-	{
-		Entity entity = { e, this };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
-
-		if (light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	const auto point_view = m_registry.view<PointLightComponent>();
-	for (auto e : point_view)
-	{
-		Entity entity = { e, this };
-		const auto& light_component = entity.GetComponent<PointLightComponent>();
-
-		if (light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	const auto spot_view = m_registry.view<SpotLightComponent>();
-	for (auto e : spot_view)
-	{
-		Entity entity = { e, this };
-		const auto& light_component = entity.GetComponent<SpotLightComponent>();
-
-		if (light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
-	}
-
-	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
+    const auto& wnd = Application::GetInstance()->GetWindow();
+    m_render_system.SetViewportSize(wnd.GetWidth(), wnd.GetHeight());
+    m_render_system.SetCamera(&FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera);
+	m_render_system.UpdateStaticLighting();
 }
 
 #ifdef DL_PLATFORM_LINUX

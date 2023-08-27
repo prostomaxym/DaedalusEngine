@@ -51,6 +51,9 @@ void GLFWWindow::Init(const WindowProps& props)
 		const auto monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
+		m_data.width = mode->width;
+		m_data.height = mode->height;
+
 		Log::Write(Log::Levels::Info, Log::Categories::Platform, "Creating window {0} ({1}, {2})", props.title, mode->width, mode->height);
 
 		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);

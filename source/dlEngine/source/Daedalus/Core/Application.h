@@ -42,7 +42,7 @@ namespace Daedalus {
 		bool OnWindowResized(WindowResizeEvent& event);
 
 		std::unique_ptr<Window> m_window;
-		ImGuiLayer* m_imgui_layer; // LayerStack owns imgui_layer
+		ImGuiLayer* m_imgui_layer{ nullptr }; // LayerStack owns imgui_layer
 		LayerStack m_layer_stack;
 		EventEngine m_event_engine;
 

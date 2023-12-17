@@ -92,15 +92,16 @@ float g_alpha_tex;
 float g_shadow; 
 
 // ------------------------------------------------- Functions ------------------------------------------------ //
-vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specular, vec3 p_light_dir, float p_luminosity)
+vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specular, vec3 p_light_dir, float p_luminosity, float shadow_intensity)
 {
     const vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
     const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
+    const float shadow = 1.0 - shadow_intensity * g_shadow;
 
     return p_luminosity * 
             (p_light_ambient * g_ambient_tex
-            + (1.0 - g_shadow) * (p_light_diffuse * diffuse_coef * g_diffuse_tex
+            + shadow * (p_light_diffuse * diffuse_coef * g_diffuse_tex
             + p_light_specular * specular_coef * g_spec_tex));
 }
 
@@ -112,7 +113,7 @@ float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_line
 
 vec3 CalculateDirectionalLight(Light p_light)
 {
-    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, p_light.direction, p_light.power);
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, p_light.direction, p_light.power, 1.0);
 }
 
 vec3 CalculatePointLight(Light p_light)
@@ -120,7 +121,7 @@ vec3 CalculatePointLight(Light p_light)
     const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
     const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
 
-    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity);
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity, 1.0);
 }
 
 vec3 CalculateSpotLight(Light p_light)
@@ -130,9 +131,9 @@ vec3 CalculateSpotLight(Light p_light)
 
     const float theta           = dot(light_direction, normalize(-p_light.direction)); 
     const float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
-    const float spot_intensity = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
+    const float spot_intensity  = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
     
-     return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
+     return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity, luminosity);
 }
 
 float BilinearInterpolation(sampler2D shadowMap, vec2 texCoords) 

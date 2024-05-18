@@ -36,17 +36,21 @@ Build from IDE or CMakeBuildRelease.bat to build without IDE
 From project root:
 ````console
         cd LinuxScripts
-        sudo sh InstallDependencies.sh
-        sudo vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty\vcpkg_triplets\
+        sh InstallDependencies.sh
+        sh UpdatePackages.sh
 ````
 <br>
 <br>
 
 - Config cmake project
 
-From project root:
+From LinuxScripts folder:
 ````console
-cmake -B $PROJECT_ROOT/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DCMAKE_TOOLCHAIN_FILE="$PROJECT_ROOT/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        sh CMakeConfig.sh      -for MakeFile
+                or
+        sh CMakeConfigCB.sh    -for CodeBlocks IDE
+                or
+        sh CMakeConfigCL.sh    -for CodeLite IDE
 ````
 <br>
 <br>
@@ -56,3 +60,6 @@ cmake -B $PROJECT_ROOT/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON -DVCPK
 Build from IDE or `cmake --build $PROJECT_ROOT/build --config Release` from build folder
 <br>
 <br>
+
+
+For demo level runtime assets should be downloaded separately and put under $PROJECT_ROOT/runtime/assets 

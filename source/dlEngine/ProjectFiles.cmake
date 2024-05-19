@@ -5,6 +5,15 @@ set(PROJECT_FILES
     source/dlpch.cpp
     source/DummyTest.h
 
+    source/Daedalus/Config/ApplicationConfig.h
+    source/Daedalus/Config/ApplicationConfig.cpp
+    source/Daedalus/Config/Config.h
+    source/Daedalus/Config/Config.cpp
+    source/Daedalus/Config/GraphicsConfig.h
+    source/Daedalus/Config/GraphicsConfig.cpp
+    source/Daedalus/Config/PathConfig.h
+    source/Daedalus/Config/PathConfig.cpp
+
     source/Daedalus/Core/Application.h
     source/Daedalus/Core/Application.cpp
     source/Daedalus/Core/Core.h

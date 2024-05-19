@@ -11,7 +11,8 @@
         {"name": "glm"},
         {"name": "stb"},
         {"name": "assimp"},
-        {"name": "entt"}
+        {"name": "entt"},
+        {"name": "simpleini"}
     ],
     "builtin-baseline":"6b99cf12ef42b9a1bda5a9ebc83720129540b9b0",
     "overrides": [

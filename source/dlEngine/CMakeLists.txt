@@ -9,9 +9,11 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 find_package(assimp CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
+
+find_path(SIMPLEINI_INCLUDE_DIRS "SimpleIni.h")
+find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
 
 
 #------------------ Project config ------------------------------#
@@ -47,6 +49,7 @@ target_include_directories(${PROJECT_NAME}
 	    ${CMAKE_CURRENT_SOURCE_DIR}/source/
     PRIVATE 
         ${STB_INCLUDE_DIRS}
+        ${SIMPLEINI_INCLUDE_DIRS}
     )
 
 target_link_libraries(${PROJECT_NAME}

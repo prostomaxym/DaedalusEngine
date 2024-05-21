@@ -13,6 +13,9 @@ namespace Daedalus {
 		//TODO: fix locking. Incorrect frame number
 		static void LockFps(int desired_fps, const DeltaTime& elapsed_time)
 		{
+			if (desired_fps <= 0)
+				return;
+				
 			const auto desired_frametime = GetLockedFrameTime(desired_fps);
 
 			const auto sleep_time = desired_frametime - elapsed_time;

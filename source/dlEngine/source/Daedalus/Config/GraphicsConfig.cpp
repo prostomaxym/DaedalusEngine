@@ -74,9 +74,9 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
     s_gamma_correction_enabled = ini.GetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, false);
     s_gamma_correction_value = ini.GetDoubleValue(RenderingSectionName, GammaCorrectionValueName, 2.2);
 	
-	s_multisample_enabled = ini.GetBoolValue(RenderingSectionName, MultisampleEnabledName, false);
-	s_blending_enabled = ini.GetBoolValue(RenderingSectionName, BlendingEnabledName, false);
-	s_line_smooth_enabled = ini.GetBoolValue(RenderingSectionName, LineSmoothEnabledName, false);
+	s_multisample_enabled = ini.GetBoolValue(RenderingSectionName, MultisampleEnabledName, true);
+	s_blending_enabled = ini.GetBoolValue(RenderingSectionName, BlendingEnabledName, true);
+	s_line_smooth_enabled = ini.GetBoolValue(RenderingSectionName, LineSmoothEnabledName, true);
 }
 
 void GraphicsConfig::Save(const std::filesystem::path& path)
@@ -97,9 +97,9 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
     ini.SetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, s_gamma_correction_enabled);
     ini.SetDoubleValue(RenderingSectionName, GammaCorrectionValueName, s_gamma_correction_value);
 
-	ini.SetBoolValue(RenderingSectionName, MultisampleEnabledName, s_gamma_correction_enabled);
-	ini.SetBoolValue(RenderingSectionName, BlendingEnabledName, s_gamma_correction_enabled);
-	ini.SetBoolValue(RenderingSectionName, LineSmoothEnabledName, s_gamma_correction_enabled);
+	ini.SetBoolValue(RenderingSectionName, MultisampleEnabledName, s_multisample_enabled);
+	ini.SetBoolValue(RenderingSectionName, BlendingEnabledName, s_blending_enabled);
+	ini.SetBoolValue(RenderingSectionName, LineSmoothEnabledName, s_line_smooth_enabled);
 	
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 

@@ -27,8 +27,7 @@ Application* Application::GetInstance()
 Application::Application()
 {
 	s_instance = this;
-	
-	GraphicsConfig::Load(WorkingDirectory::GetRootDirectory() / "config/graphics.ini");
+	WorkingDirectory::LoadConfigs();
 	
 	WindowProps props;
 	props.title = GraphicsConfig::GetWindowTitle();
@@ -53,7 +52,7 @@ Application::Application()
 
 Application::~Application()
 {
-	GraphicsConfig::Save(WorkingDirectory::GetRootDirectory() / "config/graphics.ini");
+	WorkingDirectory::SaveConfigs();
 	Input::Shutdown();
 	Renderer::Shutdown();
 }

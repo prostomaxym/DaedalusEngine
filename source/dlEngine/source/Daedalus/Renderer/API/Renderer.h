@@ -45,7 +45,7 @@ namespace Daedalus {
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
-		static void UpdateShadowMap();
+		static void UpdateShadowMap(const Shader* shader);
 
 	public:
 		static std::unique_ptr<ShaderLibrary> s_shader_library;

@@ -9,12 +9,12 @@ using namespace Daedalus;
 
 Input* Input::s_instance = nullptr;
 
-std::unique_ptr<Window> Daedalus::Platform::createWindow()
+std::unique_ptr<Window> Daedalus::Platform::createWindow(const WindowProps& props)
 {
 #ifdef DL_PLATFORM_WINDOWS
-	return std::make_unique<WindowsWindow>(WindowProps());
+	return std::make_unique<WindowsWindow>(props);
 #elif defined DL_PLATFORM_LINUX
-	return std::make_unique<LinuxWindow>(WindowProps());
+	return std::make_unique<LinuxWindow>(props);
 #else
 	static_assert(false, "Unsupported Platfrom")
 #endif

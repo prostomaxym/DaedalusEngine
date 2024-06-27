@@ -4,13 +4,15 @@
 #include "Daedalus/ECS/Components.h"
 #include "Daedalus/ECS/Entity.h"
 #include "Daedalus/ECS/Scene.h"
+#include "Daedalus/Config/GraphicsConfig.h"
 #include "Daedalus/Renderer/API/Renderer.h"
+#include "Daedalus/Renderer/API/RenderConstants.h"
 
 using namespace Daedalus;
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 {
-		RenderCommand::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.f });
+		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
 		Renderer::BeginScene(*m_camera);
 
 		UpdateDynamicLighting();
@@ -18,9 +20,9 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		const auto shadow_fb = Renderer::GetShadowFramebuffer();
 		shadow_fb->Bind();
 		RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
-		RenderCommand::SetViewport(0, 0, 2048, 2048);
+		RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 
-		auto shadow_shader = Renderer::s_shader_library->Get("Shadow");
+		const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
 
 		const auto models_view = m_registry.view<RenderableObjectComponent>();
 		for (auto e : models_view)
@@ -33,7 +35,8 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		shadow_fb->Unbind();
 
 
-		Renderer::UpdateShadowMap();
+		const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+		Renderer::UpdateShadowMap(standard_shader.get());
 		RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 

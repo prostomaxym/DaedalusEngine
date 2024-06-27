@@ -8,43 +8,60 @@ using namespace Daedalus;
 
 LayerStack::~LayerStack()
 {
-	for (Layer* layer : m_layers)
+	for (auto& layer : m_layers)
 	{
 		layer->OnDetach();
-		delete layer;
 	}
 }
 
-void LayerStack::PushLayer(Layer* layer)
+void LayerStack::PushLayer(std::unique_ptr<Layer> layer)
 {
-	m_layers.emplace(m_layers.begin() + m_layer_insert_index, layer);
-	m_layer_insert_index++;
 	layer->OnAttach();
+	m_layers.emplace(m_layers.begin() + m_layer_insert_index, std::move(layer));
+	m_layer_insert_index++;
 }
 
-void LayerStack::PushOverlay(Layer* overlay)
+void LayerStack::PushOverlay(std::unique_ptr<Layer> overlay)
 {
-	m_layers.emplace_back(overlay);
 	overlay->OnAttach();
+	m_layers.emplace_back(std::move(overlay));
 }
 
-void LayerStack::PopLayer(Layer* layer)
+std::unique_ptr<Layer> LayerStack::PopLayer(Layer* layer)
 {
-	auto it = std::find(m_layers.begin(), m_layers.begin() + m_layer_insert_index, layer);
+	auto it = std::find_if(m_layers.begin(), m_layers.begin() + m_layer_insert_index,
+	[layer](const auto& el)
+	{
+		return el.get() == layer;
+	});
+	
+	std::unique_ptr<Layer> lay = nullptr;
 	if (it != m_layers.begin() + m_layer_insert_index)
 	{
 		layer->OnDetach();
+		lay = std::move(*it);
 		m_layers.erase(it);
 		m_layer_insert_index--;
 	}
+	
+	return lay;
 }
 
-void LayerStack::PopOverlay(Layer* overlay)
+std::unique_ptr<Layer> LayerStack::PopOverlay(Layer* overlay)
 {
-	auto it = std::find(m_layers.begin() + m_layer_insert_index, m_layers.end(), overlay);
+	auto it = std::find_if(m_layers.begin(), m_layers.begin() + m_layer_insert_index,
+	[overlay](const auto& el)
+	{
+		return el.get() == overlay;
+	});
+	
+	std::unique_ptr<Layer> lay = nullptr;
 	if (it != m_layers.end())
 	{
 		overlay->OnDetach();
+		lay = std::move(*it);
 		m_layers.erase(it);
 	}
+	
+	return lay;
 }

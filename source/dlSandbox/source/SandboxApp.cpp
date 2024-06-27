@@ -13,5 +13,5 @@ Application* Daedalus::CreateApplication()
 Sandbox::Sandbox()
 {
 	Log::DisableCategory(Log::Categories::Events);
-	PushLayer(new ExampleLayer());
+	PushLayer(std::make_unique<ExampleLayer>());
 }

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "Daedalus/Config/GraphicsConfig.h"
 #include "RenderConstants.h"
 #include "Renderer.h"
 
@@ -28,6 +29,7 @@ namespace
 		return lightProjection * lightView;
 	}
 }
+
 void Renderer::Init()
 {
 	RenderCommand::Init();
@@ -35,9 +37,9 @@ void Renderer::Init()
 	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 20, 0, UniformBuffer::Type::Dynamic);
 
 	FramebufferSpecification specs;
-	specs.width = 2048;
-	specs.height = 2048;
-	specs.samples = 1;
+	specs.width = GraphicsConfig::GetShadowBufferWidth();
+	specs.height = GraphicsConfig::GetShadowBufferHeight();
+	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 
 	s_framebuffer_shadows = Framebuffer::Create(specs);
@@ -55,8 +57,8 @@ void Renderer::SetupGraphicSettings()
 	//TODO: create config class
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(float) * 4, 1, UniformBuffer::Type::Static);
 
-	int gamma_enabled = 0;
-	float gamma_value = 2.2f;
+	int gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
+	float gamma_value = GraphicsConfig::GetGammaCorrectionValue();
 
 	s_UBO_graphic_config->SetData(&gamma_enabled, sizeof(int), 0);
 	s_UBO_graphic_config->SetData(&gamma_value, sizeof(float), 4);
@@ -234,10 +236,9 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateShadowMap()
+void Renderer::UpdateShadowMap(const Shader* shader)
 {
-	auto standard_shader = Renderer::s_shader_library->Get("Standard");
-	standard_shader->Bind();
+	shader->Bind();
 	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
-	standard_shader->SetInt(ShaderConstants::ShadowMap, 3);
+	shader->SetInt(ShaderConstants::ShadowMap, 3);
 }

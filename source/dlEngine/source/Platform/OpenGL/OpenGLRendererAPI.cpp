@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/OpenGL/OpenGLShaderLibrary.h"
+#include "Daedalus/Config/GraphicsConfig.h"
 #include "Daedalus/Renderer/API/Renderer.h"
 #include "Daedalus/Renderer/API/RenderConstants.h"
 
@@ -42,12 +43,28 @@ void OpenGLRendererAPI::Init()
 
 void OpenGLRendererAPI::SetupGraphicSettings()
 {
-	glEnable(GL_MULTISAMPLE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+		glEnable(GL_MULTISAMPLE);
+	else
+		glDisable(GL_MULTISAMPLE);
+	
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
+	
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+		glEnable(GL_LINE_SMOOTH);
+	else
+		glDisable(GL_LINE_SMOOTH);
+		
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 }

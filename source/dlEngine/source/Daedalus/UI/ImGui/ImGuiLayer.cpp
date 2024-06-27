@@ -64,7 +64,7 @@ void ImGuiLayer::OnDetach()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "ImGui Layer is detached;");
+	Log::Write(Log::Levels::Warn, Log::Categories::EngineCore, "ImGui Layer is detached;");
 }
 
 void ImGuiLayer::OnEvent(Event& evt)

@@ -13,6 +13,8 @@ namespace Daedalus {
 	{
 		friend Platform;
 	public:
+		static void Shutdown() { delete s_instance; }
+		
 		//Input configuration
 		inline static void EnableKeyboardInput(bool enable) { m_keyboard_connected = enable; } //TODO: not implemented
 		inline static void EnableGamepadInput(bool enable) { m_gamepad_connected = enable; }

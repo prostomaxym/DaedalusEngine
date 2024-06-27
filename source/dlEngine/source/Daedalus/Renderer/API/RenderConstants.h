@@ -9,6 +9,7 @@ namespace Daedalus
 	{
 		inline constexpr auto StandardShader{ "Standard" };
 		inline constexpr auto CubemapShader{ "Cubemap" };
+		inline constexpr auto ShadowShader{ "Shadow" };
 
 		inline constexpr auto SceneModel{ "u_object.model_mat" };
 		inline constexpr auto ShadowModel{ "u_model" };

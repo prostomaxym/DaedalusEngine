@@ -13,8 +13,13 @@ namespace Daedalus {
 		LayerStack() = default;
 		~LayerStack();
 
-		void PushLayer(std::unique_ptr<Layer> layer);
-		void PushOverlay(std::unique_ptr<Layer> overlay);
+		LayerStack(const LayerStack&) = delete;
+		LayerStack(LayerStack&&) = delete;
+		LayerStack& operator=(const LayerStack&) = delete;
+		LayerStack& operator=(LayerStack&&) = delete;
+
+		void PushLayer(std::unique_ptr<Layer>&& layer);
+		void PushOverlay(std::unique_ptr<Layer>&& overlay);
 		std::unique_ptr<Layer> PopLayer(Layer* layer);
 		std::unique_ptr<Layer> PopOverlay(Layer* overlay);
 
@@ -32,5 +37,4 @@ namespace Daedalus {
 		std::vector<std::unique_ptr<Layer>> m_layers;
 		unsigned int m_layer_insert_index = 0;
 	};
-
 }

@@ -43,12 +43,12 @@ void OpenGLRendererAPI::Init()
 
 void OpenGLRendererAPI::SetupGraphicSettings()
 {
-	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 		glEnable(GL_MULTISAMPLE);
 	else
 		glDisable(GL_MULTISAMPLE);
 	
-	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -58,7 +58,7 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 		glDisable(GL_BLEND);
 	}
 	
-	if (Daedalus::GraphicsConfig::IsMultisampleEnabled)
+	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 		glEnable(GL_LINE_SMOOTH);
 	else
 		glDisable(GL_LINE_SMOOTH);

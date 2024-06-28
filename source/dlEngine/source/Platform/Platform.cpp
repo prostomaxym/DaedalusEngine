@@ -30,3 +30,15 @@ void Daedalus::Platform::InitInputSystem()
 	static_assert(false, "Unsupported Platfrom")
 #endif
 }
+
+std::pair<int, int> Daedalus::Platform::GetMonitorResolution()
+{
+#ifdef DL_PLATFORM_WINDOWS
+	return WindowsWindow::GetMonitorResolution();
+#elif defined DL_PLATFORM_LINUX
+	return LinuxWindow::GetMonitorResolution();
+#else
+	static_assert(false, "Unsupported Platfrom")
+#endif
+	
+}

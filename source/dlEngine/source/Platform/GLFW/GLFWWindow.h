@@ -16,6 +16,9 @@ namespace Daedalus {
 		GLFWWindow(const WindowProps& props);
 		virtual ~GLFWWindow();
 
+		static void InitGLFW();
+		static std::pair<int, int> GetMonitorResolution();
+
 		void OnUpdate() override;
 
 		inline void* GetNativeWindow() const override { return m_window; }

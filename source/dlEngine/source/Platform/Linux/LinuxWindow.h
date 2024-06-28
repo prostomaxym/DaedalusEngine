@@ -11,6 +11,8 @@ namespace Daedalus {
 	public:
 		LinuxWindow(const WindowProps& props);
 		~LinuxWindow() = default;
+
+		static std::pair<int, int> GetMonitorResolution() { return GLFWWindow::GetMonitorResolution(); }
 	};
 
 }

@@ -14,17 +14,17 @@ LayerStack::~LayerStack()
 	}
 }
 
-void LayerStack::PushLayer(std::unique_ptr<Layer> layer)
+void LayerStack::PushLayer(std::unique_ptr<Layer>&& layer)
 {
 	layer->OnAttach();
 	m_layers.emplace(m_layers.begin() + m_layer_insert_index, std::move(layer));
 	m_layer_insert_index++;
 }
 
-void LayerStack::PushOverlay(std::unique_ptr<Layer> overlay)
+void LayerStack::PushOverlay(std::unique_ptr<Layer>&& overlay)
 {
 	overlay->OnAttach();
-	m_layers.emplace_back(std::move(overlay));
+	m_layers.push_back(std::move(overlay));
 }
 
 std::unique_ptr<Layer> LayerStack::PopLayer(Layer* layer)

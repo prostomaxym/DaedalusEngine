@@ -29,8 +29,8 @@ namespace Daedalus {
 
 		void OnEvent(Event& event);
 
-		void PushLayer(std::unique_ptr<Layer> layer);
-		void PushOverlay(std::unique_ptr<Layer> overlay);
+		void PushLayer(std::unique_ptr<Layer>&& layer);
+		void PushOverlay(std::unique_ptr<Layer>&& overlay);
 
 	protected:
 		Application();

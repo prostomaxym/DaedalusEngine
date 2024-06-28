@@ -12,6 +12,7 @@ namespace Daedalus {
 	public:
 		static std::unique_ptr<Window> createWindow(const WindowProps& props);
 		static void InitInputSystem();
-	};
 
+		static std::pair<int, int> GetMonitorResolution();
+	};
 }

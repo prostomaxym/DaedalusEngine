@@ -49,10 +49,10 @@ void PathConfig::Save(const std::filesystem::path& path)
 	CSimpleIniA ini;
     ini.SetUnicode();
 
-	ini.SetValue(PathSectionName, AssetsDirName, s_assets_subdir.c_str());
-	ini.SetValue(PathSectionName, ShadersDirName, s_shaders_subdir.c_str());
-	ini.SetValue(ConfigSectionName, ConfigDirName, s_config_subdir.c_str());
-	ini.SetValue(ConfigSectionName, GraphicConfigName, s_graphics_config.c_str());
+	ini.SetValue(PathSectionName, AssetsDirName, s_assets_subdir.string().c_str());
+	ini.SetValue(PathSectionName, ShadersDirName, s_shaders_subdir.string().c_str());
+	ini.SetValue(ConfigSectionName, ConfigDirName, s_config_subdir.string().c_str());
+	ini.SetValue(ConfigSectionName, GraphicConfigName, s_graphics_config.string().c_str());
 	
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 

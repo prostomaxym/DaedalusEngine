@@ -27,13 +27,8 @@ GLFWWindow::~GLFWWindow()
 	Shutdown();
 }
 
-void GLFWWindow::Init(const WindowProps& props)
+void GLFWWindow::InitGLFW()
 {
-	m_data.title = props.title;
-	m_data.width = props.width;
-	m_data.height = props.height;
-	m_screenmode = props.screenmode;
-
 	if (!s_GLFWInitialized)
 	{
 		const auto success = glfwInit();
@@ -42,7 +37,26 @@ void GLFWWindow::Init(const WindowProps& props)
 
 		s_GLFWInitialized = true;
 	}
+}
 
+std::pair<int, int> Daedalus::GLFWWindow::GetMonitorResolution()
+{
+	InitGLFW();
+
+	const auto monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+	return { mode->width, mode->height };
+}
+
+void GLFWWindow::Init(const WindowProps& props)
+{
+	m_data.title = props.title;
+	m_data.width = props.width;
+	m_data.height = props.height;
+	m_screenmode = props.screenmode;
+
+	InitGLFW();
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 	

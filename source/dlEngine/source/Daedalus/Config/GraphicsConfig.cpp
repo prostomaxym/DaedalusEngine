@@ -1,6 +1,8 @@
 #include "dlpch.h"
 
 #include "GraphicsConfig.h"
+#include "Platform/Platform.h"
+
 #include <SimpleIni.h>
 
 using namespace Daedalus;
@@ -101,10 +103,13 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
 	ini.SetBoolValue(RenderingSectionName, BlendingEnabledName, s_blending_enabled);
 	ini.SetBoolValue(RenderingSectionName, LineSmoothEnabledName, s_line_smooth_enabled);
 	
+	if (!std::filesystem::exists(path.parent_path()))
+		std::filesystem::create_directory(path.parent_path());
+
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 
 	{
-        Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to save graphic config to " + path.string() + "\n");
+        Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to save graphics config to " + path.string() + "\n");
     }
 	else
 	{
@@ -115,8 +120,10 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
 void GraphicsConfig::LoadDefault()
 {
 	s_window_name = "Daedalus Engine";
-	s_window_width = 1920;
-	s_window_height = 1080;
+
+	const auto [monitor_width, monitor_height] = Platform::GetMonitorResolution();
+	s_window_width = monitor_width;
+	s_window_height = monitor_height;
 	s_FPSLock = 0;
 	s_window_fullscreen = true;
 	s_VSync = false;

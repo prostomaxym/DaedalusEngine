@@ -95,12 +95,12 @@ void Application::OnEvent(Event& event)
 	}
 }
 
-void Application::PushLayer(std::unique_ptr<Layer> layer)
+void Application::PushLayer(std::unique_ptr<Layer>&& layer)
 {
 	m_layer_stack.PushLayer(std::move(layer));
 }
 
-void Application::PushOverlay(std::unique_ptr<Layer> overlay)
+void Application::PushOverlay(std::unique_ptr<Layer>&& overlay)
 {
 	m_layer_stack.PushOverlay(std::move(overlay));
 }

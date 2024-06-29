@@ -25,7 +25,7 @@ namespace Daedalus
 		static int GetShadowBufferSamples() { return s_shadow_buffer_samples; }
 		
 		static bool IsGammaCorrectionEnabled() { return s_gamma_correction_enabled; }
-		static double GetGammaCorrectionValue() { return s_gamma_correction_value; }
+		static float GetGammaCorrectionValue() { return s_gamma_correction_value; }
 		
 		static bool IsMultisampleEnabled() { return s_multisample_enabled; }
 		static bool IsBlendingEnabled() { return s_blending_enabled; }
@@ -44,7 +44,7 @@ namespace Daedalus
 		static int s_shadow_buffer_samples;
 		
 		static bool s_gamma_correction_enabled;
-		static double s_gamma_correction_value;
+		static float s_gamma_correction_value;
 		
 		static bool s_multisample_enabled;
 		static bool s_blending_enabled;

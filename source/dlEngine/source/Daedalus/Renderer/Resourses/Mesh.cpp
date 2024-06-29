@@ -37,9 +37,14 @@ uint32_t Mesh::GetMaterialIndex() const
 	return m_material_index;
 }
 
-const BoundingSphere Mesh::GetBoundingSphere() const
+BoundingSphere Mesh::GetBoundingSphere() const
 {
 	return m_bounding_sphere;
+}
+
+bool Mesh::IsVisible(const Frustum& frust, const glm::mat4& transform) const
+{
+	return frust.IsInFrustum(m_bounding_sphere, transform);
 }
 
 void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)

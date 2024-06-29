@@ -31,7 +31,9 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		Entity entity = { e, m_scene };
 
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
+		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
+
+		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
 	}
 	shadow_fb->Unbind();
 
@@ -41,8 +43,6 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 
-	const auto frustum = m_camera->GetViewFrustum();
-
 	std::vector<entt::entity> visible_models;
 	visible_models.reserve(models_view.size());
 
@@ -51,11 +51,9 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		Entity entity = { e, m_scene };
 
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		const auto& sphere = model_component.model.GetBoundingSphere();
 		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
 
-		if (frustum.IsInFrustum(sphere, transform_component))
-			Renderer::Submit(model_component.shader.get(), &model_component.model, transform_component);
+		Renderer::Submit(model_component.shader.get(), &model_component.model, transform_component);
 	}
 
 	const auto cubemap_view = m_registry.view<CubemapComponent>();

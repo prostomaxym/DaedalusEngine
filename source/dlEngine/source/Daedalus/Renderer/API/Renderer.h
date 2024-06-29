@@ -5,6 +5,7 @@
 #include "Daedalus/Renderer/Resourses/Model.h"
 #include "Daedalus/Renderer/Resourses/Shader.h"
 #include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
+#include "Daedalus/Renderer/Objects/CommonStructures.h"
 #include "Daedalus/Renderer/Objects/Cubemap.h"
 #include "Daedalus/Renderer/Objects/LightSSBO.h"
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
@@ -57,5 +58,7 @@ namespace Daedalus {
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_dynamic_lighting;
 
 		static std::shared_ptr<Framebuffer> s_framebuffer_shadows;
+
+		static Frustum s_view_frustum;
 	};
 }

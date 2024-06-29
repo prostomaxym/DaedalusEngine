@@ -14,7 +14,7 @@ std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
-
+Frustum Renderer::s_view_frustum = Frustum() ;
 
 namespace
 {
@@ -54,7 +54,6 @@ void Renderer::SetupGraphicSettings()
 {
 	RenderCommand::SetupGraphicSettings();
 
-	//TODO: create config class
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(float) * 4, 1, UniformBuffer::Type::Static);
 
 	int gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
@@ -76,14 +75,19 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 
 void Renderer::BeginScene(const OrthographicCamera& camera)
 {
-	s_UBO_scene_data->SetData(&camera.GetViewProjectionMatrix(), sizeof(float) * 16, 0);
-	s_UBO_scene_data->SetData(&camera.GetPosition(), sizeof(float) * 4, 64);
+	const auto& VP = camera.GetViewProjectionMatrix();
+	const auto& pos = camera.GetPosition();
+	s_UBO_scene_data->SetData(&VP, sizeof(float) * 16, 0);
+	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
 }
 
 void Renderer::BeginScene(const PerspectiveCamera& camera)
 {
-	s_UBO_scene_data->SetData(&camera.GetProjectionViewMatrix(), sizeof(float) * 16, 0);
-	s_UBO_scene_data->SetData(&camera.GetPosition(), sizeof(float) * 4, 64);
+	const auto& PV = camera.GetProjectionViewMatrix();
+	const auto& pos = camera.GetPosition();
+	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
+	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
+	s_view_frustum = camera.GetViewFrustum();
 }
 
 void Renderer::EndScene()
@@ -102,6 +106,9 @@ void Renderer::Submit(const Shader* shader, const VertexArray* vertex_array, con
 
 void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
 {
+	if (!mesh->IsVisible(s_view_frustum, transform))
+		return;
+
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
 
@@ -121,17 +128,20 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 
 void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
-	glm::mat4 lightSpaceMatrix = GetLightMatrix();
+	const glm::mat4 light_space_matrix = GetLightMatrix();
 
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
-	shader->SetMat4(ShaderConstants::ShadowLightSpace, lightSpaceMatrix);
+	shader->SetMat4(ShaderConstants::ShadowLightSpace, light_space_matrix);
 
 	const auto& meshes = model->GetMeshes();
 	const auto& materials = model->GetMaterials();
 
 	for (const auto& mesh : meshes)
 	{
+		if (!mesh->IsVisible(s_view_frustum, transform))
+			continue;
+
 		const auto& material = materials[mesh->GetMaterialIndex()];
 
 		shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());

@@ -70,6 +70,8 @@ namespace Daedalus {
 		const std::vector<Material>& GetMaterials() const;
 		BoundingSphere GetBoundingSphere() const;
 
+		bool IsVisible(const Frustum& frust, const glm::mat4& transform) const;
+
 	private:
 		void ComputeBoundingSphere();
 

@@ -24,7 +24,9 @@ namespace Daedalus {
 		uint32_t GetVertexCount() const;
 		uint32_t GetIndexCount() const;
 		uint32_t GetMaterialIndex() const;
-		const BoundingSphere GetBoundingSphere() const;
+		BoundingSphere GetBoundingSphere() const;
+
+		bool IsVisible(const Frustum& frust, const glm::mat4& transform) const;
 
 	private:
 		void CreateBuffers(const std::vector<Vertex>& p_vertices, const std::vector<uint32_t>& indices);

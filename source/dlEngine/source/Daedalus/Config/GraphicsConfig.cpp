@@ -40,7 +40,7 @@ int GraphicsConfig::s_shadow_buffer_height = 2048;
 int GraphicsConfig::s_shadow_buffer_samples = 1;
 		
 bool GraphicsConfig::s_gamma_correction_enabled = false;
-double GraphicsConfig::s_gamma_correction_value = 2.2;
+float GraphicsConfig::s_gamma_correction_value = 2.2f;
 		
 bool GraphicsConfig::s_multisample_enabled = true;
 bool GraphicsConfig::s_blending_enabled = true;
@@ -74,7 +74,7 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
     s_shadow_buffer_height = ini.GetLongValue(RenderingSectionName, ShadowBufferHeightName, 2048);
     s_shadow_buffer_samples = ini.GetLongValue(RenderingSectionName, ShadowBufferSamplesName, 1);
     s_gamma_correction_enabled = ini.GetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, false);
-    s_gamma_correction_value = ini.GetDoubleValue(RenderingSectionName, GammaCorrectionValueName, 2.2);
+    s_gamma_correction_value = static_cast<float>(ini.GetDoubleValue(RenderingSectionName, GammaCorrectionValueName, 2.2));
 	
 	s_multisample_enabled = ini.GetBoolValue(RenderingSectionName, MultisampleEnabledName, true);
 	s_blending_enabled = ini.GetBoolValue(RenderingSectionName, BlendingEnabledName, true);
@@ -97,7 +97,7 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
     ini.SetLongValue(RenderingSectionName, ShadowBufferHeightName, s_shadow_buffer_height);
     ini.SetLongValue(RenderingSectionName, ShadowBufferSamplesName, s_shadow_buffer_samples);
     ini.SetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, s_gamma_correction_enabled);
-    ini.SetDoubleValue(RenderingSectionName, GammaCorrectionValueName, s_gamma_correction_value);
+    ini.SetDoubleValue(RenderingSectionName, GammaCorrectionValueName, static_cast<double>(s_gamma_correction_value));
 
 	ini.SetBoolValue(RenderingSectionName, MultisampleEnabledName, s_multisample_enabled);
 	ini.SetBoolValue(RenderingSectionName, BlendingEnabledName, s_blending_enabled);
@@ -133,7 +133,7 @@ void GraphicsConfig::LoadDefault()
 	s_shadow_buffer_samples = 1;
 		
 	s_gamma_correction_enabled = false;
-	s_gamma_correction_value = 2.2;
+	s_gamma_correction_value = 2.2f;
 	
 	s_multisample_enabled = true;
 	s_blending_enabled = true;

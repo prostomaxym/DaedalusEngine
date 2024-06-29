@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/Resourses/Shader.h"
-
-#include <vector>
+#include "CommonStructures.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -54,8 +52,9 @@ namespace Daedalus {
 	class DAEDALUS_API PerspectiveCamera
 	{
 	public:
-		PerspectiveCamera(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps());
+		explicit PerspectiveCamera(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps());
 
+		Frustum GetViewFrustum() const;
 		glm::mat4 GetViewMatrix() const;
 		glm::mat4 GetProjectionMatrix() const;
 		glm::mat4 GetProjectionViewMatrix() const;

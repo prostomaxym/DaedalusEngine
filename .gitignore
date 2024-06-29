@@ -4,6 +4,7 @@ build/
 install/
 vcpkg_installed/
 .vs/
+.idea/
 
 # Specific files
 TODO.txt

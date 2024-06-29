@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Daedalus/Renderer/Objects/CommonStructures.h"
 #include "Daedalus/Renderer/Primitives/IndexBuffer.h"
 #include "Daedalus/Renderer/Primitives/VertexArray.h"
 #include "Daedalus/Renderer/Primitives/VertexBuffer.h"
@@ -9,21 +10,6 @@
 #include <vector>
 
 namespace Daedalus {
-
-	struct Vertex
-	{
-		glm::vec3 position{ 0.f,0.f,0.f };
-		glm::vec2 tex_coords{ 0.f,0.f };
-		glm::vec3 normals{ 0.f,0.f,0.f };
-		glm::vec3 tangent{ 0.f,0.f,0.f };
-		glm::vec3 bitangent{ 0.f,0.f,0.f };
-	};
-
-	struct BoundingSphere
-	{
-		glm::vec3 position{ 0.f,0.f,0.f };
-		float radius = 0.f;
-	};
 
 	class Mesh
 	{

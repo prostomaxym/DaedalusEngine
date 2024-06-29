@@ -2,15 +2,11 @@
 
 #include "Material.h"
 #include "Mesh.h"
-#include "Shader.h"
-#include "Texture.h"
+#include "Daedalus/Renderer/Objects/CommonStructures.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/matrix4x4.h>
-#include <assimp/postprocess.h>
 
-#include <string>
 #include <vector>
 
 namespace Daedalus {

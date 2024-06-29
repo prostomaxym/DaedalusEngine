@@ -7,13 +7,13 @@
 #include "Daedalus/Renderer/Objects/SpotLightSource.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Renderer/Resourses/Model.h"
+#include "Daedalus/Renderer/Resourses/Shader.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-#include <iostream>
 #include <string>
 #include <typeindex>
 #include <type_traits>

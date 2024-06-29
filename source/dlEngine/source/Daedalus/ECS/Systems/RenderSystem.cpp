@@ -12,59 +12,69 @@ using namespace Daedalus;
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 {
-		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
-		Renderer::BeginScene(*m_camera);
+	RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
+	Renderer::BeginScene(*m_camera);
 
-		UpdateDynamicLighting();
+	UpdateDynamicLighting();
 
-		const auto shadow_fb = Renderer::GetShadowFramebuffer();
-		shadow_fb->Bind();
-		RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
-		RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
+	//Light pass
+	const auto shadow_fb = Renderer::GetShadowFramebuffer();
+	shadow_fb->Bind();
+	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
+	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 
-		const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
+	const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
 
-		const auto models_view = m_registry.view<RenderableObjectComponent>();
-		for (auto e : models_view)
-		{
-			Entity entity = { e, m_scene };
+	const auto models_view = m_registry.view<RenderableObjectComponent>();
+	for (const auto e : models_view)
+	{
+		Entity entity = { e, m_scene };
 
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
-		}
-		shadow_fb->Unbind();
+		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
+	}
+	shadow_fb->Unbind();
 
+	// Color Pass
+	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+	Renderer::UpdateShadowMap(standard_shader.get());
+	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 
-		const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-		Renderer::UpdateShadowMap(standard_shader.get());
-		RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
-		RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
+	const auto frustum = m_camera->GetViewFrustum();
 
-		for (auto e : models_view)
-		{
-			Entity entity = { e, m_scene };
+	std::vector<entt::entity> visible_models;
+	visible_models.reserve(models_view.size());
 
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			Renderer::Submit(model_component.shader.get(), &model_component.model, entity.GetComponent<TransformComponent>().GetTransform());
-		}
+	for (const auto e : models_view)
+	{
+		Entity entity = { e, m_scene };
 
-		const auto cubemap_view = m_registry.view<CubemapComponent>();
-		for (auto e : cubemap_view)
-		{
-			Entity entity = { e, m_scene };
+		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+		const auto& sphere = model_component.model.GetBoundingSphere();
+		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
 
-			const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
-			Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
-		}
+		if (frustum.IsInFrustum(sphere, transform_component))
+			Renderer::Submit(model_component.shader.get(), &model_component.model, transform_component);
+	}
 
-		Renderer::EndScene();
+	const auto cubemap_view = m_registry.view<CubemapComponent>();
+	for (const auto e : cubemap_view)
+	{
+		Entity entity = { e, m_scene };
+
+		const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
+		Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
+	}
+
+	Renderer::EndScene();
 }
 
 void RenderSystem::UpdateStaticLighting()
 {
 	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (auto e : dir_view)
+	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
@@ -74,7 +84,7 @@ void RenderSystem::UpdateStaticLighting()
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
-	for (auto e : point_view)
+	for (const auto e : point_view)
 	{
 		Entity entity = { e, m_scene };
 
@@ -85,7 +95,7 @@ void RenderSystem::UpdateStaticLighting()
 	}
 
 	const auto spot_view = m_registry.view<SpotLightComponent>();
-	for (auto e : spot_view)
+	for (const auto e : spot_view)
 	{
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<SpotLightComponent>();
@@ -101,7 +111,7 @@ void RenderSystem::UpdateDynamicLighting()
 {
 	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (auto e : dir_view)
+	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
@@ -111,7 +121,7 @@ void RenderSystem::UpdateDynamicLighting()
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
-	for (auto e : point_view)
+	for (const auto e : point_view)
 	{
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<PointLightComponent>();
@@ -121,7 +131,7 @@ void RenderSystem::UpdateDynamicLighting()
 	}
 
 	const auto spot_view = m_registry.view<SpotLightComponent>();
-	for (auto e : spot_view)
+	for (const auto e : spot_view)
 	{
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<SpotLightComponent>();

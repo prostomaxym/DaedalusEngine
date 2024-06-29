@@ -12,6 +12,26 @@ PerspectiveCamera::PerspectiveCamera(CameraProjectionProps proj_props, CameraPos
 	Update();
 }
 
+Frustum PerspectiveCamera::GetViewFrustum() const
+{
+	Frustum frustum;
+	const float half_vside = m_proj_props.z_far * std::tan(glm::radians(m_proj_props.fov * .5f));
+	const float half_hside = half_vside * m_proj_props.aspect_ratio;
+	const glm::vec3 front_mult_far = m_proj_props.z_far * m_front;
+
+	glm::vec3 cam_right = glm::normalize(glm::cross(m_front, m_world_up));
+	glm::vec3 cam_up = glm::normalize(glm::cross(m_right, m_front));
+
+	frustum.near_face = { m_position + m_proj_props.z_near * m_front, m_front };
+	frustum.far_face = { m_position + front_mult_far, -m_front };
+	frustum.right_face = { m_position, glm::cross(front_mult_far - cam_right * half_hside, cam_up) };
+	frustum.left_face = { m_position, glm::cross(cam_up,front_mult_far + cam_right * half_hside) };
+	frustum.top_face = { m_position, glm::cross(cam_right, front_mult_far - cam_up * half_vside) };
+	frustum.bottom_face = { m_position, glm::cross(front_mult_far + cam_up * half_vside, cam_right) };
+
+	return frustum;
+}
+
 glm::mat4 PerspectiveCamera::GetViewMatrix() const
 {
 	return glm::lookAt(m_position, m_position + m_front, m_up);
@@ -120,9 +140,9 @@ void PerspectiveCamera::RotateCamera(float xoffset, float yoffset)
 void PerspectiveCamera::Update()
 {
 	glm::vec3 front;
-	front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	front.y = sin(glm::radians(m_pitch));
-	front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	front.x = std::cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	front.y = std::sin(glm::radians(m_pitch));
+	front.z = std::sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
 
 	m_front = glm::normalize(front);
 	m_right = glm::normalize(glm::cross(m_front, m_world_up));

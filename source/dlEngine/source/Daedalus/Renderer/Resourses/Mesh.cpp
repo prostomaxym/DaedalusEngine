@@ -1,6 +1,8 @@
 #include "dlpch.h"
 #include "Mesh.h"
 
+#include "Daedalus/Renderer/API/RenderConstants.h"
+
 using namespace Daedalus;
 
 Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t material_index) :
@@ -52,8 +54,6 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 	std::vector<float> vertex_data;
 	vertex_data.reserve(vertices.size());
 
-	std::vector<unsigned int> raw_indices;
-
 	for (const auto& vertex : vertices)
 	{
 		vertex_data.push_back(vertex.position[0]);
@@ -83,11 +83,11 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 	m_VBO = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
 	m_VBO->SetLayout(BufferLayout
 		{ 
-			BufferElement{ ShaderDataType::Float3, std::string("vin_vertices"), false },
-			BufferElement{ ShaderDataType::Float2, std::string("vin_texcoord"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("vin_normals"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("vin_tangent"), false },
-			BufferElement{ ShaderDataType::Float3, std::string("vin_bitangent"), false },
+			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },
+			BufferElement{ ShaderDataType::Float2, std::string(ShaderConstants::TexCoordVar), false },
+			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::NormalsVar), false },
+			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::TangentVars), false },
+			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::BitangentVars), false },
 		});
 
 	m_EBO = IndexBuffer::Create(indices.data(), indices.size());
@@ -99,7 +99,6 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 
 void Mesh::ComputeBoundingSphere(const std::vector<Vertex>& vertices)
 {
-
 	if (vertices.empty())
 		return;
 

@@ -22,6 +22,9 @@ namespace Daedalus
         void SetViewportSize(int width, int height) { m_viewport_width = width; m_viewport_height = height;}
 
     private:
+        void DoLightPass();
+        void DoColorPass();
+
         entt::registry& m_registry;
         PerspectiveCamera* m_camera { nullptr };
         Scene* m_scene { nullptr };

@@ -189,10 +189,10 @@ void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* sce
 	// Process all the node's meshes (if any)
 	for (uint32_t i = 0; i < node->mNumMeshes; ++i)
 	{
-				std::vector<Vertex> vertices;
-				std::vector<uint32_t> indices;
+		std::vector<Vertex> vertices;
+		std::vector<uint32_t> indices;
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(&nodeTransformation, mesh, scene, vertices, indices);
+		ProcessMesh(&nodeTransformation, mesh, scene, vertices, indices);
 		meshes.push_back(std::make_unique<Mesh>(vertices, indices, mesh->mMaterialIndex));
 	}
 
@@ -206,6 +206,8 @@ void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* sce
 void AssimpParser::ProcessMesh(void* transform, aiMesh* mesh, const aiScene* scene, std::vector<Vertex>& out_vertices, std::vector<uint32_t>& out_indices)
 {
 	aiMatrix4x4 mesh_transformation = *reinterpret_cast<aiMatrix4x4*>(transform);
+	out_vertices.reserve(mesh->mNumVertices);
+	out_indices.reserve(mesh->mNumVertices);
 
 	for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 	{

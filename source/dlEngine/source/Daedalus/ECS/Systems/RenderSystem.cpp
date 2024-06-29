@@ -17,7 +17,14 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 
 	UpdateDynamicLighting();
 
-	//Light pass
+	DoLightPass();
+	DoColorPass();
+
+	Renderer::EndScene();
+}
+
+void RenderSystem::DoLightPass()
+{
 	const auto shadow_fb = Renderer::GetShadowFramebuffer();
 	shadow_fb->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
@@ -36,16 +43,16 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
 	}
 	shadow_fb->Unbind();
+}
 
-	// Color Pass
+void RenderSystem::DoColorPass()
+{
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 	Renderer::UpdateShadowMap(standard_shader.get());
 	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 
-	std::vector<entt::entity> visible_models;
-	visible_models.reserve(models_view.size());
-
+	const auto models_view = m_registry.view<RenderableObjectComponent>();
 	for (const auto e : models_view)
 	{
 		Entity entity = { e, m_scene };
@@ -64,8 +71,6 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt)
 		const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
 		Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
 	}
-
-	Renderer::EndScene();
 }
 
 void RenderSystem::UpdateStaticLighting()

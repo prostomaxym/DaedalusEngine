@@ -43,7 +43,7 @@ Application::Application()
 
 	Renderer::Init();
 	Renderer::SetupGraphicSettings();
-	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), true);
+	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
 
 	//std::unique_ptr<ImGuiLayer> lay = std::make_unique<ImGuiLayer>();
 	//m_imgui_layer = lay.get();

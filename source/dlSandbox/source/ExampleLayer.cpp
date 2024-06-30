@@ -66,7 +66,7 @@ void PrepareNukeScene(Scene& scene)
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 
 	auto camera_entity = scene.CreateEntity("Main Camera");
-	camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 1000.f));
+	camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 300.f));
 	auto& camera = camera_entity.GetComponent<CameraComponent>().camera;
 	camera.SetPosition(glm::vec3(0.f, 0.f, 0.f));
 	camera.RotateCamera(-90.f, 0.f);

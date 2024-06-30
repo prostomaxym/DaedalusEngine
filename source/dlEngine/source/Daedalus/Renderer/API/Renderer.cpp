@@ -14,17 +14,104 @@ std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
-Frustum Renderer::s_view_frustum = Frustum() ;
+Frustum Renderer::s_view_frustum = Frustum();
+glm::mat4 Renderer::s_light_projection_view = glm::mat4();
 
 namespace
 {
-	glm::mat4 GetLightMatrix()
-	{
-		glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1000.f, 1000.f);
+	//glm::mat4 GetLightMatrix()
+	//{
+	//	glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1000.f, 1000.f);
 
-		glm::mat4 lightView = glm::lookAt(glm::vec3(0.78f, 1.0f, 0.6f),
-			glm::vec3(0.0f, 0.0f, 0.0f),
-			glm::vec3(0.0f, 1.0f, 0.0f));
+	//	glm::mat4 lightView = glm::lookAt(glm::vec3(0.78f, 1.0f, 0.6f),
+	//		glm::vec3(0.0f, 0.0f, 0.0f),
+	//		glm::vec3(0.0f, 1.0f, 0.0f));
+
+	//	return lightProjection * lightView;
+	//}
+
+	glm::mat4 CalculateLightMatrix(const glm::mat4& proj, const glm::mat4& view)
+	{
+		const auto inv = glm::inverse(proj * view);
+
+		std::array<glm::vec4, 8> frustumCorners;
+		for (unsigned int x = 0, i = 0; x < 2; ++x)
+		{
+			for (unsigned int y = 0; y < 2; ++y)
+			{
+				for (unsigned int z = 0; z < 2; ++z)
+				{
+					const glm::vec4 pt =
+						inv * glm::vec4(
+							2.0f * x - 1.0f,
+							2.0f * y - 1.0f,
+							2.0f * z - 1.0f,
+							1.0f);
+					frustumCorners[i] = (pt / pt.w);
+					i++;
+				}
+			}
+		}
+
+		glm::vec3 center = glm::vec3(0, 0, 0);
+		for (const auto& v : frustumCorners)
+		{
+			center += glm::vec3(v);
+		}
+		center /= frustumCorners.size();
+
+		const auto lightView = glm::lookAt(
+			center + glm::vec3(0.78f, 1.0f, 0.6f),
+			center,
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::lowest();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::lowest();
+		float minZ = std::numeric_limits<float>::max();
+		float maxZ = std::numeric_limits<float>::lowest();
+
+		for (const auto& v : frustumCorners)
+		{
+			const auto trf = lightView * v;
+			minX = std::min(minX, trf.x);
+			maxX = std::max(maxX, trf.x);
+			minY = std::min(minY, trf.y);
+			maxY = std::max(maxY, trf.y);
+			minZ = std::min(minZ, trf.z);
+			maxZ = std::max(maxZ, trf.z);
+		}
+
+		// Tune this parameter according to the scene
+		constexpr float xMult = 0.25f;
+		constexpr float yMult = 0.25f;
+		constexpr float zMult = 1.0f;
+		minX *= xMult;
+		maxX *= xMult;
+		minY *= yMult;
+		maxY *= yMult;
+		minZ *= zMult;
+		maxZ *= zMult;
+		//if (minZ < 0)
+		//{
+		//	minZ *= zMult;
+		//}
+		//else
+		//{
+		//	minZ /= zMult;
+		//}
+		//if (maxZ < 0)
+		//{
+		//	maxZ /= zMult;
+		//}
+		//else
+		//{
+		//	maxZ *= zMult;
+		//}
+
+		const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, -1000.f, 1000.f);
 
 		return lightProjection * lightView;
 	}
@@ -85,9 +172,14 @@ void Renderer::BeginScene(const PerspectiveCamera& camera)
 {
 	const auto& PV = camera.GetProjectionViewMatrix();
 	const auto& pos = camera.GetPosition();
+	glm::vec3 light_dir(0.78f, 1.0f, 0.6f);
+
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
+	s_UBO_scene_data->SetData(&glm::ptr, sizeof(float) * 4, 80);
+
 	s_view_frustum = camera.GetViewFrustum();
+	s_light_projection_view = CalculateLightMatrix(camera.GetProjectionMatrix(), camera.GetViewMatrix());
 }
 
 void Renderer::EndScene()
@@ -128,11 +220,9 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 
 void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
-	const glm::mat4 light_space_matrix = GetLightMatrix();
-
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
-	shader->SetMat4(ShaderConstants::ShadowLightSpace, light_space_matrix);
+	shader->SetMat4(ShaderConstants::ShadowLightSpace, s_light_projection_view);
 
 	const auto& meshes = model->GetMeshes();
 	const auto& materials = model->GetMaterials();
@@ -209,11 +299,9 @@ void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::m
 
 void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
-	glm::mat4 lightSpaceMatrix = GetLightMatrix();
-
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::ShadowModel, transform);
-	shader->SetMat4(ShaderConstants::ShadowLightSpace, lightSpaceMatrix);
+	shader->SetMat4(ShaderConstants::ShadowLightSpace, s_light_projection_view);
 
 	const auto& meshes = model->GetMeshes();
 
@@ -251,4 +339,5 @@ void Renderer::UpdateShadowMap(const Shader* shader)
 	shader->Bind();
 	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
 	shader->SetInt(ShaderConstants::ShadowMap, 3);
+	shader->Unbind();
 }

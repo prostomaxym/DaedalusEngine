@@ -60,5 +60,6 @@ namespace Daedalus {
 		static std::shared_ptr<Framebuffer> s_framebuffer_shadows;
 
 		static Frustum s_view_frustum;
+		static glm::mat4 s_light_projection_view;
 	};
 }

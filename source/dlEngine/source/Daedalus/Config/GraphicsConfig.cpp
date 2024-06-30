@@ -26,6 +26,7 @@ namespace
 	constexpr auto MultisampleEnabledName = "MultisampleEnabled";
 	constexpr auto BlendingEnabledName = "BlendingEnabled";
 	constexpr auto LineSmoothEnabledName = "LineSmoothEnabled";
+	constexpr auto RecompileShadersName = "RecompileShaders";
 }
 
 std::string GraphicsConfig::s_window_name = "Daedalus Engine";
@@ -45,7 +46,8 @@ float GraphicsConfig::s_gamma_correction_value = 2.2f;
 bool GraphicsConfig::s_multisample_enabled = true;
 bool GraphicsConfig::s_blending_enabled = true;
 bool GraphicsConfig::s_line_smooth_enabled = true;
-		
+bool GraphicsConfig::s_recompile_shaders = false;
+
 void GraphicsConfig::Load(const std::filesystem::path& path)
 {
 	CSimpleIniA ini;
@@ -79,6 +81,7 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
 	s_multisample_enabled = ini.GetBoolValue(RenderingSectionName, MultisampleEnabledName, true);
 	s_blending_enabled = ini.GetBoolValue(RenderingSectionName, BlendingEnabledName, true);
 	s_line_smooth_enabled = ini.GetBoolValue(RenderingSectionName, LineSmoothEnabledName, true);
+	s_recompile_shaders = ini.GetBoolValue(RecompileShadersName, LineSmoothEnabledName, false);
 }
 
 void GraphicsConfig::Save(const std::filesystem::path& path)
@@ -102,7 +105,8 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
 	ini.SetBoolValue(RenderingSectionName, MultisampleEnabledName, s_multisample_enabled);
 	ini.SetBoolValue(RenderingSectionName, BlendingEnabledName, s_blending_enabled);
 	ini.SetBoolValue(RenderingSectionName, LineSmoothEnabledName, s_line_smooth_enabled);
-	
+	ini.SetBoolValue(RenderingSectionName, RecompileShadersName, s_recompile_shaders);
+
 	if (!std::filesystem::exists(path.parent_path()))
 		std::filesystem::create_directory(path.parent_path());
 
@@ -138,4 +142,5 @@ void GraphicsConfig::LoadDefault()
 	s_multisample_enabled = true;
 	s_blending_enabled = true;
 	s_line_smooth_enabled = true;
+	s_recompile_shaders = false;
 }

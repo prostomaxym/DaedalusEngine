@@ -37,6 +37,7 @@ struct ObjectData
 struct Scene
 {
     mat4 projection_view;
+    vec3 light_dir;
     vec3 view_pos;
 };
 
@@ -165,7 +166,7 @@ float CalculateShadow(vec4 frag_pos_light_space, float softness)
     const float current_depth = proj_coords.z;
 
     // Enhanced bias calculation
-    float bias = 0.005*tan(acos(dot(fs_in.normals, vec3(0.78, 1.0, 0.6))));
+    float bias = 0.005*tan(acos(dot(fs_in.normals, ubo_scene.light_dir)));
     bias = clamp(bias, 0.0, 0.01);
 
     float shadow = 0.0;

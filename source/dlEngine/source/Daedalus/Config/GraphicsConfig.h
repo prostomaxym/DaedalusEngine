@@ -30,6 +30,7 @@ namespace Daedalus
 		static bool IsMultisampleEnabled() { return s_multisample_enabled; }
 		static bool IsBlendingEnabled() { return s_blending_enabled; }
 		static bool IsLineSmoothEnabled() { return s_line_smooth_enabled; }
+		static bool RecompilingShadersEnabled() { return s_recompile_shaders; }
 		
 	private:
 		static std::string s_window_name;
@@ -49,5 +50,6 @@ namespace Daedalus
 		static bool s_multisample_enabled;
 		static bool s_blending_enabled;
 		static bool s_line_smooth_enabled;
+		static bool s_recompile_shaders;
 	};
 }

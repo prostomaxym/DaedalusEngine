@@ -14,19 +14,7 @@ PerspectiveCamera::PerspectiveCamera(CameraProjectionProps proj_props, CameraPos
 
 Frustum PerspectiveCamera::GetViewFrustum() const
 {
-	const float half_vside = m_proj_props.z_far * std::tan(glm::radians(m_proj_props.fov * 0.5f));
-	const float half_hside = half_vside * m_proj_props.aspect_ratio;
-	const glm::vec3 front_mult_far = m_proj_props.z_far * m_front;
-
-	Frustum frustum;
-	frustum.near_face = Plane(m_position + m_proj_props.z_near * m_front, m_front);
-	frustum.far_face = Plane(m_position + front_mult_far, -m_front);
-	frustum.right_face = Plane(m_position, glm::cross(front_mult_far - m_right * half_hside, m_up));
-	frustum.left_face = Plane(m_position, glm::cross(m_up, front_mult_far + m_right * half_hside));
-	frustum.top_face = Plane(m_position, glm::cross(m_right, front_mult_far - m_up * half_vside));
-	frustum.bottom_face = Plane(m_position, glm::cross(front_mult_far + m_up * half_vside, m_right));
-
-	return frustum;
+	return Frustum::CalculateFrustum(GetViewProjectionMatrix());
 }
 
 glm::mat4 PerspectiveCamera::GetViewMatrix() const
@@ -43,6 +31,12 @@ glm::mat4 PerspectiveCamera::GetProjectionViewMatrix() const
 {
 	return glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far) *
 		glm::lookAt(m_position, m_position + m_front, m_up);
+}
+
+glm::mat4 PerspectiveCamera::GetViewProjectionMatrix() const
+{
+	return glm::lookAt(m_position, m_position + m_front, m_up) *
+		   glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
 }
 
 glm::mat4 Daedalus::PerspectiveCamera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const

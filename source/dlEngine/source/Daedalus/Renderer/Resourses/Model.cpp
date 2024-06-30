@@ -76,7 +76,7 @@ BoundingSphere Model::GetBoundingSphere() const
 
 bool Model::IsVisible(const Frustum& frust, const glm::mat4& transform) const
 {
-	return frust.IsInFrustum(m_bounding_sphere, transform);
+	return frust.SphereInFrustum(m_bounding_sphere, transform);
 }
 
 bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<Material>& material_data, ModelParserFlags parser_flags)

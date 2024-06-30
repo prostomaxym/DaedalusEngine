@@ -60,6 +60,9 @@ void RenderSystem::DoColorPass()
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
 		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
 
+		if (entity.GetComponent<TagComponent>().tag == "Miranda")
+			int debug = 10;
+
 		Renderer::Submit(model_component.shader.get(), &model_component.model, transform_component);
 	}
 

@@ -51,7 +51,6 @@ namespace Daedalus
 
 		glm::mat4 GetTransform() const
 		{
-
 			glm::mat4 rotation_mat = glm::toMat4(glm::quat(glm::radians(rotation)));
 
 			return glm::translate(glm::mat4(1.0f), translation)

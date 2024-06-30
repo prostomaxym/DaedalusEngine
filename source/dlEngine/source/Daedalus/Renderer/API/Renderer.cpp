@@ -85,33 +85,41 @@ namespace
 		}
 
 		// Tune this parameter according to the scene
-		constexpr float xMult = 0.25f;
-		constexpr float yMult = 0.25f;
-		constexpr float zMult = 1.0f;
-		minX *= xMult;
-		maxX *= xMult;
-		minY *= yMult;
-		maxY *= yMult;
-		minZ *= zMult;
-		maxZ *= zMult;
-		//if (minZ < 0)
-		//{
-		//	minZ *= zMult;
-		//}
-		//else
-		//{
-		//	minZ /= zMult;
-		//}
-		//if (maxZ < 0)
-		//{
-		//	maxZ /= zMult;
-		//}
-		//else
-		//{
-		//	maxZ *= zMult;
-		//}
+		constexpr float xMult = 1.2f;
+		constexpr float yMult = 1.2f;
+		constexpr float zMult = 1.2f;
 
-		const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, -1000.f, 1000.f);
+		if (minX < 0)
+			minX *= xMult;
+		else
+			minX /= xMult;
+
+		if (maxX < 0)
+			maxX /= xMult;
+		else
+			maxX *= xMult;
+
+		if (minY < 0)
+			minY *= yMult;
+		else
+			minY /= yMult;
+
+		if (maxY < 0)
+			maxY /= yMult;
+		else
+			maxY *= yMult;
+
+		if (minZ < 0)
+			minZ *= zMult;
+		else
+			minZ /= zMult;
+
+		if (maxZ < 0)
+			maxZ /= zMult;
+		else
+			maxZ *= zMult;
+
+		const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
 
 		return lightProjection * lightView;
 	}
@@ -172,14 +180,14 @@ void Renderer::BeginScene(const PerspectiveCamera& camera)
 {
 	const auto& PV = camera.GetProjectionViewMatrix();
 	const auto& pos = camera.GetPosition();
-	glm::vec3 light_dir(0.78f, 1.0f, 0.6f);
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
-	s_UBO_scene_data->SetData(&glm::ptr, sizeof(float) * 4, 80);
 
+	// Right now we are choping zFar of frustum for better shadows
+	// Cascaded Shadow Mapping would be nice to implement in future
+	s_light_projection_view = CalculateLightMatrix(camera.GetProjectionMatrix(0.2f), camera.GetViewMatrix());
 	s_view_frustum = camera.GetViewFrustum();
-	s_light_projection_view = CalculateLightMatrix(camera.GetProjectionMatrix(), camera.GetViewMatrix());
 }
 
 void Renderer::EndScene()
@@ -317,7 +325,10 @@ void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, c
 void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
+	{
+		s_SSBO_static_lighting.reset();
 		return;
+	}
 
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
 	s_SSBO_static_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Static);
@@ -327,7 +338,10 @@ void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
+	{
+		s_SSBO_dynamic_lighting.reset();
 		return;
+	}
 
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
 	s_SSBO_dynamic_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);

@@ -55,10 +55,10 @@ void CameraController::OnUpdate(DeltaTime ts)
 	{
 		const auto [xAxeLeft, yAxeLeft] = Input::GetStickPos(Input::StickType::Left);
 
-		if(yAxeLeft != 0.f)
+		if (yAxeLeft != 0.f)
 			camera.MoveCamera(CameraMovement::FORWARD, -yAxeLeft * dt * 10.f);
 
-		if(xAxeLeft != 0.f)
+		if (xAxeLeft != 0.f)
 			camera.MoveCamera(CameraMovement::RIGHT, xAxeLeft * dt * 10.f);
 
 		const auto [xAxeRight, yAxeRight] = Input::GetStickPos(Input::StickType::Right);

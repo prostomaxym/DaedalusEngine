@@ -56,7 +56,9 @@ namespace Daedalus {
 
 		Frustum GetViewFrustum() const;
 		glm::mat4 GetViewMatrix() const;
+
 		glm::mat4 GetProjectionMatrix() const;
+		glm::mat4 GetProjectionMatrix(float z_far_limit) const; // For quick calculations. E.G take 0.2 of max camera distance
 		glm::mat4 GetViewProjectionMatrix() const;
 		glm::mat4 GetProjectionViewMatrix() const;
 		glm::mat4 GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const;

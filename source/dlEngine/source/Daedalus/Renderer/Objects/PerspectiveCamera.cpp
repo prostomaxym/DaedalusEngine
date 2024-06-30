@@ -14,7 +14,7 @@ PerspectiveCamera::PerspectiveCamera(CameraProjectionProps proj_props, CameraPos
 
 Frustum PerspectiveCamera::GetViewFrustum() const
 {
-	return Frustum::CalculateFrustum(GetViewProjectionMatrix());
+	return Frustum::CalculateFrustum(GetProjectionViewMatrix());
 }
 
 glm::mat4 PerspectiveCamera::GetViewMatrix() const

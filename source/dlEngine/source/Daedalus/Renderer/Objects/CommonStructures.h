@@ -17,22 +17,31 @@ namespace Daedalus {
     {
         glm::vec3 position{ 0.f,0.f,0.f };
         float radius = 0.f;
+
+        BoundingSphere() = default;
+        BoundingSphere(const glm::vec3& pos, float radius);
+        BoundingSphere GetTransformedSphere(const glm::mat4& matrix) const;
     };
 
     class Frustum
     {
     public:
         Frustum() = default;
-        static Frustum CalculateFrustum(const glm::mat4& view_projection);
+        static Frustum CalculateFrustum(const glm::mat4& projection_view);
 
         bool SphereInFrustum(const BoundingSphere& sphere, const glm::mat4& transform) const;
 
-    //private:
-        glm::vec4 m_right;
-        glm::vec4 m_left;
-        glm::vec4 m_top;
-        glm::vec4 m_bottom;
-        glm::vec4 m_near;
-        glm::vec4 m_far;
+    private:
+        std::array<glm::vec4, 6> m_planes;
+
+        enum Planes
+        {
+            Left,
+            Right,
+            Bottom,
+            Top,
+            Near,
+            Far
+        };
     };
 }

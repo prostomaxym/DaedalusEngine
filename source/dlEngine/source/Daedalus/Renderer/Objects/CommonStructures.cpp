@@ -10,84 +10,66 @@
 
 using namespace Daedalus;
 
-namespace {
+namespace 
+{
     bool CheckIfSphereInPlane(const glm::vec4& plane, const BoundingSphere& sphere)
     {
         return glm::dot(plane, glm::vec4(sphere.position, 1.f)) > -sphere.radius;
     }
 }
-Frustum Frustum::CalculateFrustum(const glm::mat4& view_projection)
+
+Frustum Frustum::CalculateFrustum(const glm::mat4& pv)
 {
     Frustum frust;
 
-    const glm::mat4 column_major_view_projection = glm::transpose(view_projection);
-    const float* clip = glm::value_ptr(column_major_view_projection);
+    frust.m_planes[Planes::Left] = glm::vec4(pv[0][3] + pv[0][0], pv[1][3] + pv[1][0], pv[2][3] + pv[2][0], pv[3][3] + pv[3][0]);
+    frust.m_planes[Planes::Right] = glm::vec4(pv[0][3] - pv[0][0], pv[1][3] - pv[1][0], pv[2][3] - pv[2][0], pv[3][3] - pv[3][0]);
+    frust.m_planes[Planes::Bottom] = glm::vec4(pv[0][3] + pv[0][1], pv[1][3] + pv[1][1], pv[2][3] + pv[2][1], pv[3][3] + pv[3][1]);
+    frust.m_planes[Planes::Top] = glm::vec4(pv[0][3] - pv[0][1], pv[1][3] - pv[1][1], pv[2][3] - pv[2][1], pv[3][3] - pv[3][1]);
+    frust.m_planes[Planes::Near] = glm::vec4(pv[0][3] + pv[0][2], pv[1][3] + pv[1][2], pv[2][3] + pv[2][2], pv[3][3] + pv[3][2]);
+    frust.m_planes[Planes::Far] = glm::vec4(pv[0][3] - pv[0][2], pv[1][3] - pv[1][2], pv[2][3] - pv[2][2], pv[3][3] - pv[3][2]);
 
-    glm::vec4 right;
-    right[0] = clip[3] - clip[0];
-    right[1] = clip[7] - clip[4];
-    right[2] = clip[11] - clip[8];
-    right[3] = clip[15] - clip[12];
-    frust.m_right = glm::normalize(right);;
 
-    glm::vec4 left;
-    left[0] = clip[3] + clip[0];
-    left[1] = clip[7] + clip[4];
-    left[2] = clip[11] + clip[8];
-    left[3] = clip[15] + clip[12];
-    frust.m_left = glm::normalize(left);
-
-    glm::vec4 bottom;
-    bottom[0] = clip[3] + clip[1];
-    bottom[1] = clip[7] + clip[5];
-    bottom[2] = clip[11] + clip[9];
-    bottom[3] = clip[15] + clip[13];
-    frust.m_bottom = glm::normalize(bottom);
-
-    glm::vec4 top;
-    top[0] = clip[3] - clip[1];
-    top[1] = clip[7] - clip[5];
-    top[2] = clip[11] - clip[9];
-    top[3] = clip[15] - clip[13];
-    frust.m_top = glm::normalize(top);
-
-    glm::vec4 far;
-    far[0] = clip[3] - clip[2];
-    far[1] = clip[7] - clip[6];
-    far[2] = clip[11] - clip[10];
-    far[3] = clip[15] - clip[14];
-    frust.m_far = glm::normalize(far);
-
-    glm::vec4 near;
-    near[0] = clip[3] + clip[2];
-    near[1] = clip[7] + clip[6];
-    near[2] = clip[11] + clip[10];
-    near[3] = clip[15] + clip[14];
-    frust.m_near = glm::normalize(near);
+    for (auto& plane : frust.m_planes)
+    {
+        float length = glm::length(glm::vec3(plane));
+        plane /= length;
+    }
 
     return frust;
 }
 
 bool Frustum::SphereInFrustum(const BoundingSphere& sphere, const glm::mat4& transform) const
 {
-    glm::vec3 scale;
-    glm::quat rotation;
-    glm::vec3 translation;
-    glm::vec3 skew_unused;
-    glm::vec4 perspective_unused;;
-    glm::decompose(transform, scale, rotation, translation, skew_unused, perspective_unused);
+    BoundingSphere transformed_sphere = sphere.GetTransformedSphere(transform);
+;
+	for (const auto& plane : m_planes)
+	{
+		float distance = glm::dot(glm::vec3(plane), transformed_sphere.position) + plane.w;
 
-    const float max_scale = std::max(std::max(std::max(scale.x, scale.y), scale.z), 0.0f);
-    const float scaled_radius = sphere.radius * max_scale;
-    const auto sphere_offset = (rotation * sphere.position) * max_scale;
-    const glm::vec3 world_center = translation + sphere_offset;
+		if (distance < -transformed_sphere.radius)
+			return false;
+	}
 
-    BoundingSphere transformed_sphere = { world_center, scaled_radius };
+	return true;
+}
 
-    return CheckIfSphereInPlane(m_near, transformed_sphere)
-        && CheckIfSphereInPlane(m_far, transformed_sphere)
-        && CheckIfSphereInPlane(m_left, transformed_sphere)
-        && CheckIfSphereInPlane(m_right, transformed_sphere)
-        && CheckIfSphereInPlane(m_top, transformed_sphere)
-        && CheckIfSphereInPlane(m_bottom, transformed_sphere);
+BoundingSphere::BoundingSphere(const glm::vec3& pos, float rad) :
+    position(pos),
+    radius(rad)
+{
+}
+
+BoundingSphere BoundingSphere::GetTransformedSphere(const glm::mat4& matrix) const
+{
+	glm::vec3 new_center = glm::vec3(matrix * glm::vec4(position, 1.0f));
+
+	glm::vec3 scale;
+	scale.x = glm::length(glm::vec3(matrix[0]));
+	scale.y = glm::length(glm::vec3(matrix[1]));
+	scale.z = glm::length(glm::vec3(matrix[2]));
+
+	float max_scale = std::max(std::max(scale.x, scale.y), scale.z);
+
+	return BoundingSphere(new_center, radius * max_scale);
 }

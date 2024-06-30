@@ -137,14 +137,11 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 	const auto& meshes = model->GetMeshes();
 	const auto& materials = model->GetMaterials();
 
-	auto drawn = 0;
-
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh->IsVisible(s_view_frustum, transform))
 			continue;
 
-		drawn++;
 		const auto& material = materials[mesh->GetMaterialIndex()];
 
 		shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());

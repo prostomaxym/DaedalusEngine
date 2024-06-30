@@ -209,13 +209,4 @@ void PrepareAnorLondoScene(Scene& scene)
 	marci_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 	auto& marci_scripts = marci_entity.AddComponent<NativeScriptComponent>();
 	marci_scripts.AddScript<RotationModelScript>(marci_entity, 0.1f);
-
-	auto tank_entity = scene.CreateEntity("Tank");
-	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", standard_shader, enhance_model_flags);
-	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
-	tank_transform.scale = glm::vec3(3.f, 3.f, 3.f);
-	tank_transform.translation = glm::vec3(0.f, -5.8f, -20.f);
-	tank_transform.rotation = glm::vec3(0.f, 180.f, 0.f);
-	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();
-	tank_scripts.AddScript<TankMovementScript>(tank_entity, glm::vec3(0.0f, 0.f, -1.0f), 30.f);
 }

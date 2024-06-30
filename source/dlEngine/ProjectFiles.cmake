@@ -58,8 +58,8 @@ set(PROJECT_FILES
 
     source/Daedalus/Renderer/Objects/Camera.h
     source/Daedalus/Renderer/Objects/Camera.cpp
-    source/Daedalus/Renderer/Objects/CommonStructures.h
-    source/Daedalus/Renderer/Objects/CommonStructures.cpp
+    source/Daedalus/Renderer/Objects/Geometry.h
+    source/Daedalus/Renderer/Objects/Geometry.cpp
     source/Daedalus/Renderer/Objects/Cubemap.h
     source/Daedalus/Renderer/Objects/Cubemap.cpp
     source/Daedalus/Renderer/Objects/OrthographicCamera.h

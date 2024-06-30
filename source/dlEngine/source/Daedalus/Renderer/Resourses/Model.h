@@ -2,7 +2,7 @@
 
 #include "Material.h"
 #include "Mesh.h"
-#include "Daedalus/Renderer/Objects/CommonStructures.h"
+#include "Daedalus/Renderer/Objects/Geometry.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

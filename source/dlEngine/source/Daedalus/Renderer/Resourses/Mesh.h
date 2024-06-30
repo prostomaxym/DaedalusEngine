@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Daedalus/Renderer/Objects/CommonStructures.h"
+#include "Daedalus/Renderer/Objects/Geometry.h"
 #include "Daedalus/Renderer/Primitives/IndexBuffer.h"
 #include "Daedalus/Renderer/Primitives/VertexArray.h"
 #include "Daedalus/Renderer/Primitives/VertexBuffer.h"

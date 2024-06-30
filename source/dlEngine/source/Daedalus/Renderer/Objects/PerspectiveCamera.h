@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CommonStructures.h"
+#include "Geometry.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

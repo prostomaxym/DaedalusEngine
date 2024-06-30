@@ -11,23 +11,28 @@ void CameraController::OnUpdate(DeltaTime ts)
 
 	const auto dt = ts.GetSeconds();
 
-	if (Input::IsKeyPressed(DL_KEY_W))
+	if (Input::IsKeyHold(DL_KEY_W))
 		camera.ProcessKeyboard(CameraMovement::FORWARD, dt);
 
-	if (Input::IsKeyPressed(DL_KEY_S))
+	if (Input::IsKeyHold(DL_KEY_S))
 		camera.ProcessKeyboard(CameraMovement::BACKWARD, dt);
 
-	if (Input::IsKeyPressed(DL_KEY_A))
+	if (Input::IsKeyHold(DL_KEY_A))
 		camera.ProcessKeyboard(CameraMovement::LEFT, dt);
 
-	if (Input::IsKeyPressed(DL_KEY_D))
+	if (Input::IsKeyHold(DL_KEY_D))
 		camera.ProcessKeyboard(CameraMovement::RIGHT, dt);
 
-	if (Input::IsKeyPressed(DL_KEY_SPACE))
+	if (Input::IsKeyHold(DL_KEY_SPACE))
 		camera.ProcessKeyboard(CameraMovement::UP, dt);
 
-	if (Input::IsKeyPressed(DL_KEY_C))
+	if (Input::IsKeyHold(DL_KEY_C))
 		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
+
+	if (Input::IsKeyHold(DL_KEY_C))
+		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
+
+	UpdateSpotlight();
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
@@ -67,5 +72,22 @@ void CameraController::OnUpdate(DeltaTime ts)
 			yoffset  = -yAxeRight * dt * 100.f;
 
 		camera.ProcessMouseMovement(xoffset, yoffset);
+	}
+}
+
+void CameraController::UpdateSpotlight()
+{
+	const auto key_pressed = Input::IsKeyReleased(DL_KEY_F);
+
+	if (key_pressed && m_spotlight_enabled)
+	{
+		m_spotlight_enabled = false;
+		m_entity.RemoveComponent<SpotLightComponent>();
+	}
+	else if (key_pressed && !m_spotlight_enabled)
+	{
+		m_spotlight_enabled = true;
+		m_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), 2.f, 500.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
 	}
 }

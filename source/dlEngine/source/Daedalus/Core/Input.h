@@ -14,7 +14,9 @@ namespace Daedalus {
 		friend Platform;
 	public:
 		static void Shutdown() { delete s_instance; }
-		
+
+		static void Update() { return s_instance->UpdateImpl(); }
+
 		//Input configuration
 		inline static void EnableKeyboardInput(bool enable) { m_keyboard_connected = enable; } //TODO: not implemented
 		inline static void EnableGamepadInput(bool enable) { m_gamepad_connected = enable; }
@@ -25,6 +27,8 @@ namespace Daedalus {
 
 		// Keyboard + mouse input
 		inline static bool IsKeyPressed(int keycode) { return s_instance->IsKeyPressedImpl(keycode); }
+		inline static bool IsKeyHold(int keycode) { return s_instance->IsKeyHoldImpl(keycode); }
+		inline static bool IsKeyReleased(int keycode) { return s_instance->IsKeyReleasedImpl(keycode); }
 
 		inline static bool IsMouseButtonPressed(int button) { return s_instance->IsMouseButtonPressedImpl(button); }
 		inline static std::pair<float, float> GetMousePos() { return s_instance->GetMousePosImpl(); }
@@ -49,9 +53,12 @@ namespace Daedalus {
 
 	protected:
 		static void CreateInstance(Input* inst) { s_instance = inst; }
+		virtual void UpdateImpl() = 0;
 
 		// Keyboard + mouse input
 		virtual bool IsKeyPressedImpl(int keycode) = 0;
+		virtual bool IsKeyHoldImpl(int keycode) = 0;
+		virtual bool IsKeyReleasedImpl(int keycode) = 0;
 		virtual bool IsMouseButtonPressedImpl(int button) = 0;
 		virtual std::pair<float, float> GetMousePosImpl() = 0;
 

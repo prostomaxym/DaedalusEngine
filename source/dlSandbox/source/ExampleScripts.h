@@ -114,6 +114,9 @@ namespace Daedalus
 
 		virtual void OnUpdate(DeltaTime dt) override
 		{
+			if (!m_entity.HasComponent<SpotLightComponent>())
+				return;
+
 			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
 			auto& light = m_entity.GetComponent<SpotLightComponent>().light;
 			light.SetPosition(camera.GetPosition());

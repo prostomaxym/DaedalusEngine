@@ -99,7 +99,7 @@ void PrepareNukeScene(Scene& scene)
 	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
 	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
-	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-38.f, 13.6f, -29.7f),
+	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
 		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, false);
 
 	auto nuke_entity = scene.CreateEntity("Nuke");

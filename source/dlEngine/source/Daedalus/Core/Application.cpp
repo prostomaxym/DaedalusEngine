@@ -62,7 +62,9 @@ void Application::Run()
 	Timer timer;
 
 	while (m_running)
-	{	
+	{
+		Input::Update();
+
 		for (auto& layer : m_layer_stack)
 		{
 			layer->OnUpdate(timer.GetEllapsedTime());

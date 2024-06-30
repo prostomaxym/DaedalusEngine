@@ -16,11 +16,9 @@ namespace
 OpenGLShaderLibrary::OpenGLShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading shader library;");
-	const auto test1 = path;
-	const auto test = path / cache_dir;
 	if (!std::filesystem::exists(path / cache_dir))
 	{
-		if(!std::filesystem::create_directory(path / cache_dir))
+		if (!std::filesystem::create_directory(path / cache_dir))
 			Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to create cached shaders directory");
 	}
 
@@ -77,9 +75,9 @@ void OpenGLShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cach
 void OpenGLShaderLibrary::LoadNotCachedShaders(const std::set<std::string>& all_shader_names, 
 	const std::vector<std::string>& cached_shader_names, const std::filesystem::path& path)
 {
-	for (auto& shader_name : all_shader_names)
+	for (const auto& shader_name : all_shader_names)
 	{
-		if (std::find(cached_shader_names.begin(), cached_shader_names.end(), shader_name) == cached_shader_names.end())
+		if (!shader_name.empty() && std::find(cached_shader_names.begin(), cached_shader_names.end(), shader_name) == cached_shader_names.end())
 		{
 			std::shared_ptr<OpenGLShader> shader;
 			shader = std::make_shared<OpenGLShader>(path.string() + "/" + shader_name + ".vert", path.string() + "/" + shader_name + ".frag");

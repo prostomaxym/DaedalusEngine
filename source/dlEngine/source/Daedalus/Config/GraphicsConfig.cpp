@@ -81,7 +81,7 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
 	s_multisample_enabled = ini.GetBoolValue(RenderingSectionName, MultisampleEnabledName, true);
 	s_blending_enabled = ini.GetBoolValue(RenderingSectionName, BlendingEnabledName, true);
 	s_line_smooth_enabled = ini.GetBoolValue(RenderingSectionName, LineSmoothEnabledName, true);
-	s_recompile_shaders = ini.GetBoolValue(RecompileShadersName, LineSmoothEnabledName, false);
+	s_recompile_shaders = ini.GetBoolValue(RenderingSectionName, RecompileShadersName, false);
 }
 
 void GraphicsConfig::Save(const std::filesystem::path& path)

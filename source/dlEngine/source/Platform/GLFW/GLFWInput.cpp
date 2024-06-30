@@ -7,12 +7,39 @@
 
 using namespace Daedalus;
 
-bool GLFWInput::IsKeyPressedImpl(int keycode)
+GLFWInput::GLFWInput()
+{
+	for (auto i = DL_KEY_SPACE; i <= DL_KEY_MENU; ++i)
+	{
+		m_prev_state[i] = GLFW_RELEASE;
+		m_current_state[i] = GLFW_RELEASE;
+	}
+}
+
+void GLFWInput::UpdateImpl()
 {
 	const auto window = static_cast<GLFWwindow*>(Application::GetInstance()->GetWindow().GetNativeWindow());
-	const auto state = glfwGetKey(window, keycode);
 
-	return state == GLFW_PRESS || state == GLFW_REPEAT;
+	for (int i = DL_KEY_SPACE; i <= DL_KEY_MENU; ++i)
+	{
+		m_prev_state[i] = m_current_state[i];
+		m_current_state[i] = glfwGetKey(window, i);
+	}
+}
+
+bool GLFWInput::IsKeyPressedImpl(int keycode)
+{
+	return m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_RELEASE;
+}
+
+bool GLFWInput::IsKeyHoldImpl(int keycode)
+{
+	return m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_PRESS;
+}
+
+bool GLFWInput::IsKeyReleasedImpl(int keycode)
+{
+	return m_current_state[keycode] == GLFW_RELEASE && m_prev_state[keycode] == GLFW_PRESS;
 }
 
 bool GLFWInput::IsMouseButtonPressedImpl(int button)

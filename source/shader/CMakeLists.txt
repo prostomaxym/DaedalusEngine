@@ -26,7 +26,7 @@ add_custom_command(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_SOURCE_DIR}/runtime/shaders
+            ${CMAKE_SOURCE_DIR}/runtime/shader
             
     COMMAND ${CMAKE_COMMAND} -E rm
             ${CMAKE_SOURCE_DIR}/runtime/shaders/CMakeLists.txt

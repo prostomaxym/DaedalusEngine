@@ -4,7 +4,6 @@
 in VS_OUT
 {
     in vec3 frag_pos;
-    in vec4 frag_pos_light_space;
     in vec2 uv;
     in vec3 normals;
     in mat3 TBN;
@@ -42,6 +41,7 @@ struct Scene
 
 struct Light 
 {
+    mat4 light_space_matrix;
     vec3 position;
     vec3 direction; 
     vec3 ambient;
@@ -54,6 +54,7 @@ struct Light
     float cutoff_angle;
     float outer_cutoff_angle;
     int type; // 0 - directional, 1 - point, 2 - spot
+    int cast_shadows;
 };
 
 // ------------------------------------------------Buffers----------------------------------------------------- //
@@ -78,7 +79,8 @@ layout (std430, binding = 1) buffer DynamicLightSSBO
 };
 
 uniform ObjectData u_object;
-uniform sampler2D u_shadow_map;
+uniform sampler2DArray u_static_shadowmaps;
+uniform sampler2DArray u_dynamic_shadowmaps;
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
 vec3 g_ambient_tex;
@@ -89,20 +91,20 @@ vec3 g_view_pos;
 vec3 g_frag_pos;
 vec3 g_normal;
 float g_alpha_tex;
-float g_shadow; 
 
 // ------------------------------------------------- Functions ------------------------------------------------ //
-vec3 BlinnPhong(vec3 p_light_ambient, vec3 p_light_diffuse, vec3 p_light_specular, vec3 p_light_dir, float p_luminosity, float shadow_intensity)
+vec3 BlinnPhong(Light p_light, float p_luminosity)
 {
-    const vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
-    const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
+    const vec3 halfway_dir = normalize(p_light.direction + g_view_dir);
+    const float diffuse_coef  = max(dot(g_normal, p_light.direction), 0.0);
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
+    const float shadow = CalculateShadow(fs_in.frag_pos_light_space, 1.0);  
     const float shadow = 1.0 - shadow_intensity * g_shadow;
 
     return p_luminosity * 
-            (p_light_ambient * g_ambient_tex
-            + shadow * (p_light_diffuse * diffuse_coef * g_diffuse_tex
-            + p_light_specular * specular_coef * g_spec_tex));
+            (p_light.ambient * g_ambient_tex
+            + shadow * (p_light.diffuse * diffuse_coef * g_diffuse_tex
+            + p_light.specular * specular_coef * g_spec_tex));
 }
 
 float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)
@@ -113,7 +115,7 @@ float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_line
 
 vec3 CalculateDirectionalLight(Light p_light)
 {
-    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, p_light.direction, p_light.power, 1.0);
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, p_light.direction, p_light.power);
 }
 
 vec3 CalculatePointLight(Light p_light)
@@ -121,7 +123,7 @@ vec3 CalculatePointLight(Light p_light)
     const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
     const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
 
-    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity, 1.0);
+    return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity);
 }
 
 vec3 CalculateSpotLight(Light p_light)
@@ -133,7 +135,7 @@ vec3 CalculateSpotLight(Light p_light)
     const float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
     const float spot_intensity  = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
     
-     return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity, luminosity);
+     return BlinnPhong(p_light.ambient, p_light.diffuse, p_light.specular, light_direction, p_light.power * luminosity * spot_intensity);
 }
 
 float BilinearInterpolation(sampler2D shadowMap, vec2 texCoords) 
@@ -208,8 +210,7 @@ void main()
     g_spec_tex *= u_object.k_specular;
     g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
-    g_view_dir = normalize(g_view_pos - g_frag_pos);
-    g_shadow = CalculateShadow(fs_in.frag_pos_light_space, 1.0);    
+    g_view_dir = normalize(g_view_pos - g_frag_pos);  
 
     if (u_object.enable_normal_map == 1)
     {

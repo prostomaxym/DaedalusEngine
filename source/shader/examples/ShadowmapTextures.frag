@@ -1,0 +1,255 @@
+uniform float dlight_intensity_scale = 1.0;
+uniform vec3 scene_llc, scene_scale; // scene bounds (world space)
+uniform vec3 camera_pos; // world space
+uniform sampler2D dlight_tex;
+uniform usampler2D dlelm_tex, dlgb_tex;
+
+#ifdef USE_DLIGHT_BCUBES
+uniform sampler2D dlbcube_tex;
+#endif
+
+#ifdef SCREEN_SPACE_DLIGHTS
+uniform vec2 resolution; // for screen space tiles
+#endif
+
+const   float SPOTLIGHT_LEAKAGE = 0.0;  // simulates indirect lighting - however, doesn't match dlights XY grid, so has artifacts, and doesn't look right
+uniform float SHADOW_LEAKAGE    = 0.05; // simulates indirect lighting, but indir may already be enabled for this light
+uniform float LT_DIR_FALLOFF    = 0.005;
+uniform float LT_DIR_FALLOFF_SM = 0.005;
+uniform float LDIR_FALL_THRESH  = 0.0;
+
+#ifdef HAS_DLIGHT_SMAP
+// must be >= the value used in shadow_map.h (Note: up to ~220 is okay for uniform array, and up to 256+ for UBO), but real cap is 127 due to bit mask logic
+const int MAX_DLIGHT_SMAPS = 120;
+uniform sampler2DArrayShadow smap_tex_arr_dl;
+//uniform mat4 smap_matrix_dl[MAX_DLIGHT_SMAPS];
+layout (std140, binding = 0) uniform U_smap_matrix_dl {mat4 smap_matrix_dl[MAX_DLIGHT_SMAPS];};
+
+// Note: for non-spotlights where the shadow frustum doesn't cover the entire light angle,
+// the lookup is clamped to the edge texel of the shadow map, which stretches the shadow to the sides;
+// it may make more sense to clip the shadower to the frustum so that all the area outside the shadow frustum is unshadowed,
+// but it's not clear how to do that cleanly/efficiently or if it would look any better
+float get_shadow_map_weight_dl(in vec4 pos, in vec3 normal, in mat4 matrix, in sampler2DArrayShadow sm_tex, in int layer) {
+	pos.xyz += norm_bias_scale*z_bias*normal; // world space
+	vec4 shadow_coord = matrix * pos;
+	shadow_coord.xyz /= shadow_coord.w;
+	shadow_coord.z   += -0.1*z_bias; // lower z-bias for local shadow maps
+#if 1
+	float ret = 0.0;
+	vec2 offset_scale = 1.0 / vec2(textureSize(sm_tex, 0));
+
+	for (int i = 0; i < 9; ++i) {
+		vec2 xy = shadow_coord.xy + offset_scale*vec2(poisson_table[2*i], poisson_table[2*i+1]);
+		ret += texture(sm_tex, vec4(xy, layer, shadow_coord.z));
+	}
+	return mix(ret/9.0, 1.0, SHADOW_LEAKAGE); // 9-tap PCF; allow a small amount of transmitted light to simulate indirect lighting
+#else
+	shadow_coord.w    = layer;
+	return mix(texture(sm_tex, shadow_coord.xywz), 1.0, SHADOW_LEAKAGE); // allow a small amount of transmitted light to simulate indirect lighting
+#endif
+}
+#endif // HAS_DLIGHT_SMAP
+
+float get_dir_light_scale(in vec3 light_dir, in vec3 dir, in float bwidth) {
+	float dp      = dot(light_dir, dir); // map dir [0,1] to [-1,1]
+	float dp_norm = 0.5*(1.0 - dp); // dp = -1.0 to 1.0, bw = 0.0 to 1.0
+	float falloff = ((bwidth <= LDIR_FALL_THRESH) ? LT_DIR_FALLOFF_SM : LT_DIR_FALLOFF);
+	float v       = clamp(2.0*(dp_norm + bwidth + falloff - 1.0)/falloff, 0.0, 1.0);
+	return mix(smoothstep(0.0, 1.0, v), 1.0, SPOTLIGHT_LEAKAGE);
+}
+
+float get_point_intensity_at(in vec3 pos, in vec3 lpos, in float radius) { // Note: doesn't handle the radius==0 case
+	float rscale = max(0.0, (radius - distance(pos, lpos)))/radius;
+#ifdef LINEAR_DLIGHT_ATTEN
+	return rscale; // linear attenuation
+#else
+	//return min(1.0, 1.5*rscale*rscale);
+	return rscale*rscale; // quadratic 1/r^2 attenuation
+#endif
+}
+
+float get_sphere_intensity_at(in vec3 pos, in vec3 lpos, in float radius, in float inner_radius) { // Note: doesn't handle the radius==0 case
+	float rscale = clamp((radius - distance(pos, lpos))/(radius - inner_radius), 0.0, 1.0);
+	return rscale*rscale; // quadratic 1/r^2 attenuation
+}
+
+float get_line_intensity_at(in vec3 pos, in vec3 lpos1, in vec3 lpos2, in float radius, out vec3 lpos) { // Note: doesn't handle the radius==0 case
+	vec3 L = (lpos2 - lpos1);
+	lpos   = lpos1 + L*clamp(dot((pos - lpos1), L)/dot(L,L), 0.0, 1.0);
+	float rscale = max(0.0, (radius - distance(lpos, pos)))/radius; // use point-to-line distance
+	return rscale*rscale; // quadratic 1/r^2 attenuation
+}
+
+//float get_sphere_intensity_at(in vec3 pos, in vec3 lpos, in float sradius, in float radius) {}
+
+vec3 apply_power_signed(in vec3 val, in float n) {
+	return sign(val)*pow(abs(val), vec3(n)); // preserve the sign
+}
+
+vec3 get_dominant_dir(in vec3 v) {
+	if (abs(v.x) > abs(v.y)) {
+		if (abs(v.x) > abs(v.z)) {return vec3(sign(v.x),0,0);} else {return vec3(0,0,sign(v.z));}
+	}
+	else {
+		if (abs(v.y) > abs(v.z)) {return vec3(0,sign(v.y),0);} else {return vec3(0,0,sign(v.z));}
+	}
+}
+
+#ifdef USE_BUMP_MAP_DL
+uniform mat4 fg_ViewMatrix;
+vec3 get_bump_map_normal();
+mat3 get_tbn(in float bscale, in vec3 n);
+vec3 apply_bump_map_for_tbn(inout vec3 light_dir, inout vec3 eye_pos, in mat3 TBN);
+#endif // USE_BUMP_MAP_DL
+
+
+void add_dlights_bm_scaled(inout vec3 color, in vec3 dlpos, in vec4 epos, in vec3 normal, in vec3 diff_color, in float bump_map_normal_scale, in float bump_map_normal_sign, in float wet_scale) {
+#ifndef NO_DYNAMIC_LIGHTS
+#ifdef USE_BUMP_MAP_DL
+	mat3 TBN = get_tbn(1.0, eye_norm);
+#endif
+	const float gamma = 2.2;
+	vec3 dl_color     = vec3(0.0);
+#ifdef SCREEN_SPACE_DLIGHTS
+	vec2 norm_pos = gl_FragCoord.xy / resolution; // screen space in [0.0, 1.0] range
+#else
+	vec2 norm_pos = clamp((dlpos.xy - scene_llc.xy)/scene_scale.xy, 0.0, 1.0); // should be in [0.0, 1.0] range
+#endif
+	uint gb_ix  = texture(dlgb_tex, norm_pos).r; // get grid bag element index range (uint32)
+	uint st_ix  = (gb_ix & 0xFFFFFFU); // 24 low bits
+	uint num_ix = ((gb_ix >> 24U) & 0xFFFFFFU); // 8 high bits
+	uint end_ix = st_ix + num_ix;
+	const uint elem_tex_x = (1<<8);  // must agree with value in C++ code, or can use textureSize()
+	
+	for (uint i = st_ix; i < end_ix; ++i) { // iterate over grid bag elements
+		uint dl_ix  = texelFetch(dlelm_tex,  ivec2((i%elem_tex_x), (i/elem_tex_x)), 0).r; // get dynamic light index (uint16)
+#ifdef USE_DLIGHT_BCUBES
+		vec3 llc = (texelFetch(dlbcube_tex, ivec2(0, dl_ix), 0).xyz * scene_scale) + scene_llc; // light bcube LLC in world space
+		vec3 urc = (texelFetch(dlbcube_tex, ivec2(1, dl_ix), 0).xyz * scene_scale) + scene_llc; // light bcube URC in world space
+		if (any(lessThan(dlpos, llc)) || any(greaterThan(dlpos, urc))) continue; // fragment is outside the light bcube, skip this light
+#endif
+		vec4 lpos_r = texelFetch(dlight_tex, ivec2(0, dl_ix), 0); // light center, radius
+		lpos_r.xyz *= scene_scale; // convert from [0,1] back into world space
+		lpos_r.xyz += scene_llc;
+		lpos_r.w   *= 0.5*scene_scale.x;
+#if (!defined(USE_BUMP_MAP_DL) || defined(BUMP_MAP_CUSTOM)) && !defined(HAS_LINE_LIGHTS) // not valid for line lights
+		// causes problems with bump mapping TBN for some reason?
+		if (abs(dlpos.z - lpos_r.z) > lpos_r.w) continue; // hurts in the close-up case but helps in the distant case
+#endif
+		vec4 lcolor    = texelFetch(dlight_tex, ivec2(1, dl_ix), 0); // light color
+		lcolor.rgb    *= 10.0; // unscale color
+		lcolor.rgb     = 2.0*lcolor.rgb - 1.0; // map [0,1] to [-1,1] for negative light support
+		vec3 light_dir;
+
+#if defined(HAS_LINE_LIGHTS) || defined(HAS_SPOTLIGHTS)
+		// fetch another texture block which contains some combination of dir, bw, and lpos2
+		vec4 dir_w = texelFetch(dlight_tex, ivec2(2, dl_ix), 0); // {light direction, beamwidth} - OR - {light pos 2, 0.0}
+#endif
+
+		float intensity;
+#ifdef HAS_LINE_LIGHTS // technically cylinder light
+		vec3 lpos1 = lpos_r.xyz;
+		if (dir_w.w == 0.0) { // this is a line light
+			vec3 lpos2 = dir_w.xyz*scene_scale + scene_llc; // other end point of line
+			intensity  = get_line_intensity_at(dlpos, lpos1, lpos2, lpos_r.w, lpos_r.xyz); // put the point used for lighting into lpos_r.xyz
+			light_dir  = normalize(lpos_r.xyz - dlpos); // since lpos_r is updated, we need to defer calculation of light_dir until here
+		}
+		else { // point light
+#else
+		if (true) { // always a point light
+#endif
+			light_dir = normalize(lpos_r.xyz - dlpos);
+			intensity = get_point_intensity_at(dlpos, lpos_r.xyz, lpos_r.w);
+			//intensity = get_sphere_intensity_at(dlpos, lpos_r.xyz, lpos_r.w, 0.1*lpos_r.w);
+#ifdef HAS_SPOTLIGHTS
+			//if (dir_w.w < 1.0) // seems to be slightly slower
+			{
+				dir_w.xyz  = (2.0*dir_w.xyz - 1.0); // expand from [0,1] to [-1,1] range
+				intensity *= get_dir_light_scale(light_dir, dir_w.xyz, dir_w.w);
+			}
+#endif
+		}
+		vec3 orig_ldir = light_dir; // world space
+		vec3 eye_dir   = normalize(camera_pos - dlpos); // world space
+
+#ifdef USE_BUMP_MAP_DL // convert from world to eye to tangent space
+		vec3 orig_eye_dir   = eye_dir;
+		vec3 orig_light_dir = light_dir;
+		vec3 lpos_eye  = ((use_fg_ViewMatrix ? fg_ViewMatrix : fg_ModelViewMatrix) * vec4(lpos_r.xyz, 1.0)).xyz; // eye space
+		float nscale   = bump_map_normal_sign*clamp(10.0*dot(normal, light_dir), 0.0, 1.0); // fix self-shadowing (in world space)
+		light_dir      = normalize(lpos_eye - epos.xyz); // eye space
+		eye_dir        = fg_NormalMatrix*eye_dir; // convert world space into eye space
+		float nm_mag   = bump_map_mag*bump_map_normal_scale; // should be either 0.0 or 1.0; used to interpolate the variables below
+		vec3 lnorm     = mix(normal, nscale*apply_bump_map_for_tbn(light_dir, eye_dir, TBN), nm_mag); // convert eye space to tangent space
+		eye_dir        = mix(orig_eye_dir,   eye_dir,   nm_mag);
+		light_dir      = mix(orig_light_dir, light_dir, nm_mag);
+#else // !USE_BUMP_MAP_DL
+		vec3 lnorm     = normal;
+#endif // USE_BUMP_MAP_DL
+		float n_dot_l  = dot(lnorm, light_dir);
+		intensity *= dlight_intensity_scale;
+		if (intensity < 0.001) continue; // usually faster
+
+#ifdef HAS_DLIGHT_SMAP
+		// Note: all math is in world space
+		// the smap index is stored as a float in [0,1] and converted to an 8-bit int by multiplying by 255;
+		// the int contains 7 index bits for up to 127 shadow maps + the 8th bit stores is_cube_face
+		int smap_index = int(round(texelFetch(dlight_tex, ivec2(3, dl_ix), 0).r*255.0)); // make sure to round to nearest int
+		if (smap_index > 0) { // has a shadow map
+#ifdef HAS_SPOTLIGHTS
+			if ((smap_index >= 128) && dot(get_dominant_dir(-orig_ldir), dir_w.xyz) < 0.9) continue; // skip lights not facing the splotlight dir (for cube maps)
+#endif
+			// Note: we can use either lnorm or normal for the smap offset, but normal seems to have less artifacts
+			smap_index = smap_index & 127; // mask off 7 LSB bits / strip off is_cube_face flag bit
+			if (smap_index > 0) {intensity *= get_shadow_map_weight_dl(vec4(dlpos, 1.0), normal, smap_matrix_dl[smap_index-1], smap_tex_arr_dl, smap_index-1);}
+		}
+#endif // HAS_DLIGHT_SMAP
+
+		float diff_mag = max(0.0, n_dot_l); // diffuse
+
+// handle specular lighting
+#ifndef NO_DL_SPECULAR
+#ifdef HAS_LINE_LIGHTS
+		if (dir_w.w == 0.0) { // compute specular light dir for line light
+			// https://github.com/turanszkij/WickedEngine/blob/master/WickedEngine/lightingHF.hlsli
+			vec3 lpos2 = dir_w.xyz*scene_scale + scene_llc; // other end point of line
+			vec3 ref = -reflect(eye_dir, normal);
+			vec3 L0 = lpos1 - dlpos;
+			vec3 L1 = lpos2 - dlpos;
+			vec3 Ld = L1 - L0;
+			float ndotLd = dot(ref, Ld);
+			float t = (dot(ref, L0) * ndotLd - dot(L0, Ld)) / (dot(Ld, Ld) - ndotLd*ndotLd);
+			light_dir = normalize(L0 + clamp(t, 0.0, 1.0) * Ld);
+			n_dot_l = dot(lnorm, light_dir);
+		}
+#endif // HAS_LINE_LIGHTS
+		float spec_mag = clamp(10.0*n_dot_l, 0.0, 1.0)*get_spec_intensity(lnorm, light_dir, eye_dir);
+		vec3 spec_color= get_wet_specular_color(wet_scale);
+#else // no specular
+		float spec_mag = 0.0;
+		vec3 spec_color= vec3(0.0);
+#endif // NO_DL_SPECULAR
+		
+#ifdef USE_SPEC_MAP
+		spec_color    *= get_spec_color();
+#endif
+
+		// Note: specular should have a lower falloff and its own intensity - however, this will require a larger radius and impact performance
+		vec3 add_color = lcolor.rgb * (spec_color*spec_mag + diff_color*diff_mag) * (lcolor.a * intensity);
+		dl_color += apply_power_signed(add_color, gamma); // add in linear space
+	} // for i
+
+#ifdef ENABLE_GAMMA_CORRECTION // everything is in linear space
+	color += gamma*min(dl_color, 1.0); // add dlights color
+#else // perform this operation using gamma correction but input/output in log space
+	color  = apply_power_signed(color, gamma); // to linear space
+	color += gamma*min(dl_color, 1.0); // add dlights color
+	color  = apply_power_signed(color, 1.0/gamma); // back to normal color space
+#endif // ENABLE_GAMMA_CORRECTION
+
+#endif // NO_DYNAMIC_LIGHTS
+}
+
+void add_dlights(inout vec3 color, in vec3 dlpos, in vec4 epos, in vec3 normal, in vec3 diff_color) {
+	add_dlights_bm_scaled(color, dlpos, epos, normal, diff_color, 1.0, 1.0, 0.0);
+}

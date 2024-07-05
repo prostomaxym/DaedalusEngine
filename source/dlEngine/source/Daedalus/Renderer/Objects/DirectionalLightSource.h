@@ -19,6 +19,9 @@ namespace Daedalus
 
 		const LightSSBO& GetShaderSSBO() const { return m_params; }
 		const LightSSBO& GetShaderSSBO(const glm::mat4& proj, const glm::mat4& view);
+		bool CastShadow() const { return m_params.cast_shadows > 0; }
+
+		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view);
 
 	private:
 		LightSSBO m_params{};

@@ -31,17 +31,30 @@ void RenderSystem::DoLightPass()
 	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 
 	const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
-
-	const auto models_view = m_registry.view<RenderableObjectComponent>();
-	for (const auto e : models_view)
+	
+	const auto dir_view = m_registry.view<DirectionalLightComponent>();
+	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
+		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
-		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
+		if (!light_component.light.CastShadow())
+			continue;
 
-		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
+		Renderer::SetLightProjectionView(light_component.light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix()));
+
+		const auto models_view = m_registry.view<RenderableObjectComponent>();
+		for (const auto e : models_view)
+		{
+			Entity entity = { e, m_scene };
+
+			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+			const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
+
+			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
+		}
 	}
+
 	shadow_fb->Unbind();
 }
 

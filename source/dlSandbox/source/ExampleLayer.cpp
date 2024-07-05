@@ -84,6 +84,10 @@ void PrepareNukeScene(Scene& scene)
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
 		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 0.1f, true);
 
+	auto light_entity2 = scene.CreateEntity("Main Light");
+	light_entity2.AddComponent<DirectionalLightComponent>(glm::vec3(-0.78f, 1.0f, 0.6f),
+		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 0.1f, true);
+
 	auto spot_entity = scene.CreateEntity("Spot Light");
 	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
 	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();

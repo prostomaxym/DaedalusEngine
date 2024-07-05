@@ -25,9 +25,9 @@ struct ObjectData
     vec3 k_diffuse;
     vec3 k_specular;
     float shininess;
-    int enable_diffuse_map;
-    int enable_specular_map;
-    int enable_normal_map;
+    bool enable_diffuse_map;
+    bool enable_specular_map;
+    bool enable_normal_map;
 };
 
 struct Scene
@@ -50,7 +50,7 @@ void main()
     mat3 normal_matrix = transpose(inverse(mat3(u_object.model_mat)));
     vs_out.normals = normalize(normal_matrix * vin_normals);
 
-    if(u_object.enable_normal_map == 1)
+    if (u_object.enable_normal_map)
     {
         vs_out.TBN = mat3
         (

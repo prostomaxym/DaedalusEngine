@@ -26,6 +26,7 @@ namespace Daedalus {
 		static void Init();
 		static void Shutdown();
 
+		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 		static void SetupGraphicSettings();
 		static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
 
@@ -44,7 +45,7 @@ namespace Daedalus {
 		static void UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 
-		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+		static void SetLightProjectionView(const glm::mat4& proj_view);
 		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
 		static void UpdateShadowMap(const Shader* shader);
 

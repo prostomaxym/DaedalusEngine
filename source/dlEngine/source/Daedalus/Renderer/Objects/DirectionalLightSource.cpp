@@ -17,7 +17,13 @@ DirectionalLightSource::DirectionalLightSource(
 
 const LightSSBO& DirectionalLightSource::GetShaderSSBO(const glm::mat4& proj, const glm::mat4& view)
 {
-	const auto inv = glm::inverse(proj * view);
+	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
+    return m_params;
+}
+
+glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view)
+{
+	const auto inv = glm::inverse(camera_proj * camera_view);
 
 	std::array<glm::vec4, 8> frustum_corners;
 	for (unsigned int x = 0, i = 0; x < 2; ++x)
@@ -105,7 +111,5 @@ const LightSSBO& DirectionalLightSource::GetShaderSSBO(const glm::mat4& proj, co
 		maxZ *= zMult;
 
 	const glm::mat4 light_projection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
-	m_params.proj_view = light_projection * light_view;
-
-    return m_params;
+	return light_projection * light_view;
 }

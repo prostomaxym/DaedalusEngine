@@ -172,10 +172,6 @@ void Renderer::BeginScene(const PerspectiveCamera& camera)
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
-
-	// Right now we are choping zFar of frustum for better shadows
-	// Cascaded Shadow Mapping would be nice to implement in future
-	s_light_projection_view = CalculateLightMatrix(camera.GetProjectionMatrix(0.2f), camera.GetViewMatrix());
 	s_view_frustum = camera.GetViewFrustum();
 }
 
@@ -334,6 +330,11 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
 	s_SSBO_dynamic_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
+}
+
+void Renderer::SetLightProjectionView(const glm::mat4& proj_view)
+{
+	s_light_projection_view = proj_view;
 }
 
 void Renderer::UpdateShadowMap(const Shader* shader)

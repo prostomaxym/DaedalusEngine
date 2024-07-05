@@ -19,17 +19,6 @@ glm::mat4 Renderer::s_light_projection_view = glm::mat4();
 
 namespace
 {
-	//glm::mat4 GetLightMatrix()
-	//{
-	//	glm::mat4 lightProjection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1000.f, 1000.f);
-
-	//	glm::mat4 lightView = glm::lookAt(glm::vec3(0.78f, 1.0f, 0.6f),
-	//		glm::vec3(0.0f, 0.0f, 0.0f),
-	//		glm::vec3(0.0f, 1.0f, 0.0f));
-
-	//	return lightProjection * lightView;
-	//}
-
 	glm::mat4 CalculateLightMatrix(const glm::mat4& proj, const glm::mat4& view)
 	{
 		const auto inv = glm::inverse(proj * view);
@@ -230,7 +219,6 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 {
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
-	shader->SetMat4(ShaderConstants::ShadowLightSpace, s_light_projection_view);
 
 	const auto& meshes = model->GetMeshes();
 	const auto& materials = model->GetMaterials();

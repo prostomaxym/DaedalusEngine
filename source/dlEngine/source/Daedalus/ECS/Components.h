@@ -99,8 +99,9 @@ namespace Daedalus
 
 		DirectionalLightComponent() = default;
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
-		DirectionalLightComponent(const glm::vec3& light_dir, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power, bool is_dyn) :
-			light(light_dir, ambient_color, diffuse_color, specular_color, light_power), is_dynamic(is_dyn) {};
+		DirectionalLightComponent(const glm::vec3& light_dir, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color,
+			bool cast_shadows, float light_power, bool is_dyn) :
+			light(light_dir, ambient_color, diffuse_color, specular_color, cast_shadows, light_power), is_dynamic(is_dyn) {};
 	};
 
 	struct PointLightComponent
@@ -110,8 +111,9 @@ namespace Daedalus
 
 		PointLightComponent() = default;
 		PointLightComponent(const PointLightComponent&) = default;
-		PointLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color, float light_power, float max_distance, bool is_dyn) :
-			light(light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance), is_dynamic(is_dyn) {};
+		PointLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color,
+			bool cast_shadows, float light_power, float max_distance, bool is_dyn) :
+			light(light_pos, ambient_color, diffuse_color, specular_color, cast_shadows, light_power, max_distance), is_dynamic(is_dyn) {};
 	};
 
 	struct SpotLightComponent
@@ -122,7 +124,7 @@ namespace Daedalus
 		SpotLightComponent() = default;
 		SpotLightComponent(const SpotLightComponent&) = default;
 		SpotLightComponent(const glm::vec3& light_pos, const glm::vec3& ambient_color, const glm::vec3& diffuse_color, const glm::vec3& specular_color,
-			float light_power, float max_distance, const glm::vec3& direction, float theta_angle, float outer_cutoff, bool is_dyn) :
-			light(light_pos, ambient_color, diffuse_color, specular_color, light_power, max_distance, direction, theta_angle, outer_cutoff), is_dynamic(is_dyn) {};
+			bool cast_shadows, float light_power, float max_distance, const glm::vec3& direction, float theta_angle, float outer_cutoff, bool is_dyn) :
+			light(light_pos, ambient_color, diffuse_color, specular_color, cast_shadows, light_power, max_distance, direction, theta_angle, outer_cutoff), is_dynamic(is_dyn) {};
 	};
 }

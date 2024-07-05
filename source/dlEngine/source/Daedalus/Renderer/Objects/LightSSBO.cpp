@@ -68,7 +68,7 @@ namespace
     }
 }
 
-LightSSBO::LightSSBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, 
+LightSSBO::LightSSBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, bool cast_shadows,
     float light_power, float max_distance, glm::vec3 dir, float cutoff, float outer_cutoff) :
     position(light_pos)
     , direction(dir)
@@ -79,6 +79,7 @@ LightSSBO::LightSSBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm
     , cutoff_angle(cutoff)
     , outer_cutoff_angle(outer_cutoff)
     , type(light_type)
+    , cast_shadows(cast_shadows ? 1 : 0)
 {
     if (type != 0)
     {

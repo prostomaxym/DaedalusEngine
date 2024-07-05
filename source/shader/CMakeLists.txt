@@ -29,7 +29,7 @@ add_custom_command(
             ${CMAKE_SOURCE_DIR}/runtime/shader
             
     COMMAND ${CMAKE_COMMAND} -E rm
-            ${CMAKE_SOURCE_DIR}/runtime/shaders/CMakeLists.txt
+            ${CMAKE_SOURCE_DIR}/runtime/shader/CMakeLists.txt
 
     COMMENT "Copying shaders to runtime folder"
 )

@@ -78,20 +78,11 @@ void PrepareNukeScene(Scene& scene)
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
 	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
 	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), 2.f, 300.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 300.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
-		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), 0.2f, false);
-
-	auto bulb_entity = scene.CreateEntity("Dir Light");
-	bulb_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
-	auto& bulb_transform = bulb_entity.GetComponent<TransformComponent>();
-	bulb_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-	bulb_transform.translation = glm::vec3(0.f, 20.f, -43.f);
-	bulb_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
-	bulb_entity.AddComponent<PointLightComponent>(glm::vec3(0.f, 20.f, -43.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), 80.f, 15.f, false);
+		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 0.1f, true);
 
 	auto spot_entity = scene.CreateEntity("Spot Light");
 	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
@@ -100,7 +91,9 @@ void PrepareNukeScene(Scene& scene)
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
 	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
 	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, false);
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), false, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, false);
+	spot_entity.AddComponent<PointLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), false, 80.f, 13.f, false);
 
 	auto nuke_entity = scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", standard_shader, enhance_model_flags);
@@ -177,7 +170,7 @@ void PrepareAnorLondoScene(Scene& scene)
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.3f, 1.f, 1.2f),
-		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), 1.f, false);
+		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), false, 1.f, false);
 
 	TransformComponent transform;
 	transform.scale = glm::vec3(2.f, 2.f, 2.f);

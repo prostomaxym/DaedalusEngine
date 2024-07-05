@@ -12,7 +12,8 @@ namespace Daedalus
 	{
 	public:
 		PointLightSource() = default;
-		PointLightSource(glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, float light_power, float max_distance);
+		PointLightSource(glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadows, float light_power, float max_distance);
+
 		void SetPosition(glm::vec3 position) { m_params.position = position; }
 		void SetPower(float power) { m_params.power = power; }
 		void SetMaxDistance(float distance);

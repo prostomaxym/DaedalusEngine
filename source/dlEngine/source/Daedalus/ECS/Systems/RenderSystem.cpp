@@ -80,10 +80,10 @@ void RenderSystem::UpdateStaticLighting()
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
+		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (!light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix()));
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
@@ -117,10 +117,10 @@ void RenderSystem::UpdateDynamicLighting()
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
+		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
+			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix()));
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();

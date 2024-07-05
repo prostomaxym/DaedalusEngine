@@ -12,12 +12,13 @@ namespace Daedalus
 	{
 	public:
 		DirectionalLightSource() = default;
-		DirectionalLightSource(glm::vec3 light_direction, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, float light_power);
+		DirectionalLightSource(glm::vec3 light_direction, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadow, float light_power);
 
 		void SetDirection(glm::vec3 direction) { m_params.position = direction; }
 		void SetPower(float lpower) { m_params.power = lpower; }
 
 		const LightSSBO& GetShaderSSBO() const { return m_params; }
+		const LightSSBO& GetShaderSSBO(const glm::mat4& proj, const glm::mat4& view);
 
 	private:
 		LightSSBO m_params{};

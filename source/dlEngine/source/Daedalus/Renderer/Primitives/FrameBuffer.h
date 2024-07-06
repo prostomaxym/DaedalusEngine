@@ -38,6 +38,7 @@ namespace Daedalus {
 		uint32_t width = 0, height = 0;
 		FramebufferAttachmentSpecification attachments;
 		uint32_t samples = 1;
+		uint32_t layers = 1;
 
 		bool swap_chain_target = false;
 	};

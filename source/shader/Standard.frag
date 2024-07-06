@@ -83,8 +83,8 @@ layout (std430, binding = 1) buffer DynamicLightSSBO
 };
 
 uniform ObjectData u_object;
-uniform sampler2DArrayShadow u_static_shadowmaps;
-uniform sampler2DArrayShadow u_dynamic_shadowmaps;
+uniform sampler2DArray u_static_shadowmaps;
+uniform sampler2DArray u_dynamic_shadowmaps;
 
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
@@ -105,15 +105,15 @@ vec3 ApplyGammaCorrection(vec3 color)
     return pow(color, vec3(1.0 / ubo_graphic_config.gamma_value));
 }
 
-float BilinearInterpolation(sampler2DArrayShadow shadow_map, vec2 tex_coords, int layer) 
+float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int layer) 
 {
-    ivec2 texel_coord = ivec2(tex_coords * textureSize(shadow_map, 0));
-    vec2 texel_offset = fract(tex_coords * textureSize(shadow_map, 0));
+    ivec2 texel_coord = ivec2(tex_coords * vec2(textureSize(shadow_map, 0)));
+    vec2 texel_offset = fract(tex_coords * vec2(textureSize(shadow_map, 0)));
 
-    float top_left = texture(shadow_map, (texel_coord + vec2(0.5, 0.5), layer) / textureSize(shadow_map, 0)).r;
-    float top_right = texture(shadow_map, (texel_coord + vec2(1.5, 0.5), layer) / textureSize(shadow_map, 0)).r;
-    float bottom_left = texture(shadow_map, (texel_coord + vec2(0.5, 1.5), layer) / textureSize(shadow_map, 0)).r;
-    float bottom_right = texture(shadow_map, (texel_coord + vec2(1.5, 1.5), layer) / textureSize(shadow_map, 0)).r;
+    float top_left = texture(shadow_map, vec3((texel_coord + vec2(0.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float top_right = texture(shadow_map, vec3((texel_coord + vec2(1.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float bottom_left = texture(shadow_map, vec3((texel_coord + vec2(0.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float bottom_right = texture(shadow_map, vec3((texel_coord + vec2(1.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
 
     float top_interpolated = mix(top_left, top_right, texel_offset.x);
     float bottom_interpolated = mix(bottom_left, bottom_right, texel_offset.x);
@@ -121,7 +121,7 @@ float BilinearInterpolation(sampler2DArrayShadow shadow_map, vec2 tex_coords, in
     return mix(top_interpolated, bottom_interpolated, texel_offset.y);
 }
 
-float CalculateShadow(Light p_light, sampler2DArrayShadow shadow_map) 
+float CalculateShadow(Light p_light, sampler2DArray shadow_map) 
 {
     const vec4 frag_pos_light_space = p_light.proj_view * vec4(fs_in.frag_pos, 1.0);
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
@@ -130,7 +130,6 @@ float CalculateShadow(Light p_light, sampler2DArrayShadow shadow_map)
     if (proj_coords.z > 1.0)
         return 1.0;
 
-    const float closest_depth = texture(shadow_map, proj_coords.xy, p_light.shadowmap_index).r; 
     const float current_depth = proj_coords.z;
 
     // Enhanced bias calculation
@@ -138,7 +137,7 @@ float CalculateShadow(Light p_light, sampler2DArrayShadow shadow_map)
     bias = clamp(bias, 0.0, 0.01);
 
     float shadow = 0.0;
-    const vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+    const vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
     
     // Percentage-closer filtering
     const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;

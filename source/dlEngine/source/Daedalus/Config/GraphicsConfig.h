@@ -23,6 +23,7 @@ namespace Daedalus
 		static int GetShadowBufferWidth() { return s_shadow_buffer_width; }
 		static int GetShadowBufferHeight() { return s_shadow_buffer_height; }
 		static int GetShadowBufferSamples() { return s_shadow_buffer_samples; }
+		static int GetShadowPCFMultiplier() { return s_shadow_pcf_multiplier; }
 		
 		static bool IsGammaCorrectionEnabled() { return s_gamma_correction_enabled; }
 		static float GetGammaCorrectionValue() { return s_gamma_correction_value; }
@@ -43,6 +44,7 @@ namespace Daedalus
 		static int s_shadow_buffer_width;
 		static int s_shadow_buffer_height;
 		static int s_shadow_buffer_samples;
+		static int s_shadow_pcf_multiplier;
 		
 		static bool s_gamma_correction_enabled;
 		static float s_gamma_correction_value;

@@ -142,9 +142,11 @@ void Renderer::SetupGraphicSettings()
 
 	int gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
 	float gamma_value = GraphicsConfig::GetGammaCorrectionValue();
+	int pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
 
 	s_UBO_graphic_config->SetData(&gamma_enabled, sizeof(int), 0);
 	s_UBO_graphic_config->SetData(&gamma_value, sizeof(float), 4);
+	s_UBO_graphic_config->SetData(&pcf_multiplier, sizeof(int), 8);
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)

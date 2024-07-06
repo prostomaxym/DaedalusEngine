@@ -5,31 +5,87 @@
 
 using namespace Daedalus;
 
-static const uint32_t s_MaxFramebufferSize = 8192;
-
 namespace {
 
-	static GLenum TextureTarget(bool multisampled)
+	static GLint GetMaxTextureSize()
 	{
-		return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
-	}
+		GLint max_texture_size;
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
 
-	static void CreateTextures(bool multisampled, uint32_t* outID, uint32_t count)
-	{
-		glCreateTextures(TextureTarget(multisampled), count, outID);
+		return max_texture_size;
 	}
-
-	static void BindTexture(bool multisampled, uint32_t id)
+	
+	static GLenum TextureTarget(bool multisampled, bool multilayer)
 	{
-		glBindTexture(TextureTarget(multisampled), id);
-	}
-
-	static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
-	{
-		bool multisampled = samples > 1;
+		GLenum tex_type;
 		if (multisampled)
 		{
+			if (multilayer)
+			{
+				tex_type = GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+			}
+			else
+			{
+				tex_type = GL_TEXTURE_2D_MULTISAMPLE;
+			}
+				
+		}	
+		else
+		{
+			if (multilayer)
+			{
+				tex_type = GL_TEXTURE_2D_ARRAY;
+			}
+			else
+			{
+				tex_type = GL_TEXTURE_2D;
+			}	
+		}
+
+		return tex_type;
+	}
+
+	static void CreateTextures(bool multisampled, bool multilayer, uint32_t* outID, uint32_t count)
+	{
+		glCreateTextures(TextureTarget(multisampled, multilayer), count, outID);
+	}
+
+	static void BindTexture(bool multisampled, bool multilayer, uint32_t id)
+	{
+		glBindTexture(TextureTarget(multisampled, multilayer), id);
+	}
+
+	static void AttachColorTexture(uint32_t id, int samples, int layers, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
+	{
+		bool multisampled = samples > 1;
+		bool multilayer = layers > 1;
+
+		if (multisampled && multilayer)
+		{
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, GL_FALSE);
+		}
+		else if (multisampled)
+		{
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
+		}
+		else if (multilayer)
+		{
+			glTexImage3D(
+				GL_TEXTURE_2D_ARRAY,
+				0,
+				internalFormat,
+				width,
+				height,
+				layers,
+				0,
+				format,
+				GL_UNSIGNED_BYTE,
+				nullptr);
+
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		}
 		else
 		{
@@ -42,15 +98,45 @@ namespace {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
+		if (multilayer)
+			glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, layers > 1), id, 0, 0);
+		else
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, layers > 1), id, 0);
 	}
 
-	static void AttachDepthTexture(uint32_t id, int samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
+	static void AttachDepthTexture(uint32_t id, int samples, int layers, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
 	{
 		bool multisampled = samples > 1;
-		if (multisampled)
+		bool multilayer = layers > 1;
+		if (multisampled && multilayer)
+		{
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, format, width, height, GL_FALSE);
+		}
+		else if (multisampled)
 		{
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+		}
+		else if (multilayer)
+		{
+			glTexImage3D(
+				GL_TEXTURE_2D_ARRAY,
+				0,
+				format,
+				width,
+				height,
+				layers,
+				0,
+				GL_DEPTH_COMPONENT,
+				GL_FLOAT,
+				nullptr);
+
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+			float border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
 		}
 		else
 		{
@@ -66,7 +152,10 @@ namespace {
 			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
 		}
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
+		if (multilayer)
+			glFramebufferTexture3D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, layers > 1), id, 0, 0);
+		else
+			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, layers > 1), id, 0);
 	}
 
 	static bool IsDepthFormat(FramebufferTextureFormat format)
@@ -96,6 +185,14 @@ namespace {
 OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
 	: m_specification(spec)
 {
+	GLint max_texture_size = GetMaxTextureSize();
+
+	if (m_specification.width == 0 || m_specification.height == 0 || m_specification.width > max_texture_size || m_specification.height > max_texture_size)
+	{
+		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Attempted to rezize framebuffer to {0}, {1}", m_specification.width, m_specification.height);
+		return;
+	}
+
 	for (auto spec : m_specification.attachments.attachments)
 	{
 		if (!IsDepthFormat(spec.texture_format))
@@ -130,23 +227,24 @@ void OpenGLFramebuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 
 	bool multisample = m_specification.samples > 1;
+	bool multilayer = m_specification.layers > 1;
 
 	// Attachments
 	if (m_color_attachment_specifications.size())
 	{
 		m_color_attachments.resize(m_color_attachment_specifications.size());
-		CreateTextures(multisample, m_color_attachments.data(), m_color_attachments.size());
+		CreateTextures(multisample, multilayer, m_color_attachments.data(), m_color_attachments.size());
 
 		for (size_t i = 0; i < m_color_attachments.size(); i++)
 		{
-			BindTexture(multisample, m_color_attachments[i]);
+			BindTexture(multisample, multilayer, m_color_attachments[i]);
 			switch (m_color_attachment_specifications[i].texture_format)
 			{
 				case FramebufferTextureFormat::RGBA8:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, GL_RGBA8, GL_RGBA, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, m_specification.width, m_specification.height, i);
 					break;
 				case FramebufferTextureFormat::RED_INTEGER:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, GL_R32I, GL_RED_INTEGER, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, m_specification.width, m_specification.height, i);
 					break;
 			}
 		}
@@ -154,12 +252,12 @@ void OpenGLFramebuffer::Invalidate()
 
 	if (m_depth_attachment_specification.texture_format != FramebufferTextureFormat::None)
 	{
-		CreateTextures(multisample, &m_depth_attachment, 1);
-		BindTexture(multisample, m_depth_attachment);
+		CreateTextures(multisample, multilayer , &m_depth_attachment, 1);
+		BindTexture(multisample, multilayer, m_depth_attachment);
 		switch (m_depth_attachment_specification.texture_format)
 		{
 			case FramebufferTextureFormat::Depth:
-				AttachDepthTexture(m_depth_attachment, m_specification.samples, GL_DEPTH_COMPONENT32F, GL_DEPTH_ATTACHMENT, m_specification.width, m_specification.height);
+				AttachDepthTexture(m_depth_attachment, m_specification.samples, m_specification.layers, GL_DEPTH_COMPONENT32F, GL_DEPTH_ATTACHMENT, m_specification.width, m_specification.height);
 				break;
 		}
 	}
@@ -195,7 +293,9 @@ void OpenGLFramebuffer::Unbind()
 
 void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 {
-	if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
+	GLint max_texture_size = GetMaxTextureSize();
+
+	if (width == 0 || height == 0 || width > max_texture_size || height > max_texture_size)
 	{
 		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Attempted to rezize framebuffer to {0}, {1}", width, height);
 		return;

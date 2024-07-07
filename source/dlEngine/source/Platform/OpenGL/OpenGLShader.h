@@ -11,18 +11,18 @@ namespace Daedalus {
 	class OpenGLShader final : public Shader
 	{
 	public:
+		OpenGLShader();
+		virtual ~OpenGLShader();
 
-		OpenGLShader(const std::string& vert_code, const std::string& frag_code, InputType input_type = InputType::PATH);
-		OpenGLShader(const std::string& compiled_shader_path);
-		~OpenGLShader();
+		void CreateFromCode(const std::string& code);
+		void CreateFromFile(const std::filesystem::path& file_path);
+		void CreateFromBinary(const std::filesystem::path& binary_path);
+		void SaveBinary(const std::filesystem::path& name) const override;
 
 		OpenGLShader(const OpenGLShader&) = delete;
 		OpenGLShader(OpenGLShader&&) = delete;
 		OpenGLShader& operator=(const OpenGLShader&) = delete;
 		OpenGLShader& operator=(OpenGLShader&&) = delete;
-
-		void SaveBinary(const std::string& name) const override;
-		void LoadBinary(const ShaderBinaryData& data) override;
 
 		void Bind() const override;
 		void Unbind() const override;
@@ -38,13 +38,6 @@ namespace Daedalus {
 
 		const std::string& GetName() const override { return m_name; }
 		void SetName(const std::string& name) override { m_name = name; }
-
-	private:
-		std::pair<GLuint, GLuint> Compile(const GLchar* vert_source, const GLchar* frag_source) const;
-		void Link(GLuint vert_shader_id, GLuint frag_shader_id);
-
-		void Pack(const std::string& file_name, const ShaderBinaryData& data) const;
-		ShaderBinaryData Unpack(const std::string& file_name) const;
 
 	private:
 		uint32_t m_rendererID;

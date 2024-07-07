@@ -1,9 +1,7 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
-#include "Platform/OpenGL/OpenGLShaderLibrary.h"
 #include "Daedalus/Config/GraphicsConfig.h"
 #include "Daedalus/Renderer/API/Renderer.h"
-#include "Daedalus/Renderer/API/RenderConstants.h"
 
 #include <glad/glad.h>
 
@@ -67,11 +65,6 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-}
-
-std::unique_ptr<ShaderLibrary> OpenGLRendererAPI::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
-{ 
-	return std::make_unique<OpenGLShaderLibrary>(path, recompile);
 }
 
 void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

@@ -143,8 +143,8 @@ set(PROJECT_FILES
     source/Platform/OpenGL/OpenGLRendererAPI.cpp
     source/Platform/OpenGL/OpenGLShader.h
     source/Platform/OpenGL/OpenGLShader.cpp
-    source/Platform/OpenGL/OpenGLShaderLibrary.h
-    source/Platform/OpenGL/OpenGLShaderLibrary.cpp
+    source/Platform/OpenGL/OpenGLShaderCompiler.h
+    source/Platform/OpenGL/OpenGLShaderCompiler.cpp
     source/Platform/OpenGL/OpenGLShaderStorageBuffer.h
     source/Platform/OpenGL/OpenGLShaderStorageBuffer.cpp
     source/Platform/OpenGL/OpenGLTexture.h

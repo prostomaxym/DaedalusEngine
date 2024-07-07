@@ -40,6 +40,7 @@ bool GraphicsConfig::s_VSync = false;
 int GraphicsConfig::s_shadow_buffer_width = 2048;
 int GraphicsConfig::s_shadow_buffer_height = 2048;
 int GraphicsConfig::s_shadow_buffer_samples = 1;
+int GraphicsConfig::s_shadow_pcf_multiplier = 5;
 		
 bool GraphicsConfig::s_gamma_correction_enabled = false;
 float GraphicsConfig::s_gamma_correction_value = 2.2f;

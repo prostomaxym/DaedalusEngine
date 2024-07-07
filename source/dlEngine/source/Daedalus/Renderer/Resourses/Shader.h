@@ -10,27 +10,23 @@ namespace Daedalus {
 	class DAEDALUS_API Shader
 	{
 	public:
-		enum class InputType
-		{
-			PATH,
-			SOURCE,
-			BINARY
-		};
 		struct ShaderBinaryData
 		{
 			unsigned int format = 0;
 			int length = 0;
 			std::vector<unsigned char> binary;
 		};
-
 	public:
-		static std::shared_ptr<Shader> Create(const std::string& compiled_shader_path);
-		static std::shared_ptr<Shader> Create(const std::string& vert_code, const std::string& frag_code, InputType input_type = InputType::PATH);
+		static std::shared_ptr<Shader> CreateFromCode(const std::string& code);
+		static std::shared_ptr<Shader> CreateFromFile(const std::filesystem::path& file_path);
+		static std::shared_ptr<Shader> CreateFromBinary(const std::filesystem::path& binary_path);
+
+		static std::string GetSourceFileExtention();
+		static std::string GetBinaryFileExtention();
 
 		virtual ~Shader() = default;
 
-		virtual void SaveBinary(const std::string& name) const = 0;
-		virtual void LoadBinary(const ShaderBinaryData& data) = 0;
+		virtual void SaveBinary(const std::filesystem::path& name) const = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;

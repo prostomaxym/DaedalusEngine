@@ -50,6 +50,11 @@ void RenderCommand::UnbindTextureSlot(uint32_t slot_num)
 	s_RendererAPI->UnbindTextureSlot(slot_num);
 }
 
+int RenderCommand::GetMaxTextureSize()
+{
+	return s_RendererAPI->GetMaxTextureSize();
+}
+
 void RenderCommand::SetLineWidth(float width)
 {
 	s_RendererAPI->SetLineWidth(width);

@@ -13,9 +13,11 @@ using namespace Daedalus;
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data;
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
+std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
-std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
+std::shared_ptr<Framebuffer> Renderer::s_framebuffer_static_shadows = nullptr;
+std::shared_ptr<Framebuffer> Renderer::s_framebuffer_dynamic_shadows = nullptr;
 Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_light_projection_view = glm::mat4();
 
@@ -30,8 +32,10 @@ void Renderer::Init()
 	specs.height = GraphicsConfig::GetShadowBufferHeight();
 	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+	specs.layers = 1;
 
-	s_framebuffer_shadows = Framebuffer::Create(specs);
+	s_framebuffer_static_shadows = Framebuffer::Create(specs);
+	s_framebuffer_dynamic_shadows = Framebuffer::Create(specs);
 }
 
 void Renderer::Shutdown()
@@ -200,7 +204,6 @@ void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, c
 {
 	shader->Bind();
 	shader->SetMat4(ShaderConstants::ShadowModel, transform);
-	shader->SetMat4(ShaderConstants::ShadowLightSpace, s_light_projection_view);
 
 	const auto& meshes = model->GetMeshes();
 
@@ -239,15 +242,53 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::SetLightProjectionView(const glm::mat4& proj_view)
+void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_space_SSBOs)
 {
-	s_light_projection_view = proj_view;
+	if (light_space_SSBOs.empty())
+	{
+		s_SSBO_light_space_matrices.reset();
+		return;
+	}
+
+	const auto SSBO_size_in_bytes = light_space_SSBOs.size() * sizeof(glm::mat4);
+	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 2, ShaderStorageBuffer::Type::Dynamic);
+	s_SSBO_light_space_matrices->SetData(light_space_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateShadowMap(const Shader* shader)
+void Renderer::UpdateStaticNumberOfShadowCasters(int number_of_shadow_casters)
 {
-	shader->Bind();
-	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
-	shader->SetInt(ShaderConstants::ShadowMap, 3);
-	shader->Unbind();
+	const auto tex_size = RenderCommand::GetMaxTextureSize();
+	FramebufferSpecification specs;
+	specs.width = tex_size;
+	specs.height = tex_size;
+	specs.samples = GraphicsConfig::GetShadowBufferSamples();
+	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+	specs.layers = number_of_shadow_casters;
+
+	s_framebuffer_static_shadows = Framebuffer::Create(specs);
+}
+
+void Renderer::UpdateDynamicNumberOfShadowCasters(int number_of_shadow_casters)
+{
+	FramebufferSpecification specs;
+	specs.width = GraphicsConfig::GetShadowBufferWidth();
+	specs.height = GraphicsConfig::GetShadowBufferHeight();
+	specs.samples = GraphicsConfig::GetShadowBufferSamples();
+	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+	specs.layers = number_of_shadow_casters;
+
+	s_framebuffer_dynamic_shadows = Framebuffer::Create(specs);
+}
+
+void Renderer::BindShadowMap(const Shader* color_pass_shader)
+{
+	color_pass_shader->Bind();
+
+	Texture2D::BindTexture(s_framebuffer_static_shadows->GetDepthAttachmentID(), 3);
+	color_pass_shader->SetInt(ShaderConstants::StaticShadowMap, 3);
+
+	Texture2D::BindTexture(s_framebuffer_dynamic_shadows->GetDepthAttachmentID(), 4);
+	color_pass_shader->SetInt(ShaderConstants::DynamicShadowMap, 4);
+
+	color_pass_shader->Unbind();
 }

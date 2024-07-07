@@ -67,3 +67,32 @@ BoundingSphere BoundingSphere::GetTransformedSphere(const glm::mat4& matrix) con
 
 	return BoundingSphere(new_center, radius * max_scale);
 }
+
+BoundingSphere BoundingSphere::CalculateCommonBoundingSphere(const std::vector<BoundingSphere>& spheres)
+{
+	if (spheres.empty())
+	{
+		return BoundingSphere();
+	}
+
+	// Compute the centroid of the bounding sphere centers
+	glm::vec3 centroid(0.f);
+	for (const auto& sphere : spheres)
+	{
+		centroid += sphere.position;
+	}
+	centroid /= static_cast<float>(spheres.size());
+
+	// Compute the radius
+	float max_distance = 0.f;
+	for (const auto& sphere : spheres)
+	{
+		float distance = glm::distance(centroid, sphere.position) + sphere.radius;
+		if (distance > max_distance)
+		{
+			max_distance = distance;
+		}
+	}
+
+	return BoundingSphere(centroid, max_distance);
+}

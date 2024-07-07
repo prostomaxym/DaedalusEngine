@@ -2,6 +2,7 @@
 
 #include "DirectionalLightSource.h"
 #include "Daedalus/Renderer/API/RenderConstants.h"
+#include "Geometry.h"
 
 using namespace Daedalus;
 
@@ -15,13 +16,17 @@ DirectionalLightSource::DirectionalLightSource(
     m_params(0, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
 {}
 
-const LightSSBO& DirectionalLightSource::GetShaderSSBO(const glm::mat4& proj, const glm::mat4& view)
+void DirectionalLightSource::UpdateSSBOForViewFrustum(const glm::mat4& proj, const glm::mat4& view)
 {
 	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
-    return m_params;
 }
 
-glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view)
+void DirectionalLightSource::UpdateSSBOForSceneFrustum(const BoundingSphere& sphere)
+{
+	m_params.proj_view = CalculateLightMatrixForSphere(sphere);
+}
+
+glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const
 {
 	const auto inv = glm::inverse(camera_proj * camera_view);
 
@@ -111,5 +116,21 @@ glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4
 		maxZ *= zMult;
 
 	const glm::mat4 light_projection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+	return light_projection * light_view;
+}
+
+glm::mat4 DirectionalLightSource::CalculateLightMatrixForSphere(const BoundingSphere& sphere) const
+{
+	const auto light_view = glm::lookAt(
+		sphere.position + m_params.direction,
+		sphere.position,
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	const glm::mat4 light_projection = glm::ortho(
+		sphere.position.x - sphere.radius, sphere.position.x + sphere.radius,
+		sphere.position.y - sphere.radius, sphere.position.y + sphere.radius,
+		sphere.position.z - sphere.radius, sphere.position.z + sphere.radius);
+
 	return light_projection * light_view;
 }

@@ -14,16 +14,24 @@ namespace Daedalus
     public:
         RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}
 
-        void UpdateStaticLighting();
-        void UpdateDynamicLighting();
+        void OnStartRuntime() const;
+        void OnUpdateRuntime(DeltaTime dt) const;
 
-        void OnUpdateRuntime(DeltaTime dt);
         void SetCamera(PerspectiveCamera* camera) { m_camera = camera; }
         void SetViewportSize(int width, int height) { m_viewport_width = width; m_viewport_height = height;}
 
     private:
-        void DoLightPass();
-        void DoColorPass();
+        void DoStaticLightPass() const;
+        void DoDynamicLightPass() const;
+        void DoColorPass() const;
+
+        void UpdateStaticLighting() const;
+        void UpdateDynamicLighting() const;
+
+        int CountStaticShadowCasters() const;
+        int CountDynamicShadowCasters() const;
+
+        BoundingSphere CaltulateSceneBoundingSphere() const;
 
         entt::registry& m_registry;
         PerspectiveCamera* m_camera { nullptr };

@@ -8,13 +8,11 @@ project(
     )
 
 set(PROJECT_FILES
-    Cubemap.vert
-    Cubemap.frag
-    Shadow.vert
-    Shadow.frag
-    Standard.vert
-    Standard.frag
+    Cubemap.glsl
+    Shadow.glsl
+    Standard.glsl
 )
+
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_custom_target(${PROJECT_NAME} SOURCES ${PROJECT_FILES})

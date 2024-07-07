@@ -45,6 +45,8 @@ namespace Daedalus {
 
 		virtual void UnbindTextureSlot(uint32_t slot_number) = 0;
 
+		virtual int GetMaxTextureSize() = 0;
+
 	private:
 		static API s_API;
 	};

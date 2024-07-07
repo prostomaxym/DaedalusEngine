@@ -18,7 +18,7 @@ void OpenGLShader::CreateFromCode(const std::string& code)
 
 	m_rendererID = OpenGLShaderCompiler::BuildFromCode(code);
 
-	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shader built from code" + code);
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shader built from code " + code);
 }
 
 void OpenGLShader::CreateFromFile(const std::filesystem::path& file_path)
@@ -28,7 +28,7 @@ void OpenGLShader::CreateFromFile(const std::filesystem::path& file_path)
 
 	m_rendererID = OpenGLShaderCompiler::BuildFromFile(file_path);
 
-	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shader built from source file" + file_path.string());
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shader built from source file " + file_path.string());
 }
 
 void OpenGLShader::CreateFromBinary(const std::filesystem::path& binary_path)
@@ -38,7 +38,7 @@ void OpenGLShader::CreateFromBinary(const std::filesystem::path& binary_path)
 
 	m_rendererID = OpenGLShaderCompiler::BuildFromBinary(binary_path);
 
-	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shaders built from binary file" + binary_path.string());
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shaders built from binary file " + binary_path.string());
 }
 
 OpenGLShader::~OpenGLShader()

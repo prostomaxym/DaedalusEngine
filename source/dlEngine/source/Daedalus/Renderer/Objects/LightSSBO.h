@@ -29,7 +29,7 @@ namespace Daedalus
         float outer_cutoff_angle = 60.f;
         int type = 0;
         int cast_shadows = 0;
-        int align5 = 0;
+        int shadow_map_index = -1;
 
 		void SetMaxDistance(float distance);
 	};

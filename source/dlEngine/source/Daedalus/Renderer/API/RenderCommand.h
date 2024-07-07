@@ -24,6 +24,8 @@ namespace Daedalus {
 
 		static void UnbindTextureSlot(uint32_t slot_num);
 
+		static int GetMaxTextureSize();
+
 	private:
 		static std::unique_ptr<RendererAPI> s_RendererAPI;
 	};

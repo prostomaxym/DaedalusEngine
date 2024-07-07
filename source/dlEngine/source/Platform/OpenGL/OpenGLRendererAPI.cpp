@@ -128,6 +128,14 @@ void OpenGLRendererAPI::UnbindTextureSlot(uint32_t slot_number)
 	}
 }
 
+int OpenGLRendererAPI::GetMaxTextureSize()
+{
+	int max_texture_size;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+
+	return max_texture_size;;
+}
+
 void OpenGLRendererAPI::ConfigLogging()
 {
 #ifdef DL_DEBUG_BUILD

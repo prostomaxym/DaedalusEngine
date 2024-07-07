@@ -25,6 +25,8 @@ namespace Daedalus {
 
 		void UnbindTextureSlot(uint32_t slot_number) override;
 
+		int GetMaxTextureSize() override;
+
 	private:
 		void ConfigLogging();
 	};

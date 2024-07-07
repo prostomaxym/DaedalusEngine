@@ -20,7 +20,9 @@ namespace Daedalus {
 
         BoundingSphere() = default;
         BoundingSphere(const glm::vec3& pos, float radius);
+
         BoundingSphere GetTransformedSphere(const glm::mat4& matrix) const;
+        static BoundingSphere CalculateCommonBoundingSphere(const std::vector<BoundingSphere>& spheres);
     };
 
     class Frustum

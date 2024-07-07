@@ -130,6 +130,7 @@ struct Light
     float cutoff_angle;
     float outer_cutoff_angle;
     int type; // 0 - directional, 1 - point, 2 - spot
+    bool cast_shadows;
     int shadowmap_index;
 };
 
@@ -239,7 +240,7 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
 
     float shadow = 1.0;
-    if (p_light.shadowmap_index >=0)
+    if (p_light.cast_shadows)
     {
         if (g_use_static_shadowmap)
             shadow = CalculateShadow(p_light, u_static_shadowmaps);

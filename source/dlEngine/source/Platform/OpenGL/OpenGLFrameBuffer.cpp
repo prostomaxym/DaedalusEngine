@@ -153,7 +153,7 @@ namespace {
 		}
 
 		if (multilayer)
-			glFramebufferTexture3D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, layers > 1), id, 0, 0);
+			glFramebufferTexture(GL_FRAMEBUFFER, attachmentType, id, 0);
 		else
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, layers > 1), id, 0);
 	}

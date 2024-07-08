@@ -157,9 +157,7 @@ layout (std430, binding = 1) buffer DynamicLightSSBO
 };
 
 uniform ObjectData u_object;
-uniform sampler2DArray u_static_shadowmaps;
-uniform sampler2DArray u_dynamic_shadowmaps;
-
+uniform sampler2DArray u_shadowmaps;
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
 vec3 g_ambient_tex = vec3(0.0, 0.0, 0.0);
@@ -170,7 +168,6 @@ vec3 g_view_pos = vec3(0.0, 0.0, 0.0);
 vec3 g_frag_pos = vec3(0.0, 0.0, 0.0);
 vec3 g_normal = vec3(0.0, 0.0, 0.0);
 float g_alpha_tex = 0;
-bool g_use_static_shadowmap = false;
 
 
 // ------------------------------------------------- General Functions ------------------------------------------------ //
@@ -221,7 +218,7 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
         {
             vec2 offset = vec2(x, y) * texel_size;
             float sampled_depth = BilinearInterpolation(shadow_map, proj_coords.xy + offset, p_light.shadowmap_index);
-            float visibility = current_depth - bias > sampled_depth ? 0.7 : 0.0;
+            float visibility = current_depth - bias > sampled_depth ? 0.8 : 0.0;
             shadow += visibility;
         }
     }
@@ -241,12 +238,7 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
 
     float shadow = 1.0;
     if (p_light.cast_shadows)
-    {
-        if (g_use_static_shadowmap)
-            shadow = CalculateShadow(p_light, u_static_shadowmaps);
-        else
-            shadow = CalculateShadow(p_light, u_dynamic_shadowmaps);
-    }
+        shadow = CalculateShadow(p_light, u_shadowmaps);
 
     return p_luminosity *
             (p_light.ambient * g_ambient_tex
@@ -316,7 +308,6 @@ void main()
     }
 
     vec3 light_sum = vec3(0.0);
-    g_use_static_shadowmap = true;
     for (int i = 0; i < ssbo_static_lights.length(); ++i)
     {
         switch(ssbo_static_lights[i].type)
@@ -327,7 +318,6 @@ void main()
         }
     }
 
-    g_use_static_shadowmap = false;
     for (int i = 0; i < ssbo_dynamic_lights.length(); ++i)
     {
         switch(ssbo_dynamic_lights[i].type)

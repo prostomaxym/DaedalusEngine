@@ -14,22 +14,21 @@ namespace Daedalus
     public:
         RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}
 
-        void OnStartRuntime() const;
+        void OnStartRuntime();
         void OnUpdateRuntime(DeltaTime dt) const;
 
         void SetCamera(PerspectiveCamera* camera) { m_camera = camera; }
         void SetViewportSize(int width, int height) { m_viewport_width = width; m_viewport_height = height;}
 
     private:
-        void DoStaticLightPass() const;
-        void DoDynamicLightPass() const;
+        void DoLightPass() const;
         void DoColorPass() const;
 
-        void UpdateStaticLighting() const;
+        void UpdateStaticLighting();
         void UpdateDynamicLighting() const;
+        void UpdateLightSpaceMatrices() const;
 
-        int CountStaticShadowCasters() const;
-        int CountDynamicShadowCasters() const;
+        int CountShadowCasters() const;
 
         BoundingSphere CalculateSceneBoundingSphere() const;
         AABB CalculateSceneBoundingAABB() const;
@@ -37,6 +36,8 @@ namespace Daedalus
         entt::registry& m_registry;
         PerspectiveCamera* m_camera { nullptr };
         Scene* m_scene { nullptr };
+
+        std::vector<glm::mat4> m_static_light_space;
 
         int m_viewport_width{ 0 };
 		int m_viewport_height{ 0 };

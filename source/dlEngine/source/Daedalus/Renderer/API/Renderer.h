@@ -46,10 +46,8 @@ namespace Daedalus {
 		static void UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_space_SSBOs);
 
-		static std::shared_ptr<Framebuffer> GetStaticShadowFramebuffer() { return s_framebuffer_static_shadows; }
-		static std::shared_ptr<Framebuffer> GetDynamicShadowFramebuffer() { return s_framebuffer_dynamic_shadows; }	
-		static void UpdateStaticNumberOfShadowCasters(int number_of_shadow_casters);
-		static void UpdateDynamicNumberOfShadowCasters(int number_of_shadow_casters);
+		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
+		static void UpdateNumberOfShadowCasters(int number_of_shadow_casters);
 		static void BindShadowMap(const Shader* color_pass_shader);
 
 	public:
@@ -63,8 +61,7 @@ namespace Daedalus {
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_static_lighting;
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_dynamic_lighting;
 
-		static std::shared_ptr<Framebuffer> s_framebuffer_static_shadows;
-		static std::shared_ptr<Framebuffer> s_framebuffer_dynamic_shadows;
+		static std::shared_ptr<Framebuffer> s_framebuffer_shadows;
 
 		static Frustum s_view_frustum;
 		static glm::mat4 s_light_projection_view;

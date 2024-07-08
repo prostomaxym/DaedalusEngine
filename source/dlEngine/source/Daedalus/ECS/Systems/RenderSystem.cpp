@@ -10,18 +10,10 @@
 
 using namespace Daedalus;
 
-void RenderSystem::OnStartRuntime() const
+void RenderSystem::OnStartRuntime()
 {
-	RenderCommand::SetClearColor({ 1.0f, 1.0f, 1.0f, 1.0 });
-	Renderer::BeginScene(*m_camera);
-
 	UpdateStaticLighting();
-	DoStaticLightPass();
-
-	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-	Renderer::BindShadowMap(standard_shader.get());
-
-	Renderer::EndScene();
+	Renderer::UpdateNumberOfShadowCasters(CountShadowCasters());
 }
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
@@ -30,52 +22,15 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	Renderer::BeginScene(*m_camera);
 
 	UpdateDynamicLighting();
-	DoDynamicLightPass();
+	DoLightPass();
 	DoColorPass();
 
 	Renderer::EndScene();
 }
 
-void RenderSystem::DoStaticLightPass() const
+void RenderSystem::DoLightPass() const
 {
-	Renderer::UpdateStaticNumberOfShadowCasters(CountStaticShadowCasters());
-
-	const auto shadow_fb = Renderer::GetStaticShadowFramebuffer();
-	shadow_fb->Bind();
-	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
-	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
-
-	const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
-
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (const auto e : dir_view)
-	{
-		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
-
-		if (!light_component.light.CastShadow() || light_component.is_dynamic)
-			continue;
-
-		const auto models_view = m_registry.view<RenderableObjectComponent>();
-		for (const auto e : models_view)
-		{
-			Entity entity = { e, m_scene };
-
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
-
-			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
-		}
-	}
-
-	shadow_fb->Unbind();
-}
-
-void RenderSystem::DoDynamicLightPass() const
-{
-	Renderer::UpdateDynamicNumberOfShadowCasters(CountDynamicShadowCasters());
-
-	const auto shadow_fb = Renderer::GetDynamicShadowFramebuffer();
+	const auto shadow_fb = Renderer::GetShadowFramebuffer();
 	shadow_fb->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
 	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
@@ -88,7 +43,7 @@ void RenderSystem::DoDynamicLightPass() const
 		Entity entity = { e, m_scene };
 		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
-		if (!light_component.light.CastShadow() || !light_component.is_dynamic)
+		if (!light_component.light.CastShadow())
 			continue;
 
 		const auto models_view = m_registry.view<RenderableObjectComponent>();
@@ -134,7 +89,7 @@ void RenderSystem::DoColorPass() const
 	}
 }
 
-int RenderSystem::CountStaticShadowCasters() const
+int RenderSystem::CountShadowCasters() const
 {
 	int counter = 0;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
@@ -143,23 +98,7 @@ int RenderSystem::CountStaticShadowCasters() const
 		Entity entity = { e, m_scene };
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
-		if (light_component.light.CastShadow() && !light_component.is_dynamic)
-			counter++;
-	}
-
-	return counter;
-}
-
-int RenderSystem::CountDynamicShadowCasters() const
-{
-	int counter = 0;
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (const auto e : dir_view)
-	{
-		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
-
-		if (light_component.light.CastShadow() && light_component.is_dynamic)
+		if (light_component.light.CastShadow())
 			counter++;
 	}
 
@@ -202,14 +141,12 @@ AABB RenderSystem::CalculateSceneBoundingAABB() const
 	return AABB::CalculateCommonBoundingAABB(spheres);
 }
 
-void RenderSystem::UpdateStaticLighting() const
+void RenderSystem::UpdateStaticLighting()
 {
 	const auto scene_aabb = CalculateSceneBoundingAABB();
-
+    m_static_light_space = std::vector<glm::mat4>();
 	std::vector<LightSSBO> light_SSBOs;
-	std::vector<glm::mat4> light_space_matrices_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	auto i = 0;
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
@@ -223,9 +160,8 @@ void RenderSystem::UpdateStaticLighting() const
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(i);
-			light_space_matrices_SSBOs.push_back(light.GetLightSpaceMatrix());
-			i++;
+			light.SetShadowMapIndex(m_static_light_space.size());
+			m_static_light_space.push_back(light.GetLightSpaceMatrix());
 		}
 
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
@@ -252,17 +188,15 @@ void RenderSystem::UpdateStaticLighting() const
 			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices_SSBOs);
 	Renderer::UpdateStaticLightSSBO(light_SSBOs);
 }
 
 void RenderSystem::UpdateDynamicLighting() const
 {
 	std::vector<LightSSBO> light_SSBOs;
-	std::vector<glm::mat4> light_space_matrices_SSBOs;
+	std::vector<glm::mat4> light_space_matrices = m_static_light_space;
 
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	auto i = 0;
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
@@ -276,9 +210,8 @@ void RenderSystem::UpdateDynamicLighting() const
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(i);
-			light_space_matrices_SSBOs.push_back(light.GetLightSpaceMatrix());
-			i++;
+			light.SetShadowMapIndex(light_space_matrices.size());
+			light_space_matrices.push_back(light.GetLightSpaceMatrix());
 		}
 			
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
@@ -304,6 +237,6 @@ void RenderSystem::UpdateDynamicLighting() const
 			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices_SSBOs);
+	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices);
 	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }

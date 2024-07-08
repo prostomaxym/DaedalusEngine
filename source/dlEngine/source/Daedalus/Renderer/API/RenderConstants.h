@@ -13,8 +13,7 @@ namespace Daedalus
 
 		constexpr auto SceneModel{ "u_object.model_mat" };
 		constexpr auto ShadowModel{ "u_model" };
-		constexpr auto StaticShadowMap{ "u_static_shadowmaps" };
-		constexpr auto DynamicShadowMap{ "u_dynamic_shadowmaps" };
+		constexpr auto ShadowMaps{ "u_shadowmaps" };
 
 		constexpr auto MaterialTexDiffuse{ "u_object.tex_diffuse" };
 		constexpr auto MaterialTexSpecular{ "u_object.tex_specular" };

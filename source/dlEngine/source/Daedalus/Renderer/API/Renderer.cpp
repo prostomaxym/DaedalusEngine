@@ -16,8 +16,7 @@ std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
-std::shared_ptr<Framebuffer> Renderer::s_framebuffer_static_shadows = nullptr;
-std::shared_ptr<Framebuffer> Renderer::s_framebuffer_dynamic_shadows = nullptr;
+std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
 Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_light_projection_view = glm::mat4();
 
@@ -34,8 +33,7 @@ void Renderer::Init()
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	specs.layers = -1;
 
-	s_framebuffer_static_shadows = Framebuffer::Create(specs);
-	s_framebuffer_dynamic_shadows = Framebuffer::Create(specs);
+	s_framebuffer_shadows = Framebuffer::Create(specs);
 }
 
 void Renderer::Shutdown()
@@ -255,7 +253,7 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 	s_SSBO_light_space_matrices->SetData(light_space_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateStaticNumberOfShadowCasters(int number_of_shadow_casters)
+void Renderer::UpdateNumberOfShadowCasters(int number_of_shadow_casters)
 {
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
@@ -264,30 +262,15 @@ void Renderer::UpdateStaticNumberOfShadowCasters(int number_of_shadow_casters)
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	specs.layers = number_of_shadow_casters;
 
-	s_framebuffer_static_shadows = Framebuffer::Create(specs);
-}
-
-void Renderer::UpdateDynamicNumberOfShadowCasters(int number_of_shadow_casters)
-{
-	FramebufferSpecification specs;
-	specs.width = GraphicsConfig::GetShadowBufferWidth();
-	specs.height = GraphicsConfig::GetShadowBufferHeight();
-	specs.samples = GraphicsConfig::GetShadowBufferSamples();
-	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = number_of_shadow_casters;
-
-	s_framebuffer_dynamic_shadows = Framebuffer::Create(specs);
+	s_framebuffer_shadows = Framebuffer::Create(specs);
 }
 
 void Renderer::BindShadowMap(const Shader* color_pass_shader)
 {
 	color_pass_shader->Bind();
 
-	Texture2D::BindTexture(s_framebuffer_static_shadows->GetDepthAttachmentID(), 3);
-	color_pass_shader->SetInt(ShaderConstants::StaticShadowMap, 3);
-
-	Texture2D::BindTexture(s_framebuffer_dynamic_shadows->GetDepthAttachmentID(), 4);
-	color_pass_shader->SetInt(ShaderConstants::DynamicShadowMap, 4);
+	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
+	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, 3);
 
 	color_pass_shader->Unbind();
 }

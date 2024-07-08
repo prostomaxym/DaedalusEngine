@@ -102,6 +102,16 @@ int RenderSystem::CountShadowCasters() const
 			counter++;
 	}
 
+	const auto spot_view = m_registry.view<SpotLightComponent>();
+	for (const auto e : spot_view)
+	{
+		Entity entity = { e, m_scene };
+		const auto& light_component = entity.GetComponent<SpotLightComponent>();
+
+		if (light_component.light.CastShadow())
+			counter++;
+	}
+
 	return counter;
 }
 
@@ -182,10 +192,19 @@ void RenderSystem::UpdateStaticLighting()
 	for (const auto e : spot_view)
 	{
 		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<SpotLightComponent>();
+		auto& light_component = entity.GetComponent<SpotLightComponent>();
+		auto& light = light_component.light;
 
-		if (!light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
+		if (light_component.is_dynamic)
+			continue;
+
+		light.UpdateSSBOForSceneSphere(scene_sphere);
+
+		if (light.CastShadow())
+		{
+			light.SetShadowMapIndex(m_static_light_space.size());
+			m_static_light_space.push_back(light.GetLightSpaceMatrix());
+		}
 	}
 
 	Renderer::UpdateStaticLightSSBO(light_SSBOs);
@@ -231,10 +250,21 @@ void RenderSystem::UpdateDynamicLighting() const
 	for (const auto e : spot_view)
 	{
 		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<SpotLightComponent>();
+		auto& light_component = entity.GetComponent<SpotLightComponent>();
+		auto& light = light_component.light;
 
-		if (light_component.is_dynamic)
-			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
+		if (!light_component.is_dynamic)
+			continue;
+
+		light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
+
+		if (light.CastShadow())
+		{
+			light.SetShadowMapIndex(light_space_matrices.size());
+			light_space_matrices.push_back(light.GetLightSpaceMatrix());
+		}
+
+		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
 	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices);

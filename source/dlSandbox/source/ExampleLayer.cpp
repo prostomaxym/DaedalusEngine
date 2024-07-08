@@ -78,11 +78,11 @@ void PrepareNukeScene(Scene& scene)
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
 	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
 	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 300.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 2.f, 300.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
-		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 1.1f, true);
+		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 0.1f, true);
 
 	//auto light_entity2 = scene.CreateEntity("Secondary Light");
 	//light_entity2.AddComponent<DirectionalLightComponent>(glm::vec3(-0.78f, 1.0f, 0.6f),

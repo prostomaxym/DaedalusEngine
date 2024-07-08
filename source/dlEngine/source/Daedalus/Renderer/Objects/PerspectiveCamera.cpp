@@ -44,7 +44,7 @@ glm::mat4 PerspectiveCamera::GetViewProjectionMatrix() const
 		   glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
 }
 
-glm::mat4 Daedalus::PerspectiveCamera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const
+glm::mat4 PerspectiveCamera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const
 {
 	glm::mat4 projection_matrix = glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_near, m_proj_props.z_far);
 	glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));

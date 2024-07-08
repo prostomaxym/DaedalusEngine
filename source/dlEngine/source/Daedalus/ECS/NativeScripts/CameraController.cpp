@@ -88,6 +88,6 @@ void CameraController::UpdateSpotlight()
 	{
 		m_spotlight_enabled = true;
 		m_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 500.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 2.f, 500.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
 	}
 }

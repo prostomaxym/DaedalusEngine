@@ -12,10 +12,8 @@ namespace Daedalus {
 
     protected:
         virtual void OnUpdate(DeltaTime dt) override;
-        void UpdateSpotlight();
 
        std::optional<float> xPrevious{ std::nullopt };
        std::optional<float> yPrevious{ std::nullopt };
-        bool m_spotlight_enabled{ true };
     };
 }

@@ -105,7 +105,7 @@ void PerspectiveCamera::ProcessMouseMovement(float xoffset, float yoffset, bool 
 
 void PerspectiveCamera::ProcessZoom(float offset)
 {
-	m_zoom = std::clamp(m_zoom + offset * m_zoom_speed, 1.f, 2.f);
+	m_zoom = std::clamp(m_zoom + offset * m_zoom_speed, 0.2f, 5.f);
 	m_proj_props.fov *= m_zoom;
 }
 

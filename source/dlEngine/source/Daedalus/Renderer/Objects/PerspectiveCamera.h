@@ -62,7 +62,10 @@ namespace Daedalus {
 		glm::mat4 GetViewProjectionMatrix() const;
 		glm::mat4 GetProjectionViewMatrix() const;
 		glm::mat4 GetProjectionViewMatrixWithoutTranslation(float rotate_angle) const;
+
 		glm::vec3 GetDirection() const { return m_front; }
+		glm::vec3 GetUp() const { return m_up; }
+		glm::vec3 GetPosition() const { return m_position; }
 		float GetZNear() const { return m_proj_props.z_near; }
 		float GetZFar() const { return m_proj_props.z_far; }
 
@@ -71,8 +74,6 @@ namespace Daedalus {
 		void SetMovementSpeed(float speed) { m_movement_speed = speed; }
 		void SetSensivitity(float senc) { m_mouse_sensitivity = senc; }
 		void SetZoomSpeed(float speed) { m_zoom_speed = speed; }
-
-		glm::vec3 GetPosition() const { return m_position; }
 
 		void ProcessKeyboard(CameraMovement direction, float delta_time);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);

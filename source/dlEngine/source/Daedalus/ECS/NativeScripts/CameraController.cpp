@@ -32,8 +32,6 @@ void CameraController::OnUpdate(DeltaTime ts)
 	if (Input::IsKeyHold(DL_KEY_C))
 		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
 
-	UpdateSpotlight();
-
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
 	if (!xPrevious.has_value() || !yPrevious.has_value())
@@ -72,22 +70,5 @@ void CameraController::OnUpdate(DeltaTime ts)
 			yoffset  = -yAxeRight * dt * 100.f;
 
 		camera.ProcessMouseMovement(xoffset, yoffset);
-	}
-}
-
-void CameraController::UpdateSpotlight()
-{
-	const auto key_pressed = Input::IsKeyReleased(DL_KEY_F);
-
-	if (key_pressed && m_spotlight_enabled)
-	{
-		m_spotlight_enabled = false;
-		m_entity.RemoveComponent<SpotLightComponent>();
-	}
-	else if (key_pressed && !m_spotlight_enabled)
-	{
-		m_spotlight_enabled = true;
-		m_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 2.f, 500.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
 	}
 }

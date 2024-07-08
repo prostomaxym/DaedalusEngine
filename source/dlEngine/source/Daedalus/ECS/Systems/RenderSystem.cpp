@@ -166,15 +166,14 @@ void RenderSystem::UpdateStaticLighting()
 		if (light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForSceneSphere(scene_sphere);
-
 		if (light.CastShadow())
 		{
+			light.UpdateSSBOForSceneSphere(scene_sphere);
 			light.SetShadowMapIndex(m_static_light_space.size());
 			m_static_light_space.push_back(light.GetLightSpaceMatrix());
 		}
 
-		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
+		light_SSBOs.emplace_back(light.GetShaderSSBO());
 	}
 
 	const auto point_view = m_registry.view<PointLightComponent>();
@@ -198,13 +197,14 @@ void RenderSystem::UpdateStaticLighting()
 		if (light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForSceneSphere(scene_sphere);
-
 		if (light.CastShadow())
 		{
+			light.UpdateSSBODefault();
 			light.SetShadowMapIndex(m_static_light_space.size());
 			m_static_light_space.push_back(light.GetLightSpaceMatrix());
 		}
+
+		light_SSBOs.emplace_back(light.GetShaderSSBO());
 	}
 
 	Renderer::UpdateStaticLightSSBO(light_SSBOs);
@@ -225,10 +225,9 @@ void RenderSystem::UpdateDynamicLighting() const
 		if (!light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
-
 		if (light.CastShadow())
 		{
+			light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
 			light.SetShadowMapIndex(light_space_matrices.size());
 			light_space_matrices.push_back(light.GetLightSpaceMatrix());
 		}
@@ -256,10 +255,9 @@ void RenderSystem::UpdateDynamicLighting() const
 		if (!light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
-
 		if (light.CastShadow())
 		{
+			light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
 			light.SetShadowMapIndex(light_space_matrices.size());
 			light_space_matrices.push_back(light.GetLightSpaceMatrix());
 		}

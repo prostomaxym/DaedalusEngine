@@ -24,7 +24,7 @@ void Renderer::Init()
 {
 	RenderCommand::Init();
 
-	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 24, 0, UniformBuffer::Type::Dynamic);
+	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 20, 0, UniformBuffer::Type::Dynamic);
 
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
@@ -79,12 +79,10 @@ void Renderer::BeginScene(const PerspectiveCamera& camera)
 	const auto& PV = camera.GetProjectionViewMatrix();
 	const auto& pos = camera.GetPosition();
 	const auto& z_near = camera.GetZNear();
-	const auto& z_far = camera.GetZFar() * 0.2f;
+	const auto& z_far = camera.GetZFar();
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 64);
-	s_UBO_scene_data->SetData(&z_near, sizeof(float), 76);
-	s_UBO_scene_data->SetData(&z_far, sizeof(float), 80);
 	s_view_frustum = camera.GetViewFrustum();
 }
 

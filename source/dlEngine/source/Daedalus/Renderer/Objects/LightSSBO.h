@@ -32,5 +32,6 @@ namespace Daedalus
         int shadow_map_index = -1;
 
 		void SetMaxDistance(float distance);
+		float GetMaxDistance() const;
 	};
 }

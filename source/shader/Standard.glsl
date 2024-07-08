@@ -35,8 +35,6 @@ struct Scene
 {
     mat4 projection_view;
     vec3 view_pos;
-    float z_near;
-    float z_far;
 };
 
 layout (std140, binding = 0) uniform SceneUBO
@@ -115,8 +113,6 @@ struct Scene
 {
     mat4 projection_view;
     vec3 view_pos;
-    float z_near;
-    float z_far;
 };
 
 struct Light 
@@ -180,12 +176,6 @@ vec3 ApplyGammaCorrection(vec3 color)
     return pow(color, vec3(1.0 / ubo_graphic_config.gamma_value));
 }
 
-float LinearizeDepth(float depth)
-{
-    float z = depth * 2.0 - 1.0; // Back to NDC 
-    return (2.0 * ubo_scene.z_near * ubo_scene.z_far) / (ubo_scene.z_far + ubo_scene.z_near - z * (ubo_scene.z_far - ubo_scene.z_near));
-}
-
 float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int layer) 
 {
     ivec2 texel_coord = ivec2(tex_coords * vec2(textureSize(shadow_map, 0)));
@@ -214,12 +204,7 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
     float current_depth = proj_coords.z;
     float bias = 0.005 * tan(acos(dot(fs_in.normals, p_light.direction)));
     bias = clamp(bias, 0.0, 0.01);
-
-    float test_depth = 0.0;
-    //if (p_light.type == 2)
-    //    test_depth = LinearizeDepth(current_depth) - bias;
-    //else
-        test_depth = current_depth - bias;
+    const float test_depth = current_depth - bias;
        
     float shadow = 0.0;
     const vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
@@ -232,9 +217,6 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
         {
             vec2 offset = vec2(x, y) * texel_size;
             float sampled_depth = BilinearInterpolation(shadow_map, proj_coords.xy + offset, p_light.shadowmap_index);
-
-           // if (p_light.type == 2)
-            //   sampled_depth = LinearizeDepth(sampled_depth);
 
             float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
             shadow += visibility;

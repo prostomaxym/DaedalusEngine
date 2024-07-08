@@ -77,8 +77,8 @@ void PrepareNukeScene(Scene& scene)
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
 	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
-	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 2.f, 300.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
+	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.0f, 0.0f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
@@ -95,7 +95,7 @@ void PrepareNukeScene(Scene& scene)
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
 	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
 	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), false, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, false);
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), true, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, true);
 	spot_entity.AddComponent<PointLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
 		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), false, 80.f, 13.f, false);
 

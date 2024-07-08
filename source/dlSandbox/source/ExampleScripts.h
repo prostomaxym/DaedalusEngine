@@ -110,10 +110,25 @@ namespace Daedalus
 	public:
 		MovingSpotLightScript(Entity entity) : NativeScript(entity) {}
 
+	private:
+		bool m_spotlight_enabled{ true };
 	protected:
 
 		virtual void OnUpdate(DeltaTime dt) override
 		{
+			const auto key_pressed = Input::IsKeyReleased(DL_KEY_F);
+
+			if (key_pressed && m_spotlight_enabled)
+			{
+				m_spotlight_enabled = false;
+				m_entity.RemoveComponent<SpotLightComponent>();
+			}
+			else if (key_pressed && !m_spotlight_enabled) {
+				m_spotlight_enabled = true;
+				m_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
+				glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
+			}
+
 			if (!m_entity.HasComponent<SpotLightComponent>())
 				return;
 

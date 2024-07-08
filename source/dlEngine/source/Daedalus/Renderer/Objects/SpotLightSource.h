@@ -18,8 +18,7 @@ namespace Daedalus
 			float light_power, float max_distance, glm::vec3 direction, float theta_angle, float outer_cutoff);
 
 		void UpdateSSBOForViewFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view);
-		void UpdateSSBOForSceneSphere(const BoundingSphere& sphere);
-		void UpdateSSBOForSceneAABB(const AABB& aabb);
+		void UpdateSSBODefault();
 
 		void SetCutoffAngle(float theta_angle) { m_params.cutoff_angle = theta_angle; }
 		void SetPosition(glm::vec3 position) { m_params.position = position; }
@@ -34,8 +33,7 @@ namespace Daedalus
 
 	private:
 		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const;
-		glm::mat4 CalculateLightMatrixForSphere(const BoundingSphere& sphere) const;
-		glm::mat4 CalculateLightMatrixForAABB(const AABB& aabb) const;
+		glm::mat4 CalculateLightMatrixDefault() const;
 
 		LightSSBO m_params{};
 		float m_max_distance{ 100.f };

@@ -4,14 +4,6 @@
 
 using namespace Daedalus;
 
-namespace 
-{
-    bool CheckIfSphereInPlane(const glm::vec4& plane, const BoundingSphere& sphere)
-    {
-        return glm::dot(plane, glm::vec4(sphere.position, 1.f)) > -sphere.radius;
-    }
-}
-
 Frustum Frustum::CalculateFrustum(const glm::mat4& pv)
 {
     Frustum frust;
@@ -71,9 +63,7 @@ BoundingSphere BoundingSphere::GetTransformedSphere(const glm::mat4& matrix) con
 BoundingSphere BoundingSphere::CalculateCommonBoundingSphere(const std::vector<BoundingSphere>& spheres)
 {
 	if (spheres.empty())
-	{
 		return BoundingSphere();
-	}
 
 	// Compute the centroid of the bounding sphere centers
 	glm::vec3 centroid(0.f);
@@ -94,5 +84,25 @@ BoundingSphere BoundingSphere::CalculateCommonBoundingSphere(const std::vector<B
 		}
 	}
 
-	return BoundingSphere(centroid, max_distance);
+	return { centroid, max_distance };
+}
+
+AABB AABB::CalculateCommonBoundingAABB(const std::vector<BoundingSphere>& spheres)
+{
+	if (spheres.empty())
+		return { glm::vec3(0.f), glm::vec3(0.f) };
+
+	glm::vec3 min(std::numeric_limits<float>::max());
+	glm::vec3 max(std::numeric_limits<float>::lowest());
+
+	for (const auto& sphere : spheres)
+	{
+		glm::vec3 sphereMin = sphere.position - glm::vec3(sphere.radius);
+		glm::vec3 sphereMax = sphere.position + glm::vec3(sphere.radius);
+
+		min = glm::min(min, sphereMin);
+		max = glm::max(max, sphereMax);
+	}
+
+	return { min, max };
 }

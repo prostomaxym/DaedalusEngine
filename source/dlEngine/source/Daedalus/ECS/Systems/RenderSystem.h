@@ -31,7 +31,8 @@ namespace Daedalus
         int CountStaticShadowCasters() const;
         int CountDynamicShadowCasters() const;
 
-        BoundingSphere CaltulateSceneBoundingSphere() const;
+        BoundingSphere CalculateSceneBoundingSphere() const;
+        AABB CalculateSceneBoundingAABB() const;
 
         entt::registry& m_registry;
         PerspectiveCamera* m_camera { nullptr };

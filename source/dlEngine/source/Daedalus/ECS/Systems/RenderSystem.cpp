@@ -18,6 +18,9 @@ void RenderSystem::OnStartRuntime() const
 	UpdateStaticLighting();
 	DoStaticLightPass();
 
+	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
+	Renderer::BindShadowMap(standard_shader.get());
+
 	Renderer::EndScene();
 }
 
@@ -40,7 +43,7 @@ void RenderSystem::DoStaticLightPass() const
 	const auto shadow_fb = Renderer::GetStaticShadowFramebuffer();
 	shadow_fb->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
-	RenderCommand::SetViewport(0, 0, RenderCommand::GetMaxTextureSize(), RenderCommand::GetMaxTextureSize());
+	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 
 	const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
 
@@ -138,7 +141,7 @@ int RenderSystem::CountStaticShadowCasters() const
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
+		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (light_component.light.CastShadow() && !light_component.is_dynamic)
 			counter++;
@@ -154,7 +157,7 @@ int RenderSystem::CountDynamicShadowCasters() const
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
+		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (light_component.light.CastShadow() && light_component.is_dynamic)
 			counter++;
@@ -163,7 +166,7 @@ int RenderSystem::CountDynamicShadowCasters() const
 	return counter;
 }
 
-BoundingSphere RenderSystem::CaltulateSceneBoundingSphere() const
+BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
 
@@ -181,9 +184,27 @@ BoundingSphere RenderSystem::CaltulateSceneBoundingSphere() const
 	return BoundingSphere::CalculateCommonBoundingSphere(spheres);
 }
 
+AABB RenderSystem::CalculateSceneBoundingAABB() const
+{
+	const auto models_view = m_registry.view<RenderableObjectComponent>();
+
+	std::vector<BoundingSphere> spheres;
+	spheres.reserve(models_view.size());
+
+	for (const auto e : models_view)
+	{
+		Entity entity = { e, m_scene };
+
+		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+		spheres.push_back(model_component.model.GetBoundingSphere());
+	}
+
+	return AABB::CalculateCommonBoundingAABB(spheres);
+}
+
 void RenderSystem::UpdateStaticLighting() const
 {
-	const auto scene_sphere = CaltulateSceneBoundingSphere();
+	const auto scene_aabb = CalculateSceneBoundingAABB();
 
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_space_matrices_SSBOs;
@@ -198,7 +219,7 @@ void RenderSystem::UpdateStaticLighting() const
 		if (light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForSceneFrustum(scene_sphere);
+		light.UpdateSSBOForSceneAABB(scene_aabb);
 
 		if (light.CastShadow())
 		{
@@ -231,6 +252,7 @@ void RenderSystem::UpdateStaticLighting() const
 			light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
+	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices_SSBOs);
 	Renderer::UpdateStaticLightSSBO(light_SSBOs);
 }
 

@@ -16,7 +16,8 @@ namespace Daedalus
 		DirectionalLightSource(glm::vec3 light_direction, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadow, float light_power);
 
 		void UpdateSSBOForViewFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view);
-		void UpdateSSBOForSceneFrustum(const BoundingSphere& sphere);
+		void UpdateSSBOForSceneSphere(const BoundingSphere& sphere);
+		void UpdateSSBOForSceneAABB(const AABB& aabb);
 
 		void SetDirection(glm::vec3 direction) { m_params.position = direction; }
 		void SetPower(float lpower) { m_params.power = lpower; }
@@ -29,6 +30,7 @@ namespace Daedalus
 	private:
 		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const;
 		glm::mat4 CalculateLightMatrixForSphere(const BoundingSphere& sphere) const;
+		glm::mat4 CalculateLightMatrixForAABB(const AABB& aabb) const;
 
 		LightSSBO m_params{};
 	};

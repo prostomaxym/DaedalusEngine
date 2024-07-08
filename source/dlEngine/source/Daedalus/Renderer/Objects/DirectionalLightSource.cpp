@@ -21,9 +21,14 @@ void DirectionalLightSource::UpdateSSBOForViewFrustum(const glm::mat4& proj, con
 	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
 }
 
-void DirectionalLightSource::UpdateSSBOForSceneFrustum(const BoundingSphere& sphere)
+void DirectionalLightSource::UpdateSSBOForSceneSphere(const BoundingSphere& sphere)
 {
 	m_params.proj_view = CalculateLightMatrixForSphere(sphere);
+}
+
+void DirectionalLightSource::UpdateSSBOForSceneAABB(const AABB& aabb)
+{
+	m_params.proj_view = CalculateLightMatrixForAABB(aabb);
 }
 
 glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const
@@ -131,6 +136,24 @@ glm::mat4 DirectionalLightSource::CalculateLightMatrixForSphere(const BoundingSp
 		sphere.position.x - sphere.radius, sphere.position.x + sphere.radius,
 		sphere.position.y - sphere.radius, sphere.position.y + sphere.radius,
 		sphere.position.z - sphere.radius, sphere.position.z + sphere.radius);
+
+	return light_projection * light_view;
+}
+
+glm::mat4 DirectionalLightSource::CalculateLightMatrixForAABB(const AABB& aabb) const
+{
+	const auto light_view = glm::lookAt(
+		aabb.center + m_params.direction,
+		aabb.center,
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	const auto min = aabb.GetMin();
+	const auto max = aabb.GetMax();
+	const glm::mat4 light_projection = glm::ortho(
+		min.x, max.x,
+		min.y, max.y,
+		min.z, max.z);
 
 	return light_projection * light_view;
 }

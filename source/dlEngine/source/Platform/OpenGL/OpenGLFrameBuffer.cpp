@@ -7,7 +7,7 @@ using namespace Daedalus;
 
 namespace {
 
-	static GLint GetMaxTextureSize()
+	GLint GetMaxTextureSize()
 	{
 		GLint max_texture_size;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
@@ -15,7 +15,7 @@ namespace {
 		return max_texture_size;
 	}
 	
-	static GLenum TextureTarget(bool multisampled, bool multilayer)
+	GLenum TextureTarget(bool multisampled, bool multilayer)
 	{
 		GLenum tex_type;
 		if (multisampled)
@@ -45,20 +45,20 @@ namespace {
 		return tex_type;
 	}
 
-	static void CreateTextures(bool multisampled, bool multilayer, uint32_t* outID, uint32_t count)
+	void CreateTextures(bool multisampled, bool multilayer, uint32_t* outID, uint32_t count)
 	{
 		glCreateTextures(TextureTarget(multisampled, multilayer), count, outID);
 	}
 
-	static void BindTexture(bool multisampled, bool multilayer, uint32_t id)
+	void BindTexture(bool multisampled, bool multilayer, uint32_t id)
 	{
 		glBindTexture(TextureTarget(multisampled, multilayer), id);
 	}
 
-	static void AttachColorTexture(uint32_t id, int samples, int layers, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
+	void AttachColorTexture(uint32_t id, int samples, int layers, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
 	{
 		bool multisampled = samples > 1;
-		bool multilayer = layers > 1;
+		bool multilayer = layers > 0;
 
 		if (multisampled && multilayer)
 		{
@@ -99,15 +99,15 @@ namespace {
 		}
 
 		if (multilayer)
-			glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, layers > 1), id, 0, 0);
+			glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, true), id, 0, 0);
 		else
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, layers > 1), id, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, false), id, 0);
 	}
 
-	static void AttachDepthTexture(uint32_t id, int samples, int layers, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
+	void AttachDepthTexture(uint32_t id, int samples, int layers, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height)
 	{
 		bool multisampled = samples > 1;
-		bool multilayer = layers > 1;
+		bool multilayer = layers > 0;
 		if (multisampled && multilayer)
 		{
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, format, width, height, GL_FALSE);
@@ -155,7 +155,7 @@ namespace {
 		if (multilayer)
 			glFramebufferTexture(GL_FRAMEBUFFER, attachmentType, id, 0);
 		else
-			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, layers > 1), id, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, false), id, 0);
 	}
 
 	static bool IsDepthFormat(FramebufferTextureFormat format)
@@ -227,7 +227,7 @@ void OpenGLFramebuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 
 	bool multisample = m_specification.samples > 1;
-	bool multilayer = m_specification.layers > 1;
+	bool multilayer = m_specification.layers > 0;
 
 	// Attachments
 	if (m_color_attachment_specifications.size())

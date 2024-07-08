@@ -32,7 +32,7 @@ void Renderer::Init()
 	specs.height = GraphicsConfig::GetShadowBufferHeight();
 	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = 1;
+	specs.layers = -1;
 
 	s_framebuffer_static_shadows = Framebuffer::Create(specs);
 	s_framebuffer_dynamic_shadows = Framebuffer::Create(specs);
@@ -257,10 +257,9 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 
 void Renderer::UpdateStaticNumberOfShadowCasters(int number_of_shadow_casters)
 {
-	const auto tex_size = RenderCommand::GetMaxTextureSize();
 	FramebufferSpecification specs;
-	specs.width = tex_size;
-	specs.height = tex_size;
+	specs.width = GraphicsConfig::GetShadowBufferWidth();
+	specs.height = GraphicsConfig::GetShadowBufferHeight();
 	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	specs.layers = number_of_shadow_casters;

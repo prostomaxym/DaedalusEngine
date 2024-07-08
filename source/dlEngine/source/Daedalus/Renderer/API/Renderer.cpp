@@ -66,24 +66,14 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	RenderCommand::SetViewport(0, 0, width, height);
 }
 
-void Renderer::BeginScene(const OrthographicCamera& camera)
+void Renderer::BeginScene(const Camera* camera)
 {
-	const auto& VP = camera.GetViewProjectionMatrix();
-	const auto& pos = camera.GetPosition();
-	s_UBO_scene_data->SetData(&VP, sizeof(float) * 16, 0);
-	s_UBO_scene_data->SetData(&pos, sizeof(float) * 4, 64);
-}
-
-void Renderer::BeginScene(const PerspectiveCamera& camera)
-{
-	const auto& PV = camera.GetProjectionViewMatrix();
-	const auto& pos = camera.GetPosition();
-	const auto& z_near = camera.GetZNear();
-	const auto& z_far = camera.GetZFar();
+	const auto& PV = camera->GetProjectionViewMatrix();
+	const auto& pos = camera->GetPosition();
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 64);
-	s_view_frustum = camera.GetViewFrustum();
+	s_view_frustum = camera->GetViewFrustum();
 }
 
 void Renderer::EndScene()

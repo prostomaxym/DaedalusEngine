@@ -19,7 +19,7 @@ void RenderSystem::OnStartRuntime()
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 {
 	RenderCommand::SetClearColor({ 1.0f, 1.0f, 1.0f, 1.0 });
-	Renderer::BeginScene(*m_camera);
+	Renderer::BeginScene(m_camera);
 
 	UpdateDynamicLighting();
 	DoLightPass();
@@ -85,7 +85,7 @@ void RenderSystem::DoColorPass() const
 		Entity entity = { e, m_scene };
 
 		const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
-		Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
+		//Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
 	}
 }
 

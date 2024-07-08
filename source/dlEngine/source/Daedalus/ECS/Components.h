@@ -6,6 +6,7 @@
 #include "Daedalus/Renderer/Objects/PointLightSource.h"
 #include "Daedalus/Renderer/Objects/SpotLightSource.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
+#include "Daedalus/Renderer/Objects/OrthographicCamera.h"
 #include "Daedalus/Renderer/Resourses/Model.h"
 #include "Daedalus/Renderer/Resourses/Shader.h"
 
@@ -84,12 +85,15 @@ namespace Daedalus
 
 	struct CameraComponent
 	{
-		PerspectiveCamera camera;
+		std::unique_ptr<Camera> camera;
 
 		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps()) :
-			camera(proj_props, pos_props) {}
+
+		explicit CameraComponent(CameraProjectionProps proj_props = CameraProjectionProps(), CameraPositionProps pos_props = CameraPositionProps()) :
+			camera(std::make_unique<PerspectiveCamera>(proj_props, pos_props)) {}
+
+		CameraComponent(float left, float right, float bottom, float top, float front, float back, CameraPositionProps pos_props = CameraPositionProps()) :
+			camera(std::make_unique<OrthographicCamera>(left, right, bottom, top, front, back, pos_props)) {}
 	};
 
 	struct DirectionalLightComponent

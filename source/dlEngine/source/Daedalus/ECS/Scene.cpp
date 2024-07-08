@@ -98,7 +98,7 @@ void Scene::PrepareScene()
 {
     const auto& wnd = Application::GetInstance()->GetWindow();
     m_render_system.SetViewportSize(wnd.GetWidth(), wnd.GetHeight());
-    m_render_system.SetCamera(&FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera);
+    m_render_system.SetCamera(FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera.get());
 	m_render_system.OnStartRuntime();
 }
 

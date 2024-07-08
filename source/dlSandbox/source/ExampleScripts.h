@@ -30,8 +30,8 @@ namespace Daedalus
 
 		virtual void OnUpdate(DeltaTime dt) override
 		{
-			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
-			const auto pos = camera.GetPosition();
+			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+			const auto pos = camera->GetPosition();
 			const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
 			Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
 		}
@@ -132,10 +132,10 @@ namespace Daedalus
 			if (!m_entity.HasComponent<SpotLightComponent>())
 				return;
 
-			auto& camera = m_entity.GetComponent<CameraComponent>().camera;
+			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 			auto& light = m_entity.GetComponent<SpotLightComponent>().light;
-			light.SetPosition(camera.GetPosition());
-			light.SetDirection(camera.GetDirection());
+			light.SetPosition(camera->GetPosition());
+			light.SetDirection(camera->GetDirection());
 		}
 	};
 }

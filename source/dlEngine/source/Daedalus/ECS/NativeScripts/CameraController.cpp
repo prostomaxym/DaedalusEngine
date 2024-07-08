@@ -7,30 +7,30 @@ using namespace Daedalus;
 
 void CameraController::OnUpdate(DeltaTime ts)
 {
-	auto& camera = m_entity.GetComponent<CameraComponent>().camera;
+	auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 
 	const auto dt = ts.GetSeconds();
 
 	if (Input::IsKeyHold(DL_KEY_W))
-		camera.ProcessKeyboard(CameraMovement::FORWARD, dt);
+		camera->ProcessKeyboard(CameraMovement::FORWARD, dt);
 
 	if (Input::IsKeyHold(DL_KEY_S))
-		camera.ProcessKeyboard(CameraMovement::BACKWARD, dt);
+		camera->ProcessKeyboard(CameraMovement::BACKWARD, dt);
 
 	if (Input::IsKeyHold(DL_KEY_A))
-		camera.ProcessKeyboard(CameraMovement::LEFT, dt);
+		camera->ProcessKeyboard(CameraMovement::LEFT, dt);
 
 	if (Input::IsKeyHold(DL_KEY_D))
-		camera.ProcessKeyboard(CameraMovement::RIGHT, dt);
+		camera->ProcessKeyboard(CameraMovement::RIGHT, dt);
 
 	if (Input::IsKeyHold(DL_KEY_SPACE))
-		camera.ProcessKeyboard(CameraMovement::UP, dt);
+		camera->ProcessKeyboard(CameraMovement::UP, dt);
 
 	if (Input::IsKeyHold(DL_KEY_C))
-		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
+		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
 
 	if (Input::IsKeyHold(DL_KEY_C))
-		camera.ProcessKeyboard(CameraMovement::DOWN, dt);
+		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
@@ -46,7 +46,7 @@ void CameraController::OnUpdate(DeltaTime ts)
 	xPrevious = xCurrent;
 	yPrevious = yCurrent;
 
-	camera.ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
+	camera->ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
 	//TODO: add zoom
 
 	if (Input::IsGamepadInputEnabled())
@@ -54,10 +54,10 @@ void CameraController::OnUpdate(DeltaTime ts)
 		const auto [xAxeLeft, yAxeLeft] = Input::GetStickPos(Input::StickType::Left);
 
 		if (yAxeLeft != 0.f)
-			camera.MoveCamera(CameraMovement::FORWARD, -yAxeLeft * dt * 10.f);
+			camera->MoveCamera(CameraMovement::FORWARD, -yAxeLeft * dt * 10.f);
 
 		if (xAxeLeft != 0.f)
-			camera.MoveCamera(CameraMovement::RIGHT, xAxeLeft * dt * 10.f);
+			camera->MoveCamera(CameraMovement::RIGHT, xAxeLeft * dt * 10.f);
 
 		const auto [xAxeRight, yAxeRight] = Input::GetStickPos(Input::StickType::Right);
 
@@ -69,6 +69,6 @@ void CameraController::OnUpdate(DeltaTime ts)
 		if (yAxeRight != 0.f)
 			yoffset  = -yAxeRight * dt * 100.f;
 
-		camera.ProcessMouseMovement(xoffset, yoffset);
+		camera->ProcessMouseMovement(xoffset, yoffset);
 	}
 }

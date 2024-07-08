@@ -8,8 +8,7 @@
 #include "Daedalus/Renderer/Objects/Cubemap.h"
 #include "Daedalus/Renderer/Objects/Geometry.h"
 #include "Daedalus/Renderer/Objects/LightSource.h"
-#include "Daedalus/Renderer/Objects/OrthographicCamera.h"
-#include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
+#include "Daedalus/Renderer/Objects/Camera.h"
 #include "Daedalus/Renderer/Primitives/FrameBuffer.h"
 #include "Daedalus/Renderer/Primitives/ShaderStorageBuffer.h"
 #include "Daedalus/Renderer/Primitives/UniformBuffer.h"
@@ -32,8 +31,7 @@ namespace Daedalus {
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
-		static void BeginScene(const OrthographicCamera& camera);
-		static void BeginScene(const PerspectiveCamera& camera);
+		static void BeginScene(const Camera* camera);
 		static void EndScene();
 
 		static void Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform = glm::mat4(1.0f));

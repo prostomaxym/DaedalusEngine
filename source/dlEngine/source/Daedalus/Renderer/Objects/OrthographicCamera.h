@@ -1,36 +1,29 @@
 #pragma once
 
+#include "Camera.h"
+
 #include <glm/glm.hpp>
 
 namespace Daedalus {
 
-class OrthographicCamera
+class OrthographicCamera : public Camera
 {
 public:
-	OrthographicCamera(float left, float right, float bottom, float top);
+	OrthographicCamera(float left, float right, float bottom, float top, float front, float back,
+		CameraPositionProps pos_props = CameraPositionProps());
 
-	void SetProjection(float left, float right, float bottom, float top);
+	void SetProjection(float left, float right, float bottom, float top, float front, float back);
 
-	const glm::vec3& GetPosition() const { return m_position; }
-	void SetPosition(const glm::vec3& position) { m_position = position; RecalculateViewMatrix(); }
+	glm::mat4 GetProjectionMatrix() const override;
+	glm::mat4 GetProjectionMatrix(float z_far_limit) const override;
 
-	float GetRotation() const { return m_rotation; }
-	void SetRotation(float rotation) { m_rotation = rotation; RecalculateViewMatrix(); }
-
-	const glm::mat4& GetProjectionMatrix() const { return m_projection_matrix; }
-	const glm::mat4& GetViewMatrix() const { return m_view_matrix; }
-	const glm::mat4& GetViewProjectionMatrix() const { return m_view_projection_matrix; }
-
-private:
-	void RecalculateViewMatrix();
-
-private:
-	glm::mat4 m_projection_matrix;
-	glm::mat4 m_view_matrix;
-	glm::mat4 m_view_projection_matrix;
-
-	glm::vec3 m_position = { 0.0f, 0.0f, 0.0f };
-	float m_rotation = 0.0f;
+protected:
+	float m_left{ -1.f };
+	float m_right{ 1.f };
+	float m_bottom{ -1.f };
+	float m_top{ 1.f };
+	float m_front{ -1.f };
+	float m_back{ 1.f };
 };
 
 }

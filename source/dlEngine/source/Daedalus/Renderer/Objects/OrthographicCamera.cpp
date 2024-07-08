@@ -5,23 +5,33 @@
 
 using namespace Daedalus;
 
-OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
-	: m_projection_matrix(glm::ortho(left, right, bottom, top, -1.0f, 1.0f)), m_view_matrix(1.0f)
+
+OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float front, float back,
+	CameraPositionProps pos_props)
+	: Camera(pos_props)
 {
-	m_view_projection_matrix = m_projection_matrix * m_view_matrix;
 }
 
-void OrthographicCamera::SetProjection(float left, float right, float bottom, float top)
+glm::mat4 OrthographicCamera::GetProjectionMatrix() const
 {
-	m_projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
-	m_view_projection_matrix = m_view_projection_matrix * m_view_matrix;
+	return glm::ortho(m_left, m_right,
+		m_bottom, m_top,
+		m_front, m_back);
 }
 
-void OrthographicCamera::RecalculateViewMatrix()
+glm::mat4 OrthographicCamera::GetProjectionMatrix(float z_far_limit) const
 {
-	glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_position) *
-		glm::rotate(glm::mat4(1.0f), glm::radians(m_rotation), glm::vec3(0, 0, 1));
+	return glm::ortho(m_left, m_right,
+		m_bottom, m_top,
+		m_front, m_back * z_far_limit);
+}
 
-	m_view_matrix = glm::inverse(transform);
-	m_view_projection_matrix = m_projection_matrix * m_view_matrix;
+void OrthographicCamera::SetProjection(float left, float right, float bottom, float top, float front, float back)
+{
+	m_left = left;
+	m_right = right;
+	m_bottom = bottom;
+	m_top = top;
+	m_front = top;
+	m_back = back;
 }

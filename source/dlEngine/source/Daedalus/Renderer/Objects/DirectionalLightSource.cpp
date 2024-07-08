@@ -13,13 +13,8 @@ DirectionalLightSource::DirectionalLightSource(
     , glm::vec3 specular_color
     , bool cast_shadow
     , float light_power) :
-    m_params(0, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
+    LightSource(LightSourceType::Directional, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
 {}
-
-void DirectionalLightSource::UpdateSSBOForViewFrustum(const glm::mat4& proj, const glm::mat4& view)
-{
-	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
-}
 
 void DirectionalLightSource::UpdateSSBOForSceneSphere(const BoundingSphere& sphere)
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Daedalus/Core/Core.h"
-#include "Daedalus/Renderer/Objects/LightSSBO.h"
+#include "Daedalus/Renderer/Objects/LightSource.h"
 #include "Geometry.h"
 
 #include <glm/glm.hpp>
@@ -9,29 +9,18 @@
 
 namespace Daedalus
 {
-	class DAEDALUS_API DirectionalLightSource
+	class DAEDALUS_API DirectionalLightSource : public LightSource
 	{
 	public:
 		DirectionalLightSource() = default;
 		DirectionalLightSource(glm::vec3 light_direction, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadow, float light_power);
 
-		void UpdateSSBOForViewFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view);
 		void UpdateSSBOForSceneSphere(const BoundingSphere& sphere);
 		void UpdateSSBOForSceneAABB(const AABB& aabb);
 
-		void SetDirection(glm::vec3 direction) { m_params.position = direction; }
-		void SetPower(float lpower) { m_params.power = lpower; }
-		void SetShadowMapIndex(int index) { m_params.shadow_map_index = index; }
-
-		const LightSSBO& GetShaderSSBO() const { return m_params; }
-		const glm::mat4 GetLightSpaceMatrix() const { return m_params.proj_view; }
-		bool CastShadow() const { return m_params.cast_shadows > 0; }
-
-	private:
-		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const;
+	protected:
+		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
 		glm::mat4 CalculateLightMatrixForSphere(const BoundingSphere& sphere) const;
 		glm::mat4 CalculateLightMatrixForAABB(const AABB& aabb) const;
-
-		LightSSBO m_params{};
 	};
 }

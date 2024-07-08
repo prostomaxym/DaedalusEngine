@@ -1,21 +1,19 @@
 #include "dlpch.h"
 
-#include "LightSSBO.h"
-
-#include <glm/gtc/type_ptr.hpp>
+#include "LightSource.h"
 
 using namespace Daedalus;
 
 namespace
 {
-    struct LightParams
+    struct AttentuationParams
     {
         float constant;
         float linear;
         float quadratic;
     };
 
-    std::vector<std::pair<float, LightParams>> lightTable =
+    std::vector<std::pair<float, AttentuationParams>> lightTable =
     {
         {7.f,    {1.f, 0.7f, 1.8f}},
         {13.f,   {1.f, 0.35f, 0.44f}},
@@ -31,7 +29,7 @@ namespace
         {3250.f, {1.f, 0.0014f, 0.000007f}}
     };
 
-    LightParams GetLightParams(float distance)
+    AttentuationParams GetLightParams(float distance)
     {
         // If the distance is smaller than the smallest entry, return the first parameters.
         if (distance <= lightTable[0].first)
@@ -56,10 +54,10 @@ namespace
         float d0 = lightTable[idx].first;
         float d1 = lightTable[idx + 1].first;
         float t = static_cast<float>(distance - d0) / (d1 - d0);
-        LightParams params0 = lightTable[idx].second;
-        LightParams params1 = lightTable[idx + 1].second;
+        AttentuationParams params0 = lightTable[idx].second;
+        AttentuationParams params1 = lightTable[idx + 1].second;
 
-        LightParams interpolatedParams;
+        AttentuationParams interpolatedParams;
         interpolatedParams.constant = params0.constant + t * (params1.constant - params0.constant);
         interpolatedParams.linear = params0.linear + t * (params1.linear - params0.linear);
         interpolatedParams.quadratic = params0.quadratic + t * (params1.quadratic - params0.quadratic);
@@ -68,7 +66,34 @@ namespace
     }
 }
 
-LightSSBO::LightSSBO(int light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, bool cast_shadows,
+LightSource::LightSource(LightSourceType type, glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color,
+    bool cast_shadows, float light_power, float max_distance, glm::vec3 direction, float cutoff, float outer_cutoff) :
+    m_params(type
+        , light_pos
+        , ambient_color
+        , diffuse_color
+        , specular_color
+        , cast_shadows
+        , light_power
+        , max_distance
+        , direction
+        , cutoff
+        , outer_cutoff)
+    , m_max_distance(max_distance)
+{
+}
+
+void LightSource::UpdateSSBOForViewFrustum(const glm::mat4& proj, const glm::mat4& view)
+{
+	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
+}
+
+void LightSource::SetMaxDistance(float distance)
+{
+	m_params.SetMaxDistance(distance);
+}
+
+LightSSBO::LightSSBO(LightSourceType light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, bool cast_shadows,
     float light_power, float max_distance, glm::vec3 dir, float cutoff, float outer_cutoff) :
     position(light_pos)
     , direction(dir)
@@ -100,9 +125,9 @@ void LightSSBO::SetMaxDistance(float distance)
 
 float LightSSBO::GetMaxDistance() const
 {
-    LightParams params {constant, linear, quadratic};
+    AttentuationParams params {constant, linear, quadratic};
     // Lambda function to calculate the Euclidean distance between two LightParams
-    auto calcDistance = [](const LightParams& a, const LightParams& b)
+    auto calcDistance = [](const AttentuationParams& a, const AttentuationParams& b)
     {
         return std::sqrt(
             (a.constant - b.constant) * (a.constant - b.constant) +

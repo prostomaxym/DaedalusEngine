@@ -7,7 +7,7 @@
 #include "Daedalus/Renderer/Resourses/ShaderLibrary.h"
 #include "Daedalus/Renderer/Objects/Cubemap.h"
 #include "Daedalus/Renderer/Objects/Geometry.h"
-#include "Daedalus/Renderer/Objects/LightSSBO.h"
+#include "Daedalus/Renderer/Objects/LightSource.h"
 #include "Daedalus/Renderer/Objects/OrthographicCamera.h"
 #include "Daedalus/Renderer/Objects/PerspectiveCamera.h"
 #include "Daedalus/Renderer/Primitives/FrameBuffer.h"

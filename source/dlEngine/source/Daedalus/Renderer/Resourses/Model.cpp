@@ -20,6 +20,7 @@ Model::Model(const std::filesystem::path& path, ModelParserFlags parser_flags)
 	}
 
 	ComputeBoundingSphere();
+	ComputeBoundingAABB();
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Model loaded: " + path.string());
 }
 
@@ -59,6 +60,46 @@ void Model::ComputeBoundingSphere()
 	}
 }
 
+void Model::ComputeBoundingAABB()
+{
+	if (m_meshes.empty())
+		return;
+
+	if (m_meshes.size() == 1)
+	{
+		m_bounding_aabb = m_meshes[0]->GetBoundingAABB();
+	}
+	else
+	{
+		float minX = std::numeric_limits<float>::max();
+		float minY = std::numeric_limits<float>::max();
+		float minZ = std::numeric_limits<float>::max();
+
+		float maxX = std::numeric_limits<float>::min();
+		float maxY = std::numeric_limits<float>::min();
+		float maxZ = std::numeric_limits<float>::min();
+
+		for (const auto& mesh : m_meshes)
+		{
+			const auto& aabb = mesh->GetBoundingAABB();
+			glm::vec3 aabbMin = aabb.GetMin();
+			glm::vec3 aabbMax = aabb.GetMax();
+
+			minX = std::min(minX, aabbMin.x);
+			minY = std::min(minY, aabbMin.y);
+			minZ = std::min(minZ, aabbMin.z);
+
+			maxX = std::max(maxX, aabbMax.x);
+			maxY = std::max(maxY, aabbMax.y);
+			maxZ = std::max(maxZ, aabbMax.z);
+		}
+
+		glm::vec3 minPoint(minX, minY, minZ);
+		glm::vec3 maxPoint(maxX, maxY, maxZ);
+		m_bounding_aabb = AABB(minPoint, maxPoint);
+	}
+}
+
 const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 {
 	return m_meshes;
@@ -72,6 +113,11 @@ const std::vector<Material>& Daedalus::Model::GetMaterials() const
 BoundingSphere Model::GetBoundingSphere() const
 {
 	return m_bounding_sphere;
+}
+
+AABB Model::GetBoundingAABB() const
+{
+	return m_bounding_aabb;
 }
 
 bool Model::IsVisible(const Frustum& frust, const glm::mat4& transform) const

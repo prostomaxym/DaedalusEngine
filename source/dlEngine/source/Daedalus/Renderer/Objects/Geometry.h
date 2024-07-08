@@ -30,6 +30,7 @@ namespace Daedalus {
         glm::vec3 center{ 0.f, 0.f, 0.f };
         glm::vec3 extents{ 0.f, 0.f, 0.f };
 
+        AABB() = default;
         AABB(const glm::vec3& min, const glm::vec3& max) :
             center{ (max + min) * 0.5f },
             extents{ max.x - center.x, max.y - center.y, max.z - center.z }
@@ -38,7 +39,7 @@ namespace Daedalus {
         glm::vec3 GetMin() const { return center - extents; }
         glm::vec3 GetMax() const { return center + extents; }
 
-        static AABB CalculateCommonBoundingAABB(const std::vector<BoundingSphere>& spheres);
+        static AABB CalculateCommonBoundingAABB(const std::vector<AABB>& aabbs);
     };
 
     class Frustum

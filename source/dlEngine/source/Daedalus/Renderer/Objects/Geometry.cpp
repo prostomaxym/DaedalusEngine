@@ -84,25 +84,25 @@ BoundingSphere BoundingSphere::CalculateCommonBoundingSphere(const std::vector<B
 		}
 	}
 
-	return { centroid, max_distance };
+	return BoundingSphere(centroid, max_distance);
 }
 
-AABB AABB::CalculateCommonBoundingAABB(const std::vector<BoundingSphere>& spheres)
+AABB AABB::CalculateCommonBoundingAABB(const std::vector<AABB>& aabbs)
 {
-	if (spheres.empty())
-		return { glm::vec3(0.f), glm::vec3(0.f) };
+	if (aabbs.empty())
+		return AABB(glm::vec3(0.f), glm::vec3(0.f));
 
 	glm::vec3 min(std::numeric_limits<float>::max());
 	glm::vec3 max(std::numeric_limits<float>::lowest());
 
-	for (const auto& sphere : spheres)
+	for (const auto& aabb : aabbs)
 	{
-		glm::vec3 sphereMin = sphere.position - glm::vec3(sphere.radius);
-		glm::vec3 sphereMax = sphere.position + glm::vec3(sphere.radius);
+		glm::vec3 aabbMin = aabb.GetMin();
+		glm::vec3 aabbMax = aabb.GetMax();
 
-		min = glm::min(min, sphereMin);
-		max = glm::max(max, sphereMax);
+		min = glm::min(min, aabbMin);
+		max = glm::max(max, aabbMax);
 	}
 
-	return { min, max };
+	return AABB(min, max);
 }

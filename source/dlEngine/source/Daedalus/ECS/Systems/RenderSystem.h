@@ -26,7 +26,6 @@ namespace Daedalus
 
         void UpdateStaticLighting();
         void UpdateDynamicLighting() const;
-        void UpdateLightSpaceMatrices() const;
 
         int CountShadowCasters() const;
 

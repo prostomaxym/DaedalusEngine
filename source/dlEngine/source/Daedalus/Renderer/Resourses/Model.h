@@ -69,17 +69,20 @@ namespace Daedalus {
 		const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
 		const std::vector<Material>& GetMaterials() const;
 		BoundingSphere GetBoundingSphere() const;
+		AABB GetBoundingAABB() const;
 
 		bool IsVisible(const Frustum& frust, const glm::mat4& transform) const;
 
 	private:
 		void ComputeBoundingSphere();
+		void ComputeBoundingAABB();
 
 	private:
 		std::vector<std::shared_ptr<Mesh>> m_meshes;
 		std::vector<Material> m_material_data;
 
 		BoundingSphere m_bounding_sphere;
+		AABB m_bounding_aabb;
 	};
 
 	class DAEDALUS_API AssimpParser

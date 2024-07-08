@@ -25,12 +25,14 @@ namespace Daedalus {
 		uint32_t GetIndexCount() const;
 		uint32_t GetMaterialIndex() const;
 		BoundingSphere GetBoundingSphere() const;
+		AABB GetBoundingAABB() const;
 
 		bool IsVisible(const Frustum& frust, const glm::mat4& transform) const;
 
 	private:
 		void CreateBuffers(const std::vector<Vertex>& p_vertices, const std::vector<uint32_t>& indices);
 		void ComputeBoundingSphere(const std::vector<Vertex>& vertices);
+		void ComputeBoundingAABB(const std::vector<Vertex>& vertices);
 
 	private:
 		const uint32_t m_vertex_count;
@@ -42,6 +44,6 @@ namespace Daedalus {
 		std::shared_ptr<IndexBuffer> m_EBO;
 
 		BoundingSphere m_bounding_sphere;
+		AABB m_bounding_aabb;
 	};
-
 }

@@ -127,23 +127,23 @@ AABB RenderSystem::CalculateSceneBoundingAABB() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
 
-	std::vector<BoundingSphere> spheres;
-	spheres.reserve(models_view.size());
+	std::vector<AABB> aabbs;
+	aabbs.reserve(models_view.size());
 
 	for (const auto e : models_view)
 	{
 		Entity entity = { e, m_scene };
 
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		spheres.push_back(model_component.model.GetBoundingSphere());
+		aabbs.push_back(model_component.model.GetBoundingAABB());
 	}
 
-	return AABB::CalculateCommonBoundingAABB(spheres);
+	return AABB::CalculateCommonBoundingAABB(aabbs);
 }
 
 void RenderSystem::UpdateStaticLighting()
 {
-	const auto scene_aabb = CalculateSceneBoundingAABB();
+	const auto scene_sphere = CalculateSceneBoundingSphere();
     m_static_light_space = std::vector<glm::mat4>();
 	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
@@ -156,7 +156,7 @@ void RenderSystem::UpdateStaticLighting()
 		if (light_component.is_dynamic)
 			continue;
 
-		light.UpdateSSBOForSceneAABB(scene_aabb);
+		light.UpdateSSBOForSceneSphere(scene_sphere);
 
 		if (light.CastShadow())
 		{

@@ -12,6 +12,7 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& ind
 {
 	CreateBuffers(vertices, indices);
 	ComputeBoundingSphere(vertices);
+	ComputeBoundingAABB(vertices);
 }
 
 void Mesh::Bind() const
@@ -42,6 +43,11 @@ uint32_t Mesh::GetMaterialIndex() const
 BoundingSphere Mesh::GetBoundingSphere() const
 {
 	return m_bounding_sphere;
+}
+
+AABB Mesh::GetBoundingAABB() const
+{
+	return m_bounding_aabb;
 }
 
 bool Mesh::IsVisible(const Frustum& frust, const glm::mat4& transform) const
@@ -127,4 +133,34 @@ void Mesh::ComputeBoundingSphere(const std::vector<Vertex>& vertices)
 	{
 		m_bounding_sphere.radius = std::max(m_bounding_sphere.radius, glm::distance(m_bounding_sphere.position, vertex.position));
 	}
+}
+
+void Mesh::ComputeBoundingAABB(const std::vector<Vertex>& vertices)
+{
+	if (vertices.empty())
+		return;
+
+	float minX = std::numeric_limits<float>::max();
+	float minY = std::numeric_limits<float>::max();
+	float minZ = std::numeric_limits<float>::max();
+
+	float maxX = std::numeric_limits<float>::min();
+	float maxY = std::numeric_limits<float>::min();
+	float maxZ = std::numeric_limits<float>::min();
+
+	for (const auto& vertex : vertices)
+	{
+		const auto& pos = vertex.position;
+		minX = std::min(minX, pos.x);
+		minY = std::min(minY, pos.y);
+		minZ = std::min(minZ, pos.z);
+
+		maxX = std::max(maxX, pos.x);
+		maxY = std::max(maxY, pos.y);
+		maxZ = std::max(maxZ, pos.z);
+	}
+
+	glm::vec3 minPoint(minX, minY, minZ);
+	glm::vec3 maxPoint(maxX, maxY, maxZ);
+	m_bounding_aabb = AABB(minPoint, maxPoint);
 }

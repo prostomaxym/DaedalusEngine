@@ -75,35 +75,35 @@ glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4
 	constexpr float yMult = 1.2f;
 	constexpr float zMult = 1.2f;
 
-	if (minX < 0)
-		minX *= xMult;
-	else
-		minX /= xMult;
+	//if (minX < 0)
+	//	minX *= xMult;
+	//else
+	//	minX /= xMult;
 
-	if (maxX < 0)
-		maxX /= xMult;
-	else
-		maxX *= xMult;
+	//if (maxX < 0)
+	//	maxX /= xMult;
+	//else
+	//	maxX *= xMult;
 
-	if (minY < 0)
-		minY *= yMult;
-	else
-		minY /= yMult;
+	//if (minY < 0)
+	//	minY *= yMult;
+	//else
+	//	minY /= yMult;
 
-	if (maxY < 0)
-		maxY /= yMult;
-	else
-		maxY *= yMult;
+	//if (maxY < 0)
+	//	maxY /= yMult;
+	//else
+	//	maxY *= yMult;
 
-	if (minZ < 0)
-		minZ *= zMult;
-	else
-		minZ /= zMult;
+	//if (minZ < 0)
+	//	minZ *= zMult;
+	//else
+	//	minZ /= zMult;
 
-	if (maxZ < 0)
-		maxZ /= zMult;
-	else
-		maxZ *= zMult;
+	//if (maxZ < 0)
+	//	maxZ /= zMult;
+	//else
+	//	maxZ *= zMult;
 
 	const glm::mat4 light_projection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
 	return light_projection * light_view;

@@ -20,7 +20,7 @@ glm::mat4 PerspectiveCamera::GetProjectionMatrix(float z_far_limit) const
 
 glm::mat4 PerspectiveCamera::GetProjectionMatrix(float z_close_limit, float z_far_limit) const
 {
-	return glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, m_proj_props.z_far * z_close_limit, m_proj_props.z_far * z_far_limit);
+	return glm::perspective(glm::radians(m_proj_props.fov), m_proj_props.aspect_ratio, std::max(m_proj_props.z_far * z_close_limit, m_proj_props.z_near), m_proj_props.z_far * z_far_limit);
 }
 
 glm::vec3 PerspectiveCamera::GetCascadeDistances(float perc_low, float perc_mid, float perc_high) const

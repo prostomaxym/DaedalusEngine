@@ -39,6 +39,6 @@ namespace Daedalus
 
 	namespace RendererConstants {
 		constexpr auto NumberOfShadowCascades = 3;
-		constexpr glm::vec3 CascadePercents = { 0.1f, 0.5, 1.f};
+		constexpr glm::vec3 CascadePercents = { 0.15f, 0.5f, 1.f};
 	}
 }

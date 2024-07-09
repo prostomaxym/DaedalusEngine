@@ -228,11 +228,12 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 
     float bias = 0.005 * tan(acos(dot(fs_in.normals, p_light.direction)));
     bias = clamp(bias, 0.0, 0.01);
-    if (p_light.number_of_shadow_cascades > 1)
-    {
-        const float bias_modifier = 0.5f;
-        bias *= 1 / (ubo_scene.cascade_distances[cascade_ind] * bias_modifier);
-    }
+    bias = 0.0;
+    //if (p_light.number_of_shadow_cascades > 1)
+   // {
+    //    const float bias_modifier = 0.5f;
+    //    bias *= 1 / (ubo_scene.cascade_distances[cascade_ind] * bias_modifier);
+    //}
 
     float current_depth = proj_coords.z;
     const float test_depth = current_depth - bias;
@@ -247,7 +248,8 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
         for (int y = -off; y <= off; ++y)
         {
             vec2 offset = vec2(x, y) * texel_size;
-            float sampled_depth = BilinearInterpolation(shadow_map, proj_coords.xy + offset, p_light.shadowmap_index + cascade_ind);
+            //float sampled_depth = BilinearInterpolation(shadow_map, proj_coords.xy + offset, p_light.shadowmap_index + cascade_ind);
+            float sampled_depth = texture(shadow_map, vec3(proj_coords.xy + vec2(x, y) * texel_size, p_light.shadowmap_index + cascade_ind)).r;
 
             float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
             shadow += visibility;
@@ -268,8 +270,8 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
 
     float shadow = 1.0;
-    if (p_light.cast_shadows)
-        shadow = CalculateShadow(p_light, u_shadowmaps);
+    //if (p_light.cast_shadows)
+    //    shadow = CalculateShadow(p_light, u_shadowmaps);
 
     return p_luminosity *
             (p_light.ambient * g_ambient_tex

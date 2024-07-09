@@ -68,7 +68,7 @@ void PrepareNukeScene(Scene& scene)
 
 
 	auto camera_entity = scene.CreateEntity("Main Camera");
-	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 300.f));
+	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 200.f));
 
 	//const auto aspect_ratio = static_cast<float>(GraphicsConfig::GetWindowWidth()) / static_cast<float>(GraphicsConfig::GetWindowHeight());
 	//const auto scale_ortho = 20.f;
@@ -83,28 +83,28 @@ void PrepareNukeScene(Scene& scene)
 	auto& camera_scripts = camera_entity.AddComponent<NativeScriptComponent>();
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
-	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
-	camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.0f, 0.0f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
+	//camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
+	//camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.0f, 0.0f),
+	//	glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
-		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 0.1f, true);
+		glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 0.1f, true);
 
 	//auto light_entity2 = scene.CreateEntity("Secondary Light");
 	//light_entity2.AddComponent<DirectionalLightComponent>(glm::vec3(-0.78f, 1.0f, 0.6f),
-	//	glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 1.1f, false);
+	//	glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 1.1f, false);
 
-	auto spot_entity = scene.CreateEntity("Spot Light");
-	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
-	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
-	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
-	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
-	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), true, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, true);
-	spot_entity.AddComponent<PointLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), false, 80.f, 13.f, false);
+	//auto spot_entity = scene.CreateEntity("Spot Light");
+	//spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
+	//auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
+	//spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+	//spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
+	//spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
+	//spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
+	//	glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), true, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, true);
+	//spot_entity.AddComponent<PointLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
+	//	glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), false, 80.f, 13.f, false);
 
 	auto nuke_entity = scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", standard_shader, enhance_model_flags);

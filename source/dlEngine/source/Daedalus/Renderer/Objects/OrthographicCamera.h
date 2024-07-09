@@ -16,6 +16,9 @@ public:
 
 	glm::mat4 GetProjectionMatrix() const override;
 	glm::mat4 GetProjectionMatrix(float z_far_limit) const override;
+	glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const override;
+
+	glm::vec3 GetCascadeDistances(float perc_low, float perc_mid, float perc_high) const override;
 
 	void ProcessZoom(float yoffset) override;
 
@@ -27,5 +30,4 @@ protected:
 	float m_near_plane{ -1.f };
 	float m_far_plane{ 1.f };
 };
-
 }

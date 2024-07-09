@@ -24,7 +24,7 @@ void Renderer::Init()
 {
 	RenderCommand::Init();
 
-	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 20, 0, UniformBuffer::Type::Dynamic);
+	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
 
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
@@ -68,11 +68,16 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 
 void Renderer::BeginScene(const Camera* camera)
 {
-	const auto& PV = camera->GetProjectionViewMatrix();
-	const auto& pos = camera->GetPosition();
+	const auto PV = camera->GetProjectionViewMatrix();
+	const auto V = camera->GetViewMatrix();
+	const auto pos = camera->GetPosition();
+	const auto perc = RendererConstants::CascadePercents;
+	const auto cascades = camera->GetCascadeDistances(perc.x, perc.y, perc.z);
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
-	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 64);
+	s_UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
+	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 128);
+	s_UBO_scene_data->SetData(&cascades, sizeof(float) * 3, 144);
 	s_view_frustum = camera->GetViewFrustum();
 }
 
@@ -252,7 +257,7 @@ void Renderer::UpdateNumberOfShadowCasters(int number_of_shadow_casters)
 	specs.height = GraphicsConfig::GetShadowBufferHeight();
 	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = number_of_shadow_casters;
+	specs.layers = number_of_shadow_casters * RendererConstants::NumberOfShadowCascades;
 
 	s_framebuffer_shadows = Framebuffer::Create(specs);
 }

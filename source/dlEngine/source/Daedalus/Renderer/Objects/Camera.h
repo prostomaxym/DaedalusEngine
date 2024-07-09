@@ -44,6 +44,7 @@ namespace Daedalus {
 		glm::mat4 GetViewMatrix() const;
 		virtual glm::mat4 GetProjectionMatrix() const = 0;
 		virtual glm::mat4 GetProjectionMatrix(float z_far_limit) const = 0; // For quick calculations. E.G take 0.2 of max camera distance
+		virtual glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const = 0; // For cascade calculations
 
 		glm::mat4 GetViewProjectionMatrix() const;
 		glm::mat4 GetProjectionViewMatrix() const;
@@ -52,6 +53,7 @@ namespace Daedalus {
 		glm::vec3 GetDirection() const { return m_front; }
 		glm::vec3 GetUp() const { return m_up; }
 		glm::vec3 GetPosition() const { return m_position; }
+		virtual glm::vec3 GetCascadeDistances(float perc_low, float perc_mid, float perc_high) const = 0;
 
 		void SetPosition(glm::vec3 position);
 		void SetRotation(float xoffset, float yoffset);

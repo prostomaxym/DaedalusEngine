@@ -30,32 +30,25 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 
 void RenderSystem::DoLightPass() const
 {
+	if (CountShadowCasters() <= 0)
+		return;
+
 	const auto shadow_fb = Renderer::GetShadowFramebuffer();
 	shadow_fb->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
 	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 
 	const auto shadow_shader = Renderer::s_shader_library->Get(ShaderConstants::ShadowShader);
-	
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (const auto e : dir_view)
+
+	const auto models_view = m_registry.view<RenderableObjectComponent>();
+	for (const auto e : models_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
-		if (!light_component.light.CastShadow())
-			continue;
+		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
 
-		const auto models_view = m_registry.view<RenderableObjectComponent>();
-		for (const auto e : models_view)
-		{
-			Entity entity = { e, m_scene };
-
-			const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-			const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
-
-			Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
-		}
+		Renderer::SubmitForShadowBuffer(shadow_shader.get(), &model_component.model, transform_component);
 	}
 
 	shadow_fb->Unbind();
@@ -85,7 +78,7 @@ void RenderSystem::DoColorPass() const
 		Entity entity = { e, m_scene };
 
 		const auto& cubemap_component = entity.GetComponent<CubemapComponent>();
-		//Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
+		Renderer::Submit(cubemap_component.shader.get(), &cubemap_component.cubemap, m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
 	}
 }
 
@@ -168,9 +161,9 @@ void RenderSystem::UpdateStaticLighting()
 
 		if (light.CastShadow())
 		{
-			light.UpdateSSBOForSceneSphere(scene_sphere);
 			light.SetShadowMapIndex(m_static_light_space.size());
-			m_static_light_space.push_back(light.GetLightSpaceMatrix());
+			light.SetShadowNumberOfCascades(1);
+			m_static_light_space.push_back(light.CalculateLightMatrixForSphere(scene_sphere));
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -199,9 +192,9 @@ void RenderSystem::UpdateStaticLighting()
 
 		if (light.CastShadow())
 		{
-			light.UpdateSSBODefault();
 			light.SetShadowMapIndex(m_static_light_space.size());
-			m_static_light_space.push_back(light.GetLightSpaceMatrix());
+			light.SetShadowNumberOfCascades(1);
+			m_static_light_space.push_back(light.CalculateLightMatrixDefault());
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -214,6 +207,7 @@ void RenderSystem::UpdateDynamicLighting() const
 {
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_space_matrices = m_static_light_space;
+	const auto perc = RendererConstants::CascadePercents;
 
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (const auto e : dir_view)
@@ -227,9 +221,11 @@ void RenderSystem::UpdateDynamicLighting() const
 
 		if (light.CastShadow())
 		{
-			light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
 			light.SetShadowMapIndex(light_space_matrices.size());
-			light_space_matrices.push_back(light.GetLightSpaceMatrix());
+			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
 		}
 			
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
@@ -257,9 +253,11 @@ void RenderSystem::UpdateDynamicLighting() const
 
 		if (light.CastShadow())
 		{
-			light.UpdateSSBOForViewFrustum(m_camera->GetProjectionMatrix(0.2f), m_camera->GetViewMatrix());
 			light.SetShadowMapIndex(light_space_matrices.size());
-			light_space_matrices.push_back(light.GetLightSpaceMatrix());
+			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
+			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
 		}
 
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());

@@ -83,11 +83,6 @@ LightSource::LightSource(LightSourceType type, glm::vec3 light_pos, glm::vec3 am
 {
 }
 
-void LightSource::UpdateSSBOForViewFrustum(const glm::mat4& proj, const glm::mat4& view)
-{
-	m_params.proj_view = CalculateLightMatrixForFrustum(proj, view);
-}
-
 void LightSource::SetMaxDistance(float distance)
 {
 	m_params.SetMaxDistance(distance);

@@ -21,7 +21,6 @@ namespace Daedalus
 		LightSSBO(LightSourceType type, glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadows, float light_power = 1.f,
 			float max_distance = 100.f, glm::vec3 direction = { 0.f, 0.f, 0.f }, float cutoff = 60.f, float outer_cutoff = 90.f);
 
-		glm::mat4 proj_view = glm::mat4(0.0);
 		glm::vec3 position = glm::vec3(0.0);
 		int align1 = 0;
 		glm::vec3 direction = glm::vec3(0.0);
@@ -40,6 +39,8 @@ namespace Daedalus
 		LightSourceType type = LightSourceType::Directional;
 		int cast_shadows = 0;
 		int shadow_map_index = -1;
+		int number_of_cascades = 1;
+		int align5 = 0;
 
 		void SetMaxDistance(float distance);
 		float GetMaxDistance() const;
@@ -54,21 +55,20 @@ class DAEDALUS_API LightSource
 
 		virtual ~LightSource() = default;
 
-	    void UpdateSSBOForViewFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view);
+		virtual glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
 
 	    void SetDirection(glm::vec3 direction) { m_params.direction = direction; }
 	    void SetPower(float lpower) { m_params.power = lpower; }
 	    void SetShadowMapIndex(int index) { m_params.shadow_map_index = index; }
+		void SetShadowNumberOfCascades(int num) { m_params.number_of_cascades = num; }
 		void SetPosition(glm::vec3 position) { m_params.position = position; }
 		void SetMaxDistance(float distance);
 
 	    const LightSSBO& GetShaderSSBO() const { return m_params; }
-	    const glm::mat4 GetLightSpaceMatrix() const { return m_params.proj_view; }
+		int GetShadowNumberOfCascades() const { return m_params.number_of_cascades; }
 	    bool CastShadow() const { return m_params.cast_shadows > 0; }
 
 	protected:
-	    virtual glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
-
 	    LightSSBO m_params{};
 		float m_max_distance{ 0.f };
 	};

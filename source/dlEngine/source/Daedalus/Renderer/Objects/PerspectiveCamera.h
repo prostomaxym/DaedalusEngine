@@ -31,6 +31,9 @@ namespace Daedalus {
 
 		glm::mat4 GetProjectionMatrix() const override;
 		glm::mat4 GetProjectionMatrix(float z_far_limit) const override;
+		glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const override;
+
+		glm::vec3 GetCascadeDistances(float perc_low, float perc_mid, float perc_high) const override;
 
 		void ProcessZoom(float yoffset) override;
 

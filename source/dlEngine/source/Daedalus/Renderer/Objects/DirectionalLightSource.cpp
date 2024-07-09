@@ -16,16 +16,6 @@ DirectionalLightSource::DirectionalLightSource(
     LightSource(LightSourceType::Directional, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
 {}
 
-void DirectionalLightSource::UpdateSSBOForSceneSphere(const BoundingSphere& sphere)
-{
-	m_params.proj_view = CalculateLightMatrixForSphere(sphere);
-}
-
-void DirectionalLightSource::UpdateSSBOForSceneAABB(const AABB& aabb)
-{
-	m_params.proj_view = CalculateLightMatrixForAABB(aabb);
-}
-
 glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const
 {
 	const auto inv = glm::inverse(camera_proj * camera_view);

@@ -36,4 +36,9 @@ namespace Daedalus
 		constexpr auto TangentVars{ "vin_tangent" };
 		constexpr auto BitangentVars{ "vin_bitangent" };
 	}
+
+	namespace RendererConstants {
+		constexpr auto NumberOfShadowCascades = 3;
+		constexpr glm::vec3 CascadePercents = { 0.1f, 0.5, 1.f};
+	}
 }

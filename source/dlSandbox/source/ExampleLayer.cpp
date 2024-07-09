@@ -68,11 +68,11 @@ void PrepareNukeScene(Scene& scene)
 
 
 	auto camera_entity = scene.CreateEntity("Main Camera");
-	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 300.f));
+	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 300.f));
 
-	const auto aspect_ratio = static_cast<float>(GraphicsConfig::GetWindowWidth()) / static_cast<float>(GraphicsConfig::GetWindowHeight());
-	const auto scale_ortho = 20.f;
-	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
+	//const auto aspect_ratio = static_cast<float>(GraphicsConfig::GetWindowWidth()) / static_cast<float>(GraphicsConfig::GetWindowHeight());
+	//const auto scale_ortho = 20.f;
+	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
 
 	auto camera = camera_comp.camera.get();
 	camera->SetPosition(glm::vec3(0.f, 0.f, 0.f));

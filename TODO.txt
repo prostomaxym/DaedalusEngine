@@ -1,0 +1,29 @@
+CSM
+Point lights
+Camera type (third person)
+PBR
+Face culling
+Tesselation
+Blending
+Parallax
+HDR
+Derrefered
+SSAO
+Physics
+Audio
+Lua
+Level Editor
+Threads
+Depth of field
+Blur
+Temporal AA
+Reflections
+Lens flares
+Particle
+Global Illumination
+HBAO+
+Water
+Procedural clouds/sky
+Screen Space Reflections
+Screen Space Shadows
+Bloom

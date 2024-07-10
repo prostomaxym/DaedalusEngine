@@ -1,4 +1,4 @@
-CSM
+CSM smoothing
 Point lights
 Camera type (third person)
 PBR
@@ -7,7 +7,7 @@ Tesselation
 Blending
 Parallax
 HDR
-Derrefered
+Derefered
 SSAO
 Physics
 Audio

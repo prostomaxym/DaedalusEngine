@@ -69,11 +69,12 @@ void PrepareNukeScene(Scene& scene)
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 
 	auto camera_entity = scene.CreateEntity("Main Camera");
-	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 200.f));
 
-	//const auto aspect_ratio = static_cast<float>(GraphicsConfig::GetWindowWidth()) / static_cast<float>(GraphicsConfig::GetWindowHeight());
-	//const auto scale_ortho = 20.f;
-	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
+	const auto aspect_ratio = Application::GetInstance()->GetWindow().GetAspectRatio();
+	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, aspect_ratio, 0.1f, 200.f));
+
+	const auto scale_ortho = 20.f;
+	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto camera = camera_comp.camera.get();
@@ -112,7 +113,7 @@ void PrepareNukeScene(Scene& scene)
 	 props.light_power = 0.1f;
 	 props.dynamic = true;
 	 props.cast_shadows = true;
-	 props.number_of_shadow_cascades = 3;
+	 props.number_of_shadow_cascades = 6;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
@@ -134,7 +135,7 @@ void PrepareNukeScene(Scene& scene)
 	props.max_distance = 100.f;
 	props.theta_angle = 5.f;
 	props.outer_cutoff = 7.f;
-	props.dynamic = true;
+	props.dynamic = false;
 	props.cast_shadows = true;
 	props.number_of_shadow_cascades = 1;
 	spot_entity.AddComponent<SpotLightComponent>(props);
@@ -238,7 +239,7 @@ void PrepareAnorLondoScene(Scene& scene)
 	camera->SetZoomSpeed(1.f);
 	auto& camera_scripts = camera_entity.AddComponent<NativeScriptComponent>();
 	camera_scripts.AddScript<CameraController>(camera_entity);
-	camera_scripts.AddScript<LogPositionScript>(camera_entity);
+	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
 	auto light_entity = scene.CreateEntity("Main Light");
 	Daedalus::LightProps props;
@@ -250,7 +251,7 @@ void PrepareAnorLondoScene(Scene& scene)
 	props.light_power = 1.f;
 	props.dynamic = true;
 	props.cast_shadows = true;
-	props.number_of_shadow_cascades = 3;
+	props.number_of_shadow_cascades = 6;
 	light_entity.AddComponent<DirectionalLightComponent>(props);
 
 	TransformComponent transform;

@@ -2,6 +2,8 @@
 
 #include "LightSource.h"
 
+#include "Daedalus/Config/GraphicsConfig.h"
+
 using namespace Daedalus;
 
 namespace
@@ -67,7 +69,7 @@ namespace
 
     glm::mat4 UpdateNearFar(const glm::mat4& projection, float newNearPlane, float newFarPlane)
     {
-        float fov = 2.0f * atan(1.0f / projection[1][1]);
+        float fov = 2.0f * std::atan(1.0f / projection[1][1]);
         float aspectRatio = projection[1][1] / projection[0][0];
 
         return glm::perspective(fov, aspectRatio, newNearPlane, newFarPlane);
@@ -81,7 +83,7 @@ namespace
     float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_number, int number_of_cascades)
     {
         float percent = static_cast<float>(cascade_plane_number) / static_cast<float>(number_of_cascades);
-        const auto cascade_exponent = 2.f;
+        const auto cascade_exponent = GraphicsConfig::GetShadowCSMExponent();
         return znear + (zfar - znear) * std::pow(percent, cascade_exponent);
     }
 }

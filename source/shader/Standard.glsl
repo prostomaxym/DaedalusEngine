@@ -35,6 +35,8 @@ struct Scene
     mat4 projection_view;
     mat4 view;
     vec3 view_pos;
+    float near_plane;
+    float far_plane;
 };
 
 layout (std140, binding = 0) uniform SceneUBO
@@ -92,6 +94,7 @@ struct GraphicConfig
     bool enable_gamma_correction;
     float gamma_value;
     int PCF_multiplier;
+    float csm_exponent;
 };
 
 struct ObjectData
@@ -114,6 +117,8 @@ struct Scene
     mat4 projection_view;
     mat4 view;
     vec3 view_pos;
+    float near_plane;
+    float far_plane;
 };
 
 struct Light 
@@ -200,7 +205,7 @@ float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int laye
 float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_inx, int number_of_cascades)
 {
     const float percent = float(cascade_plane_inx) / float(number_of_cascades);
-    const float cascade_exponent = 2.f;
+    const float cascade_exponent = ubo_graphic_config.csm_exponent;
     return znear + (zfar - znear) * pow(percent, cascade_exponent);
 }
 
@@ -215,7 +220,7 @@ int FindCascadeIndex(Light p_light)
     int cascade = p_light.number_of_shadow_cascades - 1;
     for (int i = 0; i < p_light.number_of_shadow_cascades; ++i)
     {
-        if (view_depth < CalculateCascadePlaneDistance(0.1, 200.0, i + 1, p_light.number_of_shadow_cascades))
+        if (view_depth < CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, i + 1, p_light.number_of_shadow_cascades))
         {
             cascade = i;
             break;
@@ -241,7 +246,7 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
     if (p_light.number_of_shadow_cascades > 1)
     {
         const float bias_modifier = 0.5f;
-        bias *= 1 / (CalculateCascadePlaneDistance(0.1, 200.0, cascade_ind, p_light.number_of_shadow_cascades) * bias_modifier);
+        bias *= 1 / (CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, cascade_ind, p_light.number_of_shadow_cascades) * bias_modifier);
     }
 
     const float current_depth = proj_coords.z;

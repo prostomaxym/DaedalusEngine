@@ -22,6 +22,7 @@ namespace
 	constexpr auto ShadowBufferHeightName = "ShadowBufferHeight";
 	constexpr auto ShadowBufferSamplesName = "ShadowBufferSamples";
 	constexpr auto ShadowPCFMultiplierName = "ShadowPCFMultiplier";
+	constexpr auto ShadowCSMCascadeExpName = "ShadowCSMExponent";
 	constexpr auto GammaCorrectionEnabledName = "GammaCorrectionEnabled";
 	constexpr auto GammaCorrectionValueName = "GammaCorrectionValue";
 	constexpr auto MultisampleEnabledName = "MultisampleEnabled";
@@ -41,6 +42,7 @@ int GraphicsConfig::s_shadow_buffer_width = 2048;
 int GraphicsConfig::s_shadow_buffer_height = 2048;
 int GraphicsConfig::s_shadow_buffer_samples = 1;
 int GraphicsConfig::s_shadow_pcf_multiplier = 5;
+float GraphicsConfig::s_shadow_csm_exponent = 1.5f;
 		
 bool GraphicsConfig::s_gamma_correction_enabled = false;
 float GraphicsConfig::s_gamma_correction_value = 2.2f;
@@ -78,6 +80,7 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
     s_shadow_buffer_height = ini.GetLongValue(RenderingSectionName, ShadowBufferHeightName, 2048);
     s_shadow_buffer_samples = ini.GetLongValue(RenderingSectionName, ShadowBufferSamplesName, 1);
 	s_shadow_pcf_multiplier = ini.GetLongValue(RenderingSectionName, ShadowPCFMultiplierName, 5);
+	s_shadow_csm_exponent = static_cast<float>(ini.GetDoubleValue(RenderingSectionName, ShadowCSMCascadeExpName, 1.5));
 
     s_gamma_correction_enabled = ini.GetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, false);
     s_gamma_correction_value = static_cast<float>(ini.GetDoubleValue(RenderingSectionName, GammaCorrectionValueName, 2.2));
@@ -104,7 +107,8 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
     ini.SetLongValue(RenderingSectionName, ShadowBufferHeightName, s_shadow_buffer_height);
     ini.SetLongValue(RenderingSectionName, ShadowBufferSamplesName, s_shadow_buffer_samples);
 	ini.SetLongValue(RenderingSectionName, ShadowPCFMultiplierName, s_shadow_pcf_multiplier);
-
+	ini.SetDoubleValue(RenderingSectionName, ShadowCSMCascadeExpName, s_shadow_csm_exponent);
+	
     ini.SetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, s_gamma_correction_enabled);
     ini.SetDoubleValue(RenderingSectionName, GammaCorrectionValueName, static_cast<double>(s_gamma_correction_value));
 
@@ -141,6 +145,8 @@ void GraphicsConfig::LoadDefault()
 	s_shadow_buffer_width = 2048;
 	s_shadow_buffer_height = 2048;
 	s_shadow_buffer_samples = 1;
+	s_shadow_pcf_multiplier = 5;
+	s_shadow_csm_exponent = 1.5f;
 		
 	s_gamma_correction_enabled = false;
 	s_gamma_correction_value = 2.2f;

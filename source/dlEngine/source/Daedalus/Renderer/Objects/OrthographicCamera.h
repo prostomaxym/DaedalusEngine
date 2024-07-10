@@ -6,7 +6,7 @@
 
 namespace Daedalus {
 
-class OrthographicCamera : public Camera
+class DAEDALUS_API OrthographicCamera : public Camera
 {
 public:
 	OrthographicCamera(float left, float right, float bottom, float top, float front, float back,
@@ -17,6 +17,8 @@ public:
 	glm::mat4 GetProjectionMatrix() const override;
 	glm::mat4 GetProjectionMatrix(float z_far_limit) const override;
 	glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const override;
+	float GetNearPlane() const override { return m_near_plane; }
+	float GetFarPlane() const override { return m_far_plane; }
 
 	void ProcessZoom(float yoffset) override;
 

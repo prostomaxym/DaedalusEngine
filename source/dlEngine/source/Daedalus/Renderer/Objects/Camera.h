@@ -54,6 +54,9 @@ namespace Daedalus {
 		glm::vec3 GetUp() const { return m_up; }
 		glm::vec3 GetPosition() const { return m_position; }
 
+		virtual float GetNearPlane() const = 0;
+		virtual float GetFarPlane() const = 0;
+
 		void SetPosition(glm::vec3 position);
 		void SetRotation(float xoffset, float yoffset);
 		void SetMovementSpeed(float speed) { m_movement_speed = speed; }

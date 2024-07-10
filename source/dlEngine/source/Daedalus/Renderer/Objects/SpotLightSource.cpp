@@ -18,7 +18,10 @@ namespace
 
 SpotLightSource::SpotLightSource(const LightProps& props) :
     LightSource(LightSourceType::Spot, props)
-{}
+{
+	DL_ASSERT(m_params.number_of_cascades <= 1, Log::Categories::Renderer, "Spot Light CSM is not supported now");
+	m_params.number_of_cascades = 1;
+}
 
 glm::mat4 SpotLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4&) const
 {

@@ -24,7 +24,7 @@ void Renderer::Init()
 {
 	RenderCommand::Init();
 
-	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 36, 0, UniformBuffer::Type::Dynamic);
+	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
 
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
@@ -50,10 +50,12 @@ void Renderer::SetupGraphicSettings()
 	int gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
 	float gamma_value = GraphicsConfig::GetGammaCorrectionValue();
 	int pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
+	float csm_exponent = GraphicsConfig::GetShadowCSMExponent();
 
 	s_UBO_graphic_config->SetData(&gamma_enabled, sizeof(int), 0);
 	s_UBO_graphic_config->SetData(&gamma_value, sizeof(float), 4);
 	s_UBO_graphic_config->SetData(&pcf_multiplier, sizeof(int), 8);
+	s_UBO_graphic_config->SetData(&csm_exponent, sizeof(float), 12);
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
@@ -71,10 +73,14 @@ void Renderer::BeginScene(const Camera* camera)
 	const auto PV = camera->GetProjectionViewMatrix();
 	const auto V = camera->GetViewMatrix();
 	const auto pos = camera->GetPosition();
+	const auto znear = camera->GetNearPlane();
+	const auto zfar = camera->GetFarPlane();
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 128);
+	s_UBO_scene_data->SetData(&znear, sizeof(float) * 1, 140);
+	s_UBO_scene_data->SetData(&zfar, sizeof(float) * 1, 144);
 	s_view_frustum = camera->GetViewFrustum();
 }
 

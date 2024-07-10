@@ -32,6 +32,8 @@ namespace Daedalus {
 		glm::mat4 GetProjectionMatrix() const override;
 		glm::mat4 GetProjectionMatrix(float z_far_limit) const override;
 		glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const override;
+		float GetNearPlane() const override { return m_proj_props.z_near; }
+		float GetFarPlane() const override { return m_proj_props.z_far; }
 
 		void ProcessZoom(float yoffset) override;
 

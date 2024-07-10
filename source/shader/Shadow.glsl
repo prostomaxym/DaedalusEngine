@@ -15,17 +15,22 @@ void main()
     
 layout(triangles, invocations = 5) in;
 layout(triangle_strip, max_vertices = 3) out;
-    
-layout (std430, binding = 2) buffer LightSpaceMatrices
+
+layout (std430, binding = 2) buffer LightProjView
 {
-    mat4 ubo_light_space_matrices[];
+    mat4 ubo_light_proj_view[];
+};
+
+layout (std430, binding = 3) buffer LightView
+{
+    mat4 ubo_light_view[];
 };
     
 void main()
 {          
     for (int i = 0; i < 3; ++i)
     {
-        gl_Position = ubo_light_space_matrices[gl_InvocationID] * gl_in[i].gl_Position;
+        gl_Position = ubo_light_proj_view[gl_InvocationID] * gl_in[i].gl_Position;
         gl_Layer = gl_InvocationID;
         EmitVertex();
     }

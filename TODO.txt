@@ -27,3 +27,5 @@ Procedural clouds/sky
 Screen Space Reflections
 Screen Space Shadows
 Bloom
+Log file
+Debug overlay + profiler

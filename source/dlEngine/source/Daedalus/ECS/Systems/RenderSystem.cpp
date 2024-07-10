@@ -147,7 +147,8 @@ AABB RenderSystem::CalculateSceneBoundingAABB() const
 void RenderSystem::UpdateStaticLighting()
 {
 	const auto scene_sphere = CalculateSceneBoundingSphere();
-    m_static_light_space = std::vector<glm::mat4>();
+    m_static_light_proj_view = std::vector<glm::mat4>();
+	m_static_light_view = std::vector<glm::mat4>();
 	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (const auto e : dir_view)
@@ -161,9 +162,10 @@ void RenderSystem::UpdateStaticLighting()
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(m_static_light_space.size());
+			light.SetShadowMapIndex(m_static_light_proj_view.size());
 			light.SetShadowNumberOfCascades(1);
-			m_static_light_space.push_back(light.CalculateLightMatrixForSphere(scene_sphere));
+			m_static_light_proj_view.push_back(light.CalculateProjViewForSphere(scene_sphere));
+			m_static_light_view.emplace_back(glm::mat4());
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -192,9 +194,10 @@ void RenderSystem::UpdateStaticLighting()
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(m_static_light_space.size());
+			light.SetShadowMapIndex(m_static_light_proj_view.size());
 			light.SetShadowNumberOfCascades(1);
-			m_static_light_space.push_back(light.CalculateLightMatrixDefault());
+			m_static_light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(), m_camera->GetViewMatrix()));
+			m_static_light_view.emplace_back(light.CalculateView());
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -206,7 +209,8 @@ void RenderSystem::UpdateStaticLighting()
 void RenderSystem::UpdateDynamicLighting() const
 {
 	std::vector<LightSSBO> light_SSBOs;
-	std::vector<glm::mat4> light_space_matrices = m_static_light_space;
+	std::vector<glm::mat4> light_proj_view = m_static_light_proj_view;
+	std::vector<glm::mat4> light_view = m_static_light_view;
 	const auto perc = RendererConstants::CascadePercents;
 
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
@@ -221,11 +225,14 @@ void RenderSystem::UpdateDynamicLighting() const
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(light_space_matrices.size());
+			light.SetShadowMapIndex(light_proj_view.size());
 			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
+			light_view.emplace_back(m_camera->GetViewMatrix());
+			light_view.emplace_back(m_camera->GetViewMatrix());
+			light_view.emplace_back(m_camera->GetViewMatrix());
 		}
 			
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
@@ -253,16 +260,19 @@ void RenderSystem::UpdateDynamicLighting() const
 
 		if (light.CastShadow())
 		{
-			light.SetShadowMapIndex(light_space_matrices.size());
+			light.SetShadowMapIndex(light_proj_view.size());
 			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
-			light_space_matrices.push_back(light.CalculateLightMatrixForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
+			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
+			light_view.emplace_back(light.CalculateView());
+			light_view.emplace_back(light.CalculateView());
+			light_view.emplace_back(light.CalculateView());
 		}
 
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateLightSpaceMatricesSSBO(light_space_matrices);
+	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view, light_view);
 	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }

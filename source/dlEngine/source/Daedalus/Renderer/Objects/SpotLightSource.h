@@ -17,7 +17,7 @@ namespace Daedalus
 
 		void SetCutoffAngle(float theta_angle) { m_params.cutoff_angle = theta_angle; }
 
-		glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
-		glm::mat4 CalculateLightMatrixDefault() const;
+		glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
+		glm::mat4 CalculateView() const;
 	};
 }

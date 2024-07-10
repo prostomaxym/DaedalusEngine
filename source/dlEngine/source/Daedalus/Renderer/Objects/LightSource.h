@@ -56,7 +56,7 @@ class DAEDALUS_API LightSource
 
 		virtual ~LightSource() = default;
 
-		virtual glm::mat4 CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
+		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
 
 	    void SetDirection(glm::vec3 direction) { m_params.direction = direction; }
 	    void SetPower(float lpower) { m_params.power = lpower; }

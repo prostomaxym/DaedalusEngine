@@ -42,7 +42,7 @@ namespace Daedalus {
 
 		static void UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_UBOs);
-		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_space_SSBOs);
+		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view, const std::vector<glm::mat4>& light_view);
 
 		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
 		static void UpdateNumberOfShadowCasters(int number_of_shadow_casters);

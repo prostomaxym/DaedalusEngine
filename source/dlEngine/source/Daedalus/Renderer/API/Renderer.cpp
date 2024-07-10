@@ -237,17 +237,21 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_space_SSBOs)
+void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view, const std::vector<glm::mat4>& light_view)
 {
-	if (light_space_SSBOs.empty())
+	if (light_proj_view.empty() || light_view.empty())
 	{
 		s_SSBO_light_space_matrices.reset();
 		return;
 	}
 
-	const auto SSBO_size_in_bytes = light_space_SSBOs.size() * sizeof(glm::mat4);
+	auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
 	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 2, ShaderStorageBuffer::Type::Dynamic);
-	s_SSBO_light_space_matrices->SetData(light_space_SSBOs.data(), SSBO_size_in_bytes, 0);
+	s_SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
+
+	SSBO_size_in_bytes = light_view.size() * sizeof(glm::mat4);
+	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 3, ShaderStorageBuffer::Type::Dynamic);
+	s_SSBO_light_space_matrices->SetData(light_view.data(), SSBO_size_in_bytes, 0);
 }
 
 void Renderer::UpdateNumberOfShadowCasters(int number_of_shadow_casters)

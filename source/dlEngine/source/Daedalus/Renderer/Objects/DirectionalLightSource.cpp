@@ -6,6 +6,13 @@
 
 using namespace Daedalus;
 
+namespace
+{
+	// Just magic number, needed for proper shadow cascades
+	// have no idea how to get rid of it
+	const auto zMultMagicNum = 5.f;
+}
+
 DirectionalLightSource::DirectionalLightSource(
     glm::vec3 light_direction
     , glm::vec3 ambient_color
@@ -16,7 +23,7 @@ DirectionalLightSource::DirectionalLightSource(
     LightSource(LightSourceType::Directional, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
 {}
 
-glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const
+glm::mat4 DirectionalLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const
 {
 	const auto inv = glm::inverse(camera_proj * camera_view);
 
@@ -70,46 +77,21 @@ glm::mat4 DirectionalLightSource::CalculateLightMatrixForFrustum(const glm::mat4
 		maxZ = std::max(maxZ, trf.z);
 	}
 
-	// Tune this parameter according to the scene
-	constexpr float xMult = 1.2f;
-	constexpr float yMult = 1.2f;
-	constexpr float zMult = 1.2f;
+	if (minZ < 0)
+		minZ *= zMultMagicNum;
+	else
+		minZ /= zMultMagicNum;
 
-	//if (minX < 0)
-	//	minX *= xMult;
-	//else
-	//	minX /= xMult;
-
-	//if (maxX < 0)
-	//	maxX /= xMult;
-	//else
-	//	maxX *= xMult;
-
-	//if (minY < 0)
-	//	minY *= yMult;
-	//else
-	//	minY /= yMult;
-
-	//if (maxY < 0)
-	//	maxY /= yMult;
-	//else
-	//	maxY *= yMult;
-
-	//if (minZ < 0)
-	//	minZ *= zMult;
-	//else
-	//	minZ /= zMult;
-
-	//if (maxZ < 0)
-	//	maxZ /= zMult;
-	//else
-	//	maxZ *= zMult;
+	if (maxZ < 0)
+		maxZ /= zMultMagicNum;
+	else
+		maxZ *= zMultMagicNum;
 
 	const glm::mat4 light_projection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
 	return light_projection * light_view;
 }
 
-glm::mat4 DirectionalLightSource::CalculateLightMatrixForSphere(const BoundingSphere& sphere) const
+glm::mat4 DirectionalLightSource::CalculateProjViewForSphere(const BoundingSphere& sphere) const
 {
 	const auto light_view = glm::lookAt(
 		sphere.position + m_params.direction,
@@ -125,7 +107,7 @@ glm::mat4 DirectionalLightSource::CalculateLightMatrixForSphere(const BoundingSp
 	return light_projection * light_view;
 }
 
-glm::mat4 DirectionalLightSource::CalculateLightMatrixForAABB(const AABB& aabb) const
+glm::mat4 DirectionalLightSource::CalculateProjViewForAABB(const AABB& aabb) const
 {
 	const auto light_view = glm::lookAt(
 		aabb.center + m_params.direction,

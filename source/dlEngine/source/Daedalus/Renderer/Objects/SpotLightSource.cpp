@@ -29,7 +29,7 @@ SpotLightSource::SpotLightSource(glm::vec3 light_pos
     LightSource(LightSourceType::Spot, light_pos, ambient_color, diffuse_color, specular_color, cast_shadows, light_power, max_distance, direction, std::cos(glm::radians(cutoff_angle)), std::cos(glm::radians(outer_cutoff)))
 {}
 
-glm::mat4 SpotLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camera_proj, const glm::mat4&) const
+glm::mat4 SpotLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4&) const
 {
 	const auto light_view = glm::lookAt(
 		m_params.position,
@@ -41,21 +41,16 @@ glm::mat4 SpotLightSource::CalculateLightMatrixForFrustum(const glm::mat4& camer
 	ExtractPerspectiveParams(camera_proj, fov, aspect, znear, zfar);
 
 	// TODO fix for orthographic camera
-	const glm::mat4 light_projection = glm::perspective(fov, 1.f, znear, zfar);
+	const glm::mat4 light_projection = glm::perspective(fov, 1.f, znear, zfar);//std::min(zfar, m_max_distance));
 
 	return light_projection * light_view;
 }
 
-glm::mat4 SpotLightSource::CalculateLightMatrixDefault() const
+glm::mat4 SpotLightSource::CalculateView() const
 {
-	const auto light_view = glm::lookAt(
+	return glm::lookAt(
 		m_params.position,
 		m_params.position + m_params.direction,
 		glm::vec3(0.0f, 1.0f, 0.0f)
 	);
-
-	const glm::mat4 light_projection = glm::perspective(90.f, 1.f, 0.f, m_params.GetMaxDistance());
-
-	// Combine view and projection matrices
-	return light_projection * light_view;
 }

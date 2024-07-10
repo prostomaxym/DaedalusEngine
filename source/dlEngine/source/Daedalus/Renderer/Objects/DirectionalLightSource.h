@@ -13,11 +13,10 @@ namespace Daedalus
 	{
 	public:
 		DirectionalLightSource() = default;
-		DirectionalLightSource(glm::vec3 light_direction, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadow, float light_power);
+		DirectionalLightSource(const LightProps& props);
 
 		glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
 		glm::mat4 CalculateProjViewForSphere(const BoundingSphere& sphere) const;
 		glm::mat4 CalculateProjViewForAABB(const AABB& aabb) const;
-
 	};
 }

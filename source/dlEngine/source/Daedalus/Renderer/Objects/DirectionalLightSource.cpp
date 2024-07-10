@@ -13,14 +13,8 @@ namespace
 	const auto zMultMagicNum = 5.f;
 }
 
-DirectionalLightSource::DirectionalLightSource(
-    glm::vec3 light_direction
-    , glm::vec3 ambient_color
-    , glm::vec3 diffuse_color
-    , glm::vec3 specular_color
-    , bool cast_shadow
-    , float light_power) :
-    LightSource(LightSourceType::Directional, light_direction, ambient_color, diffuse_color, specular_color, cast_shadow, light_power, 100.f, light_direction)
+DirectionalLightSource::DirectionalLightSource(const LightProps& props) :
+    LightSource(LightSourceType::Directional, props)
 {}
 
 glm::mat4 DirectionalLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const

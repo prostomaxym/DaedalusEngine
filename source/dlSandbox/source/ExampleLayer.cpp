@@ -64,6 +64,8 @@ void ExampleLayer::OnUpdate(DeltaTime dt)
 
 void PrepareNukeScene(Scene& scene)
 {
+	Daedalus::LightProps props;
+
 	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
 
 	auto camera_entity = scene.CreateEntity("Main Camera");
@@ -73,6 +75,7 @@ void PrepareNukeScene(Scene& scene)
 	//const auto scale_ortho = 20.f;
 	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
 
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto camera = camera_comp.camera.get();
 	camera->SetPosition(glm::vec3(0.f, 0.f, 0.f));
 	camera->RotateCamera(-90.f, 0.f);
@@ -82,43 +85,95 @@ void PrepareNukeScene(Scene& scene)
 	auto& camera_scripts = camera_entity.AddComponent<NativeScriptComponent>();
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
-	//camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
-	//camera_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.0f, 0.0f),
-	//	glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f, 0.f, 1.f }, 10.f, 35.f, true);
+	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
 
-	// auto light_entity = scene.CreateEntity("Main Light");
-	// light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.78f, 1.0f, 0.6f),
-	// 	glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 1.1f, true);
+	props.light_pos = glm::vec3(0.f, 0.0f, 0.0f);
+	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
+	props.specular_color = glm::vec3(1.f, 1.f, 1.f);
+	props.direction = glm::vec3{ 0.f, 0.f, 1.f };
+	props.light_power = 4.f;
+	props.max_distance = 100.f;
+	props.theta_angle = 10.f;
+	props.outer_cutoff = 35.f;
+	props.dynamic = true;
+	props.cast_shadows = false;
+	props.number_of_shadow_cascades = 1;
+	camera_entity.AddComponent<SpotLightComponent>(props);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
-	// auto light_entity2 = scene.CreateEntity("Secondary Light");
-	// light_entity2.AddComponent<DirectionalLightComponent>(glm::vec3(-0.78f, 1.0f, 0.6f),
-	// 	glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), true, 1.1f, true);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */
+	 auto light_entity = scene.CreateEntity("Main Light");
+	 props.light_pos = glm::vec3(0.78f, 1.0f, 0.6f);
+	 props.ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);
+	 props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
+	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
+	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
+	 props.light_power = 0.1f;
+	 props.dynamic = true;
+	 props.cast_shadows = true;
+	 props.number_of_shadow_cascades = 3;
+	 light_entity.AddComponent<DirectionalLightComponent>(props);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto spot_entity = scene.CreateEntity("Spot Light");
 	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
 	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
 	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
 	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
-	spot_entity.AddComponent<SpotLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.8f), glm::vec3(1.f, 1.f, 0.8f), true, 30.f, 100.f, glm::vec3(0.79f, -0.5f, 0.35f), 5.f, 7.f, true);
-	spot_entity.AddComponent<PointLightComponent>(glm::vec3(-37.f, 13.6f, -29.7f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 0.8f, 0.6f), glm::vec3(1.f, 1.f, 0.6f), false, 80.f, 13.f, false);
 
+	props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
+	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	props.diffuse_color = glm::vec3(1.f, 0.8f, 0.8f);
+	props.specular_color = glm::vec3(1.f, 1.f, 0.8f);
+	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
+	props.light_power = 30.f;
+	props.max_distance = 100.f;
+	props.theta_angle = 5.f;
+	props.outer_cutoff = 7.f;
+	props.dynamic = true;
+	props.cast_shadows = true;
+	props.number_of_shadow_cascades = 1;
+	spot_entity.AddComponent<SpotLightComponent>(props);
+
+	props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
+	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	props.diffuse_color = glm::vec3(1.f, 0.8f, 0.6f);
+	props.specular_color = glm::vec3(1.f, 1.f, 0.6f);
+	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
+	props.light_power = 80.f;
+	props.max_distance = 13.f;
+	props.dynamic = false;
+	props.cast_shadows = false;
+	props.number_of_shadow_cascades = 1;
+	spot_entity.AddComponent<PointLightComponent>(props);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto nuke_entity = scene.CreateEntity("Nuke");
 	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", standard_shader, enhance_model_flags);
 	auto& nuke_transfrom = nuke_entity.GetComponent<TransformComponent>();
 	nuke_transfrom.scale = glm::vec3(2.f, 2.f, 2.f);
 	nuke_transfrom.translation = glm::vec3(-50.f, 18.f, -120.f);
 	nuke_transfrom.rotation = glm::vec3(-90.f, 0.f, 0.f);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto kratos_model = scene.CreateEntity("Kratos");
 	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", standard_shader, enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	kratos_transform.translation = glm::vec3(0.f, -2.8f, -18.f);
 	kratos_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto miranda_entity = scene.CreateEntity("Miranda");
 	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", standard_shader, enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
@@ -127,7 +182,10 @@ void PrepareNukeScene(Scene& scene)
 	miranda_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 	auto& miranda_scripts = miranda_entity.AddComponent<NativeScriptComponent>();
 	miranda_scripts.AddScript<RotationModelScript>(miranda_entity, 0.1f);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto tank_entity = scene.CreateEntity("Tank");
 	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", standard_shader, enhance_model_flags);
 	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
@@ -136,7 +194,10 @@ void PrepareNukeScene(Scene& scene)
 	tank_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
 	auto& tank_scripts = tank_entity.AddComponent<NativeScriptComponent>();
 	tank_scripts.AddScript<TankMovementScript>(tank_entity, glm::vec3(1.0f, 0.f, 0.0f), 50.f);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	std::vector<std::string> faces
 	{
 		"/skyboxes/Night/right.jpg",
@@ -160,6 +221,7 @@ void PrepareNukeScene(Scene& scene)
 	cubemap_transform.scale = glm::vec3(1.f, 1.f, 1.f);
 	cubemap_transform.translation = glm::vec3(0.f, 0.f, 0.f);
 	cubemap_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 }
 
 void PrepareAnorLondoScene(Scene& scene)
@@ -179,8 +241,17 @@ void PrepareAnorLondoScene(Scene& scene)
 	camera_scripts.AddScript<LogPositionScript>(camera_entity);
 
 	auto light_entity = scene.CreateEntity("Main Light");
-	light_entity.AddComponent<DirectionalLightComponent>(glm::vec3(0.3f, 1.f, 1.2f),
-		glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.95f, 0.85f, 0.65f), false, 1.f, false);
+	Daedalus::LightProps props;
+	props.light_pos = glm::vec3(0.3f, 1.f, 1.2f);
+	props.ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);
+	props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
+	props.specular_color = glm::vec3(0.95f, 0.85f, 0.65f);
+	props.direction = glm::vec3(0.3f, 1.f, 1.2f);
+	props.light_power = 1.f;
+	props.dynamic = true;
+	props.cast_shadows = true;
+	props.number_of_shadow_cascades = 3;
+	light_entity.AddComponent<DirectionalLightComponent>(props);
 
 	TransformComponent transform;
 	transform.scale = glm::vec3(2.f, 2.f, 2.f);

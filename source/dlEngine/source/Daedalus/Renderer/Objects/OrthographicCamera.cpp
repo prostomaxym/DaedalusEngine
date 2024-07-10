@@ -39,11 +39,6 @@ glm::mat4 OrthographicCamera::GetProjectionMatrix(float z_close_limit, float z_f
 		m_far_plane * z_close_limit, m_far_plane * z_far_limit);
 }
 
-glm::vec3 OrthographicCamera::GetCascadeDistances(float perc_low, float perc_mid, float perc_high) const
-{
-	return glm::vec3(m_far_plane * perc_low, m_far_plane * perc_mid, m_far_plane * perc_high);
-}
-
 void OrthographicCamera::SetProjection(float left, float right, float bottom, float top, float front, float back)
 {
 	m_left_plane = left;

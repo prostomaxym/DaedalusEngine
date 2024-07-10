@@ -13,7 +13,7 @@ using namespace Daedalus;
 void RenderSystem::OnStartRuntime()
 {
 	UpdateStaticLighting();
-	Renderer::UpdateNumberOfShadowCasters(CountShadowCasters());
+	Renderer::UpdateNumberOfShadowMap(CountShadowCasters());
 }
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
@@ -92,7 +92,7 @@ int RenderSystem::CountShadowCasters() const
 		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
 
 		if (light_component.light.CastShadow())
-			counter++;
+			counter += light_component.light.GetShadowNumberOfCascades();
 	}
 
 	const auto spot_view = m_registry.view<SpotLightComponent>();
@@ -102,7 +102,7 @@ int RenderSystem::CountShadowCasters() const
 		const auto& light_component = entity.GetComponent<SpotLightComponent>();
 
 		if (light_component.light.CastShadow())
-			counter++;
+			counter += light_component.light.GetShadowNumberOfCascades();
 	}
 
 	return counter;
@@ -148,7 +148,6 @@ void RenderSystem::UpdateStaticLighting()
 {
 	const auto scene_sphere = CalculateSceneBoundingSphere();
     m_static_light_proj_view = std::vector<glm::mat4>();
-	m_static_light_view = std::vector<glm::mat4>();
 	std::vector<LightSSBO> light_SSBOs;
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (const auto e : dir_view)
@@ -163,9 +162,7 @@ void RenderSystem::UpdateStaticLighting()
 		if (light.CastShadow())
 		{
 			light.SetShadowMapIndex(m_static_light_proj_view.size());
-			light.SetShadowNumberOfCascades(1);
 			m_static_light_proj_view.push_back(light.CalculateProjViewForSphere(scene_sphere));
-			m_static_light_view.emplace_back(glm::mat4());
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -195,9 +192,7 @@ void RenderSystem::UpdateStaticLighting()
 		if (light.CastShadow())
 		{
 			light.SetShadowMapIndex(m_static_light_proj_view.size());
-			light.SetShadowNumberOfCascades(1);
 			m_static_light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(), m_camera->GetViewMatrix()));
-			m_static_light_view.emplace_back(light.CalculateView());
 		}
 
 		light_SSBOs.emplace_back(light.GetShaderSSBO());
@@ -210,8 +205,6 @@ void RenderSystem::UpdateDynamicLighting() const
 {
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_proj_view = m_static_light_proj_view;
-	std::vector<glm::mat4> light_view = m_static_light_view;
-	const auto perc = RendererConstants::CascadePercents;
 
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
 	for (const auto e : dir_view)
@@ -226,13 +219,8 @@ void RenderSystem::UpdateDynamicLighting() const
 		if (light.CastShadow())
 		{
 			light.SetShadowMapIndex(light_proj_view.size());
-			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
-			light_view.emplace_back(m_camera->GetViewMatrix());
-			light_view.emplace_back(m_camera->GetViewMatrix());
-			light_view.emplace_back(m_camera->GetViewMatrix());
+			const auto cascades = light.CalculateCascadesProjView(m_camera->GetProjectionMatrix(), m_camera->GetViewMatrix());
+			light_proj_view.insert(light_proj_view.end(), cascades.begin(), cascades.end());
 		}
 			
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
@@ -261,18 +249,13 @@ void RenderSystem::UpdateDynamicLighting() const
 		if (light.CastShadow())
 		{
 			light.SetShadowMapIndex(light_proj_view.size());
-			light.SetShadowNumberOfCascades(RendererConstants::NumberOfShadowCascades);
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(0.f, perc.x), m_camera->GetViewMatrix()));
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.x, perc.y), m_camera->GetViewMatrix()));
-			light_proj_view.push_back(light.CalculateProjViewForFrustum(m_camera->GetProjectionMatrix(perc.y, perc.z), m_camera->GetViewMatrix()));
-			light_view.emplace_back(light.CalculateView());
-			light_view.emplace_back(light.CalculateView());
-			light_view.emplace_back(light.CalculateView());
+			const auto cascades = light.CalculateCascadesProjView(m_camera->GetProjectionMatrix(), m_camera->GetViewMatrix());
+			light_proj_view.insert(light_proj_view.end(), cascades.begin(), cascades.end());
 		}
 
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
-	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view, light_view);
+	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view);
 	Renderer::UpdateDynamicLightSSBO(light_SSBOs);
 }

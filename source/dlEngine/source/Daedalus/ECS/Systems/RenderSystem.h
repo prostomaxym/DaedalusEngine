@@ -37,7 +37,6 @@ namespace Daedalus
         Scene* m_scene { nullptr };
 
         std::vector<glm::mat4> m_static_light_proj_view;
-        std::vector<glm::mat4> m_static_light_view;
 
         int m_viewport_width{ 0 };
 		int m_viewport_height{ 0 };

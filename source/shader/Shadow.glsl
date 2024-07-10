@@ -20,11 +20,6 @@ layout (std430, binding = 2) buffer LightProjView
 {
     mat4 ubo_light_proj_view[];
 };
-
-layout (std430, binding = 3) buffer LightView
-{
-    mat4 ubo_light_view[];
-};
     
 void main()
 {          

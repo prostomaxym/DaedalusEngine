@@ -123,10 +123,24 @@ namespace Daedalus
 				m_spotlight_enabled = false;
 				m_entity.RemoveComponent<SpotLightComponent>();
 			}
-			else if (key_pressed && !m_spotlight_enabled) {
+			else if (key_pressed && !m_spotlight_enabled)
+			{
 				m_spotlight_enabled = true;
-				m_entity.AddComponent<SpotLightComponent>(glm::vec3(0.f, 0.f, 0.f),
-				glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(1.f, 1.f, 1.f), false, 2.f, 100.f, glm::vec3{ 0.f,0.f,1.f }, 10.f, 35.f, true);
+
+				Daedalus::LightProps props;
+				props.light_pos = glm::vec3(0.f, 0.f, 0.f);
+				props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+				props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
+				props.specular_color = glm::vec3(1.f, 1.f, 1.f);
+				props.direction = glm::vec3(0.f, 0.f, -1.f);
+				props.light_power = 4.f;
+				props.max_distance = 100.f;
+				props.theta_angle = 10.f;
+				props.outer_cutoff = 35.f;
+				props.dynamic = true;
+				props.cast_shadows = false;
+				props.number_of_shadow_cascades = 1;
+				m_entity.AddComponent<SpotLightComponent>(props);
 			}
 
 			if (!m_entity.HasComponent<SpotLightComponent>())

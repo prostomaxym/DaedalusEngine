@@ -35,7 +35,6 @@ struct Scene
     mat4 projection_view;
     mat4 view;
     vec3 view_pos;
-    vec3 cascade_distances;
 };
 
 layout (std140, binding = 0) uniform SceneUBO
@@ -115,7 +114,6 @@ struct Scene
     mat4 projection_view;
     mat4 view;
     vec3 view_pos;
-    vec3 cascade_distances;
 };
 
 struct Light 
@@ -163,11 +161,6 @@ layout (std430, binding = 2) buffer LightProjView
     mat4 ubo_light_proj_view[];
 };
 
-layout (std430, binding = 3) buffer LightView
-{
-    mat4 ubo_light_view[];
-};
-
 uniform ObjectData u_object;
 uniform sampler2DArray u_shadowmaps;
 
@@ -204,30 +197,38 @@ float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int laye
     return mix(top_interpolated, bottom_interpolated, texel_offset.y);
 }
 
+float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_inx, int number_of_cascades)
+{
+    const float percent = float(cascade_plane_inx) / float(number_of_cascades);
+    const float cascade_exponent = 2.f;
+    return znear + (zfar - znear) * pow(percent, cascade_exponent);
+}
+
 int FindCascadeIndex(Light p_light)
 {
     if (p_light.number_of_shadow_cascades <= 1)
         return 0;
 
-    vec4 frag_pos_view_space = ubo_light_view[p_light.shadowmap_index] * vec4(fs_in.frag_pos, 1.0);
+    vec4 frag_pos_view_space = ubo_scene.view * vec4(fs_in.frag_pos, 1.0);
     float view_depth = abs(frag_pos_view_space.z);
 
-    int cascade = 2;
-    for (int i = 0; i < 3; ++i)
+    int cascade = p_light.number_of_shadow_cascades - 1;
+    for (int i = 0; i < p_light.number_of_shadow_cascades; ++i)
     {
-        if (view_depth < ubo_scene.cascade_distances[i])
+        if (view_depth < CalculateCascadePlaneDistance(0.1, 200.0, i + 1, p_light.number_of_shadow_cascades))
         {
             cascade = i;
             break;
         }
     }
-    return 1;//cascade;
+
+    return cascade;
 }
 
 float CalculateShadow(Light p_light, sampler2DArray shadow_map) 
 {
     const int cascade_ind = FindCascadeIndex(p_light);
-    vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(fs_in.frag_pos, 1.0);
+    const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(fs_in.frag_pos, 1.0);
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5 + 0.5;
 
@@ -240,10 +241,10 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
     if (p_light.number_of_shadow_cascades > 1)
     {
         const float bias_modifier = 0.5f;
-        bias *= 1 / (ubo_scene.cascade_distances[cascade_ind] * bias_modifier);
+        bias *= 1 / (CalculateCascadePlaneDistance(0.1, 200.0, cascade_ind, p_light.number_of_shadow_cascades) * bias_modifier);
     }
 
-    float current_depth = proj_coords.z;
+    const float current_depth = proj_coords.z;
     const float test_depth = current_depth - bias;
        
     float shadow = 0.0;

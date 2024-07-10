@@ -12,12 +12,10 @@ namespace Daedalus
 	{
 	public:
 		SpotLightSource() = default;
-		SpotLightSource(glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadows,
-			float light_power, float max_distance, glm::vec3 direction, float theta_angle, float outer_cutoff);
+		SpotLightSource(const LightProps& props);
 
 		void SetCutoffAngle(float theta_angle) { m_params.cutoff_angle = theta_angle; }
 
 		glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
-		glm::mat4 CalculateView() const;
 	};
 }

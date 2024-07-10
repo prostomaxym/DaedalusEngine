@@ -24,7 +24,7 @@ void Renderer::Init()
 {
 	RenderCommand::Init();
 
-	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
+	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 36, 0, UniformBuffer::Type::Dynamic);
 
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
@@ -71,13 +71,10 @@ void Renderer::BeginScene(const Camera* camera)
 	const auto PV = camera->GetProjectionViewMatrix();
 	const auto V = camera->GetViewMatrix();
 	const auto pos = camera->GetPosition();
-	const auto perc = RendererConstants::CascadePercents;
-	const auto cascades = camera->GetCascadeDistances(perc.x, perc.y, perc.z);
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
 	s_UBO_scene_data->SetData(&pos, sizeof(float) * 3, 128);
-	s_UBO_scene_data->SetData(&cascades, sizeof(float) * 3, 144);
 	s_view_frustum = camera->GetViewFrustum();
 }
 
@@ -237,9 +234,9 @@ void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view, const std::vector<glm::mat4>& light_view)
+void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view)
 {
-	if (light_proj_view.empty() || light_view.empty())
+	if (light_proj_view.empty())
 	{
 		s_SSBO_light_space_matrices.reset();
 		return;
@@ -248,20 +245,16 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 	auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
 	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 2, ShaderStorageBuffer::Type::Dynamic);
 	s_SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
-
-	SSBO_size_in_bytes = light_view.size() * sizeof(glm::mat4);
-	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 3, ShaderStorageBuffer::Type::Dynamic);
-	s_SSBO_light_space_matrices->SetData(light_view.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateNumberOfShadowCasters(int number_of_shadow_casters)
+void Renderer::UpdateNumberOfShadowMap(int number_of_shadow_map)
 {
 	FramebufferSpecification specs;
 	specs.width = GraphicsConfig::GetShadowBufferWidth();
 	specs.height = GraphicsConfig::GetShadowBufferHeight();
 	specs.samples = GraphicsConfig::GetShadowBufferSamples();
 	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = number_of_shadow_casters * RendererConstants::NumberOfShadowCascades;
+	specs.layers = number_of_shadow_map;
 
 	s_framebuffer_shadows = Framebuffer::Create(specs);
 }

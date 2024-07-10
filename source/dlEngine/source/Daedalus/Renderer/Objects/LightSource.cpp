@@ -64,23 +64,48 @@ namespace
 
         return interpolatedParams;
     }
+
+    glm::mat4 UpdateNearFar(const glm::mat4& projection, float newNearPlane, float newFarPlane)
+    {
+        float fov = 2.0f * atan(1.0f / projection[1][1]);
+        float aspectRatio = projection[1][1] / projection[0][0];
+
+        return glm::perspective(fov, aspectRatio, newNearPlane, newFarPlane);
+    }
+
+    std::pair<float, float> ExtractNearFar(const glm::mat4& projection)
+    {
+        return { projection[3][2] / (projection[2][2] - 1.0f), projection[3][2] / (projection[2][2] + 1.0f) };
+    }
+
+    float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_number, int number_of_cascades)
+    {
+        float percent = static_cast<float>(cascade_plane_number) / static_cast<float>(number_of_cascades);
+        const auto cascade_exponent = 2.f;
+        return znear + (zfar - znear) * std::pow(percent, cascade_exponent);
+    }
 }
 
-LightSource::LightSource(LightSourceType type, glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color,
-    bool cast_shadows, float light_power, float max_distance, glm::vec3 direction, float cutoff, float outer_cutoff) :
-    m_params(type
-        , light_pos
-        , ambient_color
-        , diffuse_color
-        , specular_color
-        , cast_shadows
-        , light_power
-        , max_distance
-        , direction
-        , cutoff
-        , outer_cutoff)
-    , m_max_distance(max_distance)
+LightSource::LightSource(LightSourceType type, const LightProps& props) :
+    m_params(type, props)
 {
+}
+
+std::vector<glm::mat4> LightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const
+{
+	std::vector<glm::mat4> light_proj_view;
+	light_proj_view.reserve(m_params.number_of_cascades);
+
+    const auto [original_near, original_far] = ExtractNearFar(proj);
+	for (auto i = 0; i < m_params.number_of_cascades; ++i)
+	{
+        const auto new_znear = CalculateCascadePlaneDistance(original_near, original_far, i, m_params.number_of_cascades);
+        const auto new_zfar = CalculateCascadePlaneDistance(original_near, original_far, i + 1, m_params.number_of_cascades);
+        const auto proj_clipped = UpdateNearFar(proj, new_znear, new_zfar);
+		light_proj_view.push_back(CalculateProjViewForFrustum(proj_clipped, view));
+	}
+
+	return light_proj_view;
 }
 
 void LightSource::SetMaxDistance(float distance)
@@ -88,22 +113,22 @@ void LightSource::SetMaxDistance(float distance)
 	m_params.SetMaxDistance(distance);
 }
 
-LightSSBO::LightSSBO(LightSourceType light_type, glm::vec3 light_pos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, bool cast_shadows,
-    float light_power, float max_distance, glm::vec3 dir, float cutoff, float outer_cutoff) :
-    position(light_pos)
-    , direction(dir)
-    , ambient_color(ambient)
-    , diffuse_color(diffuse)
-    , specular_color(specular)
-    , power(light_power)
-    , cutoff_angle(cutoff)
-    , outer_cutoff_angle(outer_cutoff)
+LightSSBO::LightSSBO(LightSourceType light_type, const LightProps& props) :
+    position(props.light_pos)
+    , direction(props.direction)
+    , ambient_color(props.ambient_color)
+    , diffuse_color(props.diffuse_color)
+    , specular_color(props.specular_color)
+    , power(props.light_power)
+    , cutoff_angle(std::cos(glm::radians(props.theta_angle)))
+    , outer_cutoff_angle(std::cos(glm::radians(props.outer_cutoff)))
     , type(light_type)
-    , cast_shadows(cast_shadows ? 1 : 0)
+    , cast_shadows(props.cast_shadows ? 1 : 0)
+    , number_of_cascades(props.number_of_shadow_cascades)
 {
-    if (type != 0)
+    if (type != LightSourceType::Directional)
     {
-        const auto params = GetLightParams(max_distance);
+        const auto params = GetLightParams(props.max_distance);
         constant = params.constant;
         linear = params.linear;
         quadratic = params.quadratic;

@@ -16,17 +16,8 @@ namespace
 	}
 }
 
-SpotLightSource::SpotLightSource(glm::vec3 light_pos
-	, glm::vec3 ambient_color
-	, glm::vec3 diffuse_color
-	, glm::vec3 specular_color
-	, bool cast_shadows
-	, float light_power
-	, float max_distance
-	, glm::vec3 direction
-	, float cutoff_angle
-	, float outer_cutoff) :
-    LightSource(LightSourceType::Spot, light_pos, ambient_color, diffuse_color, specular_color, cast_shadows, light_power, max_distance, direction, std::cos(glm::radians(cutoff_angle)), std::cos(glm::radians(outer_cutoff)))
+SpotLightSource::SpotLightSource(const LightProps& props) :
+    LightSource(LightSourceType::Spot, props)
 {}
 
 glm::mat4 SpotLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4&) const
@@ -44,13 +35,4 @@ glm::mat4 SpotLightSource::CalculateProjViewForFrustum(const glm::mat4& camera_p
 	const glm::mat4 light_projection = glm::perspective(fov, 1.f, znear, zfar);//std::min(zfar, m_max_distance));
 
 	return light_projection * light_view;
-}
-
-glm::mat4 SpotLightSource::CalculateView() const
-{
-	return glm::lookAt(
-		m_params.position,
-		m_params.position + m_params.direction,
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
 }

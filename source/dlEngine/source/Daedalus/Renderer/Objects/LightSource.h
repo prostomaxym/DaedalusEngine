@@ -14,12 +14,27 @@ namespace Daedalus
 		Spot = 2
 	};
 
+	struct DAEDALUS_API LightProps
+	{
+		glm::vec3 light_pos{ 0.f, 0.f, 0.f };
+		glm::vec3 ambient_color{ 0.f, 0.f, 0.f };
+		glm::vec3 diffuse_color{ 0.f, 0.f, 0.f };
+		glm::vec3 specular_color{ 0.f, 0.f, 0.f };
+		glm::vec3 direction{ 0.f, 0.f, 0.f };
+		float light_power{ 0.f };
+		float max_distance{ 100.f };
+		float theta_angle{ 60.f };;
+		float outer_cutoff{ 90.f };
+		bool dynamic{ false };
+		bool cast_shadows{ false };
+		int number_of_shadow_cascades{ 1 };
+	};
+
 	// Should match GLSL memory alignment
 	struct LightSSBO
 	{
 		LightSSBO() = default;
-		LightSSBO(LightSourceType type, glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadows, float light_power = 1.f,
-			float max_distance = 100.f, glm::vec3 direction = { 0.f, 0.f, 0.f }, float cutoff = 60.f, float outer_cutoff = 90.f);
+		LightSSBO(LightSourceType type, const LightProps& props);
 
 		// Should be aligned to N * 16 bytes
 		// Align matrices and vectors with scalars for reducing space
@@ -47,30 +62,29 @@ namespace Daedalus
 		float GetMaxDistance() const;
 	};
 
-class DAEDALUS_API LightSource
+	class DAEDALUS_API LightSource
 	{
 	public:
-	    LightSource() = default;
-		LightSource(LightSourceType type, glm::vec3 light_pos, glm::vec3 ambient_color, glm::vec3 diffuse_color, glm::vec3 specular_color, bool cast_shadows, float light_power,
-			float max_distance = 100.f, glm::vec3 direction = { 0.f, 0.f, 0.f }, float cutoff = 60.f, float outer_cutoff = 90.f);
+		LightSource() = default;
+		LightSource(LightSourceType type, const LightProps& props);
 
 		virtual ~LightSource() = default;
 
+		std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const;
 		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
 
-	    void SetDirection(glm::vec3 direction) { m_params.direction = direction; }
-	    void SetPower(float lpower) { m_params.power = lpower; }
-	    void SetShadowMapIndex(int index) { m_params.shadow_map_index = index; }
+		void SetDirection(glm::vec3 direction) { m_params.direction = direction; }
+		void SetPower(float lpower) { m_params.power = lpower; }
+		void SetShadowMapIndex(int index) { m_params.shadow_map_index = index; }
 		void SetShadowNumberOfCascades(int num) { m_params.number_of_cascades = num; }
 		void SetPosition(glm::vec3 position) { m_params.position = position; }
 		void SetMaxDistance(float distance);
 
-	    const LightSSBO& GetShaderSSBO() const { return m_params; }
+		const LightSSBO& GetShaderSSBO() const { return m_params; }
 		int GetShadowNumberOfCascades() const { return m_params.number_of_cascades; }
-	    bool CastShadow() const { return m_params.cast_shadows > 0; }
+		bool CastShadow() const { return m_params.cast_shadows > 0; }
 
 	protected:
-	    LightSSBO m_params{};
-		float m_max_distance{ 0.f };
+		LightSSBO m_params{};;
 	};
 }

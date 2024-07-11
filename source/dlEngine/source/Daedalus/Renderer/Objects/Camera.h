@@ -6,7 +6,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Daedalus {
-
 	enum class DAEDALUS_API CameraMovement
 	{
 		FORWARD,
@@ -15,6 +14,12 @@ namespace Daedalus {
 		RIGHT,
 		UP,
 		DOWN
+	};
+
+	enum class CameraType
+	{
+		FirstPerson,
+		ThirdPerson
 	};
 
 	struct DAEDALUS_API CameraPositionProps
@@ -52,7 +57,11 @@ namespace Daedalus {
 
 		glm::vec3 GetDirection() const { return m_front; }
 		glm::vec3 GetUp() const { return m_up; }
+		glm::vec3 GetRight() const { return m_right; }
 		glm::vec3 GetPosition() const { return m_position; }
+
+		float GetYaw() const { return m_yaw; }
+		float GetPitch() const { return m_yaw; }
 
 		virtual float GetNearPlane() const = 0;
 		virtual float GetFarPlane() const = 0;
@@ -62,6 +71,7 @@ namespace Daedalus {
 		void SetMovementSpeed(float speed) { m_movement_speed = speed; }
 		void SetSensivitity(float senc) { m_mouse_sensitivity = senc; }
 		void SetZoomSpeed(float speed) { m_zoom_speed = speed; }
+		void SetPersonParams(float distance, float height);
 
 		void ProcessKeyboard(CameraMovement direction, float delta_time);
 		void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);
@@ -72,6 +82,9 @@ namespace Daedalus {
 
 	protected:
 		void UpdateView();
+
+		float m_distance = 0.f;
+		float m_height = 0.f;
 
 		glm::vec3 m_position;
 		glm::vec3 m_front;

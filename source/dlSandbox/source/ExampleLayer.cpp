@@ -75,6 +75,7 @@ void PrepareNukeScene(Scene& scene)
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto camera = camera_comp.camera.get();
 	camera->SetPosition(glm::vec3(0.f, 0.f, 0.f));
+	camera->SetPersonParams(7.f, 4.f);
 	camera->RotateCamera(-90.f, 0.f);
 	camera->SetMovementSpeed(15.f);
 	camera->SetSensivitity(5.f);
@@ -82,7 +83,13 @@ void PrepareNukeScene(Scene& scene)
 	auto& camera_scripts = camera_entity.AddComponent<NativeScriptComponent>();
 	camera_scripts.AddScript<CameraController>(camera_entity);
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
-	camera_scripts.AddScript<MovingSpotLightScript>(camera_entity);
+	camera_scripts.AddScript<PlayerControllerScript>(camera_entity);
+
+	camera_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", enhance_model_flags);
+	auto& miran_transform = camera_entity.GetComponent<TransformComponent>();
+	miran_transform.scale = glm::vec3(2.f, 2.f, 2.f);
+	miran_transform.translation = glm::vec3(0.f, 0.f, 0.f);
+	miran_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
 
 	props.light_pos = glm::vec3(0.f, 0.0f, 0.0f);
 	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
@@ -105,7 +112,7 @@ void PrepareNukeScene(Scene& scene)
 	 props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
-	 props.light_power = 0.1f;
+	 props.light_power = 1.1f;
 	 props.cast_shadows = true;
 	 props.number_of_shadow_cascades = 6;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);

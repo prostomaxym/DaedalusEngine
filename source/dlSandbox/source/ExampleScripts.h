@@ -105,16 +105,17 @@ namespace Daedalus
 	};
 
 
-	class MovingSpotLightScript : public NativeScript
+	class PlayerControllerScript : public NativeScript
 	{
 	public:
-		MovingSpotLightScript(Entity entity) : NativeScript(entity) {}
+		PlayerControllerScript(Entity entity) : NativeScript(entity) {}
 
 	private:
 		bool m_spotlight_enabled{ true };
-	protected:
+		bool m_thirdperson{ true };
+		const float turn_speed = 10.f;
 
-		virtual void OnUpdate(DeltaTime dt) override
+		void UpdateSpotLight()
 		{
 			const auto key_pressed = Input::IsKeyReleased(DL_KEY_F);
 
@@ -147,8 +148,66 @@ namespace Daedalus
 
 			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 			auto& light = m_entity.GetComponent<SpotLightComponent>().light;
-			light.SetPosition(camera->GetPosition());
-			light.SetDirection(camera->GetDirection());
+
+			if (!m_thirdperson)
+			{
+				light.SetPosition(camera->GetPosition());
+				light.SetDirection(camera->GetDirection());
+			}
+			else
+			{
+				auto& trans = m_entity.GetComponent<TransformComponent>();
+				light.SetPosition(camera->GetPosition() + camera->GetDirection());
+				light.SetDirection(trans.rotation);
+			}
+
+		}
+		void UpdatePlayerModel(DeltaTime dt)
+		{
+			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+			auto& trans = m_entity.GetComponent<TransformComponent>();
+			trans.translation = camera->GetPosition();
+
+			glm::vec3 camera_forward = camera->GetDirection();
+			glm::vec3 camera_right = camera->GetRight();
+			glm::vec3 camera_up = camera->GetUp();
+
+			glm::quat rotation;
+			bool key_pressed = false;
+
+			if (Input::IsKeyHold(DL_KEY_W))
+			{
+				rotation = glm::quatLookAt(-camera_forward, camera_up); // Facing the camera
+				key_pressed = true;
+			}
+			if (Input::IsKeyHold(DL_KEY_S))
+			{
+				rotation = glm::quatLookAt(camera_forward, camera_up); // Facing away from the camera
+				key_pressed = true;
+			}
+
+			if (Input::IsKeyHold(DL_KEY_A))
+			{
+				rotation = glm::quatLookAt(camera_right, camera_up); // Facing right of the camera
+				key_pressed = true;
+			}
+
+			if (Input::IsKeyHold(DL_KEY_D)* dt.GetSeconds())
+			{
+				rotation = glm::quatLookAt(-camera_right, camera_up); // Facing left of the camera
+				key_pressed = true;
+			}
+
+			if(key_pressed)
+				trans.rotation = glm::degrees(glm::eulerAngles(rotation) * dt.GetSeconds());
+		}
+
+	protected:
+
+		virtual void OnUpdate(DeltaTime dt) override
+		{
+			UpdatePlayerModel(dt);
+			UpdateSpotLight();
 		}
 	};
 }

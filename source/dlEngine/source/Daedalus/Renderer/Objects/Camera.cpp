@@ -17,7 +17,11 @@ Frustum Camera::GetViewFrustum() const
 
 glm::mat4 Camera::GetViewMatrix() const
 {
-	return glm::lookAt(m_position, m_position + m_front, m_up);
+	glm::vec3 position = m_position;
+	position.y += m_height;
+	position += m_front * (-m_distance);
+
+	return glm::lookAt(position, m_position + m_front, m_up);
 }
 
 glm::mat4 Camera::GetProjectionViewMatrix() const
@@ -44,6 +48,12 @@ void Camera::SetPosition(glm::vec3 position)
 	m_position = position;
 
 	UpdateView();
+}
+
+void Camera::SetPersonParams(float distance, float height)
+{
+	m_distance = distance;
+	m_height = height;
 }
 
 void Camera::SetRotation(float xoffset, float yoffset)

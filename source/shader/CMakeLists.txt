@@ -8,6 +8,8 @@ project(
     )
 
 set(PROJECT_FILES
+    LightSSBO.hglsl
+    Scene.hglsl
     Cubemap.glsl
     Shadow.glsl
     Standard.glsl

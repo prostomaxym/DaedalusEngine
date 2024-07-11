@@ -1,25 +1,22 @@
+Camera type (third person)
+Fps lock window swap
+Tesselation
 CSM smoothing
 Point lights
-Camera type (third person)
 PBR
 Face culling
-Tesselation
 Blending
 Parallax
 HDR
 Derefered
 SSAO
-Physics
-Audio
-Lua
-Level Editor
-Threads
 Depth of field
 Blur
-Temporal AA
 Reflections
 Lens flares
+
 Particle
+Temporal AA
 Global Illumination
 HBAO+
 Water
@@ -27,5 +24,12 @@ Procedural clouds/sky
 Screen Space Reflections
 Screen Space Shadows
 Bloom
+
+Physics
+Audio
+Lua
+Level Editor
+Threads
+
 Log file
 Debug overlay + profiler

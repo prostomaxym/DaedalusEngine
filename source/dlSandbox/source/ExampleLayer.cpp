@@ -89,7 +89,7 @@ void PrepareNukeScene(Scene& scene)
 	auto& miran_transform = camera_entity.GetComponent<TransformComponent>();
 	miran_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miran_transform.translation = glm::vec3(0.f, 0.f, 0.f);
-	miran_transform.rotation = glm::vec3(0.f, 90.f, 0.f);
+	miran_transform.rotation = glm::vec3(0.f, 180.f, 0.f);
 
 	props.light_pos = glm::vec3(0.f, 0.0f, 0.0f);
 	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
@@ -112,7 +112,7 @@ void PrepareNukeScene(Scene& scene)
 	 props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
-	 props.light_power = 1.1f;
+	 props.light_power = 0.1f;
 	 props.cast_shadows = true;
 	 props.number_of_shadow_cascades = 6;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);

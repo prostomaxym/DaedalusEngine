@@ -1,5 +1,6 @@
 #vertex
 #version 450 core
+#include "Scene.hglsl"
 
 layout (location = 0) in vec3 vin_vertices;
 layout (location = 1) in vec2 vin_texcoord;
@@ -28,20 +29,6 @@ struct ObjectData
     bool enable_diffuse_map;
     bool enable_specular_map;
     bool enable_normal_map;
-};
-
-struct Scene
-{
-    mat4 projection_view;
-    mat4 view;
-    vec3 view_pos;
-    float near_plane;
-    float far_plane;
-};
-
-layout (std140, binding = 0) uniform SceneUBO
-{
-    Scene ubo_scene;
 };
 
 uniform ObjectData u_object; 
@@ -74,7 +61,8 @@ void main()
 // ----------------------------------------------------------------------------- //
 #fragment
 #version 450 core
-
+#include "Scene.hglsl"
+#include "LightSSBO.hglsl"
 
 // -------------------------------------------Inputs/Outputs------------------------------------------------- //
 in VS_OUT
@@ -89,14 +77,6 @@ out vec4 fout_color;
 
 
 // ----------------------------------------------Structures-------------------------------------------------- //
-struct GraphicConfig
-{
-    bool enable_gamma_correction;
-    float gamma_value;
-    int PCF_multiplier;
-    float csm_exponent;
-};
-
 struct ObjectData
 {
     sampler2D tex_diffuse;
@@ -112,57 +92,11 @@ struct ObjectData
     bool enable_normal_map;
 };
 
-struct Scene
-{
-    mat4 projection_view;
-    mat4 view;
-    vec3 view_pos;
-    float near_plane;
-    float far_plane;
-};
-
-struct Light 
-{
-    vec3 position;
-    int type; // 0 - directional, 1 - point, 2 - spot
-    vec3 direction;
-    bool cast_shadows;
-    vec3 ambient;
-    int shadowmap_index;
-    vec3 diffuse;
-    int number_of_shadow_cascades;
-    vec3 specular;
-    float power; 
-    float constant;
-	float linear;
-	float quadratic;
-    float cutoff_angle;
-    float outer_cutoff_angle;
-};
 
 // ------------------------------------------------Buffers----------------------------------------------------- //
-layout (std140, binding = 0) uniform SceneUBO
-{
-    Scene ubo_scene;
-};
-
-layout (std140, binding = 1) uniform GraphicConfigUBO
-{
-    GraphicConfig ubo_graphic_config;
-};
-
-layout (std430, binding = 0) buffer LightSSBO
-{
-    Light ssbo_lights[];
-};
-
-layout (std430, binding = 1) buffer LightProjView
-{
-    mat4 ubo_light_proj_view[];
-};
-
 uniform ObjectData u_object;
 uniform sampler2DArray u_shadowmaps;
+
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
 vec3 g_ambient_tex = vec3(0.0, 0.0, 0.0);

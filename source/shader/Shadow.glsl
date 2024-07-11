@@ -12,15 +12,11 @@ void main()
 // ----------------------------------------------------------------------------- //
 #geometry
 #version 450 core
-    
+#include "LightSSBO.hglsl"
+
 layout(triangles, invocations = 5) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout (std430, binding = 1) buffer LightProjView
-{
-    mat4 ubo_light_proj_view[];
-};
-    
 void main()
 {          
     for (int i = 0; i < 3; ++i)

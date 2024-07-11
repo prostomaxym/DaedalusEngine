@@ -4,6 +4,8 @@
 
 #include <fstream>
 
+#include "Daedalus/Config/PathConfig.h"
+
 using namespace Daedalus;
 
 GLuint OpenGLShaderCompiler::CompileFromCode(const std::string& code, ShaderType type)
@@ -160,8 +162,11 @@ GLenum OpenGLShaderCompiler::GetShaderGLType(ShaderType type)
     case ShaderType::Geometry:
         GLtype = GL_GEOMETRY_SHADER;
         break;
-    case ShaderType::Tessellation:
+    case ShaderType::TessellationControl:
         GLtype = GL_TESS_CONTROL_SHADER;
+        break;
+    case ShaderType::TessellationEvaluation:
+        GLtype = GL_TESS_EVALUATION_SHADER;
         break;
     case ShaderType::Compute:
         GLtype = GL_COMPUTE_SHADER;
@@ -189,8 +194,11 @@ std::string OpenGLShaderCompiler::GetShaderTypeString(ShaderType type)
     case ShaderType::Geometry:
         type_str = "Geometry";
         break;
-    case ShaderType::Tessellation:
-        type_str = "Tessellation";
+    case ShaderType::TessellationControl:
+        type_str = "Tessellation Control";
+        break;
+    case ShaderType::TessellationEvaluation:
+        type_str = "Tessellation Evaluation";
         break;
     case ShaderType::Compute:
         type_str = "Compute";
@@ -228,9 +236,13 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
         {
             current_shader_type = ShaderType::Geometry;
         }
-        else if (tag == "#tessellation")
+        else if (tag == "#tesscontrol")
         {
-            current_shader_type = ShaderType::Tessellation;
+            current_shader_type = ShaderType::TessellationControl;
+        }
+        else if (tag == "#tesseval")
+        {
+            current_shader_type = ShaderType::TessellationEvaluation;
         }
         else if (tag == "#compute")
         {
@@ -251,6 +263,16 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
             }
             SetShaderType(line);
             current_tag = line;
+        }
+        else if (line.rfind("#include", 0) == 0)
+        {
+            std::istringstream include_stream(line);
+            std::string directive, filepath;
+            include_stream >> directive >> filepath;
+
+            filepath = filepath.substr(1, filepath.length() - 2); // Remove quotes
+            std::string included_content = ReadHeaderFile(PathConfig::GetShadersPath() / filepath);
+            current_shader_code += included_content + "\n";
         }
         else
         {
@@ -282,6 +304,16 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
     return SplitCodeIntoShaders(content);
 }
 
+std::string OpenGLShaderCompiler::ReadHeaderFile(const std::filesystem::path& path)
+{
+    std::ifstream file(path);
+    if (!file.is_open())
+        throw std::runtime_error("Failed to open GLSL header file: " + path.string());
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
 void OpenGLShaderCompiler::Pack(const std::filesystem::path& file_name, const Shader::ShaderBinaryData& data)
 {
     try

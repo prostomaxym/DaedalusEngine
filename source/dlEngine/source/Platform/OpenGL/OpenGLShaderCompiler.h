@@ -19,7 +19,8 @@ namespace Daedalus {
 			Vertex,
 			Fragment,
 			Geometry,
-			Tessellation,
+			TessellationControl,
+			TessellationEvaluation,
 			Compute,
 			Unknown
 		};
@@ -38,6 +39,7 @@ namespace Daedalus {
 
 		static std::map<ShaderType, std::string> SplitFileIntoShaders(const std::filesystem::path& file_path);
 		static std::map<ShaderType, std::string> SplitCodeIntoShaders(const std::string& content);
+		static std::string ReadHeaderFile(const std::filesystem::path& path);
 
 		static GLenum GetShaderGLType(ShaderType type);
 		static std::string GetShaderTypeString(ShaderType type);

@@ -1,0 +1,26 @@
+struct GraphicConfig
+{
+    bool enable_gamma_correction;
+    float gamma_value;
+    int PCF_multiplier;
+    float csm_exponent;
+};
+
+struct Scene
+{
+    mat4 projection_view;
+    mat4 view;
+    vec3 view_pos;
+    float near_plane;
+    float far_plane;
+};
+
+layout (std140, binding = 0) uniform SceneUBO
+{
+    Scene ubo_scene;
+};
+
+layout (std140, binding = 1) uniform GraphicConfigUBO
+{
+    GraphicConfig ubo_graphic_config;
+};

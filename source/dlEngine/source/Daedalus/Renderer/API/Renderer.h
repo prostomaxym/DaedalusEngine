@@ -28,6 +28,7 @@ namespace Daedalus {
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 		static void SetupGraphicSettings();
 		static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
+		static ShaderLibrary* GetShaderLibrary() { return s_shader_library.get(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
@@ -38,26 +39,23 @@ namespace Daedalus {
 		static void Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Cubemap* model, const glm::mat4& transform = glm::mat4(1.0f));
+
 		static void SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 
-		static void UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_UBOs);
-		static void UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_UBOs);
-		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
-
-		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
-		static void UpdateNumberOfShadowMap(int number_of_shadow_map);
 		static void BindShadowMap(const Shader* color_pass_shader);
-
-	public:
-		static std::unique_ptr<ShaderLibrary> s_shader_library;
+		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
+		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
+		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
+		static void UpdateNumberOfShadowMap(int number_of_shadow_map);
 
 	private:
+		static std::unique_ptr<ShaderLibrary> s_shader_library;
+
 		static std::shared_ptr<UniformBuffer> s_UBO_scene_data;
 		static std::shared_ptr<UniformBuffer> s_UBO_graphic_config;
 
 		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_light_space_matrices;
-		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_static_lighting;
-		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_dynamic_lighting;
+		static std::shared_ptr<ShaderStorageBuffer> s_SSBO_lighting;
 
 		static std::shared_ptr<Framebuffer> s_framebuffer_shadows;
 

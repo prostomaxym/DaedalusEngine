@@ -130,7 +130,7 @@ void Scene::OnComponentAdded<RenderableObjectComponent>(Entity entity, Renderabl
 }
 
 template<>
-void Scene::OnComponentAdded<CubemapComponent>(Entity entity, CubemapComponent& component)
+void Scene::OnComponentAdded<SkyboxComponent>(Entity entity, SkyboxComponent& component)
 {
 }
 

@@ -35,7 +35,7 @@ namespace Daedalus
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag)
+		explicit TagComponent(std::string_view tag)
 			: tag(tag) {}
 	};
 
@@ -47,7 +47,7 @@ namespace Daedalus
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& translation)
+		explicit TransformComponent(const glm::vec3& translation)
 			: translation(translation) {}
 
 		glm::mat4 GetTransform() const
@@ -63,24 +63,22 @@ namespace Daedalus
 	struct RenderableObjectComponent
 	{
 		Model model;
-		std::shared_ptr<Shader> shader;
 
 		RenderableObjectComponent() = default;
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;
-		RenderableObjectComponent(const std::filesystem::path& path, std::shared_ptr<Shader> shader_, ModelParserFlags parser_flags = ModelParserFlags::NONE)
-			: model(path, parser_flags), shader(shader_){}
+		explicit RenderableObjectComponent(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE)
+			: model(path, parser_flags) {}
 	};
 
-	struct CubemapComponent
+	struct SkyboxComponent
 	{
 		Cubemap cubemap;
-		std::shared_ptr<Shader> shader;
 		float rotation_angle{ 0.f };
 
-		CubemapComponent() = default;
-		CubemapComponent(const CubemapComponent&) = default;
-		CubemapComponent(std::vector<std::string>& faces, std::shared_ptr<Shader> shader_, float rotation_ang = 0.f)
-			: cubemap(faces), shader(shader_), rotation_angle(rotation_ang){}
+		SkyboxComponent() = default;
+		SkyboxComponent(const SkyboxComponent&) = default;
+		explicit SkyboxComponent(std::vector<std::string>& faces, float rotation_ang = 0.f)
+			: cubemap(faces), rotation_angle(rotation_ang){}
 	};
 
 	struct CameraComponent
@@ -99,30 +97,27 @@ namespace Daedalus
 	struct DirectionalLightComponent
 	{
 		DirectionalLightSource light;
-		bool is_dynamic{ false };
 
 		DirectionalLightComponent() = default;
 		DirectionalLightComponent(const DirectionalLightComponent&) = default;
-		DirectionalLightComponent(const LightProps& props) : light(props), is_dynamic(props.dynamic) {}
+		explicit DirectionalLightComponent(const LightProps& props) : light(props) {}
 	};
 
 	struct PointLightComponent
 	{
 		PointLightSource light;
-		bool is_dynamic{ false };
 
 		PointLightComponent() = default;
 		PointLightComponent(const PointLightComponent&) = default;
-		PointLightComponent(const LightProps& props) : light(props), is_dynamic(props.dynamic) {}
+		explicit PointLightComponent(const LightProps& props) : light(props) {}
 	};
 
 	struct SpotLightComponent
 	{
 		SpotLightSource light;
-		bool is_dynamic{ false };
 
 		SpotLightComponent() = default;
 		SpotLightComponent(const SpotLightComponent&) = default;
-		SpotLightComponent(const LightProps& props) : light(props), is_dynamic(props.dynamic) {}
+		explicit SpotLightComponent(const LightProps& props) : light(props) {}
 	};
 }

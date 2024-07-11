@@ -137,7 +137,6 @@ namespace Daedalus
 				props.max_distance = 100.f;
 				props.theta_angle = 10.f;
 				props.outer_cutoff = 35.f;
-				props.dynamic = true;
 				props.cast_shadows = false;
 				props.number_of_shadow_cascades = 1;
 				m_entity.AddComponent<SpotLightComponent>(props);

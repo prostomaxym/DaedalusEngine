@@ -14,8 +14,7 @@ std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<Sha
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data;
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices;
-std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_static_lighting = nullptr;
-std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_dynamic_lighting = nullptr;
+std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_lighting = nullptr;
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
 Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_light_projection_view = glm::mat4();
@@ -43,6 +42,7 @@ void Renderer::Shutdown()
 
 void Renderer::SetupGraphicSettings()
 {
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading Graphic Settings");
 	RenderCommand::SetupGraphicSettings();
 
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(float) * 4, 1, UniformBuffer::Type::Static);
@@ -90,12 +90,8 @@ void Renderer::EndScene()
 
 void Renderer::Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
 {
-	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
-
 	RenderCommand::DrawIndexed(vertex_array);
-
-	shader->Unbind();
 }
 
 void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
@@ -103,7 +99,6 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 	if (!mesh->IsVisible(s_view_frustum, transform))
 		return;
 
-	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
 
 	if (mesh->GetIndexCount() > 0)
@@ -116,13 +111,10 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 		/* Without EBO */
 		RenderCommand::DrawUnindexed(mesh->GetVertexArray().get(), mesh->GetVertexCount());
 	}
-
-	shader->Unbind();
 }
 
 void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
-	shader->Bind();
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
 
 	const auto& meshes = model->GetMeshes();
@@ -179,13 +171,10 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 		const auto vertex_array = mesh->GetVertexArray();
 		RenderCommand::DrawIndexed(vertex_array.get());
 	}
-
-	shader->Unbind();
 }
 
 void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
 {
-	shader->Bind();
 	shader->SetMat4(ShaderConstants::CubemapProjectionView, transform);
 
 	const auto& vertex_array = cubemap->GetVertexArray();
@@ -194,13 +183,10 @@ void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::m
 	shader->SetInt(ShaderConstants::CubemapTexture, 0);
 
 	RenderCommand::DrawUnindexed(vertex_array.get(), cubemap->GetIndexCount());
-
-	shader->Unbind();
 }
 
 void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
-	shader->Bind();
 	shader->SetMat4(ShaderConstants::ShadowModel, transform);
 
 	const auto& meshes = model->GetMeshes();
@@ -210,34 +196,19 @@ void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, c
 		const auto vertex_array = mesh->GetVertexArray();
 		RenderCommand::DrawIndexed(vertex_array.get());
 	}
-
-	shader->Unbind();
 }
 
-void Renderer::UpdateStaticLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
+void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
 	{
-		s_SSBO_static_lighting.reset();
+		s_SSBO_lighting.reset();
 		return;
 	}
 
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
-	s_SSBO_static_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Static);
-	s_SSBO_static_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
-}
-
-void Renderer::UpdateDynamicLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
-{
-	if (light_SSBOs.empty())
-	{
-		s_SSBO_dynamic_lighting.reset();
-		return;
-	}
-
-	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
-	s_SSBO_dynamic_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
-	s_SSBO_dynamic_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
+	s_SSBO_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Dynamic);
+	s_SSBO_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
 void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view)
@@ -248,8 +219,8 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 		return;
 	}
 
-	auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
-	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 2, ShaderStorageBuffer::Type::Dynamic);
+	const auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
+	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
 	s_SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
 }
 

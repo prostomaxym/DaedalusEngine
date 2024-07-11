@@ -14,7 +14,7 @@ namespace Daedalus
     public:
         RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}
 
-        void OnStartRuntime();
+        void OnStartRuntime() const;
         void OnUpdateRuntime(DeltaTime dt) const;
 
         void SetCamera(Camera* camera) { m_camera = camera; }
@@ -24,8 +24,7 @@ namespace Daedalus
         void DoLightPass() const;
         void DoColorPass() const;
 
-        void UpdateStaticLighting();
-        void UpdateDynamicLighting() const;
+        void UpdateLighting() const;
 
         int CountShadowCasters() const;
 
@@ -35,8 +34,6 @@ namespace Daedalus
         entt::registry& m_registry;
         Camera* m_camera { nullptr };
         Scene* m_scene { nullptr };
-
-        std::vector<glm::mat4> m_static_light_proj_view;
 
         int m_viewport_width{ 0 };
 		int m_viewport_height{ 0 };

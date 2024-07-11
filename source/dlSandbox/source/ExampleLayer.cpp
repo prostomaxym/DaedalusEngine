@@ -19,7 +19,7 @@ namespace
 		ModelParserFlags::CALC_TANGENT_SPACE;
 
 	//Create complex level from multiple related obj files
-	void CreateEntitiesForOBJFiles(const std::string& folderPath, Scene& scene, std::shared_ptr<Shader> standard_shader, const TransformComponent& transform)
+	void CreateEntitiesForOBJFiles(const std::string& folderPath, Scene& scene, const TransformComponent& transform)
 	{
 		namespace fs = std::filesystem;
 
@@ -30,15 +30,13 @@ namespace
 				std::string filename = entry.path().stem().string();
 
 				auto model_entity = scene.CreateEntity(filename);
-				model_entity.AddComponent<RenderableObjectComponent>(entry.path().string(), standard_shader, enhance_model_flags);
+				model_entity.AddComponent<RenderableObjectComponent>(entry.path().string(), enhance_model_flags);
 
 				auto& model_transform = model_entity.GetComponent<TransformComponent>();
 				model_transform = transform;
 			}
 		}
 	}
-	//CreateEntitiesForOBJFiles("C:/maxym/objects/Anor Londo/", m_scene, model_transform);
-
 }
 
 void PrepareNukeScene(Scene& scene);
@@ -66,15 +64,13 @@ void PrepareNukeScene(Scene& scene)
 {
 	Daedalus::LightProps props;
 
-	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-
 	auto camera_entity = scene.CreateEntity("Main Camera");
 
 	const auto aspect_ratio = Application::GetInstance()->GetWindow().GetAspectRatio();
-	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, aspect_ratio, 0.1f, 200.f));
+	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, aspect_ratio, 0.1f, 200.f));
 
-	const auto scale_ortho = 20.f;
-	auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
+	//const auto scale_ortho = 20.f;
+	//auto& camera_comp = camera_entity.AddComponent<CameraComponent>(-scale_ortho * aspect_ratio, scale_ortho * aspect_ratio, -scale_ortho, scale_ortho, -scale_ortho * 10.0f, scale_ortho * 10.f);
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto camera = camera_comp.camera.get();
@@ -97,7 +93,6 @@ void PrepareNukeScene(Scene& scene)
 	props.max_distance = 100.f;
 	props.theta_angle = 10.f;
 	props.outer_cutoff = 35.f;
-	props.dynamic = true;
 	props.cast_shadows = false;
 	props.number_of_shadow_cascades = 1;
 	camera_entity.AddComponent<SpotLightComponent>(props);
@@ -111,7 +106,6 @@ void PrepareNukeScene(Scene& scene)
 	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
 	 props.light_power = 0.1f;
-	 props.dynamic = true;
 	 props.cast_shadows = true;
 	 props.number_of_shadow_cascades = 6;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);
@@ -120,7 +114,7 @@ void PrepareNukeScene(Scene& scene)
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto spot_entity = scene.CreateEntity("Spot Light");
-	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", standard_shader, enhance_model_flags);
+	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", enhance_model_flags);
 	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
 	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
@@ -135,7 +129,6 @@ void PrepareNukeScene(Scene& scene)
 	props.max_distance = 100.f;
 	props.theta_angle = 5.f;
 	props.outer_cutoff = 7.f;
-	props.dynamic = false;
 	props.cast_shadows = true;
 	props.number_of_shadow_cascades = 1;
 	spot_entity.AddComponent<SpotLightComponent>(props);
@@ -147,7 +140,6 @@ void PrepareNukeScene(Scene& scene)
 	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
 	props.light_power = 80.f;
 	props.max_distance = 13.f;
-	props.dynamic = false;
 	props.cast_shadows = false;
 	props.number_of_shadow_cascades = 1;
 	spot_entity.AddComponent<PointLightComponent>(props);
@@ -156,7 +148,7 @@ void PrepareNukeScene(Scene& scene)
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto nuke_entity = scene.CreateEntity("Nuke");
-	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", standard_shader, enhance_model_flags);
+	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", enhance_model_flags);
 	auto& nuke_transfrom = nuke_entity.GetComponent<TransformComponent>();
 	nuke_transfrom.scale = glm::vec3(2.f, 2.f, 2.f);
 	nuke_transfrom.translation = glm::vec3(-50.f, 18.f, -120.f);
@@ -166,7 +158,7 @@ void PrepareNukeScene(Scene& scene)
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto kratos_model = scene.CreateEntity("Kratos");
-	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", standard_shader, enhance_model_flags);
+	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	kratos_transform.translation = glm::vec3(0.f, -2.8f, -18.f);
@@ -176,7 +168,7 @@ void PrepareNukeScene(Scene& scene)
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto miranda_entity = scene.CreateEntity("Miranda");
-	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", standard_shader, enhance_model_flags);
+	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miranda_transform.translation = glm::vec3(-12.f, -2.8f, -18.f);
@@ -188,7 +180,7 @@ void PrepareNukeScene(Scene& scene)
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto tank_entity = scene.CreateEntity("Tank");
-	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", standard_shader, enhance_model_flags);
+	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", enhance_model_flags);
 	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
 	tank_transform.scale = glm::vec3(3.f, 3.f, 3.f);
 	tank_transform.translation = glm::vec3(-25.f, -2.8f, -23.f);
@@ -214,10 +206,8 @@ void PrepareNukeScene(Scene& scene)
 		face = WorkingDirectory::GetAssetsDirectory().string() + face;
 	}
 
-	const auto cubemap_shader = Renderer::s_shader_library->Get(ShaderConstants::CubemapShader);
-
 	auto cubemap_entity = scene.CreateEntity("Cubemap");
-	cubemap_entity.AddComponent<CubemapComponent>(faces, cubemap_shader, 0.f);
+	cubemap_entity.AddComponent<SkyboxComponent>(faces, 0.f);
 	auto& cubemap_transform = cubemap_entity.GetComponent<TransformComponent>();
 	cubemap_transform.scale = glm::vec3(1.f, 1.f, 1.f);
 	cubemap_transform.translation = glm::vec3(0.f, 0.f, 0.f);
@@ -227,8 +217,6 @@ void PrepareNukeScene(Scene& scene)
 
 void PrepareAnorLondoScene(Scene& scene)
 {
-	const auto standard_shader = Renderer::s_shader_library->Get(ShaderConstants::StandardShader);
-
 	auto camera_entity = scene.CreateEntity("Main Camera");
 	auto& camera_comp =camera_entity.AddComponent<CameraComponent>(CameraProjectionProps(80.f, Application::GetInstance()->GetWindow().GetAspectRatio(), 0.1f, 10000.f));
 	auto camera = camera_comp.camera.get();
@@ -249,7 +237,6 @@ void PrepareAnorLondoScene(Scene& scene)
 	props.specular_color = glm::vec3(0.95f, 0.85f, 0.65f);
 	props.direction = glm::vec3(0.3f, 1.f, 1.2f);
 	props.light_power = 1.f;
-	props.dynamic = true;
 	props.cast_shadows = true;
 	props.number_of_shadow_cascades = 6;
 	light_entity.AddComponent<DirectionalLightComponent>(props);
@@ -258,17 +245,17 @@ void PrepareAnorLondoScene(Scene& scene)
 	transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	transform.translation = glm::vec3(510.f, -240.f, 730.f);
 	transform.rotation = glm::vec3(0.f, -90.f, 0.f);
-	CreateEntitiesForOBJFiles(WorkingDirectory::GetAssetsDirectory().string() + "/models/Anor Londo/", scene, standard_shader, transform);
+	CreateEntitiesForOBJFiles(WorkingDirectory::GetAssetsDirectory().string() + "/models/Anor Londo/", scene, transform);
 
 	auto kratos_model = scene.CreateEntity("Kratos");
-	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", standard_shader, enhance_model_flags);
+	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	kratos_transform.translation = glm::vec3(9.f, -6.f, -20.f);
 	kratos_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 
 	auto miranda_entity = scene.CreateEntity("Miranda");
-	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", standard_shader, enhance_model_flags);
+	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miranda_transform.translation = glm::vec3(-9.f, -6.f, -20.f);
@@ -277,7 +264,7 @@ void PrepareAnorLondoScene(Scene& scene)
 	miranda_scripts.AddScript<RotationModelScript>(miranda_entity, 0.1f);
 
 	auto marci_entity = scene.CreateEntity("Marci");
-	marci_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Marci/marci.fbx", standard_shader, enhance_model_flags);
+	marci_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Marci/marci.fbx", enhance_model_flags);
 	auto& marci_transform = marci_entity.GetComponent<TransformComponent>();
 	marci_transform.scale = glm::vec3(0.0002f, 0.0002f, 0.0002f);
 	marci_transform.translation = glm::vec3(-9.f, -6.f, -35.f);

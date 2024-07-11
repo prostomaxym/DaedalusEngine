@@ -25,7 +25,6 @@ namespace Daedalus
 		float max_distance{ 100.f };
 		float theta_angle{ 60.f };;
 		float outer_cutoff{ 90.f };
-		bool dynamic{ false };
 		bool cast_shadows{ false };
 		int number_of_shadow_cascades{ 1 };
 	};

@@ -151,17 +151,12 @@ layout (std140, binding = 1) uniform GraphicConfigUBO
     GraphicConfig ubo_graphic_config;
 };
 
-layout (std430, binding = 0) buffer StaticLightSSBO
+layout (std430, binding = 0) buffer LightSSBO
 {
-    Light ssbo_static_lights[];
+    Light ssbo_lights[];
 };
 
-layout (std430, binding = 1) buffer DynamicLightSSBO
-{
-    Light ssbo_dynamic_lights[];
-};
-
-layout (std430, binding = 2) buffer LightProjView
+layout (std430, binding = 1) buffer LightProjView
 {
     mat4 ubo_light_proj_view[];
 };
@@ -353,23 +348,13 @@ void main()
     }
 
     vec3 light_sum = vec3(0.0);
-    for (int i = 0; i < ssbo_static_lights.length(); ++i)
+    for (int i = 0; i < ssbo_lights.length(); ++i)
     {
-        switch(ssbo_static_lights[i].type)
+        switch(ssbo_lights[i].type)
         {
-            case 0: light_sum += CalculateDirectionalLight(ssbo_static_lights[i]);   break;
-            case 1: light_sum += CalculatePointLight(ssbo_static_lights[i]);         break;
-            case 2: light_sum += CalculateSpotLight(ssbo_static_lights[i]);          break;
-        }
-    }
-
-    for (int i = 0; i < ssbo_dynamic_lights.length(); ++i)
-    {
-        switch(ssbo_dynamic_lights[i].type)
-        {
-            case 0: light_sum += CalculateDirectionalLight(ssbo_dynamic_lights[i]);   break;
-            case 1: light_sum += CalculatePointLight(ssbo_dynamic_lights[i]);         break;
-            case 2: light_sum += CalculateSpotLight(ssbo_dynamic_lights[i]);          break;
+            case 0: light_sum += CalculateDirectionalLight(ssbo_lights[i]);   break;
+            case 1: light_sum += CalculatePointLight(ssbo_lights[i]);         break;
+            case 2: light_sum += CalculateSpotLight(ssbo_lights[i]);          break;
         }
     }
 

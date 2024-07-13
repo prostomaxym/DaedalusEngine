@@ -38,7 +38,11 @@ glm::mat4 Camera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) 
 {
 	glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::vec3 rotated_vector = glm::vec3(rotation_matrix * glm::vec4(m_front, 0.0f));
-	glm::mat4 view_matrix_without_translation = glm::mat4(glm::mat3(glm::lookAt(m_position, m_position + rotated_vector, m_up)));
+
+	glm::vec3 position = m_position;
+	position.y += m_height;
+	position += rotated_vector * (-m_distance);
+	glm::mat4 view_matrix_without_translation = glm::mat4(glm::mat3(glm::lookAt(position, m_position + rotated_vector, m_up)));
 
 	return GetProjectionMatrix() * view_matrix_without_translation;
 }

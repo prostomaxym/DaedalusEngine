@@ -13,7 +13,12 @@ namespace Daedalus
 		void OnDetach() override;
 		void OnUpdate(DeltaTime dt) override;
 
+		static ModelParserFlags s_enhance_model_flags;
+
 	private:
+		void PrepareNukeScene();
+		void PrepareAnorLondoScene();
+
 		Scene m_scene;
 	};
 }

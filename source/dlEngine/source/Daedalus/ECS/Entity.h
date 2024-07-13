@@ -63,6 +63,24 @@ namespace Daedalus
 			m_scene->m_registry.remove<T>(m_entity_handle);
 		}
 
+		template<typename T>
+		std::unique_ptr<T> PopComponent()
+		{
+			DL_ASSERT(HasComponent<T>(), Log::Categories::ECS, "Entity does not have component!");
+			auto component = std::make_unique<T>(std::move(m_scene->m_registry.get<T>(m_entity_handle)));
+			m_scene->m_registry.remove<T>(m_entity_handle);
+			return component;
+		}
+
+		template<typename T>
+		void MoveComponent(std::unique_ptr<T>&& component)
+		{
+			auto comp_inst = *component.release();
+			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
+			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(comp_inst));
+			m_scene->OnComponentAdded<T>(*this, comp);
+		}
+
 		operator bool() const { return m_entity_handle != entt::null; }
 		operator entt::entity() const { return m_entity_handle; }
 		operator uint32_t() const { return (uint32_t)m_entity_handle; }

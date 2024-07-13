@@ -1,8 +1,9 @@
 Camera type (third person)
 Fps lock window swap
-Tesselation
+VSM
 CSM smoothing
 Point lights
+Tesselation
 PBR
 Face culling
 Blending

@@ -45,17 +45,21 @@ void Renderer::SetupGraphicSettings()
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading Graphic Settings");
 	RenderCommand::SetupGraphicSettings();
 
-	s_UBO_graphic_config = UniformBuffer::Create(sizeof(float) * 4, 1, UniformBuffer::Type::Static);
+	struct BufferData
+	{
+		int gamma_enabled = 0;
+		float gamma_value = 0.f;
+		int pcf_multiplier = 0;
+		float csm_exponent = 0.f;
+	};
 
-	int gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
-	float gamma_value = GraphicsConfig::GetGammaCorrectionValue();
-	int pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
-	float csm_exponent = GraphicsConfig::GetShadowCSMExponent();
+	BufferData data;
+	data.gamma_enabled = GraphicsConfig::IsGammaCorrectionEnabled() ? 1 : 0;
+	data.gamma_value = GraphicsConfig::GetGammaCorrectionValue();
+	data.pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
+	data.csm_exponent = GraphicsConfig::GetShadowCSMExponent();
 
-	s_UBO_graphic_config->SetData(&gamma_enabled, sizeof(int), 0);
-	s_UBO_graphic_config->SetData(&gamma_value, sizeof(float), 4);
-	s_UBO_graphic_config->SetData(&pcf_multiplier, sizeof(int), 8);
-	s_UBO_graphic_config->SetData(&csm_exponent, sizeof(float), 12);
+	s_UBO_graphic_config = UniformBuffer::Create(sizeof(float) * 4, 1, UniformBuffer::Type::Static, &data);
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)

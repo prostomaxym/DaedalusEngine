@@ -7,10 +7,10 @@ namespace Daedalus {
 	class OpenGLUniformBuffer final : public UniformBuffer
 	{
 	public:
-		OpenGLUniformBuffer(uint32_t size, uint32_t binding, Type type);
+		OpenGLUniformBuffer(uint32_t size, uint32_t binding, Type type, const void* data);
 		~OpenGLUniformBuffer();
 
-		void SetData(const void* data, uint32_t size, uint32_t offset = 0) const override;
+		void SetData(const void* data, uint32_t size, uint32_t offset) const override;
 		void Bind(uint32_t binding) const override;
 
 	private:

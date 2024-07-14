@@ -131,11 +131,58 @@ float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int laye
     return mix(top_interpolated, bottom_interpolated, texel_offset.y);
 }
 
+// Percentage-closer filtering
+float CalculateShadowPCF(sampler2DArray shadow_map, vec2 proj_coords, int shadow_map_index, float test_depth)
+{
+    float shadow = 0.0;
+    const vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
+
+    const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
+    for (int x = -off; x <= off; ++x)
+    {
+        for (int y = -off; y <= off; ++y)
+        {
+            vec2 offset = vec2(x, y) * texel_size;
+            float sampled_depth = BilinearInterpolation(shadow_map, proj_coords + offset, shadow_map_index);
+            //float sampled_depth = texture(shadow_map, vec3(proj_coords.xy + vec2(x, y) * texel_size, shadow_map_index)).r;
+
+            float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
+            shadow += visibility;
+        }
+    }
+
+    shadow /= pow(ubo_graphic_config.PCF_multiplier, 2);
+    return shadow;
+}
+
 float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_inx, int number_of_cascades)
 {
     const float percent = float(cascade_plane_inx) / float(number_of_cascades);
     const float cascade_exponent = ubo_graphic_config.csm_exponent;
     return znear + (zfar - znear) * pow(percent, cascade_exponent);
+}
+
+float CalculateShadowBias(vec3 light_dir, int light_type, int number_of_cascades, int cascade_ind)
+{
+    float bias = 0.0;
+
+    if (light_type == POINT_LIGHT_SOURCE)
+    {
+        bias = 0.0001;
+    }
+    else
+    {
+        bias = 0.005 * tan(acos(dot(fs_in.normals, light_dir)));
+        bias = clamp(bias, 0.0, 0.01);
+        bias = 0.0;
+        if (number_of_cascades > 1)
+        {
+            const float bias_modifier = 0.5f;
+            bias *= 1 / (CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, cascade_ind, number_of_cascades) * bias_modifier);
+        }
+    }
+
+    return bias;
 }
 
 int FindCascadeIndex(Light p_light)
@@ -159,104 +206,37 @@ int FindCascadeIndex(Light p_light)
     return cascade;
 }
 
+int FindShadowCubeIndex(vec3 light_pos)
+{
+    int face_index = -1;
+    vec3 frag_to_light = fs_in.frag_pos - light_pos;
+
+    if (abs(frag_to_light.x) > abs(frag_to_light.y) && abs(frag_to_light.x) > abs(frag_to_light.z))
+        face_index = frag_to_light.x > 0.0 ? 0 : 1;
+    else if (abs(frag_to_light.y) > abs(frag_to_light.x) && abs(frag_to_light.y) > abs(frag_to_light.z))
+        face_index = frag_to_light.y > 0.0 ? 2 : 3;
+    else
+        face_index = frag_to_light.z > 0.0 ? 4 : 5;
+
+    return face_index;
+}
+
 float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 {
-    if (p_light.type == POINT_LIGHT_SOURCE)
-    {
-        vec3 frag_to_light = fs_in.frag_pos - p_light.position;
-        //vec3 proj_coords = frag_to_light / length(frag_to_light);
-        //proj_coords = proj_coords * 0.5 + 0.5;
-        int faceIndex = -1;
+    const int cascade_ind = p_light.type == POINT_LIGHT_SOURCE ? FindShadowCubeIndex(p_light.position) : FindCascadeIndex(p_light);
+    const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(fs_in.frag_pos, 1.0);
+    const vec3 proj_coords = 0.5 * (frag_pos_light_space.xyz / frag_pos_light_space.w) + 0.5;
 
-        if (abs(frag_to_light.x) > abs(frag_to_light.y) && abs(frag_to_light.x) > abs(frag_to_light.z))
-            faceIndex = frag_to_light.x > 0.0 ? 0 : 1;
-        else if (abs(frag_to_light.y) > abs(frag_to_light.x) && abs(frag_to_light.y) > abs(frag_to_light.z))
-            faceIndex = frag_to_light.y > 0.0 ? 2 : 3;
-        else
-            faceIndex = frag_to_light.z > 0.0 ? 4 : 5;
+    if (proj_coords.z > 1.0)
+        return 1.0;
 
-//        const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
-//        for (int x = -off; x <= off; ++x)
-//        {
-//            for (int y = -off; y <= off; ++y)
-//            {
-//                vec2 offset = vec2(x, y) * texel_size;
-//                float sampled_depth = texture(shadow_map, vec3(proj_coords.xy + offset, p_light.shadowmap_index * 6 + faceIndex)).r;
-//                float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
-//                shadow += visibility;
-//            }
-//        }
+    const float bias = CalculateShadowBias(p_light.direction, p_light.type, p_light.number_of_shadow_cascades, cascade_ind);
+    const float current_depth = proj_coords.z;
+    const float test_depth = current_depth - bias;
 
-//        const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + faceIndex] * vec4(fs_in.frag_pos, 1.0);
-//        vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-//        proj_coords = proj_coords * 0.5 + 0.5;
-//        float bias = 0.005;
-//        const float current_depth = proj_coords.z;
-//        float test_depth = current_depth - bias;
-//        if (proj_coords.z > 1.0)
-//            return 1.0;
-//
-//        float sampled_depth = texture(shadow_map, vec3(proj_coords.xy, p_light.shadowmap_index + faceIndex)).r;
-//        float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
+    float shadow = CalculateShadowPCF(shadow_map, proj_coords.xy, p_light.shadowmap_index + cascade_ind, test_depth);
 
-        const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + faceIndex] * vec4(fs_in.frag_pos, 1.0);
-        vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-        proj_coords = proj_coords * 0.5 + 0.5;
-
-        if (proj_coords.z > 1.0)
-            return 1.0;
-
-        float closestDepth = texture(shadow_map, vec3(proj_coords.xy, p_light.shadowmap_index + faceIndex)).r;
-        float bias = 0.000;
-        const float current_depth = proj_coords.z;
-        const float test_depth = current_depth - bias;
-        float shadow = test_depth > closestDepth ? 1.0 : 0.0;
-        return 1.0 - shadow;
-    }
-    else
-    {
-        const int cascade_ind = FindCascadeIndex(p_light);
-        const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(fs_in.frag_pos, 1.0);
-        vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-        proj_coords = proj_coords * 0.5 + 0.5;
-
-        if (proj_coords.z > 1.0)
-            return 1.0;
-
-        float bias = 0.005 * tan(acos(dot(fs_in.normals, p_light.direction)));
-        bias = clamp(bias, 0.0, 0.01);
-        bias = 0.0;
-        if (p_light.number_of_shadow_cascades > 1)
-        {
-            const float bias_modifier = 0.5f;
-            bias *= 1 / (CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, cascade_ind, p_light.number_of_shadow_cascades) * bias_modifier);
-        }
-
-        const float current_depth = proj_coords.z;
-        const float test_depth = current_depth - bias;
-
-        float shadow = 0.0;
-        const vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
-
-        // Percentage-closer filtering
-        const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
-        for (int x = - off; x <= off; ++x)
-        {
-            for (int y = - off; y <= off; ++y)
-            {
-                vec2 offset = vec2(x, y) * texel_size;
-                float sampled_depth = BilinearInterpolation(shadow_map, proj_coords.xy + offset, p_light.shadowmap_index + cascade_ind);
-                //float sampled_depth = texture(shadow_map, vec3(proj_coords.xy + vec2(x, y) * texel_size, p_light.shadowmap_index + cascade_ind)).r;
-
-                float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
-                shadow += visibility;
-            }
-        }
-
-        shadow /= pow(ubo_graphic_config.PCF_multiplier, 2);
-
-        return 1.0 - shadow;
-    }
+    return 1.0 - shadow;
 }
 
 
@@ -348,5 +328,5 @@ void main()
     }
 
     fout_color = ubo_graphic_config.enable_gamma_correction ?
-        vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex);
+      vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex);
 }

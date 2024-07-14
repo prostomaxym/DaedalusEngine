@@ -13,12 +13,12 @@ namespace Daedalus
 		PointLightSource() = default;
 		PointLightSource(const LightProps& props);
 
-		std::vector<glm::mat4> CalculateShadowCubemapProjView(const glm::mat4& camera_proj, const glm::mat4& camera_view) const;
+		std::vector<glm::mat4> CalculateShadowCubemapProjView(const glm::mat4& camera_proj) const;
 
 	protected:
 		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override
 		{
-			DL_ASSERT(false, "Not Implemented");
+			//DL_ASSERT(false, "Not Implemented");
 			return glm::mat4();
 		}
 	};

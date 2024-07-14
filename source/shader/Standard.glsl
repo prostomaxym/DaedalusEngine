@@ -117,8 +117,34 @@ float g_alpha_tex = 0;
 
 vec2 ParallaxMapping(vec2 tex_coords, vec3 view_dir)
 {
-    float height = texture(u_object.tex_height, tex_coords).r;
-    return tex_coords - view_dir.xy * (height * 1.0);
+    const float heightScale = 1.f;
+    const float minLayers = 8;
+    const float maxLayers = 32;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), view_dir)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+    vec2 P = view_dir.xy / view_dir.z * heightScale;
+    vec2 deltaTexCoords = P / numLayers;
+
+    vec2 currentTexCoords     = tex_coords;
+    float currentDepthMapValue = texture(u_object.tex_height, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue)
+    {
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = texture(u_object.tex_height, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(u_object.tex_height, prevTexCoords).r - currentLayerDepth + layerDepth;
+
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return finalTexCoords;
 }
 
 vec3 ApplyGammaCorrection(vec3 color) 

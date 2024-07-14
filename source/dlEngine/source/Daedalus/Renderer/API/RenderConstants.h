@@ -18,6 +18,7 @@ namespace Daedalus
 		constexpr auto MaterialTexDiffuse{ "u_object.tex_diffuse" };
 		constexpr auto MaterialTexSpecular{ "u_object.tex_specular" };
 		constexpr auto MaterialTexNormal{ "u_object.tex_normal" };
+		constexpr auto MaterialTexHeight{ "u_object.tex_height" };
 		constexpr auto MaterialKAmbient{ "u_object.k_ambient" };
 		constexpr auto MaterialKDiffuse{ "u_object.k_diffuse" };
 		constexpr auto MaterialKSpecular{ "u_object.k_specular" };
@@ -26,6 +27,7 @@ namespace Daedalus
 		constexpr auto ConfigDiffuseMapUsed{ "u_object.enable_diffuse_map" };
 		constexpr auto ConfigSpecularMapUsed{ "u_object.enable_specular_map" };
 		constexpr auto ConfigNormalMapUsed{ "u_object.enable_normal_map" };
+		constexpr auto ConfigHeightMapUsed{ "u_object.enable_height_map" };
 
 		constexpr auto CubemapTexture{ "u_cubemap" };
 		constexpr auto CubemapProjectionView{ "u_projection_view" };

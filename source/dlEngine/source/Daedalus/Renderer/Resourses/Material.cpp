@@ -27,3 +27,8 @@ void Material::SetNormalMap(unsigned char* data, int width, int height, int chan
 {
 	m_map_normal = Texture2D::Create(data, width, height, channels);
 }
+
+void Material::SetHeightMap(unsigned char* data, int width, int height, int channels)
+{
+	m_map_height = Texture2D::Create(data, width, height, channels);
+}

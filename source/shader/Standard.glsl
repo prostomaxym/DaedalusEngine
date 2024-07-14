@@ -21,6 +21,7 @@ struct ObjectData
     sampler2D tex_diffuse;
     sampler2D tex_specular;
     sampler2D tex_normal;
+    sampler2D tex_height;
     mat4 model_mat;
     vec3 k_ambient;
     vec3 k_diffuse;
@@ -29,6 +30,7 @@ struct ObjectData
     bool enable_diffuse_map;
     bool enable_specular_map;
     bool enable_normal_map;
+    bool enable_height_map;
 };
 
 uniform ObjectData u_object; 
@@ -82,6 +84,7 @@ struct ObjectData
     sampler2D tex_diffuse;
     sampler2D tex_specular;
     sampler2D tex_normal;
+    sampler2D tex_height;
     mat4 model_mat;
     vec3 k_ambient;
     vec3 k_diffuse;
@@ -90,6 +93,7 @@ struct ObjectData
     bool enable_diffuse_map;
     bool enable_specular_map;
     bool enable_normal_map;
+    bool enable_height_map;
 };
 
 
@@ -110,6 +114,13 @@ float g_alpha_tex = 0;
 
 
 // ------------------------------------------------- General Functions ------------------------------------------------ //
+
+vec2 ParallaxMapping(vec2 tex_coords, vec3 view_dir)
+{
+    float height = texture(u_object.tex_height, tex_coords).r;
+    return tex_coords - view_dir.xy * (height * 1.0);
+}
+
 vec3 ApplyGammaCorrection(vec3 color) 
 {
     return pow(color, vec3(1.0 / ubo_graphic_config.gamma_value));
@@ -288,26 +299,25 @@ vec3 CalculateSpotLight(Light p_light)
 
 void main()
 {
-    g_alpha_tex = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, fs_in.uv).a : 1.0;
+    g_view_pos = ubo_scene.view_pos;
+    g_frag_pos = fs_in.frag_pos;
+    g_view_dir = normalize(g_view_pos - g_frag_pos);
+    const vec2 tex_coord = u_object.enable_height_map ? ParallaxMapping(fs_in.uv, g_view_dir) : fs_in.uv;
 
     // TODO: implement better way to show transparent objects in front of opaque objects
+    g_alpha_tex = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, tex_coord).a : 1.0;
     if (g_alpha_tex < 0.99)
         discard;
 
-    g_view_pos = ubo_scene.view_pos;
-    g_frag_pos = fs_in.frag_pos;
-
-    g_diffuse_tex = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, fs_in.uv).rgb : vec3(1.0, 1.0, 1.0);
+    g_diffuse_tex = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, tex_coord).rgb : vec3(1.0, 1.0, 1.0);
     g_diffuse_tex *= u_object.k_diffuse;
-    g_spec_tex = u_object.enable_specular_map ? vec3(texture(u_object.tex_specular, fs_in.uv)) : vec3(1.0, 1.0, 1.0);
+    g_spec_tex = u_object.enable_specular_map ? vec3(texture(u_object.tex_specular, tex_coord)) : vec3(1.0, 1.0, 1.0);
     g_spec_tex *= u_object.k_specular;
     g_ambient_tex = u_object.k_ambient * g_diffuse_tex;
 
-    g_view_dir = normalize(g_view_pos - g_frag_pos);  
-
     if (u_object.enable_normal_map)
     {
-        g_normal = texture(u_object.tex_normal, fs_in.uv).rgb;
+        g_normal = texture(u_object.tex_normal, tex_coord).rgb;
         g_normal = normalize(g_normal * 2.0 - 1.0);   
         g_normal = normalize(fs_in.TBN * g_normal);
     }

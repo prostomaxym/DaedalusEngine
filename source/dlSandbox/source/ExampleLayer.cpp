@@ -97,6 +97,7 @@ void ExampleLayer::PrepareNukeScene()
 	props.theta_angle = 10.f;
 	props.outer_cutoff = 35.f;
 	props.cast_shadows = false;
+	props.number_of_shadow_cascades = 1;
 	camera_entity.AddComponent<SpotLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
@@ -124,6 +125,7 @@ void ExampleLayer::PrepareNukeScene()
 	props.light_power = 30.f;
 	props.max_distance = 50.f;
 	props.cast_shadows = true;
+	props.number_of_shadow_cascades = 1;
 	Aside_light_entity.AddComponent<PointLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
@@ -145,6 +147,7 @@ void ExampleLayer::PrepareNukeScene()
 	props.theta_angle = 5.f;
 	props.outer_cutoff = 7.f;
 	props.cast_shadows = true;
+	props.number_of_shadow_cascades = 1;
 	spot_entity.AddComponent<SpotLightComponent>(props);
 
 	props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
@@ -155,6 +158,7 @@ void ExampleLayer::PrepareNukeScene()
 	props.light_power = 80.f;
 	props.max_distance = 13.f;
 	props.cast_shadows = false;
+	props.number_of_shadow_cascades = 1;
 	spot_entity.AddComponent<PointLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 

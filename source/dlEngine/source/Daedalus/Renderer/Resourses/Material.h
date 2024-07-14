@@ -15,10 +15,12 @@ namespace Daedalus
 		void SetDiffuseMap(unsigned char* data, int width, int height, int channels);
 		void SetSpecularMap(unsigned char* data, int width, int height, int channels);
 		void SetNormalMap(unsigned char* data, int width, int height, int channels);
+		void SetHeightMap(unsigned char* data, int width, int height, int channels);
 
 		std::shared_ptr<Texture2D> GetDiffuseMap() const { return m_map_diffuse; }
 		std::shared_ptr<Texture2D> GetSpecularMap() const { return m_map_specular; }
 		std::shared_ptr<Texture2D> GetNormalMap() const { return m_map_normal; }
+		std::shared_ptr<Texture2D> GetHeightMap() const { return m_map_height; }
 
 		glm::vec3 GetAmbientK() const { return m_k_ambient; }
 		glm::vec3 GetDiffuseK() const { return m_k_diffuse; }
@@ -35,5 +37,6 @@ namespace Daedalus
 		std::shared_ptr<Texture2D> m_map_diffuse{ nullptr };
 		std::shared_ptr<Texture2D> m_map_specular{ nullptr };
 		std::shared_ptr<Texture2D> m_map_normal{ nullptr };
+		std::shared_ptr<Texture2D> m_map_height{ nullptr };
 	};
 }

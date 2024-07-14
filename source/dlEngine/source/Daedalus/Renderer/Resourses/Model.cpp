@@ -144,6 +144,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 
 void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name)
 {
+	// We cannot create for OpenGL textures in parallel. So at least we can read files threaded
 	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
 
 	material_data.resize(scene->mNumMaterials);
@@ -171,7 +172,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 
 			std::array<aiTextureType, 3> texture_types{ aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_NORMALS };
 
-			for(auto tex_type : texture_types)
+			for (auto tex_type : texture_types)
 			{
 				for (uint32_t k = 0; k < material->GetTextureCount(tex_type); ++k)
 				{
@@ -218,6 +219,10 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 
 		case aiTextureType_NORMALS:
 			material_data[material_index].SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+
+		case aiTextureType_HEIGHT:
+			material_data[material_index].SetHeightMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		default:

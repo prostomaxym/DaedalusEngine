@@ -168,6 +168,18 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 0);
 		}
 
+		if (const auto& height_map = material.GetHeightMap(); height_map)
+		{
+			height_map->Bind(3);
+			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 1);
+			shader->SetInt(ShaderConstants::MaterialTexHeight, 3);
+		}
+		else
+		{
+			RenderCommand::UnbindTextureSlot(3);
+			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 0);
+		}
+
 		const auto vertex_array = mesh->GetVertexArray();
 		RenderCommand::DrawIndexed(vertex_array.get());
 	}
@@ -240,8 +252,8 @@ void Renderer::BindShadowMap(const Shader* color_pass_shader)
 {
 	color_pass_shader->Bind();
 
-	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 3);
-	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, 3);
+	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 4);
+	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, 4);
 
 	color_pass_shader->Unbind();
 }

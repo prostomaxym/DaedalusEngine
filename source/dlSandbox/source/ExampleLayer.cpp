@@ -97,55 +97,65 @@ void ExampleLayer::PrepareNukeScene()
 	props.theta_angle = 10.f;
 	props.outer_cutoff = 35.f;
 	props.cast_shadows = false;
-	props.number_of_shadow_cascades = 1;
 	camera_entity.AddComponent<SpotLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */
-	 auto light_entity = m_scene.CreateEntity("Main Light");
-	 props.light_pos = glm::vec3(0.78f, 1.0f, 0.6f);
-	 props.ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);
-	 props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
-	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
-	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
-	 props.light_power = 0.1f;
-	 props.cast_shadows = true;
-	 props.number_of_shadow_cascades = 6;
-	 light_entity.AddComponent<DirectionalLightComponent>(props);
+	 // auto light_entity = m_scene.CreateEntity("Main Light");
+	 // props.light_pos = glm::vec3(0.78f, 1.0f, 0.6f);
+	 // props.ambient_color = glm::vec3(0.2f, 0.2f, 0.2f);
+	 // props.diffuse_color = glm::vec3(1.f, 1.f, 1.f);
+	 // props.specular_color = glm::vec3(1.f, 1.f, 1.f);
+	 // props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
+	 // props.light_power = 0.1f;
+	 // props.cast_shadows = false;
+	 // props.number_of_shadow_cascades = 6;
+	 // light_entity.AddComponent<DirectionalLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
-
-	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
-	auto spot_entity = m_scene.CreateEntity("Spot Light");
-	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", ExampleLayer::s_enhance_model_flags);
-	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
-	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
-	spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
-
-	props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
-	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
-	props.diffuse_color = glm::vec3(1.f, 0.8f, 0.8f);
-	props.specular_color = glm::vec3(1.f, 1.f, 0.8f);
-	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
-	props.light_power = 30.f;
-	props.max_distance = 100.f;
-	props.theta_angle = 5.f;
-	props.outer_cutoff = 7.f;
-	props.cast_shadows = true;
-	props.number_of_shadow_cascades = 1;
-	spot_entity.AddComponent<SpotLightComponent>(props);
-
-	props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
-	props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	//-18.020638 / Y: 11.867470 / Z: -74.680733
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */
+	auto Aside_light_entity = m_scene.CreateEntity("ASide Light");
+	props.light_pos = glm::vec3(-18.0f, 12.f, -74.5f);
+	props.ambient_color = glm::vec3(0.1f, 0.1f, 0.1f);
 	props.diffuse_color = glm::vec3(1.f, 0.8f, 0.6f);
 	props.specular_color = glm::vec3(1.f, 1.f, 0.6f);
 	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
-	props.light_power = 80.f;
-	props.max_distance = 13.f;
-	props.cast_shadows = false;
-	props.number_of_shadow_cascades = 1;
-	spot_entity.AddComponent<PointLightComponent>(props);
+	props.light_power = 160.f;
+	props.max_distance = 30.f;
+	props.cast_shadows = true;
+	Aside_light_entity.AddComponent<PointLightComponent>(props);
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
+	// auto spot_entity = m_scene.CreateEntity("Spot Light");
+	// spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", ExampleLayer::s_enhance_model_flags);
+	// auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
+	// spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+	// spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
+	// spot_transform.rotation = glm::vec3(90.f, 0.f, 0.f);
+	//
+	// props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
+	// props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	// props.diffuse_color = glm::vec3(1.f, 0.8f, 0.8f);
+	// props.specular_color = glm::vec3(1.f, 1.f, 0.8f);
+	// props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
+	// props.light_power = 30.f;
+	// props.max_distance = 100.f;
+	// props.theta_angle = 5.f;
+	// props.outer_cutoff = 7.f;
+	// props.cast_shadows = false;
+	// spot_entity.AddComponent<SpotLightComponent>(props);
+	//
+	// props.light_pos = glm::vec3(-37.f, 13.6f, -29.7f);
+	// props.ambient_color = glm::vec3(0.f, 0.f, 0.f);
+	// props.diffuse_color = glm::vec3(1.f, 0.8f, 0.6f);
+	// props.specular_color = glm::vec3(1.f, 1.f, 0.6f);
+	// props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
+	// props.light_power = 80.f;
+	// props.max_distance = 13.f;
+	// props.cast_shadows = false;
+	// spot_entity.AddComponent<PointLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 

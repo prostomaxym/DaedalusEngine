@@ -1,4 +1,8 @@
-struct Light 
+const int DIRECTIONAL_LIGHT_SOURCE = 0;
+const int POINT_LIGHT_SOURCE = 1;
+const int SPOT_LIGHT_SOURCE = 2;
+
+struct Light
 {
     vec3 position;
     int type; // 0 - directional, 1 - point, 2 - spot

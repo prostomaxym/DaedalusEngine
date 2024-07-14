@@ -84,6 +84,8 @@ namespace Daedalus
 		bool CastShadow() const { return m_params.cast_shadows > 0; }
 
 	protected:
+		void ExtractPerspectiveParams(const glm::mat4& projMatrix, float& fov, float& aspect, float& z_near, float& z_far) const;
+
 		LightSSBO m_params{};;
 	};
 }

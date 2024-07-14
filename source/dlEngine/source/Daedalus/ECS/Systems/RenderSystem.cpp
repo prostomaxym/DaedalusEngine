@@ -88,32 +88,6 @@ void RenderSystem::DoColorPass() const
 	standard_shader->Unbind();
 }
 
-int RenderSystem::CountShadowCasters() const
-{
-	int counter = 0;
-	const auto dir_view = m_registry.view<DirectionalLightComponent>();
-	for (const auto e : dir_view)
-	{
-		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
-
-		if (light_component.light.CastShadow())
-			counter += light_component.light.GetShadowNumberOfCascades();
-	}
-
-	const auto spot_view = m_registry.view<SpotLightComponent>();
-	for (const auto e : spot_view)
-	{
-		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<SpotLightComponent>();
-
-		if (light_component.light.CastShadow())
-			counter += light_component.light.GetShadowNumberOfCascades();
-	}
-
-	return counter;
-}
-
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
@@ -179,8 +153,15 @@ void RenderSystem::UpdateLighting() const
 	for (const auto e : point_view)
 	{
 		Entity entity = { e, m_scene };
-		const auto& light_component = entity.GetComponent<PointLightComponent>();
+		auto& light_component = entity.GetComponent<PointLightComponent>();
+		auto& light = light_component.light;
 
+		if (light.CastShadow())
+		{
+			light.SetShadowMapIndex(light_proj_view.size());
+			const auto cubemap = light.CalculateShadowCubemapProjView(proj, view);
+			light_proj_view.insert(light_proj_view.end(), cubemap.begin(), cubemap.end());
+		}
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());
 	}
 
@@ -203,4 +184,40 @@ void RenderSystem::UpdateLighting() const
 
 	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view);
 	Renderer::UpdateLightSSBO(light_SSBOs);
+}
+
+int RenderSystem::CountShadowCasters() const
+{
+	int counter = 0;
+	const auto dir_view = m_registry.view<DirectionalLightComponent>();
+	for (const auto e : dir_view)
+	{
+		Entity entity = { e, m_scene };
+		const auto& light_component = entity.GetComponent<DirectionalLightComponent>();
+
+		if (light_component.light.CastShadow())
+			counter += light_component.light.GetShadowNumberOfCascades();
+	}
+
+	const auto point_view = m_registry.view<PointLightComponent>();
+	for (const auto e : point_view)
+	{
+		Entity entity = { e, m_scene };
+		const auto& light_component = entity.GetComponent<PointLightComponent>();
+
+		if (light_component.light.CastShadow())
+			counter += 6;
+
+	}
+	const auto spot_view = m_registry.view<SpotLightComponent>();
+	for (const auto e : spot_view)
+	{
+		Entity entity = { e, m_scene };
+		const auto& light_component = entity.GetComponent<SpotLightComponent>();
+
+		if (light_component.light.CastShadow())
+			counter += light_component.light.GetShadowNumberOfCascades();
+	}
+
+	return counter;
 }

@@ -4,18 +4,6 @@
 
 using namespace Daedalus;
 
-namespace
-{
-	// Stupid ChatGPT gave me this shitty code. No time to clean, sry
-	void ExtractPerspectiveParams(const glm::mat4& projMatrix, float& fov, float& aspect, float& z_near, float& z_far)
-	{
-		aspect = projMatrix[1][1] / projMatrix[0][0];
-		fov = 2.0f * atan(1.0f / projMatrix[1][1]);
-		z_near = (projMatrix[3][2]) / (projMatrix[2][2] - 1.0f);
-		z_far = (projMatrix[3][2]) / (projMatrix[2][2] + 1.0f);
-	}
-}
-
 SpotLightSource::SpotLightSource(const LightProps& props) :
     LightSource(LightSourceType::Spot, props)
 {

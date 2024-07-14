@@ -109,7 +109,7 @@ void ExampleLayer::PrepareNukeScene()
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
 	 props.light_power = 0.1f;
 	 props.cast_shadows = true;
-	 props.number_of_shadow_cascades = 6;
+	 props.number_of_shadow_cascades = 4;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 

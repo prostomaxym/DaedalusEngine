@@ -248,11 +248,11 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), u_object.shininess);
 
     float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
-
+    float visability_trip = pow(visability, 3.0);
     return p_luminosity *
             (p_light.ambient * g_ambient_tex
-            + visability * (p_light.diffuse * diffuse_coef * g_diffuse_tex
-            + p_light.specular * specular_coef * g_spec_tex));
+            + visability * p_light.diffuse * diffuse_coef * g_diffuse_tex
+            + visability_trip * p_light.specular * specular_coef * g_spec_tex);
 }
 
 float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)

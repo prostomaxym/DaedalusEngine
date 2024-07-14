@@ -121,8 +121,8 @@ void ExampleLayer::PrepareNukeScene()
 	props.diffuse_color = glm::vec3(1.f, 0.8f, 0.6f);
 	props.specular_color = glm::vec3(1.f, 1.f, 0.6f);
 	props.direction = glm::vec3(0.79f, -0.5f, 0.35f);
-	props.light_power = 160.f;
-	props.max_distance = 30.f;
+	props.light_power = 30.f;
+	props.max_distance = 50.f;
 	props.cast_shadows = true;
 	Aside_light_entity.AddComponent<PointLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */

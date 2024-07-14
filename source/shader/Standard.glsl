@@ -163,9 +163,7 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 {
     if (p_light.type == POINT_LIGHT_SOURCE)
     {
-        vec3 frag_to_light = fs_in.frag_pos - p_light.position;
-        //vec3 proj_coords = frag_to_light / length(frag_to_light);
-        //proj_coords = proj_coords * 0.5 + 0.5;
+        const vec3 frag_to_light = fs_in.frag_pos - p_light.position;
         int faceIndex = -1;
 
         if (abs(frag_to_light.x) > abs(frag_to_light.y) && abs(frag_to_light.x) > abs(frag_to_light.z))
@@ -175,43 +173,28 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
         else
             faceIndex = frag_to_light.z > 0.0 ? 4 : 5;
 
-//        const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
-//        for (int x = -off; x <= off; ++x)
-//        {
-//            for (int y = -off; y <= off; ++y)
-//            {
-//                vec2 offset = vec2(x, y) * texel_size;
-//                float sampled_depth = texture(shadow_map, vec3(proj_coords.xy + offset, p_light.shadowmap_index * 6 + faceIndex)).r;
-//                float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
-//                shadow += visibility;
-//            }
-//        }
+        const float currentDepth = length(frag_to_light);
+        const float bias = 0.000;
+        const float test_depth = currentDepth - bias;
 
-//        const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + faceIndex] * vec4(fs_in.frag_pos, 1.0);
-//        vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-//        proj_coords = proj_coords * 0.5 + 0.5;
-//        float bias = 0.005;
-//        const float current_depth = proj_coords.z;
-//        float test_depth = current_depth - bias;
-//        if (proj_coords.z > 1.0)
-//            return 1.0;
-//
-//        float sampled_depth = texture(shadow_map, vec3(proj_coords.xy, p_light.shadowmap_index + faceIndex)).r;
-//        float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
+        //const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + faceIndex] * vec4(fs_in.frag_pos, 1.0);
+        //vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+        vec3 proj_coords;
+        if (faceIndex == 0) proj_coords = vec3(-frag_to_light.z, -frag_to_light.y, -frag_to_light.x);
+        if (faceIndex == 1) proj_coords = vec3(frag_to_light.z, -frag_to_light.y, frag_to_light.x);
+        if (faceIndex == 2) proj_coords = vec3(frag_to_light.x, frag_to_light.z, frag_to_light.y);
+        if (faceIndex == 3) proj_coords = vec3(frag_to_light.x, -frag_to_light.z, -frag_to_light.y);
+        if (faceIndex == 4) proj_coords = vec3(frag_to_light.x, -frag_to_light.y, -frag_to_light.z);
+        if (faceIndex == 5) proj_coords = vec3(-frag_to_light.x, -frag_to_light.y, frag_to_light.z);
 
-        const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + faceIndex] * vec4(fs_in.frag_pos, 1.0);
-        vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+        proj_coords = frag_to_light / length(frag_to_light);
         proj_coords = proj_coords * 0.5 + 0.5;
 
-        if (proj_coords.z > 1.0)
-            return 1.0;
+        float sampled_depth = texture(shadow_map, vec3(proj_coords.xy, p_light.shadowmap_index + faceIndex)).r;
+        sampled_depth *= ubo_scene.far_plane;
+        const float visibility = test_depth > sampled_depth ? 0.8 : 0.0;
 
-        float closestDepth = texture(shadow_map, vec3(proj_coords.xy, p_light.shadowmap_index + faceIndex)).r;
-        float bias = 0.000;
-        const float current_depth = proj_coords.z;
-        const float test_depth = current_depth - bias;
-        float shadow = test_depth > closestDepth ? 1.0 : 0.0;
-        return 1.0 - shadow;
+        return 1.0 - visibility;
     }
     else
     {
@@ -348,5 +331,5 @@ void main()
     }
 
     fout_color = ubo_graphic_config.enable_gamma_correction ?
-        vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex);
+      vec4(ApplyGammaCorrection(light_sum), g_alpha_tex) : vec4(light_sum, g_alpha_tex);
 }

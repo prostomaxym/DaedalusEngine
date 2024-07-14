@@ -159,7 +159,7 @@ void RenderSystem::UpdateLighting() const
 		if (light.CastShadow())
 		{
 			light.SetShadowMapIndex(light_proj_view.size());
-			const auto cubemap = light.CalculateShadowCubemapProjView(proj, view);
+			const auto cubemap = light.CalculateShadowCubemapProjView(proj);
 			light_proj_view.insert(light_proj_view.end(), cubemap.begin(), cubemap.end());
 		}
 		light_SSBOs.emplace_back(light_component.light.GetShaderSSBO());

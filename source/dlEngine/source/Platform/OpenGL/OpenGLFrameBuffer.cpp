@@ -93,9 +93,9 @@ namespace {
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 
 		if (multilayer)
@@ -173,8 +173,9 @@ namespace {
 		switch (format)
 		{
 			case FramebufferTextureFormat::RGBA8:        return GL_RGBA8;
-			case FramebufferTextureFormat::RGBA16:       return GL_RGBA16F;
-			case FramebufferTextureFormat::RGBA32:       return GL_RGBA;
+			case FramebufferTextureFormat::RGBA16F:       return GL_RGBA16F;
+			case FramebufferTextureFormat::RGBA32U:       return GL_RGBA;
+			case FramebufferTextureFormat::RED16F:       return GL_R16F;
 			case FramebufferTextureFormat::RED_INTEGER:  return GL_RED_INTEGER;
 		}
 
@@ -245,14 +246,17 @@ void OpenGLFramebuffer::Invalidate()
 				case FramebufferTextureFormat::RGBA8:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RGBA16:
+				case FramebufferTextureFormat::RGBA16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RGBA32:
+				case FramebufferTextureFormat::RGBA32U:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
 				case FramebufferTextureFormat::RED_INTEGER:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
+					break;
+				case FramebufferTextureFormat::RED16F:
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R16F, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
 			}
 		}

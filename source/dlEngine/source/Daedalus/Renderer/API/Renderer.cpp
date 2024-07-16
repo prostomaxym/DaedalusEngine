@@ -63,11 +63,12 @@ void Renderer::Init()
 	gbuffer_specs.height = GraphicsConfig::GetWindowHeight();
 	gbuffer_specs.samples = 1;
 	gbuffer_specs.attachments = FramebufferAttachmentSpecification({
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RED16F),
 		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	gbuffer_specs.layers = -1;
 	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
@@ -319,6 +320,9 @@ void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_sl
 
 	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(4), first_slot + 4);
 	light_pass_shader->SetInt(ShaderConstants::GBufferAlbedo, first_slot + 4);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(5), first_slot + 5);
+	light_pass_shader->SetInt(ShaderConstants::GBufferShininess, first_slot + 5);
 }
 
 std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()

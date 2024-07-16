@@ -79,6 +79,7 @@ layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gAmbient;
 layout (location = 3) out vec4 gSpec;
 layout (location = 4) out vec4 gAlbedo;
+layout (location = 5) out float gShininess;
 
 // ----------------------------------------------Structures-------------------------------------------------- //
 struct ObjectData
@@ -159,11 +160,10 @@ void main()
         normal = fs_in.normals;
     }
 
-    float shininess_inv = clamp(1.0 / u_object.shininess, 0.0, 1.0);
-
     gPosition = vec4(fs_in.frag_pos, 1.0);
     gNormal = vec4(normal, 1.0);
     gAmbient = vec4(u_object.k_ambient * diffuse, 1.0);
-    gSpec = vec4(spec, shininess_inv);
+    gSpec = vec4(spec, 1.0);
     gAlbedo = vec4(diffuse, 1.0);
+    gShininess = 1.0 / u_object.shininess;
 }

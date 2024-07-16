@@ -11,9 +11,10 @@ namespace Daedalus {
 
 		// Color
 		RGBA8,
-		RGBA16,
-		RGBA32,
+		RGBA16F,
+		RGBA32U,
 		RED_INTEGER,
+		RED16F,
 		Depth
 	};
 

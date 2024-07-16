@@ -29,6 +29,7 @@ uniform sampler2D u_gNormal;
 uniform sampler2D u_gAmbient;
 uniform sampler2D u_gSpec;
 uniform sampler2D u_gAlbedo;
+uniform sampler2D u_gShininess;
 uniform sampler2DArray u_shadowmaps;
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
@@ -227,7 +228,7 @@ void main()
     g_spec_tex = texture(u_gSpec, vout_uv).rgb;
     g_diffuse_tex = texture(u_gAlbedo, vout_uv).rgb;
 
-    g_shininess = 1.0 / texture(u_gSpec, vout_uv).a;
+    g_shininess = 1.0 / texture(u_gShininess, vout_uv).r;
     g_view_pos = ubo_scene.view_pos;
     g_view_dir = normalize(g_view_pos - g_frag_pos);
 

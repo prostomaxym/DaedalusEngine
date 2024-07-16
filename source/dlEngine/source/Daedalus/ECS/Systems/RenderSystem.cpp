@@ -100,7 +100,7 @@ void RenderSystem::DoDeferredLightPass() const
 	light_shader->Bind();
 
 	Renderer::BindGBufferTextures(light_shader.get(), 0);
-	Renderer::BindShadowMap(light_shader.get(), 5);
+	Renderer::BindShadowMap(light_shader.get(), 6);
 
 	Renderer::DrawUnitQuad();
 	light_shader->Unbind();

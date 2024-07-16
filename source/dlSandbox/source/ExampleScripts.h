@@ -181,7 +181,7 @@ namespace Daedalus
 				front.x = std::cos(glm::radians(-trans.rotation.y - 90.f)) * std::cos(glm::radians(trans.rotation.x));
 				front.y = std::sin(glm::radians(trans.rotation.x));
 				front.z = std::sin(glm::radians(-trans.rotation.y - 90.f)) * std::cos(glm::radians(trans.rotation.x));
-				glm::normalize(front);
+				front = glm::normalize(front);
 
 				light.SetDirection(-front);
 			}

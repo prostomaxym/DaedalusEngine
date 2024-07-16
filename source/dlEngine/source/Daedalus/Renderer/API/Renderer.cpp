@@ -12,10 +12,10 @@ using namespace Daedalus;
 
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 
-std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data;
-std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
+std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data = nullptr;
+std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config = nullptr;
 
-std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices;
+std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices = nullptr;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_lighting = nullptr;
 
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;

@@ -59,7 +59,6 @@ void GLFWWindow::Init(const WindowProps& props)
 	InitGLFW();
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
-	glfwWindowHint(GLFW_DEPTH_BITS, 32);
 	
 	if (props.screenmode != WindowProps::ScreenMode::windowed)
 	{

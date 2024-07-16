@@ -43,6 +43,7 @@ OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
 	m_data_format = GL_RGBA;
 
 	glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
+	glBindTexture(GL_TEXTURE_2D, m_rendererID);
 	glTextureStorage2D(m_rendererID, 1, m_internal_format, m_width, m_height);
 
 	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -58,8 +59,10 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 	int width, height, channels;
 	stbi_set_flip_vertically_on_load(1);
 	stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-			
-	if (data)
+	auto img_data = data;
+	std::vector<unsigned char> converted_data;
+
+	if (img_data)
 	{
 		m_is_loaded = true;
 
@@ -79,8 +82,10 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		}
 		else if (channels == 1)
 		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_STENCIL_INDEX;
+			converted_data = ConvertToRGB(data, m_width, m_height);
+			img_data = converted_data.data();
+			internalFormat = GL_RGB8;
+			dataFormat = GL_RGB;
 		}
 
 		m_internal_format = internalFormat;
@@ -94,7 +99,7 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, data);
+		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, img_data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		stbi_image_free(data);
 	}
@@ -106,7 +111,10 @@ OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 
 OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int channels)
 {
-	if (data)
+	auto img_data = data;
+	std::vector<unsigned char> converted_data;
+
+	if (img_data)
 	{
 		m_is_loaded = true;
 
@@ -126,14 +134,17 @@ OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int
 		}
 		else if (channels == 1)
 		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_STENCIL_INDEX;
+			converted_data = ConvertToRGB(data, m_width, m_height);
+			img_data = converted_data.data();
+			internalFormat = GL_RGB8;
+			dataFormat = GL_RGB;
 		}
 
 		m_internal_format = internalFormat;
 		m_data_format = dataFormat;
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
+		glBindTexture(GL_TEXTURE_2D, m_rendererID);
 		glTextureStorage2D(m_rendererID, 1, internalFormat, m_width, m_height);
 
 		glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -141,7 +152,7 @@ OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int
 		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, data);
+		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, img_data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else

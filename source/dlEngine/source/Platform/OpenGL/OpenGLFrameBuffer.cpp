@@ -5,7 +5,40 @@
 
 using namespace Daedalus;
 
-namespace {
+namespace
+{
+	// Do not know how to make it platform independent, so will cover only common scenario
+	GLint GetMainFramebufferFormat(int current_id)
+	{
+		GLint depth_size;
+		GLint stencil_size;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &depth_size);
+		glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencil_size);
+
+		
+		GLint format = GL_DEPTH24_STENCIL8; // For my RTX 3070Ti this is default, so I will assume it is common default
+		if (stencil_size == 8)
+		{
+			if (depth_size == 24)
+				format = GL_DEPTH24_STENCIL8;
+			else
+				format = GL_DEPTH32F_STENCIL8;
+		}
+		else
+		{
+			if(depth_size == 32)
+				format = GL_DEPTH_COMPONENT32;
+			else if (depth_size == 24)
+				format = GL_DEPTH_COMPONENT24;
+			else if (depth_size == 16)
+				format = GL_DEPTH_COMPONENT16;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, current_id);
+
+		return format;	
+	}
 
 	GLint GetMaxTextureSize()
 	{
@@ -173,8 +206,8 @@ namespace {
 		switch (format)
 		{
 			case FramebufferTextureFormat::RGBA8:        return GL_RGBA8;
-			case FramebufferTextureFormat::RGBA16F:       return GL_RGBA16F;
-			case FramebufferTextureFormat::RGBA32U:       return GL_RGBA;
+			case FramebufferTextureFormat::RGBA16F:      return GL_RGBA16F;
+			case FramebufferTextureFormat::RGBA32U:      return GL_RGBA;
 			case FramebufferTextureFormat::RED16F:       return GL_R16F;
 			case FramebufferTextureFormat::RED_INTEGER:  return GL_RED_INTEGER;
 		}
@@ -183,6 +216,69 @@ namespace {
 		return 0;
 	}
 
+}
+
+void OpenGLFramebuffer::CopyFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_id);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_id);
+
+	glBlitFramebuffer(
+		0, 0, width, height,
+		0, 0, width, height,
+		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+		GL_NEAREST
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, dest_id);
+}
+
+void OpenGLFramebuffer::CopyDepthFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_id);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_id);
+
+	glBlitFramebuffer(
+		0, 0, width, height,
+		0, 0, width, height,
+		GL_DEPTH_BUFFER_BIT,
+		GL_NEAREST
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, dest_id);
+}
+
+void OpenGLFramebuffer::CopyColorFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_id);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_id);
+
+	glBlitFramebuffer(
+		0, 0, width, height,
+		0, 0, width, height,
+		GL_COLOR_BUFFER_BIT,
+		GL_NEAREST
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, dest_id);
+}
+
+void OpenGLFramebuffer::CopyColorAttachmentImpl(unsigned int src_id, unsigned int dest_id, int width, int height, int src_attach_id, int dest_attach_id)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_id);
+	glReadBuffer(src_attach_id);
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_id);
+	glDrawBuffer(dest_attach_id);
+
+	glBlitFramebuffer(
+		0, 0, width, height, // Source dimensions
+		0, 0, width, height, // Destination dimensions
+		GL_COLOR_BUFFER_BIT, // Buffers to copy
+		GL_NEAREST // Filter mode
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, dest_id);
 }
 
 OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
@@ -269,7 +365,7 @@ void OpenGLFramebuffer::Invalidate()
 		switch (m_depth_attachment_specification.texture_format)
 		{
 			case FramebufferTextureFormat::Depth:
-				AttachDepthTexture(m_depth_attachment, m_specification.samples, m_specification.layers, GL_DEPTH_COMPONENT32F, GL_DEPTH_ATTACHMENT, m_specification.width, m_specification.height);
+				AttachDepthTexture(m_depth_attachment, m_specification.samples, m_specification.layers, GetMainFramebufferFormat(m_rendererID), GL_DEPTH_ATTACHMENT, m_specification.width, m_specification.height);
 				break;
 		}
 	}
@@ -347,15 +443,4 @@ void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	auto& spec = m_color_attachment_specifications[attachmentIndex];
 	glClearTexImage(m_color_attachments[attachmentIndex], 0,
 		DaedalusFBTextureFormatToGL(spec.texture_format), GL_INT, &value);
-}
-
-void OpenGLFramebuffer::CopyDepthBufferToMainFramebuffer() const
-{
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_rendererID);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-	// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-	// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-	// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-	glBlitFramebuffer(0, 0, m_specification.width, m_specification.height, 0, 0, m_specification.width, m_specification.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

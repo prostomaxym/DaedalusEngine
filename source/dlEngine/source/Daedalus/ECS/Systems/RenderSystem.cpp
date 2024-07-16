@@ -24,6 +24,7 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	DoShadowPass();
 	DoDeferredGeometryPass();
 	DoDeferredLightPass();
+	DoForwardPass();
 
 	Renderer::EndScene();
 }
@@ -79,21 +80,11 @@ void RenderSystem::DoDeferredGeometryPass() const
 	gbuffer->Unbind();
 }
 
-void RenderSystem::DoDeferredLightPass() const
+void RenderSystem::DoForwardPass() const
 {
-	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
-	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
-	const auto light_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredLightShader);
-	light_shader->Bind();
-
-	Renderer::BindGBufferTextures(light_shader.get(), 0);
-	Renderer::BindShadowMap(light_shader.get(), 6);
-
-	Renderer::DrawUnitQuad();
-	light_shader->Unbind();
-
 	const auto gbuffer = Renderer::GetGBuffer();
-	gbuffer->CopyDepthBufferToMainFramebuffer();
+	const auto& spec = gbuffer->GetSpecification();
+	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 
 	const auto cubemap_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::CubemapShader);
 	cubemap_shader->Bind();
@@ -107,6 +98,20 @@ void RenderSystem::DoDeferredLightPass() const
 			m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
 	}
 	cubemap_shader->Unbind();
+}
+
+void RenderSystem::DoDeferredLightPass() const
+{
+	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
+	const auto light_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredLightShader);
+	light_shader->Bind();
+
+	Renderer::BindGBufferTextures(light_shader.get(), 0);
+	Renderer::BindShadowMap(light_shader.get(), 6);
+
+	Renderer::DrawUnitQuad();
+	light_shader->Unbind();
 }
 
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const

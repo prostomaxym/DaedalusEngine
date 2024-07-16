@@ -8,6 +8,12 @@ namespace Daedalus {
 	class OpenGLFramebuffer final : public Framebuffer
 	{
 	public:
+		static void CopyFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height);
+		static void CopyDepthFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height);
+		static void CopyColorFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height);
+		static void CopyColorAttachmentImpl(unsigned int src_id, unsigned int dest_id, int width, int height, int src_attach_id, int dest_attach_id);
+
+	public:
 		OpenGLFramebuffer(const FramebufferSpecification& spec);
 		~OpenGLFramebuffer();
 
@@ -19,14 +25,13 @@ namespace Daedalus {
 		void Resize(uint32_t width, uint32_t height) override;
 		int ReadPixel(uint32_t attachmentIndex, int x, int y) override;
 
+		const FramebufferSpecification& GetSpecification() const override { return m_specification; }
+
 		void ClearAttachment(uint32_t attachmentIndex, int value) override;
 
 		uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { return m_color_attachments[index]; }
-
-		const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 		uint32_t GetDepthAttachmentID() const { return m_depth_attachment; }
-
-		void CopyDepthBufferToMainFramebuffer() const override;
+		uint32_t GetID() const override { return m_rendererID; };
 
 	private:
 		uint32_t m_rendererID = 0;

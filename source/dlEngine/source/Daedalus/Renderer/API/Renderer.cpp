@@ -65,8 +65,8 @@ void Renderer::Init()
 	gbuffer_specs.attachments = FramebufferAttachmentSpecification({
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
 		FramebufferTextureSpecification(FramebufferTextureFormat::RED16F),
 		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });

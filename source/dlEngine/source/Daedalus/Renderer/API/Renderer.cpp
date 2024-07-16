@@ -26,17 +26,22 @@ std::shared_ptr<VertexArray> Renderer::s_unit_quad = nullptr;
 Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_light_projection_view = glm::mat4();
 
-namespace {
-	float quad_vertices[] =
+namespace
+{
+	std::array<float, 20> quad_vertices =
 	{
-		// positions        // texture Coords
+		// positions        // texture coords
 		-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
 		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
 		 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 	};
 
-
+	std::array<uint32_t, 6> quad_indices =
+	{
+		0, 1, 2, // first triangle
+		1, 3, 2  // second triangle
+	};
 }
 
 void Renderer::Init()
@@ -61,7 +66,8 @@ void Renderer::Init()
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
 		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32)});
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32),
+		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	gbuffer_specs.layers = -1;
 	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
 
@@ -249,7 +255,7 @@ void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, c
 
 void Renderer::DrawUnitQuad()
 {
-	RenderCommand::DrawUnindexed(s_unit_quad.get(), 4);
+	RenderCommand::DrawIndexed(s_unit_quad.get());
 }
 
 void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
@@ -290,61 +296,43 @@ void Renderer::UpdateNumberOfShadowMap(int number_of_shadow_map)
 	s_framebuffer_shadows = Framebuffer::Create(specs);
 }
 
-void Renderer::BindShadowMap(const Shader* color_pass_shader)
+void Renderer::BindShadowMap(const Shader* color_pass_shader, int slot)
 {
-	color_pass_shader->Bind();
-
-	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), 4);
-	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, 4);
-
-	color_pass_shader->Unbind();
+	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), slot);
+	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, slot);
 }
 
-void Renderer::BindGBufferTextures(const Shader* light_pass_shader)
+void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_slot)
 {
-	light_pass_shader->Bind();
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), first_slot);
+	light_pass_shader->SetInt(ShaderConstants::GBufferPos, first_slot);
 
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), 0);
-	light_pass_shader->SetInt(ShaderConstants::GBufferPos, 0);
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), first_slot + 1);
+	light_pass_shader->SetInt(ShaderConstants::GBufferNorm, first_slot + 1);
 
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), 1);
-	light_pass_shader->SetInt(ShaderConstants::GBufferNorm, 1);
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(2), first_slot + 2);
+	light_pass_shader->SetInt(ShaderConstants::GBufferSpec, first_slot + 2);
 
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(2), 2);
-	light_pass_shader->SetInt(ShaderConstants::GBufferSpec, 2);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(3), 3);
-	light_pass_shader->SetInt(ShaderConstants::GBufferAlbedo, 3);
-
-	light_pass_shader->Unbind();
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(3), first_slot + 3);
+	light_pass_shader->SetInt(ShaderConstants::GBufferAlbedo, first_slot + 3);
 }
 
 std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()
 {
-	std::vector<float> vertex_data;
-	vertex_data.reserve(20);
-
-	for (auto i = 0; i < 20; ++i)
-	{
-		vertex_data.push_back(quad_vertices[i]);
-		vertex_data.push_back(quad_vertices[i + 1]);
-		vertex_data.push_back(quad_vertices[i + 2]);
-
-		vertex_data.push_back(quad_vertices[i + 3]);
-		vertex_data.push_back(quad_vertices[i + 4]);
-	}
-
 	auto vertex_array = VertexArray::Create();
 	vertex_array->Bind();
 
-	auto vertex_buffer = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
+	auto vertex_buffer = VertexBuffer::Create(quad_vertices.data(), quad_vertices.size() * sizeof(float));
 	vertex_buffer->SetLayout(BufferLayout
 		{
 			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },
 			BufferElement{ ShaderDataType::Float2, std::string(ShaderConstants::TexCoordVar), false },
 		});
 
+	auto indexes_buffer = IndexBuffer::Create(quad_indices.data(), quad_indices.size());
+
 	vertex_array->AddVertexBuffer(vertex_buffer);
+	vertex_array->SetIndexBuffer(indexes_buffer);
 	vertex_array->Unbind();
 
 	return vertex_array;

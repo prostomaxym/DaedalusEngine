@@ -33,10 +33,10 @@ in VS_OUT
 
 out vec4 fout_color;
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gSpec;
-uniform sampler2D gAlbedo;
+uniform sampler2D u_gPosition;
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gSpec;
+uniform sampler2D u_gAlbedo;
 uniform sampler2DArray u_shadowmaps;
 
 // ------------------------------------------------- Globals ------------------------------------------------ //
@@ -229,11 +229,11 @@ vec3 CalculateSpotLight(Light p_light)
 
 void main()
 {
-    g_frag_pos = texture(gPosition, fs_in.uv).rgb;
-    g_normal = texture(gNormal, fs_in.uv).rgb;
+    g_frag_pos = texture(u_gPosition, fs_in.uv).rgb;
+    g_normal = texture(u_gNormal, fs_in.uv).rgb;
     g_ambient_tex = vec3(0.0, 0.0, 0.0);
-    g_spec_tex = texture(gSpec, fs_in.uv).rgba;
-    g_diffuse_tex = texture(gAlbedo, fs_in.uv).rgb;
+    g_spec_tex = texture(u_gSpec, fs_in.uv).rgba;
+    g_diffuse_tex = texture(u_gAlbedo, fs_in.uv).rgb;
 
     g_view_pos = ubo_scene.view_pos;
     g_view_dir = normalize(g_view_pos - g_frag_pos);

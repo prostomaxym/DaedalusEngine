@@ -109,12 +109,11 @@ void ExampleLayer::PrepareNukeScene()
 	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
 	 props.light_power = 0.1f;
-	 props.cast_shadows = false;
+	 props.cast_shadows = true;
 	 props.number_of_shadow_cascades = 4;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
-	//-18.020638 / Y: 11.867470 / Z: -74.680733
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */
 	auto Aside_light_entity = m_scene.CreateEntity("ASide Light");
 	props.light_pos = glm::vec3(-26.0f, 12.f, -74.5f);

@@ -47,8 +47,8 @@ namespace Daedalus {
 		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
 		static std::shared_ptr<VertexArray> GetUnitQuad() { return s_unit_quad; }
 
-		static void BindGBufferTextures(const Shader* light_pass_shader);
-		static void BindShadowMap(const Shader* color_pass_shader);
+		static void BindGBufferTextures(const Shader* light_pass_shader, int slot);
+		static void BindShadowMap(const Shader* color_pass_shader, int first_slot);
 
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);

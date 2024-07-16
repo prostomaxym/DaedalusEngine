@@ -21,9 +21,9 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	Renderer::BeginScene(m_camera);
 
 	UpdateLighting();
-	//DoShadowPass();
-	DoGeometryPass();
-	DoLightPass();
+	DoShadowPass();
+	DoDeferredGeometryPass();
+	DoDeferredLightPass();
 
 	Renderer::EndScene();
 }
@@ -55,10 +55,10 @@ void RenderSystem::DoShadowPass() const
 	shadow_fb->Unbind();
 }
 
-void RenderSystem::DoGeometryPass() const
+void RenderSystem::DoDeferredGeometryPass() const
 {
 	const auto gbuffer_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredGShader);
-	//Renderer::BindShadowMap(standard_shader.get());
+	
 	const auto gbuffer = Renderer::GetGBuffer();
 	gbuffer->Bind();
 	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
@@ -92,16 +92,17 @@ void RenderSystem::DoGeometryPass() const
 	gbuffer->Unbind();
 }
 
-void RenderSystem::DoLightPass() const
+void RenderSystem::DoDeferredLightPass() const
 {
 	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 	const auto light_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredLightShader);
 	light_shader->Bind();
-	Renderer::BindGBufferTextures(light_shader.get());
+
+	Renderer::BindGBufferTextures(light_shader.get(), 0);
+	Renderer::BindShadowMap(light_shader.get(), 4);
 
 	Renderer::DrawUnitQuad();
-
 	light_shader->Unbind();
 }
 

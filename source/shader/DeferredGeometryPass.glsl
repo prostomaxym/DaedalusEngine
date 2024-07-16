@@ -76,8 +76,8 @@ in VS_OUT
 
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gAlbedo;
-layout (location = 3) out vec4 gSpec;
+layout (location = 2) out vec4 gSpec;
+layout (location = 3) out vec4 gAlbedo;
 
 // ----------------------------------------------Structures-------------------------------------------------- //
 struct ObjectData

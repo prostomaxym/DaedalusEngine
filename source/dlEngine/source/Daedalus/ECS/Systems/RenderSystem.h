@@ -22,8 +22,8 @@ namespace Daedalus
 
     private:
         void DoShadowPass() const;
-        void DoLightPass() const;
-        void DoGeometryPass() const;
+        void DoDeferredLightPass() const;
+        void DoDeferredGeometryPass() const;
 
         void UpdateLighting() const;
 

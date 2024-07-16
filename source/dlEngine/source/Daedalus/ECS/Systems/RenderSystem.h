@@ -21,8 +21,9 @@ namespace Daedalus
         void SetViewportSize(int width, int height) { m_viewport_width = width; m_viewport_height = height;}
 
     private:
+        void DoShadowPass() const;
         void DoLightPass() const;
-        void DoColorPass() const;
+        void DoGeometryPass() const;
 
         void UpdateLighting() const;
 

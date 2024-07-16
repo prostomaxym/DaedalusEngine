@@ -7,9 +7,11 @@ namespace Daedalus
 {
 	namespace ShaderConstants
 	{
-		constexpr auto StandardShader{ "Standard" };
+		constexpr auto ForwardShader{ "ForwardPass" };
+		constexpr auto DeferredGShader{ "DeferredGeometryPass" };
+		constexpr auto DeferredLightShader{ "DeferredLightPass" };
 		constexpr auto CubemapShader{ "Cubemap" };
-		constexpr auto ShadowShader{ "Shadow" };
+		constexpr auto ShadowShader{ "ShadowPass" };
 
 		constexpr auto SceneModel{ "u_object.model_mat" };
 		constexpr auto ShadowModel{ "u_model" };
@@ -37,5 +39,10 @@ namespace Daedalus
 		constexpr auto NormalsVar{ "vin_normals" };
 		constexpr auto TangentVars{ "vin_tangent" };
 		constexpr auto BitangentVars{ "vin_bitangent" };
+
+		constexpr auto GBufferPos{ "u_gPosition" };
+		constexpr auto GBufferNorm{ "u_gNormal" };
+		constexpr auto GBufferSpec{ "u_gSpec" };
+		constexpr auto GBufferAlbedo{ "u_gAlbedo" };
 	}
 }

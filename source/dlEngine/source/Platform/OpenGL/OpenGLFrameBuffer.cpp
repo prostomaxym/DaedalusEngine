@@ -55,7 +55,7 @@ namespace {
 		glBindTexture(TextureTarget(multisampled, multilayer), id);
 	}
 
-	void AttachColorTexture(uint32_t id, int samples, int layers, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
+	void AttachColorTexture(uint32_t id, int samples, int layers, GLenum internalFormat, GLenum format, GLenum type, uint32_t width, uint32_t height, int index)
 	{
 		bool multisampled = samples > 1;
 		bool multilayer = layers > 0;
@@ -79,7 +79,7 @@ namespace {
 				layers,
 				0,
 				format,
-				GL_UNSIGNED_BYTE,
+				type,
 				nullptr);
 
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -89,13 +89,13 @@ namespace {
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		}
 
 		if (multilayer)
@@ -158,7 +158,7 @@ namespace {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, false), id, 0);
 	}
 
-	static bool IsDepthFormat(FramebufferTextureFormat format)
+	bool IsDepthFormat(FramebufferTextureFormat format)
 	{
 		switch (format)
 		{
@@ -168,12 +168,14 @@ namespace {
 		return false;
 	}
 
-	static GLenum DaedalusFBTextureFormatToGL(FramebufferTextureFormat format)
+	GLenum DaedalusFBTextureFormatToGL(FramebufferTextureFormat format)
 	{
 		switch (format)
 		{
-			case FramebufferTextureFormat::RGBA8:       return GL_RGBA8;
-			case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+			case FramebufferTextureFormat::RGBA8:        return GL_RGBA8;
+			case FramebufferTextureFormat::RGBA16:       return GL_RGBA16F;
+			case FramebufferTextureFormat::RGBA32:       return GL_RGBA;
+			case FramebufferTextureFormat::RED_INTEGER:  return GL_RED_INTEGER;
 		}
 
 		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unsupported FramebufferTextureFormat");
@@ -241,10 +243,16 @@ void OpenGLFramebuffer::Invalidate()
 			switch (m_color_attachment_specifications[i].texture_format)
 			{
 				case FramebufferTextureFormat::RGBA8:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
+					break;
+				case FramebufferTextureFormat::RGBA16:
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
+					break;
+				case FramebufferTextureFormat::RGBA32:
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
 				case FramebufferTextureFormat::RED_INTEGER:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
 			}
 		}

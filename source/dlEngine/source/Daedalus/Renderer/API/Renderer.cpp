@@ -11,13 +11,33 @@
 using namespace Daedalus;
 
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
+
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data;
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config;
+
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices;
 std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_lighting = nullptr;
+
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
+std::shared_ptr<Framebuffer> Renderer::s_g_framebuffer = nullptr;
+
+std::shared_ptr<VertexArray> Renderer::s_unit_quad = nullptr;
+
 Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_light_projection_view = glm::mat4();
+
+namespace {
+	float quad_vertices[] =
+	{
+		// positions        // texture Coords
+		-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+		 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+	};
+
+
+}
 
 void Renderer::Init()
 {
@@ -25,14 +45,27 @@ void Renderer::Init()
 
 	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
 
-	FramebufferSpecification specs;
-	specs.width = GraphicsConfig::GetShadowBufferWidth();
-	specs.height = GraphicsConfig::GetShadowBufferHeight();
-	specs.samples = GraphicsConfig::GetShadowBufferSamples();
-	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = -1;
+	FramebufferSpecification shadow_specs;
+	shadow_specs.width = GraphicsConfig::GetShadowBufferWidth();
+	shadow_specs.height = GraphicsConfig::GetShadowBufferHeight();
+	shadow_specs.samples = GraphicsConfig::GetShadowBufferSamples();
+	shadow_specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+	shadow_specs.layers = -1;
+	s_framebuffer_shadows = Framebuffer::Create(shadow_specs);
 
-	s_framebuffer_shadows = Framebuffer::Create(specs);
+	FramebufferSpecification gbuffer_specs;
+	gbuffer_specs.width = GraphicsConfig::GetWindowWidth();
+	gbuffer_specs.height = GraphicsConfig::GetWindowHeight();
+	gbuffer_specs.samples = 1;
+	gbuffer_specs.attachments = FramebufferAttachmentSpecification({
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32)});
+	gbuffer_specs.layers = -1;
+	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
+
+	s_unit_quad = CreateUnitQuad();
 }
 
 void Renderer::Shutdown()
@@ -214,6 +247,11 @@ void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, c
 	}
 }
 
+void Renderer::DrawUnitQuad()
+{
+	RenderCommand::DrawUnindexed(s_unit_quad.get(), 4);
+}
+
 void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
@@ -260,4 +298,54 @@ void Renderer::BindShadowMap(const Shader* color_pass_shader)
 	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, 4);
 
 	color_pass_shader->Unbind();
+}
+
+void Renderer::BindGBufferTextures(const Shader* light_pass_shader)
+{
+	light_pass_shader->Bind();
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), 0);
+	light_pass_shader->SetInt(ShaderConstants::GBufferPos, 0);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), 1);
+	light_pass_shader->SetInt(ShaderConstants::GBufferNorm, 1);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(2), 2);
+	light_pass_shader->SetInt(ShaderConstants::GBufferSpec, 2);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(3), 3);
+	light_pass_shader->SetInt(ShaderConstants::GBufferAlbedo, 3);
+
+	light_pass_shader->Unbind();
+}
+
+std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()
+{
+	std::vector<float> vertex_data;
+	vertex_data.reserve(20);
+
+	for (auto i = 0; i < 20; ++i)
+	{
+		vertex_data.push_back(quad_vertices[i]);
+		vertex_data.push_back(quad_vertices[i + 1]);
+		vertex_data.push_back(quad_vertices[i + 2]);
+
+		vertex_data.push_back(quad_vertices[i + 3]);
+		vertex_data.push_back(quad_vertices[i + 4]);
+	}
+
+	auto vertex_array = VertexArray::Create();
+	vertex_array->Bind();
+
+	auto vertex_buffer = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
+	vertex_buffer->SetLayout(BufferLayout
+		{
+			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },
+			BufferElement{ ShaderDataType::Float2, std::string(ShaderConstants::TexCoordVar), false },
+		});
+
+	vertex_array->AddVertexBuffer(vertex_buffer);
+	vertex_array->Unbind();
+
+	return vertex_array;
 }

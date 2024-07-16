@@ -85,7 +85,6 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 	m_VAO = VertexArray::Create();
 	m_VAO->Bind();
 
-	uint64_t vertex_size = sizeof(Vertex);
 	m_VBO = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
 	m_VBO->SetLayout(BufferLayout
 		{ 

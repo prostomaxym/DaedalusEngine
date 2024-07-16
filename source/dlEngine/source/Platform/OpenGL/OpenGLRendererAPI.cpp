@@ -97,7 +97,6 @@ void OpenGLRendererAPI::DrawUnindexed(const VertexArray* vertex_array, uint32_t 
 	vertex_array->Unbind();
 }
 
-
 void OpenGLRendererAPI::DrawLines(const VertexArray* vertex_array, uint32_t vertexCount)
 {
 	vertex_array->Bind();

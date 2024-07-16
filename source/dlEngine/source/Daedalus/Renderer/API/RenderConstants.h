@@ -42,6 +42,7 @@ namespace Daedalus
 
 		constexpr auto GBufferPos{ "u_gPosition" };
 		constexpr auto GBufferNorm{ "u_gNormal" };
+		constexpr auto GBufferAmbient{ "u_gAmbient" };
 		constexpr auto GBufferSpec{ "u_gSpec" };
 		constexpr auto GBufferAlbedo{ "u_gAlbedo" };
 	}

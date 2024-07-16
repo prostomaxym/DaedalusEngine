@@ -272,9 +272,20 @@ void OpenGLFramebuffer::Invalidate()
 
 	if (m_color_attachments.size() > 1)
 	{
-		DL_ASSERT(m_color_attachments.size() <= 4, Log::Categories::Renderer, "incorrect color attachment size");
-		GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-		glDrawBuffers(m_color_attachments.size(), buffers);
+		GLint max_draw_buffers;
+		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &max_draw_buffers);
+
+		DL_ASSERT(m_color_attachments.size() <= max_draw_buffers, Log::Categories::Renderer, "Maximum number of framebuffer attachments exceeded");
+
+		std::vector<GLenum> buffers;
+		buffers.reserve(m_color_attachments.size());
+
+		for (auto i = 0; i < m_color_attachments.size(); ++i)
+		{
+			buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+		}
+
+		glDrawBuffers(m_color_attachments.size(), buffers.data());
 	}
 	else if (m_color_attachments.empty())
 	{

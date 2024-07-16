@@ -4,16 +4,11 @@
 layout (location = 0) in vec3 vin_vertices;
 layout (location = 1) in vec2 vin_texcoord;
 
-out VS_OUT
-{
-    out vec3 frag_pos;
-    out vec2 uv;
-}vs_out;
+out vec2 vout_uv;
 
 void main()
 {
-    vs_out.uv = vin_texcoord;
-    vs_out.frag_pos = vin_vertices;
+    vout_uv = vin_texcoord;
     gl_Position = vec4(vin_vertices, 1.0);
 }
 
@@ -25,16 +20,13 @@ void main()
 #include "LightSSBO.hglsl"
 
 // -------------------------------------------Inputs/Outputs------------------------------------------------- //
-in VS_OUT
-{
-    in vec3 frag_pos;
-    in vec2 uv;
-}fs_in;
 
+in vec2 vout_uv;
 out vec4 fout_color;
 
 uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
+uniform sampler2D u_gAmbient;
 uniform sampler2D u_gSpec;
 uniform sampler2D u_gAlbedo;
 uniform sampler2DArray u_shadowmaps;
@@ -42,12 +34,12 @@ uniform sampler2DArray u_shadowmaps;
 // ------------------------------------------------- Globals ------------------------------------------------ //
 vec3 g_ambient_tex = vec3(0.0, 0.0, 0.0);
 vec3 g_diffuse_tex = vec3(0.0, 0.0, 0.0);
-vec4 g_spec_tex = vec4(0.0, 0.0, 0.0, 1.0);
+vec3 g_spec_tex = vec3(0.0, 0.0, 0.0);
 vec3 g_view_dir = vec3(0.0, 0.0, 0.0);
 vec3 g_view_pos = vec3(0.0, 0.0, 0.0);
 vec3 g_frag_pos = vec3(0.0, 0.0, 0.0);
 vec3 g_normal = vec3(0.0, 0.0, 0.0);
-float g_alpha_tex = 0;
+float g_shininess = 1.0;
 
 
 // ------------------------------------------------- General Functions ------------------------------------------------ //
@@ -131,7 +123,7 @@ int FindCascadeIndex(Light p_light)
     if (p_light.number_of_shadow_cascades <= 1)
         return 0;
 
-    vec4 frag_pos_view_space = ubo_scene.view * vec4(fs_in.frag_pos, 1.0);
+    vec4 frag_pos_view_space = ubo_scene.view * vec4(g_frag_pos, 1.0);
     float view_depth = abs(frag_pos_view_space.z);
 
     int cascade = p_light.number_of_shadow_cascades - 1;
@@ -150,7 +142,7 @@ int FindCascadeIndex(Light p_light)
 int FindShadowCubeIndex(vec3 light_pos)
 {
     int face_index = -1;
-    vec3 frag_to_light = fs_in.frag_pos - light_pos;
+    vec3 frag_to_light = g_frag_pos - light_pos;
 
     if (abs(frag_to_light.x) > abs(frag_to_light.y) && abs(frag_to_light.x) > abs(frag_to_light.z))
         face_index = frag_to_light.x > 0.0 ? 0 : 1;
@@ -165,7 +157,7 @@ int FindShadowCubeIndex(vec3 light_pos)
 float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 {
     const int cascade_ind = p_light.type == POINT_LIGHT_SOURCE ? FindShadowCubeIndex(p_light.position) : FindCascadeIndex(p_light);
-    const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(fs_in.frag_pos, 1.0);
+    const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(g_frag_pos, 1.0);
     const vec3 proj_coords = 0.5 * (frag_pos_light_space.xyz / frag_pos_light_space.w) + 0.5;
 
     if (proj_coords.z > 1.0)
@@ -186,14 +178,14 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
 {
     const vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
     const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
-    const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), 1.0 / g_spec_tex.a);
+    const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), g_shininess);
 
     float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
     float visability_trip = pow(visability, 3.0);
     return p_luminosity *
             (p_light.ambient * g_ambient_tex
             + visability * p_light.diffuse * diffuse_coef * g_diffuse_tex
-            + visability_trip * p_light.specular * specular_coef * g_spec_tex.rgb);
+            + visability_trip * p_light.specular * specular_coef * g_spec_tex);
 }
 
 float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)
@@ -229,12 +221,13 @@ vec3 CalculateSpotLight(Light p_light)
 
 void main()
 {
-    g_frag_pos = texture(u_gPosition, fs_in.uv).rgb;
-    g_normal = texture(u_gNormal, fs_in.uv).rgb;
-    g_ambient_tex = vec3(0.0, 0.0, 0.0);
-    g_spec_tex = texture(u_gSpec, fs_in.uv).rgba;
-    g_diffuse_tex = texture(u_gAlbedo, fs_in.uv).rgb;
+    g_frag_pos = texture(u_gPosition, vout_uv).rgb;
+    g_normal = texture(u_gNormal, vout_uv).rgb;
+    g_ambient_tex = texture(u_gAmbient, vout_uv).rgb;
+    g_spec_tex = texture(u_gSpec, vout_uv).rgb;
+    g_diffuse_tex = texture(u_gAlbedo, vout_uv).rgb;
 
+    g_shininess = 1.0 / texture(u_gSpec, vout_uv).a;
     g_view_pos = ubo_scene.view_pos;
     g_view_dir = normalize(g_view_pos - g_frag_pos);
 

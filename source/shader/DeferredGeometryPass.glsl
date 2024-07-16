@@ -76,8 +76,9 @@ in VS_OUT
 
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gSpec;
-layout (location = 3) out vec4 gAlbedo;
+layout (location = 2) out vec4 gAmbient;
+layout (location = 3) out vec4 gSpec;
+layout (location = 4) out vec4 gAlbedo;
 
 // ----------------------------------------------Structures-------------------------------------------------- //
 struct ObjectData
@@ -162,6 +163,7 @@ void main()
 
     gPosition = vec4(fs_in.frag_pos, 1.0);
     gNormal = vec4(normal, 1.0);
+    gAmbient = vec4(u_object.k_ambient * diffuse, 1.0);
     gSpec = vec4(spec, shininess_inv);
     gAlbedo = vec4(diffuse, 1.0);
 }

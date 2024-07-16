@@ -64,6 +64,7 @@ namespace Daedalus {
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 		virtual uint32_t GetDepthAttachmentID() const = 0;
 
+		virtual void CopyDepthBufferToMainFramebuffer() const = 0;
 		static std::shared_ptr<Framebuffer> Create(const FramebufferSpecification& spec);
 	};
 

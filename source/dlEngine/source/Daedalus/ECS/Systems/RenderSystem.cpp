@@ -64,19 +64,6 @@ void RenderSystem::DoDeferredGeometryPass() const
 	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 
-	// const auto cubemap_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::CubemapShader);
-	// cubemap_shader->Bind();
-	// const auto cubemap_view = m_registry.view<SkyboxComponent>();
-	// for (const auto e : cubemap_view)
-	// {
-	// 	Entity entity = { e, m_scene };
-	//
-	// 	const auto& cubemap_component = entity.GetComponent<SkyboxComponent>();
-	// 	Renderer::Submit(cubemap_shader.get(), &cubemap_component.cubemap,
-	// 		m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
-	// }
-	// cubemap_shader->Unbind();
-
 	gbuffer_shader->Bind();
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
 	for (const auto e : models_view)
@@ -104,6 +91,22 @@ void RenderSystem::DoDeferredLightPass() const
 
 	Renderer::DrawUnitQuad();
 	light_shader->Unbind();
+
+	const auto gbuffer = Renderer::GetGBuffer();
+	gbuffer->CopyDepthBufferToMainFramebuffer();
+
+	const auto cubemap_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::CubemapShader);
+	cubemap_shader->Bind();
+	const auto cubemap_view = m_registry.view<SkyboxComponent>();
+	for (const auto e : cubemap_view)
+	{
+		Entity entity = { e, m_scene };
+
+		const auto& cubemap_component = entity.GetComponent<SkyboxComponent>();
+		Renderer::Submit(cubemap_shader.get(), &cubemap_component.cubemap,
+			m_camera->GetProjectionViewMatrixWithoutTranslation(cubemap_component.rotation_angle));
+	}
+	cubemap_shader->Unbind();
 }
 
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const

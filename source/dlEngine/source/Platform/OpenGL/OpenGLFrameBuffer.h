@@ -26,6 +26,8 @@ namespace Daedalus {
 		const FramebufferSpecification& GetSpecification() const override { return m_specification; }
 		uint32_t GetDepthAttachmentID() const { return m_depth_attachment; }
 
+		void CopyDepthBufferToMainFramebuffer() const override;
+
 	private:
 		uint32_t m_rendererID = 0;
 		FramebufferSpecification m_specification;

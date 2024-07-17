@@ -106,6 +106,7 @@ void Renderer::SetupGraphicSettings()
 	data.gamma_value = GraphicsConfig::GetGammaCorrectionValue();
 	data.pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
 	data.csm_exponent = GraphicsConfig::GetShadowCSMExponent();
+	data.enable_ssao = GraphicsConfig::IsSSBOEnabled();
 
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(BufferData), 1, UniformBuffer::Type::Static, &data);
 	s_ssao->CreateUBO();

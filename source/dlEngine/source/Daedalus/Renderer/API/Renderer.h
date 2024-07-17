@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderCommand.h"
+#include "Daedalus/Renderer/Buffers/SSAO.h"
 #include "Daedalus/Renderer/Resourses/Mesh.h"
 #include "Daedalus/Renderer/Resourses/Model.h"
 #include "Daedalus/Renderer/Resourses/Shader.h"
@@ -59,6 +60,7 @@ namespace Daedalus {
 
 		static std::unique_ptr<ShaderLibrary> s_shader_library;
 
+		static std::unique_ptr<SSAO> s_ssao;
 		static std::shared_ptr<UniformBuffer> s_UBO_scene_data;
 		static std::shared_ptr<UniformBuffer> s_UBO_graphic_config;
 

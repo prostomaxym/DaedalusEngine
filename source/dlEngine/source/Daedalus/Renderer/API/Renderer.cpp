@@ -12,6 +12,8 @@ using namespace Daedalus;
 
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 
+std::unique_ptr<SSAO> Renderer::s_ssao = nullptr;
+
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data = nullptr;
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config = nullptr;
 
@@ -74,6 +76,8 @@ void Renderer::Init()
 	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
 
 	s_unit_quad = CreateUnitQuad();
+
+	s_ssao = std::make_unique<SSAO>(GraphicsConfig::GetWindowWidth(), GraphicsConfig::GetWindowHeight(), 64, 4, 4);
 }
 
 void Renderer::Shutdown()

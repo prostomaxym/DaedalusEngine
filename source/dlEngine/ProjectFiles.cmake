@@ -56,6 +56,9 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/API/RendererAPI.h
     source/Daedalus/Renderer/API/RendererAPI.cpp
 
+    source/Daedalus/Renderer/Buffers/SSAO.h
+    source/Daedalus/Renderer/Buffers/SSAO.cpp
+
     source/Daedalus/Renderer/Objects/Camera.h
     source/Daedalus/Renderer/Objects/Camera.cpp
     source/Daedalus/Renderer/Objects/Geometry.h

@@ -14,6 +14,7 @@ namespace Daedalus {
 		RGBA16F,
 		RGBA32U,
 		RED_INTEGER,
+		RED_FLOAT,
 		RED16F,
 		Depth
 	};

@@ -10,9 +10,14 @@ project(
 set(PROJECT_FILES
     LightSSBO.hglsl
     Scene.hglsl
+
+    Blur.glsl
     Cubemap.glsl
-    Shadow.glsl
-    Standard.glsl
+    DeferredGeometryPass.glsl
+    DeferredLightPass.glsl
+    ForwardPass.glsl
+    ShadowPass.glsl
+    SSAO.glsl
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})

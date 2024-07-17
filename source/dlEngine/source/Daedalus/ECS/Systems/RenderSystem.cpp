@@ -23,6 +23,7 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	UpdateLighting();
 	DoShadowPass();
 	DoDeferredGeometryPass();
+	DoSSAOPass();
 	DoDeferredLightPass();
 	DoForwardPass();
 
@@ -114,6 +115,10 @@ void RenderSystem::DoDeferredLightPass() const
 	light_shader->Unbind();
 }
 
+void RenderSystem::DoSSAOPass() const
+{
+
+}
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();

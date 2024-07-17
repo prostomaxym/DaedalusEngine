@@ -210,6 +210,7 @@ namespace
 			case FramebufferTextureFormat::RGBA32U:      return GL_RGBA;
 			case FramebufferTextureFormat::RED16F:       return GL_R16F;
 			case FramebufferTextureFormat::RED_INTEGER:  return GL_RED_INTEGER;
+			case FramebufferTextureFormat::RED_FLOAT:    return GL_RED;
 		}
 
 		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unsupported FramebufferTextureFormat");
@@ -354,6 +355,9 @@ void OpenGLFramebuffer::Invalidate()
 				case FramebufferTextureFormat::RED16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R16F, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
+				case FramebufferTextureFormat::RED_FLOAT:
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RED, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
+				break;
 			}
 		}
 	}

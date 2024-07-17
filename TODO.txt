@@ -1,21 +1,25 @@
-Camera type (third person)
-Fps lock window swap
-VSM
-CSM smoothing
-Point lights
-Tesselation
-PBR
-Face culling
-Blending
-Parallax
-HDR
-Derefered
 SSAO
-Depth of field
-Blur
-Reflections
-Lens flares
+PBR
 
+
+- Systems
+Physics
+Audio
+Lua
+Level Editor
+Threads
+Debug
+
+
+- General Tech dept
+Fps lock window swap
+Log file
+Debug overlay + profiler
+
+
+- Graphics Tech dept:
+Volume lights
+LOD
 Particle
 Temporal AA
 Global Illumination
@@ -25,12 +29,11 @@ Procedural clouds/sky
 Screen Space Reflections
 Screen Space Shadows
 Bloom
-
-Physics
-Audio
-Lua
-Level Editor
-Threads
-
-Log file
-Debug overlay + profiler
+VSM
+CSM smoothing
+Blending
+HDR
+Depth of field
+Blur
+Reflections
+Lens flares

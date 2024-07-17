@@ -95,7 +95,7 @@ void Renderer::SetupGraphicSettings()
 		float gamma_value = 0.f;
 		int pcf_multiplier = 0;
 		float csm_exponent = 0.f;
-		bool enable_ssao = true;
+		int enable_ssao = 1;
 		int align1 = -1;
 		int align2= -1;
 		int align3= -1;
@@ -106,7 +106,7 @@ void Renderer::SetupGraphicSettings()
 	data.gamma_value = GraphicsConfig::GetGammaCorrectionValue();
 	data.pcf_multiplier = GraphicsConfig::GetShadowPCFMultiplier();
 	data.csm_exponent = GraphicsConfig::GetShadowCSMExponent();
-	data.enable_ssao = GraphicsConfig::IsSSBOEnabled();
+	data.enable_ssao = GraphicsConfig::IsSSBOEnabled() ? 1 : 0;
 
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(BufferData), 1, UniformBuffer::Type::Static, &data);
 	s_ssao->CreateUBO();
@@ -322,16 +322,16 @@ void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4&
 	ssao_pass_shader->SetInt(ShaderConstants::GBufferNorm, 1);
 
 	Texture2D::BindTexture(s_ssao->GetNoiseTexture()->GetRendererID(), 2);
-	ssao_pass_shader->SetInt(ShaderConstants::SSBOBufferNoise, 2);
+	ssao_pass_shader->SetInt(ShaderConstants::SSAOBufferNoise, 2);
 
-	ssao_pass_shader->SetMat4(ShaderConstants::SSBOProjection, proj);
-	ssao_pass_shader->SetMat4("u_view", view);
+	ssao_pass_shader->SetMat4(ShaderConstants::SSAOProjection, proj);
+	ssao_pass_shader->SetMat4(ShaderConstants::SSAOView, view);
 }
 
 void Renderer::BindSSAOBlurTextures(const Shader* blur_pass_shader)
 {
 	Texture2D::BindTexture(s_ssao->GetSSAOFramebuffer()->GetColorAttachmentRendererID(0), 0);
-	blur_pass_shader->SetInt(ShaderConstants::SSBOBlurBufferNoise, 0);
+	blur_pass_shader->SetInt(ShaderConstants::SSAOBlurBufferNoise, 0);
 }
 
 void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_slot)
@@ -357,7 +357,7 @@ void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_sl
 	if (GraphicsConfig::IsSSBOEnabled())
 	{
 		Texture2D::BindTexture(s_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0), first_slot + 6);
-		light_pass_shader->SetInt(ShaderConstants::SSBOFinalBuffer, first_slot + 6);
+		light_pass_shader->SetInt(ShaderConstants::SSAOFinalBuffer, first_slot + 6);
 	}
 }
 

@@ -1,6 +1,4 @@
-SSAO
 PBR
-
 
 - Systems
 Physics
@@ -18,6 +16,7 @@ Debug overlay + profiler
 
 
 - Graphics Tech dept:
+Bias calculation
 Volume lights
 LOD
 Particle
@@ -37,3 +36,5 @@ Depth of field
 Blur
 Reflections
 Lens flares
+Vulkan, DX12
+Ray Tracing?

@@ -10,16 +10,30 @@ namespace Daedalus
 	{
 	public:
 		template<typename T>
-		static T UniformDistribution()
+		static T UniformIntDistribution()
 		{
 			std::uniform_int_distribution<T> distribution;
 			return distribution(s_engine);
 		}
 
 		template<typename T>
-		static T UniformDistribution(T from, T to)
+		static T UniformIntDistribution(T from, T to)
 		{
 			std::uniform_int_distribution<T> distribution(from.value(), to.value());
+			return distribution(s_engine);
+		}
+
+		template<typename T>
+		static T UniformRealDistribution()
+		{
+			std::uniform_real_distribution<T> distribution;
+			return distribution(s_engine);
+		}
+
+		template<typename T>
+		static T UniformRealDistribution(T from, T to)
+		{
+			std::uniform_real_distribution<T> distribution(from, to);
 			return distribution(s_engine);
 		}
 

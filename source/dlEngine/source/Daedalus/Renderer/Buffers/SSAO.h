@@ -27,9 +27,6 @@ namespace Daedalus
         void CreateSampleKernel(int kernel_size);
         void CreateNoiseTexture(int noise_width, int noise_height);
 
-        static std::mt19937 CreateRandomGenerator();
-
-        std::mt19937 m_rand_generator;
         std::shared_ptr<Framebuffer> m_ssao_buffer = nullptr;
         std::shared_ptr<Framebuffer> m_blur_buffer = nullptr;
         std::vector<glm::vec4> m_kernel;

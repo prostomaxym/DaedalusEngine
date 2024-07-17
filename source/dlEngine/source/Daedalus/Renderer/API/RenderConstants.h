@@ -36,8 +36,9 @@ namespace Daedalus
 		constexpr auto CubemapTexture{ "u_cubemap" };
 		constexpr auto CubemapProjectionView{ "u_projection_view" };
 
-		constexpr auto SSBOKernel{ "u_samples" };
-		constexpr auto SSBOProjection{ "u_projection" };
+		constexpr auto SSAOKernel{ "u_samples" };
+		constexpr auto SSAOProjection{ "u_projection" };
+		constexpr auto SSAOView{ "u_view" };
 
 		constexpr auto VerticesVar{ "vin_vertices" };
 		constexpr auto TexCoordVar{ "vin_texcoord" };
@@ -51,8 +52,8 @@ namespace Daedalus
 		constexpr auto GBufferSpec{ "u_gSpec" };
 		constexpr auto GBufferAlbedo{ "u_gAlbedo" };
 		constexpr auto GBufferShininess{ "u_gShininess" };
-		constexpr auto SSBOBufferNoise{ "u_tex_noise" };
-		constexpr auto SSBOBlurBufferNoise{ "u_tex_input" };
-		constexpr auto SSBOFinalBuffer{ "u_gSSAO" };
+		constexpr auto SSAOBufferNoise{ "u_tex_noise" };
+		constexpr auto SSAOBlurBufferNoise{ "u_tex_input" };
+		constexpr auto SSAOFinalBuffer{ "u_gSSAO" };
 	}
 }

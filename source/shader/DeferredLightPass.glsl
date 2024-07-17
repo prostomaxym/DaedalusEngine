@@ -101,19 +101,23 @@ float CalculateShadowBias(vec3 light_dir, int light_type, int number_of_cascades
 {
     float bias = 0.0;
 
+    // TODO: Rework bias, not working completely for all light sources
     if (light_type == POINT_LIGHT_SOURCE)
     {
         bias = 0.0001;
     }
     else
     {
-        bias = 0.005 * tan(acos(dot(g_normal, light_dir)));
-        bias = clamp(bias, 0.0, 0.01);
-        if (number_of_cascades > 1)
-        {
-            const float bias_modifier = 0.5f;
-            bias *= 1 / (CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, cascade_ind, number_of_cascades) * bias_modifier);
-        }
+        //bias = 0.005 * tan(acos(dot(g_normal, light_dir)));
+        //bias = clamp(bias, 0.0, 0.01);
+       
+        //if (number_of_cascades > 1)
+        //{
+        //    const float bias_modifier = 0.5f;
+        //    bias *= 1 / (CalculateCascadePlaneDistance(ubo_scene.near_plane, ubo_scene.far_plane, cascade_ind, number_of_cascades) * bias_modifier);
+        //}
+
+         bias = 0.0001;
     }
 
     return bias;

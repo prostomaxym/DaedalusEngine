@@ -7,7 +7,7 @@ namespace Daedalus
 	class UUID
 	{
 	public:
-		UUID() : m_UUID(Random::UniformDistribution<uint64_t>()) {}
+		UUID() : m_UUID(Random::UniformIntDistribution<uint64_t>()) {}
 		UUID(uint64_t uuid) : m_UUID(uuid) {}
 		UUID(const UUID&) = default;
 

@@ -109,7 +109,7 @@ void RenderSystem::DoDeferredLightPass() const
 	light_shader->Bind();
 
 	Renderer::BindGBufferTextures(light_shader.get(), 0);
-	Renderer::BindShadowMap(light_shader.get(), 6);
+	Renderer::BindShadowMap(light_shader.get(), 7);
 
 	Renderer::DrawUnitQuad();
 	light_shader->Unbind();
@@ -117,8 +117,33 @@ void RenderSystem::DoDeferredLightPass() const
 
 void RenderSystem::DoSSAOPass() const
 {
+	const auto SSAO = Renderer::GetSSAOBuffers();
 
+	// ----------------------------------------- Main SSAO Pass --------------------------------------------- //
+	const auto ssao_buffer = SSAO->GetSSAOFramebuffer();
+	ssao_buffer->Bind();
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer);
+
+	const auto ssao_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::SSAOShader);
+	ssao_shader->Bind();
+	Renderer::BindSSAOTextures(ssao_shader.get(), m_camera->GetProjectionMatrix());
+	Renderer::DrawUnitQuad();
+	ssao_shader->Unbind();
+	ssao_buffer->Unbind();
+
+	// ----------------------------------------- Blur SSAO Pass --------------------------------------------- //
+	const auto blur_buffer = SSAO->GetBlurFramebuffer();
+	blur_buffer->Bind();
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer);
+
+	const auto blue_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::BlurShader);
+	blue_shader->Bind();
+	Renderer::BindSSAOBlurTextures(blue_shader.get());
+	Renderer::DrawUnitQuad();
+	blue_shader->Unbind();
+	blur_buffer->Unbind();
 }
+
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();

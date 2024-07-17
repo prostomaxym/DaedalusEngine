@@ -33,15 +33,21 @@ std::mt19937 SSAO::CreateRandomGenerator()
 
 void SSAO::CreateFramebuffer(int width, int height)
 {
-    FramebufferSpecification buffer_specs;
-    buffer_specs.width = width;
-    buffer_specs.height = height;
-    buffer_specs.samples = 1;
-    buffer_specs.attachments = FramebufferAttachmentSpecification({
-        FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT),
-        FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT)});
-    buffer_specs.layers = -1;
-    m_buffer = Framebuffer::Create(buffer_specs);
+    FramebufferSpecification ssao_spec;
+    ssao_spec.width = width;
+    ssao_spec.height = height;
+    ssao_spec.samples = 1;
+    ssao_spec.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT) });
+    ssao_spec.layers = -1;
+    m_ssao_buffer = Framebuffer::Create(ssao_spec);
+
+    FramebufferSpecification blur_specs;
+    blur_specs.width = width;
+    blur_specs.height = height;
+    blur_specs.samples = 1;
+    blur_specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT) });
+    blur_specs.layers = -1;
+    m_blur_buffer = Framebuffer::Create(blur_specs);
 }
 
 void SSAO::CreateSampleKernel(int kernel_size)

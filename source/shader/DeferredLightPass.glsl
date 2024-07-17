@@ -224,10 +224,11 @@ void main()
 {
     g_frag_pos = texture(u_gPosition, vout_uv).rgb;
     g_normal = texture(u_gNormal, vout_uv).rgb;
-    float ambient_occlusion = texture(u_gSSAO, vout_uv).r;
-    g_ambient_tex = texture(u_gAmbient, vout_uv).rgb *ambient_occlusion;
     g_spec_tex = texture(u_gSpec, vout_uv).rgb;
     g_diffuse_tex = texture(u_gAlbedo, vout_uv).rgb;
+
+    float ambient_occlusion = texture(u_gSSAO, vout_uv).r;
+    g_ambient_tex = vec3(0.3 * g_diffuse_tex * ambient_occlusion);
 
     g_shininess = 1.0 / texture(u_gShininess, vout_uv).r;
     g_view_pos = ubo_scene.view_pos;

@@ -76,7 +76,6 @@ void Renderer::Init()
 	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
 
 	s_unit_quad = CreateUnitQuad();
-
 	s_ssao = std::make_unique<SSAO>(GraphicsConfig::GetWindowWidth(), GraphicsConfig::GetWindowHeight(), 64, 4, 4);
 }
 
@@ -308,6 +307,31 @@ void Renderer::BindShadowMap(const Shader* color_pass_shader, int slot)
 	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, slot);
 }
 
+void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj)
+{
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), 0);
+	ssao_pass_shader->SetInt(ShaderConstants::GBufferPos, 0);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), 1);
+	ssao_pass_shader->SetInt(ShaderConstants::GBufferNorm, 1);
+
+	Texture2D::BindTexture(s_ssao->GetNoiseTexture()->GetRendererID(), 2);
+	ssao_pass_shader->SetInt(ShaderConstants::SSBOBufferNoise, 2);
+
+	const auto& kernel = s_ssao->GetKernelArray();
+	std::string samples_name = ShaderConstants::SSBOKernel;
+	for (int i = 0; i < kernel.size(); ++i)
+		ssao_pass_shader->SetFloat3(samples_name + "[" + std::to_string(i) + "]", kernel[i]);
+
+	ssao_pass_shader->SetMat4(ShaderConstants::SSBOProjection, proj);
+}
+
+void Renderer::BindSSAOBlurTextures(const Shader* blur_pass_shader)
+{
+	Texture2D::BindTexture(s_ssao->GetSSAOFramebuffer()->GetColorAttachmentRendererID(0), 0);
+	blur_pass_shader->SetInt(ShaderConstants::SSBOBlurBufferNoise, 0);
+}
+
 void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_slot)
 {
 	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), first_slot);
@@ -327,6 +351,9 @@ void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_sl
 
 	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(5), first_slot + 5);
 	light_pass_shader->SetInt(ShaderConstants::GBufferShininess, first_slot + 5);
+
+	Texture2D::BindTexture(s_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0), first_slot + 6);
+	light_pass_shader->SetInt(ShaderConstants::SSBOFinalBuffer, first_slot + 6);
 }
 
 std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()

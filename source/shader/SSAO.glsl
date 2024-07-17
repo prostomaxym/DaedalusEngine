@@ -31,7 +31,7 @@ const int kernel_size = 64;
 const float radius = 0.5;
 const float bias = 0.025;
 
-const vec2 noise_scale = vec2(1920.0/4.0, 1080.0/4.0);
+const vec2 noise_scale = vec2(2560.0/4.0, 1440.0/4.0);
 
 void main()
 {

@@ -10,6 +10,8 @@ namespace Daedalus
 		constexpr auto ForwardShader{ "ForwardPass" };
 		constexpr auto DeferredGShader{ "DeferredGeometryPass" };
 		constexpr auto DeferredLightShader{ "DeferredLightPass" };
+		constexpr auto SSAOShader{ "SSAO" };
+		constexpr auto BlurShader{ "Blur" };
 		constexpr auto CubemapShader{ "Cubemap" };
 		constexpr auto ShadowShader{ "ShadowPass" };
 
@@ -34,6 +36,9 @@ namespace Daedalus
 		constexpr auto CubemapTexture{ "u_cubemap" };
 		constexpr auto CubemapProjectionView{ "u_projection_view" };
 
+		constexpr auto SSBOKernel{ "u_samples" };
+		constexpr auto SSBOProjection{ "u_projection" };
+
 		constexpr auto VerticesVar{ "vin_vertices" };
 		constexpr auto TexCoordVar{ "vin_texcoord" };
 		constexpr auto NormalsVar{ "vin_normals" };
@@ -46,5 +51,8 @@ namespace Daedalus
 		constexpr auto GBufferSpec{ "u_gSpec" };
 		constexpr auto GBufferAlbedo{ "u_gAlbedo" };
 		constexpr auto GBufferShininess{ "u_gShininess" };
+		constexpr auto SSBOBufferNoise{ "u_tex_noise" };
+		constexpr auto SSBOBlurBufferNoise{ "u_tex_input" };
+		constexpr auto SSBOFinalBuffer{ "u_gSSAO" };
 	}
 }

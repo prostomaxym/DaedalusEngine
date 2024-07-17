@@ -9,23 +9,23 @@ using namespace Daedalus;
 
 namespace {
 
-void OpenGLMessageCallback(
-	unsigned source,
-	unsigned type,
-	unsigned id,
-	unsigned severity,
-	int length,
-	const char* message,
-	const void* userParam)
-{
-	switch (severity)
+	void OpenGLMessageCallback(
+		unsigned source,
+		unsigned type,
+		unsigned id,
+		unsigned severity,
+		int length,
+		const char* message,
+		const void* userParam)
 	{
-	case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::Renderer, message); return;
-	case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::Renderer, message); return;
-	case GL_DEBUG_SEVERITY_LOW:         /*Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message);*/ return;
-	case GL_DEBUG_SEVERITY_NOTIFICATION: /*Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message);*/ return;
+		switch (severity)
+		{
+		case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::Renderer, message); return;
+		case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::Renderer, message); return;
+		case GL_DEBUG_SEVERITY_LOW:         /*Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message);*/ return;
+		case GL_DEBUG_SEVERITY_NOTIFICATION: /*Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message);*/ return;
+		}
 	}
-}
 
 }
 
@@ -46,15 +46,16 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 	else
 		glDisable(GL_MULTISAMPLE);
 	
-	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
-	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-	else
-	{
-		glDisable(GL_BLEND);
-	}
+	//if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
+	//{
+	//	glEnable(GL_BLEND);
+	//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//}
+	//else
+	//{
+	//	glDisable(GL_BLEND);
+	//}
+	glDisable(GL_BLEND);
 	
 	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 		glEnable(GL_LINE_SMOOTH);

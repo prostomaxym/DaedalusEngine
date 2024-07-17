@@ -74,7 +74,7 @@ std::shared_ptr<TextureCubemap> TextureCubemap::Create(std::vector<std::string>&
 	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 	return nullptr;
 }
-std::shared_ptr<Texture2D> Create(float* data, int width, int height, int channels)
+std::shared_ptr<Texture2D> Texture2D::Create(float* data, int width, int height, int channels)
 {
 	switch (Renderer::GetAPI())
 	{

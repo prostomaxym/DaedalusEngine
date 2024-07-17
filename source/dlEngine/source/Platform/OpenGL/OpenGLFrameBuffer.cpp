@@ -409,6 +409,13 @@ void OpenGLFramebuffer::Bind()
 	glViewport(0, 0, m_specification.width, m_specification.height);
 }
 
+void OpenGLFramebuffer::BindDrawColorAttachment(int attachment_num)
+{
+	GLenum single_buffer[] = { GL_COLOR_ATTACHMENT0 + attachment_num };
+
+	glDrawBuffers(1, single_buffer);
+}
+
 void OpenGLFramebuffer::Unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

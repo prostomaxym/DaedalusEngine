@@ -183,7 +183,7 @@ OpenGLTexture2D::OpenGLTexture2D(float* data, int width, int height, int channel
 		}
 		else
 		{
-			DL_ASSERT(false, "Not Implemented");
+			DL_ASSERT(false, Log::Categories::Renderer, "Not Implemented");
 		}
 
 		m_internal_format = internalFormat;

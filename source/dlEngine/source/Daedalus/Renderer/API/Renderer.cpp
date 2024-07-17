@@ -307,7 +307,7 @@ void Renderer::BindShadowMap(const Shader* color_pass_shader, int slot)
 	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, slot);
 }
 
-void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj)
+void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj, const glm::mat4& view)
 {
 	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), 0);
 	ssao_pass_shader->SetInt(ShaderConstants::GBufferPos, 0);
@@ -324,6 +324,7 @@ void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4&
 		ssao_pass_shader->SetFloat3(samples_name + "[" + std::to_string(i) + "]", kernel[i]);
 
 	ssao_pass_shader->SetMat4(ShaderConstants::SSBOProjection, proj);
+	ssao_pass_shader->SetMat4("u_view", view);
 }
 
 void Renderer::BindSSAOBlurTextures(const Shader* blur_pass_shader)

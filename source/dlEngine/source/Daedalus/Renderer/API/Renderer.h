@@ -51,7 +51,7 @@ namespace Daedalus {
 
 		static void BindGBufferTextures(const Shader* light_pass_shader, int slot);
 		static void BindShadowMap(const Shader* color_pass_shader, int first_slot);
-		static void BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj);
+		static void BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj, const glm::mat4& view);
 		static void BindSSAOBlurTextures(const Shader* blur_pass_shader);
 
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);

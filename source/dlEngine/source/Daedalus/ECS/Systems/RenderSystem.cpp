@@ -126,7 +126,7 @@ void RenderSystem::DoSSAOPass() const
 
 	const auto ssao_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::SSAOShader);
 	ssao_shader->Bind();
-	Renderer::BindSSAOTextures(ssao_shader.get(), m_camera->GetProjectionMatrix());
+	Renderer::BindSSAOTextures(ssao_shader.get(), m_camera->GetProjectionMatrix(), m_camera->GetViewMatrix());
 	Renderer::DrawUnitQuad();
 	ssao_shader->Unbind();
 	ssao_buffer->Unbind();

@@ -19,5 +19,6 @@ namespace Daedalus {
 		virtual void Bind(uint32_t binding) const = 0;
 
 		static std::shared_ptr<UniformBuffer> Create(uint32_t size, uint32_t binding, Type type, const void* data = nullptr);
+		static std::unique_ptr<UniformBuffer> CreateUnique(uint32_t size, uint32_t binding, Type type, const void* data = nullptr);
 	};
 }

@@ -4,6 +4,7 @@ struct GraphicConfig
     float gamma_value;
     int PCF_multiplier;
     float csm_exponent;
+    bool enable_ssao;
 };
 
 struct Scene

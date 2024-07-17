@@ -25,7 +25,12 @@ namespace Daedalus
 		static int GetShadowBufferSamples() { return s_shadow_buffer_samples; }
 		static int GetShadowPCFMultiplier() { return s_shadow_pcf_multiplier; }
 		static float GetShadowCSMExponent() { return s_shadow_csm_exponent; }
-		
+
+		static bool IsSSBOEnabled() { return s_ssao_enabled; }
+		static float GetSSAORadius() { return s_ssao_radius; }
+		static float GetSSAOBias() { return s_ssao_bias; }
+		static int GetSSAOKernelSize() { return s_ssao_kernel_size; }
+
 		static bool IsGammaCorrectionEnabled() { return s_gamma_correction_enabled; }
 		static float GetGammaCorrectionValue() { return s_gamma_correction_value; }
 		
@@ -47,7 +52,12 @@ namespace Daedalus
 		static int s_shadow_buffer_samples;
 		static int s_shadow_pcf_multiplier;
 		static float s_shadow_csm_exponent;
-		
+
+		static bool s_ssao_enabled;
+		static float s_ssao_radius;
+		static float s_ssao_bias;
+		static int  s_ssao_kernel_size;
+
 		static bool s_gamma_correction_enabled;
 		static float s_gamma_correction_value;
 		

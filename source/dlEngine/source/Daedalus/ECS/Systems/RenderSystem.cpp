@@ -23,7 +23,10 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	UpdateLighting();
 	DoShadowPass();
 	DoDeferredGeometryPass();
-	DoSSAOPass();
+
+	if (GraphicsConfig::IsSSBOEnabled())
+		DoSSAOPass();
+
 	DoDeferredLightPass();
 	DoForwardPass();
 

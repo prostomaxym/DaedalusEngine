@@ -18,17 +18,26 @@ namespace
 	constexpr auto WindowVSyncName = "VSync";
 
 	constexpr auto RenderingSectionName = "Rendering";
-	constexpr auto ShadowBufferWidthName = "ShadowBufferWidth";
-	constexpr auto ShadowBufferHeightName = "ShadowBufferHeight";
-	constexpr auto ShadowBufferSamplesName = "ShadowBufferSamples";
-	constexpr auto ShadowPCFMultiplierName = "ShadowPCFMultiplier";
-	constexpr auto ShadowCSMCascadeExpName = "ShadowCSMExponent";
 	constexpr auto GammaCorrectionEnabledName = "GammaCorrectionEnabled";
 	constexpr auto GammaCorrectionValueName = "GammaCorrectionValue";
 	constexpr auto MultisampleEnabledName = "MultisampleEnabled";
 	constexpr auto BlendingEnabledName = "BlendingEnabled";
 	constexpr auto LineSmoothEnabledName = "LineSmoothEnabled";
 	constexpr auto RecompileShadersName = "RecompileShaders";
+
+	constexpr auto ShadowSectionName = "Shadows";
+	constexpr auto ShadowBufferWidthName = "ShadowBufferWidth";
+	constexpr auto ShadowBufferHeightName = "ShadowBufferHeight";
+	constexpr auto ShadowBufferSamplesName = "ShadowBufferSamples";
+	constexpr auto ShadowPCFMultiplierName = "ShadowPCFMultiplier";
+	constexpr auto ShadowCSMCascadeExpName = "ShadowCSMExponent";
+
+	constexpr auto SSAOSectionName = "SSAO";
+	constexpr auto SSAOEnabledName = "SSAOEnabled";
+	constexpr auto SSAORadiusName = "SSAORadius";
+	constexpr auto SSAOBiasName = "SSAOBias";
+	constexpr auto SSAOKernelSizeName = "SSAOKernelSize";
+
 }
 
 std::string GraphicsConfig::s_window_name = "Daedalus Engine";
@@ -43,7 +52,12 @@ int GraphicsConfig::s_shadow_buffer_height = 2048;
 int GraphicsConfig::s_shadow_buffer_samples = 1;
 int GraphicsConfig::s_shadow_pcf_multiplier = 5;
 float GraphicsConfig::s_shadow_csm_exponent = 1.5f;
-		
+
+bool GraphicsConfig::s_ssao_enabled = true;
+float GraphicsConfig::s_ssao_radius = 0.5f;
+float GraphicsConfig::s_ssao_bias = 0.025f;
+int GraphicsConfig::s_ssao_kernel_size = 64;
+
 bool GraphicsConfig::s_gamma_correction_enabled = false;
 float GraphicsConfig::s_gamma_correction_value = 2.2f;
 		
@@ -76,11 +90,16 @@ void GraphicsConfig::Load(const std::filesystem::path& path)
     s_FPSLock = ini.GetLongValue(WindowSectionName, FPSLockName, 0);
 	s_VSync = ini.GetBoolValue(WindowSectionName, WindowVSyncName, false);
 
-    s_shadow_buffer_width = ini.GetLongValue(RenderingSectionName, ShadowBufferWidthName, 2048);
-    s_shadow_buffer_height = ini.GetLongValue(RenderingSectionName, ShadowBufferHeightName, 2048);
-    s_shadow_buffer_samples = ini.GetLongValue(RenderingSectionName, ShadowBufferSamplesName, 1);
-	s_shadow_pcf_multiplier = ini.GetLongValue(RenderingSectionName, ShadowPCFMultiplierName, 5);
-	s_shadow_csm_exponent = static_cast<float>(ini.GetDoubleValue(RenderingSectionName, ShadowCSMCascadeExpName, 1.5));
+    s_shadow_buffer_width = ini.GetLongValue(ShadowSectionName, ShadowBufferWidthName, 2048);
+    s_shadow_buffer_height = ini.GetLongValue(ShadowSectionName, ShadowBufferHeightName, 2048);
+    s_shadow_buffer_samples = ini.GetLongValue(ShadowSectionName, ShadowBufferSamplesName, 1);
+	s_shadow_pcf_multiplier = ini.GetLongValue(ShadowSectionName, ShadowPCFMultiplierName, 5);
+	s_shadow_csm_exponent = static_cast<float>(ini.GetDoubleValue(ShadowSectionName, ShadowCSMCascadeExpName, 1.5));
+
+	s_ssao_enabled = ini.GetBoolValue(SSAOSectionName, SSAOEnabledName, true);
+	s_ssao_radius = static_cast<float>(ini.GetDoubleValue(SSAOSectionName, SSAORadiusName, 0.5));
+	s_ssao_bias = static_cast<float>(ini.GetDoubleValue(SSAOSectionName, SSAOBiasName, 0.025));
+	s_ssao_kernel_size = ini.GetLongValue(SSAOSectionName, SSAOKernelSizeName, 64);
 
     s_gamma_correction_enabled = ini.GetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, false);
     s_gamma_correction_value = static_cast<float>(ini.GetDoubleValue(RenderingSectionName, GammaCorrectionValueName, 2.2));
@@ -103,12 +122,17 @@ void GraphicsConfig::Save(const std::filesystem::path& path)
     ini.SetLongValue(WindowSectionName, FPSLockName, s_FPSLock);
 	ini.SetBoolValue(WindowSectionName, WindowVSyncName, s_VSync);
 
-    ini.SetLongValue(RenderingSectionName, ShadowBufferWidthName, s_shadow_buffer_width);
-    ini.SetLongValue(RenderingSectionName, ShadowBufferHeightName, s_shadow_buffer_height);
-    ini.SetLongValue(RenderingSectionName, ShadowBufferSamplesName, s_shadow_buffer_samples);
-	ini.SetLongValue(RenderingSectionName, ShadowPCFMultiplierName, s_shadow_pcf_multiplier);
-	ini.SetDoubleValue(RenderingSectionName, ShadowCSMCascadeExpName, s_shadow_csm_exponent);
-	
+    ini.SetLongValue(ShadowSectionName, ShadowBufferWidthName, s_shadow_buffer_width);
+    ini.SetLongValue(ShadowSectionName, ShadowBufferHeightName, s_shadow_buffer_height);
+    ini.SetLongValue(ShadowSectionName, ShadowBufferSamplesName, s_shadow_buffer_samples);
+	ini.SetLongValue(ShadowSectionName, ShadowPCFMultiplierName, s_shadow_pcf_multiplier);
+	ini.SetDoubleValue(ShadowSectionName, ShadowCSMCascadeExpName, s_shadow_csm_exponent);
+
+	ini.SetBoolValue(SSAOSectionName, SSAOEnabledName, s_ssao_enabled);
+	ini.SetDoubleValue(SSAOSectionName, SSAORadiusName, s_ssao_radius);
+	ini.SetDoubleValue(SSAOSectionName, SSAOBiasName, s_ssao_bias);
+	ini.SetLongValue(SSAOSectionName, SSAOKernelSizeName, s_ssao_kernel_size);
+
     ini.SetBoolValue(RenderingSectionName, GammaCorrectionEnabledName, s_gamma_correction_enabled);
     ini.SetDoubleValue(RenderingSectionName, GammaCorrectionValueName, static_cast<double>(s_gamma_correction_value));
 
@@ -147,7 +171,12 @@ void GraphicsConfig::LoadDefault()
 	s_shadow_buffer_samples = 1;
 	s_shadow_pcf_multiplier = 5;
 	s_shadow_csm_exponent = 1.5f;
-		
+
+	s_ssao_enabled = true;
+	s_ssao_radius = 0.5f;
+	s_ssao_bias = 0.025f;
+	s_ssao_kernel_size = 64;
+
 	s_gamma_correction_enabled = false;
 	s_gamma_correction_value = 2.2f;
 	

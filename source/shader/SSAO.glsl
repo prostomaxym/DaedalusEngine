@@ -24,31 +24,38 @@ uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
 uniform sampler2D u_tex_noise;
 
-uniform vec3 u_samples[64];
 uniform mat4 u_projection;
 uniform mat4 u_view;
 
-const int kernel_size = 64;
-const float radius = 0.5;
-const float bias = 0.025;
+struct SSAO
+{
+    vec4 ssao_kernel[64];
+    vec2 ssao_noise_scale;
+    float ssao_radius;
+    int ssao_kernel_size;
+    float ssao_bias;
+};
 
-const vec2 noise_scale = vec2(2560.0/4.0, 1440.0/4.0);
+layout (std140, binding = 2) uniform ssaoUBO
+{
+    SSAO ubo_ssao;
+};
 
 void main()
 {
     vec4 frag_pos = u_view * texture(u_gPosition, vout_uv);
     vec3 normal = mat3(u_view) * texture(u_gNormal, vout_uv).rgb;
-    vec3 random_vec = normalize(texture(u_tex_noise, vout_uv * noise_scale).xyz);
+    vec3 random_vec = texture(u_tex_noise, vout_uv * ubo_ssao.ssao_noise_scale).xyz;
 
     vec3 tangent = normalize(random_vec - normal * dot(random_vec, normal));
     vec3 bitangent = cross(normal, tangent);
     mat3 TBN = mat3(tangent, bitangent, normal);
 
     float occlusion = 0.0;
-    for (int i = 0; i < kernel_size; ++i)
+    for (int i = 0; i < ubo_ssao.ssao_kernel_size; ++i)
     {
-        vec3 sample_pos = TBN * u_samples[i];
-        sample_pos = frag_pos.xyz + sample_pos * radius;
+        vec3 sample_pos = TBN * ubo_ssao.ssao_kernel[i].xyz;
+        sample_pos = frag_pos.xyz + sample_pos * ubo_ssao.ssao_radius;
 
         vec4 offset = vec4(sample_pos, 1.0);
         offset = u_projection * offset;
@@ -57,10 +64,10 @@ void main()
 
         float sample_depth = vec3(u_view * texture(u_gPosition, offset.xy)).z;
 
-        float range_check = smoothstep(0.0, 1.0, radius / abs(frag_pos.z - sample_depth));
-        occlusion += (sample_depth >= sample_pos.z + bias ? 1.0 : 0.0) * range_check;
+        float range_check = smoothstep(0.0, 1.0, ubo_ssao.ssao_radius / abs(frag_pos.z - sample_depth));
+        occlusion += (sample_depth >= sample_pos.z + ubo_ssao.ssao_bias ? 1.0 : 0.0) * range_check;
     }
 
-    occlusion = 1.0 - (occlusion / kernel_size);
+    occlusion = 1.0 - (occlusion / ubo_ssao.ssao_kernel_size);
     fout_color = occlusion;
 }

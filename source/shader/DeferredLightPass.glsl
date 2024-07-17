@@ -184,7 +184,7 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
     float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
     float visability_trip = pow(visability, 3.0);
     return p_luminosity *
-            (g_ambient_tex
+            (p_light.ambient * g_ambient_tex
             + visability * p_light.diffuse * diffuse_coef * g_diffuse_tex
             + visability_trip * p_light.specular * specular_coef * g_spec_tex);
 }
@@ -226,9 +226,13 @@ void main()
     g_normal = texture(u_gNormal, vout_uv).rgb;
     g_spec_tex = texture(u_gSpec, vout_uv).rgb;
     g_diffuse_tex = texture(u_gAlbedo, vout_uv).rgb;
+    g_ambient_tex = texture(u_gAmbient, vout_uv).rgb;
 
-    float ambient_occlusion = texture(u_gSSAO, vout_uv).r;
-    g_ambient_tex = vec3(0.3 * g_diffuse_tex * ambient_occlusion);
+    if (ubo_graphic_config.enable_ssao)
+    {
+        float ambient_occlusion = texture(u_gSSAO, vout_uv).r;
+        g_ambient_tex *= ambient_occlusion;
+    }
 
     g_shininess = 1.0 / texture(u_gShininess, vout_uv).r;
     g_view_pos = ubo_scene.view_pos;

@@ -39,4 +39,31 @@ namespace Daedalus
 		std::shared_ptr<Texture2D> m_map_normal{ nullptr };
 		std::shared_ptr<Texture2D> m_map_height{ nullptr };
 	};
+
+	class MaterialPBR
+	{
+	public:
+		MaterialPBR(const std::string& material_name = { "Default Material" });
+
+		void SetAlbedoMap(unsigned char* data, int width, int height, int channels);
+		void SetNormalMap(unsigned char* data, int width, int height, int channels);
+		void SetMetallicMap(unsigned char* data, int width, int height, int channels);
+		void SetRoughnessMap(unsigned char* data, int width, int height, int channels);
+		void SetAOMap(unsigned char* data, int width, int height, int channels);
+
+		std::shared_ptr<Texture2D> GetAlbedoMap() const { return m_map_albedo; }
+		std::shared_ptr<Texture2D> GetNormalMap() const { return m_map_normal; }
+		std::shared_ptr<Texture2D> GetMetallicMap() const { return m_map_metallic; }
+		std::shared_ptr<Texture2D> GetRoughnessMap() const { return m_map_roughness; }
+		std::shared_ptr<Texture2D> GetAOMap() const { return m_map_ao; }
+
+	private:
+		std::string m_material_name{ "Default Material" };
+
+		std::shared_ptr<Texture2D> m_map_albedo { nullptr };
+		std::shared_ptr<Texture2D> m_map_normal{ nullptr };
+		std::shared_ptr<Texture2D> m_map_metallic{ nullptr };
+		std::shared_ptr<Texture2D> m_map_roughness{ nullptr };
+		std::shared_ptr<Texture2D> m_map_ao{ nullptr };
+	};
 }

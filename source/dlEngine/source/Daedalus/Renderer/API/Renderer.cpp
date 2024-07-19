@@ -22,6 +22,7 @@ std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_lighting = nullptr;
 
 std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
 std::shared_ptr<Framebuffer> Renderer::s_g_framebuffer = nullptr;
+std::shared_ptr<Framebuffer> Renderer::s_g_pbr_framebuffer = nullptr;
 
 std::shared_ptr<VertexArray> Renderer::s_unit_quad = nullptr;
 
@@ -74,6 +75,19 @@ void Renderer::Init()
 		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
 	gbuffer_specs.layers = -1;
 	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
+
+	FramebufferSpecification gpbr_buffer_specs;
+	gpbr_buffer_specs.width = GraphicsConfig::GetWindowWidth();
+	gpbr_buffer_specs.height = GraphicsConfig::GetWindowHeight();
+	gpbr_buffer_specs.samples = 1;
+	gpbr_buffer_specs.attachments = FramebufferAttachmentSpecification({
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
+		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
+		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+	gpbr_buffer_specs.layers = -1;
+	s_g_pbr_framebuffer = Framebuffer::Create(gpbr_buffer_specs);
 
 	s_unit_quad = CreateUnitQuad();
 	s_ssao = std::make_unique<SSAO>(GraphicsConfig::GetWindowWidth(), GraphicsConfig::GetWindowHeight(), GraphicsConfig::GetSSAOKernelSize(), 4, 4);
@@ -169,6 +183,78 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 
 void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
 {
+	// shader->SetMat4(ShaderConstants::SceneModel, transform);
+	//
+	// const auto& meshes = model->GetMeshes();
+	// const auto& materials = model->GetMaterials();
+	//
+	// for (const auto& mesh : meshes)
+	// {
+	// 	if (!mesh->IsVisible(s_view_frustum, transform))
+	// 		continue;
+	//
+	// 	const auto& material = materials[mesh->GetMaterialIndex()];
+	//
+	// 	shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());
+	// 	shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material.GetDiffuseK());
+	// 	shader->SetFloat3(ShaderConstants::MaterialKSpecular,material.GetSpecularK());
+	// 	shader->SetFloat(ShaderConstants::MaterialShininess, material.GetShininess());
+	//
+	// 	if (const auto& diffuse_map = material.GetDiffuseMap(); diffuse_map)
+	// 	{
+	// 		diffuse_map->Bind(0);
+	// 		shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 1);
+	// 		shader->SetInt(ShaderConstants::MaterialTexDiffuse, 0);
+	// 	}
+	// 	else
+	// 	{
+	// 		RenderCommand::UnbindTextureSlot(0);
+	// 		shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 0);
+	// 	}
+	//
+	// 	if (const auto& specular_map = material.GetSpecularMap(); specular_map)
+	// 	{
+	// 		specular_map->Bind(1);
+	// 		shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 1);
+	// 		shader->SetInt(ShaderConstants::MaterialTexSpecular, 1);
+	// 	}
+	// 	else
+	// 	{
+	// 		RenderCommand::UnbindTextureSlot(1);
+	// 		shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 0);
+	// 	}
+	//
+	// 	if (const auto& normal_map = material.GetNormalMap(); normal_map)
+	// 	{
+	// 		normal_map->Bind(2);
+	// 		shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 1);
+	// 		shader->SetInt(ShaderConstants::MaterialTexNormal, 2);
+	// 	}
+	// 	else
+	// 	{
+	// 		RenderCommand::UnbindTextureSlot(2);
+	// 		shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 0);
+	// 	}
+	//
+	// 	if (const auto& height_map = material.GetHeightMap(); height_map)
+	// 	{
+	// 		height_map->Bind(3);
+	// 		shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 1);
+	// 		shader->SetInt(ShaderConstants::MaterialTexHeight, 3);
+	// 	}
+	// 	else
+	// 	{
+	// 		RenderCommand::UnbindTextureSlot(3);
+	// 		shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 0);
+	// 	}
+	//
+	// 	const auto vertex_array = mesh->GetVertexArray();
+	// 	RenderCommand::DrawIndexed(vertex_array.get());
+	// }
+}
+
+void Renderer::SubmitPBR(const Shader* shader, const Model* model, const glm::mat4& transform)
+{
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
 
 	const auto& meshes = model->GetMeshes();
@@ -181,58 +267,20 @@ void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4&
 
 		const auto& material = materials[mesh->GetMaterialIndex()];
 
-		shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());
-		shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material.GetDiffuseK());
-		shader->SetFloat3(ShaderConstants::MaterialKSpecular,material.GetSpecularK());
-		shader->SetFloat(ShaderConstants::MaterialShininess, material.GetShininess());
+		material.GetAlbedoMap()->Bind(0);
+		shader->SetInt("u_material.albedo", 0);
 
-		if (const auto& diffuse_map = material.GetDiffuseMap(); diffuse_map)
-		{
-			diffuse_map->Bind(0);
-			shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexDiffuse, 0);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(0);
-			shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 0);
-		}
+		material.GetNormalMap()->Bind(1);
+		shader->SetInt("u_material.normal", 1);
 
-		if (const auto& specular_map = material.GetSpecularMap(); specular_map)
-		{
-			specular_map->Bind(1);
-			shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexSpecular, 1);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(1);
-			shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 0);
-		}
+		material.GetMetallicMap()->Bind(2);
+		shader->SetInt("u_material.metallic", 2);
 
-		if (const auto& normal_map = material.GetNormalMap(); normal_map)
-		{
-			normal_map->Bind(2);
-			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexNormal, 2);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(2);
-			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 0);
-		}
+		material.GetRoughnessMap()->Bind(3);
+		shader->SetInt("u_material.roughness", 3);
 
-		if (const auto& height_map = material.GetHeightMap(); height_map)
-		{
-			height_map->Bind(3);
-			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexHeight, 3);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(3);
-			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 0);
-		}
+		material.GetAOMap()->Bind(4);
+		shader->SetInt("u_material.ao", 4);
 
 		const auto vertex_array = mesh->GetVertexArray();
 		RenderCommand::DrawIndexed(vertex_array.get());
@@ -359,6 +407,21 @@ void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_sl
 		Texture2D::BindTexture(s_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0), first_slot + 6);
 		light_pass_shader->SetInt(ShaderConstants::SSAOFinalBuffer, first_slot + 6);
 	}
+}
+
+void Renderer::BindGPBRBufferTextures(const Shader* light_pass_shader, int first_slot)
+{
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), first_slot);
+	light_pass_shader->SetInt("u_gPosition", first_slot);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), first_slot + 1);
+	light_pass_shader->SetInt("u_gNormal", first_slot + 1);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(2), first_slot + 2);
+	light_pass_shader->SetInt("u_gAlbedo", first_slot + 2);
+
+	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(3), first_slot + 3);
+	light_pass_shader->SetInt("u_gMetallicRoughnessAO", first_slot + 3);
 }
 
 std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()

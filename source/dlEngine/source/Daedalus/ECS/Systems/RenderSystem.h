@@ -27,6 +27,9 @@ namespace Daedalus
         void DoForwardPass() const;
         void DoSSAOPass() const;
 
+        void DoDeferredLightPBRPass() const;
+        void DoDeferredGeometryPBRPass() const;
+
         void UpdateLighting() const;
 
         int CountShadowCasters() const;

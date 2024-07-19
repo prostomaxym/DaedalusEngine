@@ -21,13 +21,16 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	Renderer::BeginScene(m_camera);
 
 	UpdateLighting();
-	DoShadowPass();
-	DoDeferredGeometryPass();
+	//DoShadowPass();
+	//DoDeferredGeometryPass();
 
-	if (GraphicsConfig::IsSSBOEnabled())
-		DoSSAOPass();
+	//if (GraphicsConfig::IsSSBOEnabled())
+	//	DoSSAOPass();
 
-	DoDeferredLightPass();
+	//DoDeferredLightPass();
+
+	DoDeferredGeometryPBRPass();
+	DoDeferredLightPBRPass();
 	DoForwardPass();
 
 	Renderer::EndScene();
@@ -145,6 +148,44 @@ void RenderSystem::DoSSAOPass() const
 	Renderer::DrawUnitQuad();
 	blue_shader->Unbind();
 	blur_buffer->Unbind();
+}
+
+void RenderSystem::DoDeferredGeometryPBRPass() const
+{
+	const auto gbuffer_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredGShader);
+
+	const auto gbuffer = Renderer::GetGPBRBuffer();
+	gbuffer->Bind();
+	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
+
+	gbuffer_shader->Bind();
+	const auto models_view = m_registry.view<RenderableObjectComponent>();
+	for (const auto e : models_view)
+	{
+		Entity entity = { e, m_scene };
+
+		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
+		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
+
+		Renderer::SubmitPBR(gbuffer_shader.get(), &model_component.model, transform_component);
+	}
+	gbuffer_shader->Unbind();
+	gbuffer->Unbind();
+}
+
+void RenderSystem::DoDeferredLightPBRPass() const
+{
+	RenderCommand::SetViewport(0, 0, m_viewport_width, m_viewport_height);
+	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
+	const auto light_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredLightShader);
+	light_shader->Bind();
+
+	Renderer::BindGPBRBufferTextures(light_shader.get(), 0);
+	//Renderer::BindShadowMap(light_shader.get(), 7);
+
+	Renderer::DrawUnitQuad();
+	light_shader->Unbind();
 }
 
 BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const

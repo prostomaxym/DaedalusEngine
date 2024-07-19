@@ -105,7 +105,7 @@ const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 	return m_meshes;
 }
 
-const std::vector<Material>& Daedalus::Model::GetMaterials() const
+const std::vector<MaterialPBR>& Daedalus::Model::GetMaterials() const
 {
 	return m_material_data;
 }
@@ -125,7 +125,7 @@ bool Model::IsVisible(const Frustum& frust, const glm::mat4& transform) const
 	return frust.SphereInFrustum(m_bounding_sphere, transform);
 }
 
-bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<Material>& material_data, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<MaterialPBR>& material_data, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(file_name.string(), static_cast<unsigned int>(parser_flags));
@@ -142,7 +142,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	return true;
 }
 
-void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name)
+void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<MaterialPBR>& material_data, const std::filesystem::path& file_name)
 {
 	// We cannot create for OpenGL textures in parallel. So at least we can read files threaded
 	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
@@ -159,18 +159,10 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 			float shininess;
 
 			material->Get(AI_MATKEY_NAME, name);
-			material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor);
-			material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
-			material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
-			material->Get(AI_MATKEY_SHININESS, shininess);
 
-			material_data[i] = Material(name.C_Str()
-				, glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b)
-				, glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b)
-				, glm::vec3(specularColor.r, specularColor.g, specularColor.b)
-				, shininess);
-
-			std::array<aiTextureType, 3> texture_types{ aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_NORMALS };
+			material_data[i] = MaterialPBR(name.C_Str());
+			std::array<aiTextureType, 5> texture_types{ aiTextureType_DIFFUSE, aiTextureType_NORMALS,
+				aiTextureType_METALNESS, aiTextureType_DIFFUSE_ROUGHNESS, aiTextureType_AMBIENT_OCCLUSION };
 
 			for (auto tex_type : texture_types)
 			{
@@ -195,7 +187,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 		}
 		else
 		{
-			material_data[i] = Material();
+			material_data[i] = MaterialPBR();
 		}
 	}
 
@@ -210,19 +202,22 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 		switch (tex_type)
 		{
 		case aiTextureType_DIFFUSE:
-			material_data[material_index].SetDiffuseMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
-			break;
-
-		case aiTextureType_SPECULAR:
-			material_data[material_index].SetSpecularMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index].SetAlbedoMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_NORMALS:
 			material_data[material_index].SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
-		case aiTextureType_HEIGHT:
-			material_data[material_index].SetHeightMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+		case aiTextureType_METALNESS:
+			material_data[material_index].SetMetallicMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+
+		case aiTextureType_DIFFUSE_ROUGHNESS:
+			material_data[material_index].SetRoughnessMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			break;
+		case aiTextureType_AMBIENT_OCCLUSION:
+			material_data[material_index].SetAOMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		default:
@@ -299,7 +294,7 @@ Model::Model(const Model& other)
 Model::Model(Model&& other) noexcept
 	: m_meshes(std::move(other.m_meshes)),
 	m_material_data(std::move(other.m_material_data)),
-	m_bounding_sphere(std::move(other.m_bounding_sphere))
+	m_bounding_sphere(other.m_bounding_sphere)
 {
 }
 
@@ -321,7 +316,7 @@ Model& Model::operator=(Model&& other) noexcept
 	{
 		m_meshes = std::move(other.m_meshes);
 		m_material_data = std::move(other.m_material_data);
-		m_bounding_sphere = std::move(other.m_bounding_sphere);
+		m_bounding_sphere = other.m_bounding_sphere;
 	}
 
 	return *this;

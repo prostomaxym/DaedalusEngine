@@ -67,7 +67,7 @@ namespace Daedalus {
 		Model& operator=(Model&& other) noexcept;
 
 		const std::vector<std::shared_ptr<Mesh>>& GetMeshes() const;
-		const std::vector<Material>& GetMaterials() const;
+		const std::vector<MaterialPBR>& GetMaterials() const;
 		BoundingSphere GetBoundingSphere() const;
 		AABB GetBoundingAABB() const;
 
@@ -79,7 +79,7 @@ namespace Daedalus {
 
 	private:
 		std::vector<std::shared_ptr<Mesh>> m_meshes;
-		std::vector<Material> m_material_data;
+		std::vector<MaterialPBR> m_material_data;
 
 		BoundingSphere m_bounding_sphere;
 		AABB m_bounding_aabb;
@@ -90,11 +90,11 @@ namespace Daedalus {
 	public:
 		static bool LoadModel(const std::filesystem::path& fileName
 			, std::vector<std::shared_ptr<Mesh>>& meshes
-			, std::vector<Material>& material_data
+			, std::vector<MaterialPBR>& material_data
 			, ModelParserFlags parser_flags);
 
 	private:
-		static void ProcessMaterials(const struct aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name);
+		static void ProcessMaterials(const struct aiScene* scene, std::vector<MaterialPBR>& material_data, const std::filesystem::path& file_name);
 		static void ProcessNode(void* p_transform, struct aiNode* node, const struct aiScene* scene, std::vector<std::shared_ptr<Mesh>>& meshes);
 		static void ProcessMesh(void* p_transform, struct aiMesh* mesh, const struct aiScene* scene, std::vector<Vertex>& out_vertices, std::vector<uint32_t>& out_indices);
 	};

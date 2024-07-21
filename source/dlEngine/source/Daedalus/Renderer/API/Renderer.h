@@ -40,19 +40,16 @@ namespace Daedalus {
 		static void Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 		static void Submit(const Shader* shader, const Cubemap* model, const glm::mat4& transform = glm::mat4(1.0f));
-		static void SubmitPBR(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 
 		static void SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform = glm::mat4(1.0f));
 		static void DrawUnitQuad();
 
 		static std::shared_ptr<Framebuffer> GetGBuffer() { return s_g_framebuffer; }
-		static std::shared_ptr<Framebuffer> GetGPBRBuffer() { return s_g_pbr_framebuffer; }
 		static std::shared_ptr<Framebuffer> GetShadowFramebuffer() { return s_framebuffer_shadows; }
 		static SSAO* GetSSAOBuffers() { return s_ssao.get(); }
 		static std::shared_ptr<VertexArray> GetUnitQuad() { return s_unit_quad; }
 
 		static void BindGBufferTextures(const Shader* light_pass_shader, int slot);
-		static void BindGPBRBufferTextures(const Shader* light_pass_shader, int slot);
 		static void BindShadowMap(const Shader* color_pass_shader, int first_slot);
 		static void BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj, const glm::mat4& view);
 		static void BindSSAOBlurTextures(const Shader* blur_pass_shader);
@@ -75,7 +72,6 @@ namespace Daedalus {
 
 		static std::shared_ptr<Framebuffer> s_framebuffer_shadows;
 		static std::shared_ptr<Framebuffer> s_g_framebuffer;
-		static std::shared_ptr<Framebuffer> s_g_pbr_framebuffer;
 
 		static std::shared_ptr<VertexArray> s_unit_quad;
 

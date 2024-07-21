@@ -18,7 +18,6 @@ namespace Daedalus
 	private:
 		void PrepareNukeScene();
 		void PrepareAnorLondoScene();
-		void PreparePBRScene();
 
 		Scene m_scene;
 	};

@@ -32,33 +32,3 @@ void Material::SetHeightMap(unsigned char* data, int width, int height, int chan
 {
 	m_map_height = Texture2D::Create(data, width, height, channels);
 }
-
-MaterialPBR::MaterialPBR(const std::string& material_name) :
-	m_material_name(material_name)
-{
-}
-
-void MaterialPBR::SetAlbedoMap(unsigned char* data, int width, int height, int channels)
-{
-	m_map_albedo = Texture2D::Create(data, width, height, channels);
-}
-
-void MaterialPBR::SetNormalMap(unsigned char* data, int width, int height, int channels)
-{
-	m_map_normal = Texture2D::Create(data, width, height, channels);
-}
-
-void MaterialPBR::SetMetallicMap(unsigned char* data, int width, int height, int channels)
-{
-	m_map_metallic = Texture2D::Create(data, width, height, channels);
-}
-
-void MaterialPBR::SetRoughnessMap(unsigned char* data, int width, int height, int channels)
-{
-	m_map_roughness = Texture2D::Create(data, width, height, channels);
-}
-
-void MaterialPBR::SetAOMap(unsigned char* data, int width, int height, int channels)
-{
-	m_map_ao = Texture2D::Create(data, width, height, channels);
-}

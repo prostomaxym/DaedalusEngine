@@ -109,7 +109,7 @@ void ExampleLayer::PrepareNukeScene()
 	 props.specular_color = glm::vec3(1.f, 1.f, 1.f);
 	 props.direction = glm::vec3(0.78f, 1.0f, 0.6f);
 	 props.light_power = 0.2f;
-	 props.cast_shadows = true;
+	 props.cast_shadows = false;
 	 props.number_of_shadow_cascades = 4;
 	 light_entity.AddComponent<DirectionalLightComponent>(props);
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */

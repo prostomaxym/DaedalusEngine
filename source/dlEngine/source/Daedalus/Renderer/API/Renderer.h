@@ -46,7 +46,7 @@ namespace Daedalus {
 		static void Draw(const Shader* shader, const Cubemap* model, const glm::mat4& transform = glm::mat4(1.0f));
 		static void DrawUnitQuad();
 
-		static void SetLights(std::map<uint32_t, LightSource*> lights);
+		static void SetLights(const std::map<uint32_t, LightSource*>& lights);
 		static void AddLight(uint32_t id, LightSource* light);
 		static void RemoveLight(uint32_t id);
 

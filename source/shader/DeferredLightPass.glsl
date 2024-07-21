@@ -185,8 +185,11 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
     const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
     const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), g_shininess);
 
-    float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
-    float visability_trip = pow(visability, 3.0);
+    //float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
+    //float visability_trip = pow(visability, 3.0);
+
+    float visability = 1.0;
+    float visability_trip = 1.0;
     return p_luminosity *
             (p_light.ambient * g_ambient_tex
             + visability * p_light.diffuse * diffuse_coef * g_diffuse_tex
@@ -243,7 +246,8 @@ void main()
     g_view_dir = normalize(g_view_pos - g_frag_pos);
 
     vec3 light_sum = vec3(0.0);
-    for (int i = 0; i < ssbo_lights.length(); ++i)
+    int i = 0;
+    for (i = 0; i < 4; ++i)
     {
         switch(ssbo_lights[i].type)
         {
@@ -255,4 +259,8 @@ void main()
 
     fout_color = ubo_graphic_config.enable_gamma_correction ?
       vec4(ApplyGammaCorrection(light_sum), 1.0) : vec4(light_sum, 1.0);
+
+    //fout_color = vec4(g_diffuse_tex, 1.0);
+    //float test = i;
+   // fout_color = vec4(test / 3.0, test / 3.0, test / 3.0, 1.0);
 }

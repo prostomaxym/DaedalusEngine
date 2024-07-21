@@ -57,8 +57,12 @@ void GLFWWindow::Init(const WindowProps& props)
 	m_screenmode = props.screenmode;
 
 	InitGLFW();
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 	
 	if (props.screenmode != WindowProps::ScreenMode::windowed)
 	{

@@ -51,7 +51,7 @@ void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 	Renderer::BeginFrame(m_camera, m_registry.view<RenderableObjectComponent>().size());
 	SubmitModels();
 	Renderer::FlushPipeline();
-	//RenderSkybox();
+	RenderSkybox();
 }
 
 void RenderSystem::SetViewportSize(int width, int height)

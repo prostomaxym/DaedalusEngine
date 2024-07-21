@@ -168,9 +168,9 @@ void Renderer::FlushPipeline()
 
 	s_light_pass.Render(geom_out);
 
-	//const auto gbuffer = s_geometry_pass.GetBuffer();
-	//const auto& spec = gbuffer->GetSpecification();
-	//Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
+	const auto gbuffer = s_geometry_pass.GetBuffer();
+	const auto& spec = gbuffer->GetSpecification();
+	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 }
 
 void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
@@ -200,7 +200,7 @@ void Renderer::Draw(const Shader* shader, const Mesh* mesh, const glm::mat4& tra
 
 void Renderer::Submit(const Model* model, const glm::mat4& transform)
 {
-	s_frame_models.emplace_back(std::make_pair(model, transform ));
+	s_frame_models.emplace_back(model, transform );
 }
 
 void Renderer::Draw(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
@@ -225,9 +225,8 @@ void Renderer::UpdateLightShaderData()
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_proj_view;
 
-	for (const auto light_pair : s_lights)
+	for (const auto [id, light] : s_lights)
 	{
-		const auto light = light_pair.second;
 		if (light->CastShadow())
 		{
 			light->SetShadowMapIndex(light_proj_view.size());
@@ -238,8 +237,8 @@ void Renderer::UpdateLightShaderData()
 		light_SSBOs.emplace_back(light->GetShaderSSBO());
 	}
 
-	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view);
 	Renderer::UpdateLightSSBO(light_SSBOs);
+	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view);
 }
 
 void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
@@ -262,14 +261,13 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 	SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::SetLights(std::map<uint32_t, LightSource*> lights)
+void Renderer::SetLights(const std::map<uint32_t, LightSource*>& lights)
 {
 	s_lights = lights;
 
 	int number_of_shadowmaps = 0;
-	for (const auto light_pair : s_lights)
+	for (const auto [id, light] : s_lights)
 	{
-		const auto light = light_pair.second;
 		if (light->CastShadow())
 			number_of_shadowmaps += light->GetShadowNumberOfCascades();
 	}

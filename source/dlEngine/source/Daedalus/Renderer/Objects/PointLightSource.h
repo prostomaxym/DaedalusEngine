@@ -15,6 +15,8 @@ namespace Daedalus
 
 		std::vector<glm::mat4> CalculateShadowCubemapProjView(const glm::mat4& camera_proj) const;
 
+		virtual int GetShadowNumberOfCascades() const override{ return 6; }
+
 	protected:
 		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override
 		{

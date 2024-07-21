@@ -403,6 +403,11 @@ void OpenGLFramebuffer::Invalidate()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void OpenGLFramebuffer::BindDefault()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void OpenGLFramebuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);

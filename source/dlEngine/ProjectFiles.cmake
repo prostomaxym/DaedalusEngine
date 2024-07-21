@@ -78,6 +78,17 @@ set(PROJECT_FILES
     source/Daedalus/Renderer/Objects/PointLightSource.h
     source/Daedalus/Renderer/Objects/PointLightSource.cpp
 
+    source/Daedalus/Renderer/Passes/DeferredGeometryPass.h
+    source/Daedalus/Renderer/Passes/DeferredGeometryPass.cpp
+    source/Daedalus/Renderer/Passes/DeferredLightPass.h
+    source/Daedalus/Renderer/Passes/DeferredLightPass.cpp
+    source/Daedalus/Renderer/Passes/SSAOPass.h
+    source/Daedalus/Renderer/Passes/SSAOPass.cpp
+    source/Daedalus/Renderer/Passes/ShadowPass.h
+    source/Daedalus/Renderer/Passes/ShadowPass.cpp
+    source/Daedalus/Renderer/Passes/SkyboxPass.h
+    source/Daedalus/Renderer/Passes/SkyboxPass.cpp
+
     source/Daedalus/Renderer/Primitives/BufferLayout.h
     source/Daedalus/Renderer/Primitives/GraphicsContext.h
     source/Daedalus/Renderer/Primitives/GraphicsContext.cpp

@@ -74,6 +74,7 @@ namespace Daedalus {
 
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 
-		static std::shared_ptr<Framebuffer> Create(const FramebufferSpecification& spec);
+		static std::unique_ptr<Framebuffer> Create(const FramebufferSpecification& spec);
+		static void BindMain();
 	};
 }

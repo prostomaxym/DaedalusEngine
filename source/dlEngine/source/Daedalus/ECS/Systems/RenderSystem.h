@@ -18,18 +18,11 @@ namespace Daedalus
         void OnUpdateRuntime(DeltaTime dt) const;
 
         void SetCamera(Camera* camera) { m_camera = camera; }
-        void SetViewportSize(int width, int height) { m_viewport_width = width; m_viewport_height = height;}
+        void SetViewportSize(int width, int height);
 
     private:
-        void DoShadowPass() const;
-        void DoDeferredLightPass() const;
-        void DoDeferredGeometryPass() const;
-        void DoForwardPass() const;
-        void DoSSAOPass() const;
-
-        void UpdateLighting() const;
-
-        int CountShadowCasters() const;
+        void RenderSkybox() const;
+        void SubmitModels() const;
 
         BoundingSphere CalculateSceneBoundingSphere() const;
         AABB CalculateSceneBoundingAABB() const;

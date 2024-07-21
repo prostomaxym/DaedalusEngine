@@ -24,7 +24,7 @@ SSAO::SSAO(int width, int height, int kernel_size, int noise_width, int noise_he
     CreateNoiseTexture(noise_width, noise_height);
 }
 
-void SSAO::CreateUBO()
+void SSAO::CreateUBO(int width, int height)
 {
     struct BufferData
     {
@@ -41,14 +41,14 @@ void SSAO::CreateUBO()
     BufferData data;
 
     std::copy(m_kernel.begin(), m_kernel.end(), data.ssao_kernel.begin());
-    data.ssao_noise_scale = glm::vec2(static_cast<float>(GraphicsConfig::GetWindowWidth()) / static_cast<float>(m_noise_width),
-        static_cast<float>(GraphicsConfig::GetWindowHeight()) / static_cast<float>(m_noise_width));
+    data.ssao_noise_scale = glm::vec2(static_cast<float>(width) / static_cast<float>(m_noise_width),
+        height / static_cast<float>(m_noise_width));
 
     data.ssao_radius = GraphicsConfig::GetSSAORadius();
     data.ssao_kernel_size = GraphicsConfig::GetSSAOKernelSize();
     data.ssao_bias = GraphicsConfig::GetSSAOBias();
 
-    m_ubo = UniformBuffer::CreateUnique(sizeof(BufferData), 2, UniformBuffer::Type::Static, &data);
+    m_ubo = UniformBuffer::Create(sizeof(BufferData), 2, UniformBuffer::Type::Static, &data);
 }
 
 void SSAO::CreateFramebuffer(int width, int height)

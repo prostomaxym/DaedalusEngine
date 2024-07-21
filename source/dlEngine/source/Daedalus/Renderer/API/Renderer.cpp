@@ -12,21 +12,24 @@ using namespace Daedalus;
 
 std::unique_ptr<ShaderLibrary> Renderer::s_shader_library = std::make_unique<ShaderLibrary>();
 
-std::unique_ptr<SSAO> Renderer::s_ssao = nullptr;
-
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_scene_data = nullptr;
 std::shared_ptr<UniformBuffer> Renderer::s_UBO_graphic_config = nullptr;
+Frustum Renderer::s_view_frustum = Frustum();
+glm::mat4 Renderer::s_scene_proj = glm::mat4();
+glm::mat4 Renderer::s_scene_view = glm::mat4();
 
-std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_light_space_matrices = nullptr;
-std::shared_ptr<ShaderStorageBuffer> Renderer::s_SSBO_lighting = nullptr;
-
-std::shared_ptr<Framebuffer> Renderer::s_framebuffer_shadows = nullptr;
-std::shared_ptr<Framebuffer> Renderer::s_g_framebuffer = nullptr;
+std::map<uint32_t, LightSource*> Renderer::s_lights = std::map<uint32_t, LightSource*>();
+std::vector<std::pair<const Model*, glm::mat4>> Renderer::s_frame_models = std::vector<std::pair<const Model*, glm::mat4>>();
 
 std::shared_ptr<VertexArray> Renderer::s_unit_quad = nullptr;
 
-Frustum Renderer::s_view_frustum = Frustum();
-glm::mat4 Renderer::s_light_projection_view = glm::mat4();
+ShadowPass Renderer::s_shadow_pass = ShadowPass();
+DeferredGeometryPass Renderer::s_geometry_pass = DeferredGeometryPass();
+DeferredLightPass Renderer::s_light_pass = DeferredLightPass();
+SSAOPass Renderer::s_ssao_pass = SSAOPass();
+
+int Renderer::s_window_width = 0;
+int Renderer::s_window_height = 0;
 
 namespace
 {
@@ -44,50 +47,38 @@ namespace
 		0, 1, 2, // first triangle
 		1, 3, 2  // second triangle
 	};
+
+	std::shared_ptr<VertexArray> CreateUnitQuad()
+	{
+		auto vertex_array = VertexArray::Create();
+		vertex_array->Bind();
+
+		auto vertex_buffer = VertexBuffer::Create(quad_vertices.data(), quad_vertices.size() * sizeof(float));
+		vertex_buffer->SetLayout(BufferLayout
+			{
+				BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },
+				BufferElement{ ShaderDataType::Float2, std::string(ShaderConstants::TexCoordVar), false },
+			});
+
+		auto indexes_buffer = IndexBuffer::Create(quad_indices.data(), quad_indices.size());
+
+		vertex_array->AddVertexBuffer(vertex_buffer);
+		vertex_array->SetIndexBuffer(indexes_buffer);
+		vertex_array->Unbind();
+
+		return vertex_array;
+	}
 }
 
 void Renderer::Init()
 {
 	RenderCommand::Init();
 
-	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
-
-	FramebufferSpecification shadow_specs;
-	shadow_specs.width = GraphicsConfig::GetShadowBufferWidth();
-	shadow_specs.height = GraphicsConfig::GetShadowBufferHeight();
-	shadow_specs.samples = GraphicsConfig::GetShadowBufferSamples();
-	shadow_specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	shadow_specs.layers = -1;
-	s_framebuffer_shadows = Framebuffer::Create(shadow_specs);
-
-	FramebufferSpecification gbuffer_specs;
-	gbuffer_specs.width = GraphicsConfig::GetWindowWidth();
-	gbuffer_specs.height = GraphicsConfig::GetWindowHeight();
-	gbuffer_specs.samples = 1;
-	gbuffer_specs.attachments = FramebufferAttachmentSpecification({
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RED16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	gbuffer_specs.layers = -1;
-	s_g_framebuffer = Framebuffer::Create(gbuffer_specs);
-
-	s_unit_quad = CreateUnitQuad();
-	s_ssao = std::make_unique<SSAO>(GraphicsConfig::GetWindowWidth(), GraphicsConfig::GetWindowHeight(), GraphicsConfig::GetSSAOKernelSize(), 4, 4);
-}
-
-void Renderer::Shutdown()
-{
-
-}
-
-void Renderer::SetupGraphicSettings()
-{
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading Graphic Settings");
 	RenderCommand::SetupGraphicSettings();
+
+	s_window_width = GraphicsConfig::GetWindowWidth();
+	s_window_height = GraphicsConfig::GetWindowHeight();
 
 	struct BufferData
 	{
@@ -97,8 +88,8 @@ void Renderer::SetupGraphicSettings()
 		float csm_exponent = 0.f;
 		int enable_ssao = 1;
 		int align1 = -1;
-		int align2= -1;
-		int align3= -1;
+		int align2 = -1;
+		int align3 = -1;
 	};
 
 	BufferData data;
@@ -109,7 +100,16 @@ void Renderer::SetupGraphicSettings()
 	data.enable_ssao = GraphicsConfig::IsSSBOEnabled() ? 1 : 0;
 
 	s_UBO_graphic_config = UniformBuffer::Create(sizeof(BufferData), 1, UniformBuffer::Type::Static, &data);
-	s_ssao->CreateUBO();
+	s_UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
+	s_unit_quad = CreateUnitQuad();
+
+	s_geometry_pass.CreateGBuffer(s_window_width, s_window_height);
+	s_ssao_pass.CreateSSAOBuffers(s_window_width, s_window_height);
+}
+
+void Renderer::Shutdown()
+{
+
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
@@ -120,15 +120,22 @@ void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompi
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 {
 	RenderCommand::SetViewport(0, 0, width, height);
+	s_window_width = width;
+	s_window_height = height;
+
+	s_geometry_pass.CreateGBuffer(width, height);
+	s_ssao_pass.CreateSSAOBuffers(width, height);
 }
 
-void Renderer::BeginScene(const Camera* camera)
+void Renderer::BeginFrame(const Camera* camera, std::optional<int> number_of_objects)
 {
 	const auto PV = camera->GetProjectionViewMatrix();
 	const auto V = camera->GetViewMatrix();
 	const auto pos = camera->GetPosition();
 	const auto znear = camera->GetNearPlane();
 	const auto zfar = camera->GetFarPlane();
+	s_scene_proj = camera->GetProjectionMatrix();
+	s_scene_view = V;
 
 	s_UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
 	s_UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
@@ -136,19 +143,43 @@ void Renderer::BeginScene(const Camera* camera)
 	s_UBO_scene_data->SetData(&znear, sizeof(float) * 1, 140);
 	s_UBO_scene_data->SetData(&zfar, sizeof(float) * 1, 144);
 	s_view_frustum = camera->GetViewFrustum();
+
+	RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
+	s_frame_models.clear();
+
+	if (number_of_objects.has_value())
+		s_frame_models.reserve(number_of_objects.value());
 }
 
-void Renderer::EndScene()
+void Renderer::FlushPipeline()
 {
+	UpdateLightShaderData();
+
+	const auto shadow_output = s_shadow_pass.Render(ShadowPass::PassIn(s_frame_models));
+
+	const auto geometry_output = s_geometry_pass.Render(DeferredGeometryPass::PassIn(s_frame_models, s_view_frustum, s_window_width, s_window_height));
+	DeferredLightPass::PassIn geom_out(geometry_output, shadow_output.shadow_map_id, s_window_width, s_window_height);
+
+	if (GraphicsConfig::IsSSBOEnabled())
+	{
+		const auto ssao_output = s_ssao_pass.Render(SSAOPass::PassIn(geometry_output.pos_texture, geometry_output.norm_texture, s_scene_proj, s_scene_view));
+		geom_out.ssao_texture = ssao_output.ssao_texture;
+	}
+
+	s_light_pass.Render(geom_out);
+
+	//const auto gbuffer = s_geometry_pass.GetBuffer();
+	//const auto& spec = gbuffer->GetSpecification();
+	//Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 }
 
-void Renderer::Submit(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
+void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
 {
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
 	RenderCommand::DrawIndexed(vertex_array);
 }
 
-void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
+void Renderer::Draw(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
 {
 	if (!mesh->IsVisible(s_view_frustum, transform))
 		return;
@@ -167,79 +198,12 @@ void Renderer::Submit(const Shader* shader, const Mesh* mesh, const glm::mat4& t
 	}
 }
 
-void Renderer::Submit(const Shader* shader, const Model* model, const glm::mat4& transform)
+void Renderer::Submit(const Model* model, const glm::mat4& transform)
 {
-	shader->SetMat4(ShaderConstants::SceneModel, transform);
-
-	const auto& meshes = model->GetMeshes();
-	const auto& materials = model->GetMaterials();
-
-	for (const auto& mesh : meshes)
-	{
-		if (!mesh->IsVisible(s_view_frustum, transform))
-			continue;
-
-		const auto& material = materials[mesh->GetMaterialIndex()];
-
-		shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());
-		shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material.GetDiffuseK());
-		shader->SetFloat3(ShaderConstants::MaterialKSpecular,material.GetSpecularK());
-		shader->SetFloat(ShaderConstants::MaterialShininess, material.GetShininess());
-
-		if (const auto& diffuse_map = material.GetDiffuseMap(); diffuse_map)
-		{
-			diffuse_map->Bind(0);
-			shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexDiffuse, 0);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(0);
-			shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 0);
-		}
-
-		if (const auto& specular_map = material.GetSpecularMap(); specular_map)
-		{
-			specular_map->Bind(1);
-			shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexSpecular, 1);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(1);
-			shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 0);
-		}
-
-		if (const auto& normal_map = material.GetNormalMap(); normal_map)
-		{
-			normal_map->Bind(2);
-			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexNormal, 2);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(2);
-			shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 0);
-		}
-
-		if (const auto& height_map = material.GetHeightMap(); height_map)
-		{
-			height_map->Bind(3);
-			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 1);
-			shader->SetInt(ShaderConstants::MaterialTexHeight, 3);
-		}
-		else
-		{
-			RenderCommand::UnbindTextureSlot(3);
-			shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 0);
-		}
-
-		const auto vertex_array = mesh->GetVertexArray();
-		RenderCommand::DrawIndexed(vertex_array.get());
-	}
+	s_frame_models.emplace_back(std::make_pair(model, transform ));
 }
 
-void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
+void Renderer::Draw(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
 {
 	shader->SetMat4(ShaderConstants::CubemapProjectionView, transform);
 
@@ -251,133 +215,74 @@ void Renderer::Submit(const Shader* shader, const Cubemap* cubemap, const glm::m
 	RenderCommand::DrawUnindexed(vertex_array.get(), cubemap->GetIndexCount());
 }
 
-void Renderer::SubmitForShadowBuffer(const Shader* shader, const Model* model, const glm::mat4& transform)
-{
-	shader->SetMat4(ShaderConstants::ShadowModel, transform);
-
-	const auto& meshes = model->GetMeshes();
-
-	for (const auto& mesh : meshes)
-	{
-		const auto vertex_array = mesh->GetVertexArray();
-		RenderCommand::DrawIndexed(vertex_array.get());
-	}
-}
-
 void Renderer::DrawUnitQuad()
 {
 	RenderCommand::DrawIndexed(s_unit_quad.get());
 }
 
+void Renderer::UpdateLightShaderData()
+{
+	std::vector<LightSSBO> light_SSBOs;
+	std::vector<glm::mat4> light_proj_view;
+
+	for (const auto light_pair : s_lights)
+	{
+		const auto light = light_pair.second;
+		if (light->CastShadow())
+		{
+			light->SetShadowMapIndex(light_proj_view.size());
+			const auto cascades = light->CalculateCascadesProjView(s_scene_proj, s_scene_view);
+			light_proj_view.insert(light_proj_view.end(), cascades.begin(), cascades.end());
+		}
+
+		light_SSBOs.emplace_back(light->GetShaderSSBO());
+	}
+
+	Renderer::UpdateLightSpaceMatricesSSBO(light_proj_view);
+	Renderer::UpdateLightSSBO(light_SSBOs);
+}
+
 void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
 	if (light_SSBOs.empty())
-	{
-		s_SSBO_lighting.reset();
 		return;
-	}
 
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
-	s_SSBO_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Dynamic);
-	s_SSBO_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
+	auto SSBO_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Dynamic);
+	SSBO_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
 void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view)
 {
 	if (light_proj_view.empty())
-	{
-		s_SSBO_light_space_matrices.reset();
 		return;
-	}
 
 	const auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
-	s_SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
-	s_SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
+	auto SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
+	SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::UpdateNumberOfShadowMap(int number_of_shadow_map)
+void Renderer::SetLights(std::map<uint32_t, LightSource*> lights)
 {
-	FramebufferSpecification specs;
-	specs.width = GraphicsConfig::GetShadowBufferWidth();
-	specs.height = GraphicsConfig::GetShadowBufferHeight();
-	specs.samples = GraphicsConfig::GetShadowBufferSamples();
-	specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
-	specs.layers = number_of_shadow_map;
+	s_lights = lights;
 
-	s_framebuffer_shadows = Framebuffer::Create(specs);
-}
-
-void Renderer::BindShadowMap(const Shader* color_pass_shader, int slot)
-{
-	Texture2D::BindTexture(s_framebuffer_shadows->GetDepthAttachmentID(), slot);
-	color_pass_shader->SetInt(ShaderConstants::ShadowMaps, slot);
-}
-
-void Renderer::BindSSAOTextures(const Shader* ssao_pass_shader, const glm::mat4& proj, const glm::mat4& view)
-{
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), 0);
-	ssao_pass_shader->SetInt(ShaderConstants::GBufferPos, 0);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), 1);
-	ssao_pass_shader->SetInt(ShaderConstants::GBufferNorm, 1);
-
-	Texture2D::BindTexture(s_ssao->GetNoiseTexture()->GetRendererID(), 2);
-	ssao_pass_shader->SetInt(ShaderConstants::SSAOBufferNoise, 2);
-
-	ssao_pass_shader->SetMat4(ShaderConstants::SSAOProjection, proj);
-	ssao_pass_shader->SetMat4(ShaderConstants::SSAOView, view);
-}
-
-void Renderer::BindSSAOBlurTextures(const Shader* blur_pass_shader)
-{
-	Texture2D::BindTexture(s_ssao->GetSSAOFramebuffer()->GetColorAttachmentRendererID(0), 0);
-	blur_pass_shader->SetInt(ShaderConstants::SSAOBlurBufferNoise, 0);
-}
-
-void Renderer::BindGBufferTextures(const Shader* light_pass_shader, int first_slot)
-{
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(0), first_slot);
-	light_pass_shader->SetInt(ShaderConstants::GBufferPos, first_slot);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(1), first_slot + 1);
-	light_pass_shader->SetInt(ShaderConstants::GBufferNorm, first_slot + 1);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(2), first_slot + 2);
-	light_pass_shader->SetInt(ShaderConstants::GBufferAmbient, first_slot + 2);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(3), first_slot + 3);
-	light_pass_shader->SetInt(ShaderConstants::GBufferSpec, first_slot + 3);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(4), first_slot + 4);
-	light_pass_shader->SetInt(ShaderConstants::GBufferAlbedo, first_slot + 4);
-
-	Texture2D::BindTexture(s_g_framebuffer->GetColorAttachmentRendererID(5), first_slot + 5);
-	light_pass_shader->SetInt(ShaderConstants::GBufferShininess, first_slot + 5);
-
-	if (GraphicsConfig::IsSSBOEnabled())
+	int number_of_shadowmaps = 0;
+	for (const auto light_pair : s_lights)
 	{
-		Texture2D::BindTexture(s_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0), first_slot + 6);
-		light_pass_shader->SetInt(ShaderConstants::SSAOFinalBuffer, first_slot + 6);
+		const auto light = light_pair.second;
+		if (light->CastShadow())
+			number_of_shadowmaps += light->GetShadowNumberOfCascades();
 	}
+
+	s_shadow_pass.SetNumberOfShadowMaps(number_of_shadowmaps);
 }
 
-std::shared_ptr<VertexArray> Renderer::CreateUnitQuad()
+void Renderer::AddLight(uint32_t id, LightSource* light)
 {
-	auto vertex_array = VertexArray::Create();
-	vertex_array->Bind();
+	s_lights[id] = light;
+}
 
-	auto vertex_buffer = VertexBuffer::Create(quad_vertices.data(), quad_vertices.size() * sizeof(float));
-	vertex_buffer->SetLayout(BufferLayout
-		{
-			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },
-			BufferElement{ ShaderDataType::Float2, std::string(ShaderConstants::TexCoordVar), false },
-		});
-
-	auto indexes_buffer = IndexBuffer::Create(quad_indices.data(), quad_indices.size());
-
-	vertex_array->AddVertexBuffer(vertex_buffer);
-	vertex_array->SetIndexBuffer(indexes_buffer);
-	vertex_array->Unbind();
-
-	return vertex_array;
+void Renderer::RemoveLight(uint32_t id)
+{
+	s_lights.erase(id);
 }

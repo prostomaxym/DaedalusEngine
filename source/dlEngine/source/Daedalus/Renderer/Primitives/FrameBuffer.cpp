@@ -6,16 +6,27 @@
 
 using namespace Daedalus;
 
-std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
+std::unique_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 {
 	switch (Renderer::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
-	case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLFramebuffer>(spec);
+	case RendererAPI::API::OpenGL:  return std::make_unique<OpenGLFramebuffer>(spec);
 	}
 
 	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 	return nullptr;
+}
+
+void Framebuffer::BindMain()
+{
+	switch (Renderer::GetAPI())
+	{
+	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
+	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::BindDefault(); return;
+	}
+
+	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 }
 
 void Framebuffer::CopyFramebuffer(unsigned int src_id, unsigned int dest_id, int width, int height)

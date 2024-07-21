@@ -15,7 +15,7 @@ namespace Daedalus
     public:
         SSAO(int width, int height, int kernel_size, int noise_width, int noise_height);
 
-        void CreateUBO();
+        void CreateUBO(int width, int height);
 
         std::shared_ptr<Framebuffer> GetSSAOFramebuffer() const { return m_ssao_buffer; }
         std::shared_ptr<Framebuffer> GetBlurFramebuffer() const { return m_blur_buffer; }

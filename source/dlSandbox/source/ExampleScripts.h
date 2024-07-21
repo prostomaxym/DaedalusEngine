@@ -140,6 +140,7 @@ namespace Daedalus
 			{
 				m_spotlight_enabled = false;
 				m_entity.RemoveComponent<SpotLightComponent>();
+				Renderer::RemoveLight(m_entity.GetUUID());
 			}
 			else if (key_pressed)
 			{
@@ -157,7 +158,8 @@ namespace Daedalus
 				props.outer_cutoff = 35.f;
 				props.cast_shadows = false;
 				props.number_of_shadow_cascades = 1;
-				m_entity.AddComponent<SpotLightComponent>(props);
+				auto& light = m_entity.AddComponent<SpotLightComponent>(props);
+				Renderer::AddLight(m_entity.GetUUID(), &light.light);
 			}
 
 			if (!m_entity.HasComponent<SpotLightComponent>())

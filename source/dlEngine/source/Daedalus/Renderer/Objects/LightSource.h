@@ -80,7 +80,7 @@ namespace Daedalus
 		void SetMaxDistance(float distance);
 
 		const LightSSBO& GetShaderSSBO() const { return m_params; }
-		int GetShadowNumberOfCascades() const { return m_params.number_of_cascades; }
+		virtual int GetShadowNumberOfCascades() const { return m_params.number_of_cascades; }
 		bool CastShadow() const { return m_params.cast_shadows > 0; }
 
 	protected:

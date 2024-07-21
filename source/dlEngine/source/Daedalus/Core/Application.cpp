@@ -42,7 +42,6 @@ Application::Application()
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::SetupGraphicSettings();
 	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
 
 	//std::unique_ptr<ImGuiLayer> lay = std::make_unique<ImGuiLayer>();

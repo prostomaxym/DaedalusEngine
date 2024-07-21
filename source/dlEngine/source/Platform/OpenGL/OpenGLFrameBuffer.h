@@ -19,6 +19,7 @@ namespace Daedalus {
 
 		void Invalidate();
 
+		static void BindDefault();
 		void Bind() override;
 		void Unbind() override;
 

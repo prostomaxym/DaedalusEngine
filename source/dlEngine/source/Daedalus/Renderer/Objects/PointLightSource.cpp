@@ -9,10 +9,10 @@ PointLightSource::PointLightSource(const LightProps& props)
 	LightSource(LightSourceType::Point, props)
 {}
 
-std::vector<glm::mat4> PointLightSource::CalculateShadowCubemapProjView(const glm::mat4& camera_proj) const
+std::vector<glm::mat4> PointLightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4&) const
 {
 	float fov = 0.f, aspect = 0.f, znear = 0.f, zfar = 0.f;
-	ExtractPerspectiveParams(camera_proj, fov, aspect, znear, zfar);
+	ExtractPerspectiveParams(proj, fov, aspect, znear, zfar);
 	const glm::mat4 shadow_proj = glm::perspective(90.f, 1.f, znear, zfar);//std::min(zfar, m_max_distance));
 
     std::vector<glm::mat4> shadow_transforms;

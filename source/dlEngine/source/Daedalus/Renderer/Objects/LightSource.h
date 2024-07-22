@@ -69,7 +69,7 @@ namespace Daedalus
 
 		virtual ~LightSource() = default;
 
-		std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const;
+		virtual std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const;
 		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
 
 		void SetDirection(glm::vec3 direction) { m_params.direction = direction; }

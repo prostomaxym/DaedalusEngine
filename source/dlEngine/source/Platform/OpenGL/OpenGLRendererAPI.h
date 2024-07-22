@@ -8,7 +8,7 @@ namespace Daedalus {
 	class OpenGLRendererAPI final : public RendererAPI
 	{
 	public:
-		OpenGLRendererAPI();
+		OpenGLRendererAPI() = default;
 
 		void Init() override;
 		void SetupGraphicSettings() override;

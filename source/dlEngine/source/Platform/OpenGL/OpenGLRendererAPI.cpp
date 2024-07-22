@@ -29,10 +29,6 @@ namespace {
 
 }
 
-OpenGLRendererAPI::OpenGLRendererAPI()
-{
-}
-
 void OpenGLRendererAPI::Init()
 {
 	ConfigLogging();

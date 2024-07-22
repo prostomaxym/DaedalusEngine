@@ -3,12 +3,14 @@
 #include "UUID.h"
 #include "Systems/RenderSystem.h"
 #include "Daedalus/Utils/DeltaTime.h"
+#include "Components.h"
 
 #include <entt/entt.hpp>
 
 namespace Daedalus
 {
 	class Entity;
+	struct NativeScriptComponent;
 
 	class DAEDALUS_API Scene
 	{
@@ -36,7 +38,19 @@ namespace Daedalus
 
 	private:
 		template<typename T>
-		void OnComponentAdded(Entity entity, T& component);
+		void OnComponentAdded(T& component)
+		{
+			static_assert(sizeof(T) == 0);
+		}
+
+		template<typename T>
+		void OnComponentRemoved(T& component)
+		{
+			static_assert(sizeof(T) == 0);
+		}
+		
+		#include "SceneComponents.inl" // Sorry for that, only way I figured out to make it. All other options give me linking errors because circular dependencies
+
 		void PrepareScene();
 
 		entt::registry m_registry;
@@ -49,11 +63,4 @@ namespace Daedalus
 
 		friend class Entity;
 	};
-
-	// MSVC and GCC for some reason have different linking for this part
-	// TODO: investigate and fix it properly
-	#ifdef DL_PLATFORM_WINDOWS
-		template<typename T>
-		inline void Scene::OnComponentAdded(Entity entity, T& component) {}
-	#endif
 }

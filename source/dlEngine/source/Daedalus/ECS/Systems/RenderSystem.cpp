@@ -12,35 +12,32 @@ using namespace Daedalus;
 
 void RenderSystem::OnStartRuntime() const
 {
-	std::map<uint32_t, LightSource*> lights;
-
 	const auto dir_view = m_registry.view<DirectionalLightComponent>();
+	const auto point_view = m_registry.view<PointLightComponent>();
+	const auto spot_view = m_registry.view<SpotLightComponent>();
+
+	std::vector<LightSource*> lights;
+	lights.reserve(dir_view.size() + point_view.size() + spot_view.size());
+
 	for (const auto e : dir_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light = entity.GetComponent<DirectionalLightComponent>().light;
-		const auto id = entity.GetUUID();
-		lights[id] = &light;
+		auto light = &entity.GetComponent<DirectionalLightComponent>().light;
+		lights.push_back(light);
 	}
 
-	const auto point_view = m_registry.view<PointLightComponent>();
 	for (const auto e : point_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<PointLightComponent>();
-		auto& light = light_component.light;
-		const auto id = entity.GetUUID();
-		lights[id] = &light;
+		auto light = &entity.GetComponent<PointLightComponent>().light;
+		lights.push_back(light);
 	}
 
-	const auto spot_view = m_registry.view<SpotLightComponent>();
 	for (const auto e : spot_view)
 	{
 		Entity entity = { e, m_scene };
-		auto& light_component = entity.GetComponent<SpotLightComponent>();
-		auto& light = light_component.light;
-		const auto id = entity.GetUUID();
-		lights[id] = &light;
+		auto light = &entity.GetComponent<SpotLightComponent>().light;
+		lights.push_back(light);
 	}
 
 	Renderer::SetLights(lights);
@@ -59,6 +56,16 @@ void RenderSystem::SetViewportSize(int width, int height)
 	m_viewport_width = width;
 	m_viewport_height = height;
 	Renderer::OnWindowResize(width, height);
+}
+
+void RenderSystem::AddLight(LightSource* light) const
+{
+	Renderer::AddLight(light);
+}
+
+void RenderSystem::RemoveLight(LightSource* light) const
+{
+	Renderer::RemoveLight(light);
 }
 
 void RenderSystem::RenderSkybox() const

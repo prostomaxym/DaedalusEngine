@@ -23,23 +23,23 @@ namespace Daedalus
 		{
 			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
 			T& component = m_scene->m_registry.emplace<T>(m_entity_handle, std::forward<Args>(args)...);
-			m_scene->OnComponentAdded<T>(*this, component);
+			m_scene->OnComponentAdded<T>(component);
 			return component;
 		}
 
 		template<typename T>
-		void MoveComponent(T&& component)
+		void PushComponent(T&& component)
 		{
 			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
 			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(component));
-			m_scene->OnComponentAdded<T>(*this, component);
+			m_scene->OnComponentAdded<T>(component);
 		}
 
 		template<typename T, typename... Args>
 		T& AddOrReplaceComponent(Args&&... args)
 		{
 			T& component = m_scene->m_registry.emplace_or_replace<T>(m_entity_handle, std::forward<Args>(args)...);
-			m_scene->OnComponentAdded<T>(*this, component);
+			m_scene->OnComponentAdded<T>(component);
 			return component;
 		}
 
@@ -59,7 +59,8 @@ namespace Daedalus
 		template<typename T>
 		void RemoveComponent()
 		{
-			DL_ASSERT(HasComponent<T>(), Log::Categories::ECS, "Entity does not have component!");
+			auto& component = GetComponent<T>();
+			m_scene->OnComponentRemoved<T>(component);
 			m_scene->m_registry.remove<T>(m_entity_handle);
 		}
 
@@ -73,12 +74,12 @@ namespace Daedalus
 		}
 
 		template<typename T>
-		void MoveComponent(std::unique_ptr<T>&& component)
+		void PushComponent(std::unique_ptr<T>&& component)
 		{
 			auto comp_inst = *component.release();
 			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
 			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(comp_inst));
-			m_scene->OnComponentAdded<T>(*this, comp);
+			m_scene->OnComponentAdded<T>(comp);
 		}
 
 		operator bool() const { return m_entity_handle != entt::null; }
@@ -102,5 +103,4 @@ namespace Daedalus
 		entt::entity m_entity_handle{ entt::null };
 		Scene* m_scene{ nullptr };
 	};
-
 }

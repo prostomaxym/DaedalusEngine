@@ -18,7 +18,7 @@ Frustum Renderer::s_view_frustum = Frustum();
 glm::mat4 Renderer::s_scene_proj = glm::mat4();
 glm::mat4 Renderer::s_scene_view = glm::mat4();
 
-std::map<uint32_t, LightSource*> Renderer::s_lights = std::map<uint32_t, LightSource*>();
+std::vector<LightSource*> Renderer::s_lights = std::vector<LightSource*>();
 std::vector<std::pair<const Model*, glm::mat4>> Renderer::s_frame_models = std::vector<std::pair<const Model*, glm::mat4>>();
 
 std::shared_ptr<VertexArray> Renderer::s_unit_quad = nullptr;
@@ -225,7 +225,7 @@ void Renderer::UpdateLightShaderData()
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_proj_view;
 
-	for (const auto [id, light] : s_lights)
+	for (const auto light : s_lights)
 	{
 		if (light->CastShadow())
 		{
@@ -243,44 +243,71 @@ void Renderer::UpdateLightShaderData()
 
 void Renderer::UpdateLightSSBO(const std::vector<LightSSBO>& light_SSBOs)
 {
+	static std::shared_ptr<ShaderStorageBuffer> SSBO_lighting = nullptr;
 	if (light_SSBOs.empty())
+	{
+		SSBO_lighting.reset();
 		return;
-
+	}
+		
 	const auto SSBO_size_in_bytes = light_SSBOs.size() * sizeof(LightSSBO);
-	auto SSBO_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Dynamic);
+	SSBO_lighting = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 0, ShaderStorageBuffer::Type::Dynamic);
 	SSBO_lighting->SetData(light_SSBOs.data(), SSBO_size_in_bytes, 0);
 }
 
 void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view)
 {
-	if (light_proj_view.empty())
-		return;
+	static std::shared_ptr<ShaderStorageBuffer> SSBO_light_space_matrices = nullptr;
 
+	if (light_proj_view.empty())
+	{
+		SSBO_light_space_matrices.reset();
+		return;
+	}
+		
 	const auto SSBO_size_in_bytes = light_proj_view.size() * sizeof(glm::mat4);
-	auto SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
+	SSBO_light_space_matrices = ShaderStorageBuffer::Create(SSBO_size_in_bytes, 1, ShaderStorageBuffer::Type::Dynamic);
 	SSBO_light_space_matrices->SetData(light_proj_view.data(), SSBO_size_in_bytes, 0);
 }
 
-void Renderer::SetLights(const std::map<uint32_t, LightSource*>& lights)
+int Renderer::CalculateNumberOfShadowMaps()
 {
-	s_lights = lights;
-
 	int number_of_shadowmaps = 0;
-	for (const auto [id, light] : s_lights)
+	for (const auto light : s_lights)
 	{
 		if (light->CastShadow())
 			number_of_shadowmaps += light->GetShadowNumberOfCascades();
 	}
 
-	s_shadow_pass.SetNumberOfShadowMaps(number_of_shadowmaps);
+	return number_of_shadowmaps;
 }
 
-void Renderer::AddLight(uint32_t id, LightSource* light)
+void Renderer::SetLights(const std::vector<LightSource*>& lights)
 {
-	s_lights[id] = light;
+	s_lights = lights;
+	s_shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 }
 
-void Renderer::RemoveLight(uint32_t id)
+void Renderer::AddLight(LightSource* light)
 {
-	s_lights.erase(id);
+	s_lights.push_back(light);
+
+	if (light->CastShadow())
+		s_shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+}
+
+void Renderer::RemoveLight(LightSource* light)
+{
+	auto it = std::find(s_lights.begin(), s_lights.end(), light);
+	if (it != s_lights.end())
+	{
+		s_lights.erase(it);
+
+		if (light->CastShadow())
+			s_shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+	}
+	else
+	{
+		DL_ASSERT(false, Log::Categories::Renderer, "Trying to remove not existing light source from renderer");
+	}	
 }

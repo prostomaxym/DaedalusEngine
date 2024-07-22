@@ -46,14 +46,15 @@ namespace Daedalus {
 		static void Draw(const Shader* shader, const Cubemap* model, const glm::mat4& transform = glm::mat4(1.0f));
 		static void DrawUnitQuad();
 
-		static void SetLights(const std::map<uint32_t, LightSource*>& lights);
-		static void AddLight(uint32_t id, LightSource* light);
-		static void RemoveLight(uint32_t id);
+		static void SetLights(const std::vector<LightSource*>& lights);
+		static void AddLight(LightSource* light);
+		static void RemoveLight(LightSource* light);
 
 	private:
 		static void UpdateLightShaderData();
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
-		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);		
+		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
+		static int CalculateNumberOfShadowMaps();
 
 		static std::unique_ptr<ShaderLibrary> s_shader_library;
 
@@ -63,7 +64,7 @@ namespace Daedalus {
 		static glm::mat4 s_scene_proj;
 		static glm::mat4 s_scene_view;
 
-		static std::map<uint32_t, LightSource*> s_lights;
+		static std::vector<LightSource*> s_lights;
 		static std::vector<std::pair<const Model*, glm::mat4>> s_frame_models;
 
 		static ShadowPass s_shadow_pass;

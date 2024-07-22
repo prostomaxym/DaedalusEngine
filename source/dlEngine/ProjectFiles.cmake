@@ -29,6 +29,7 @@ set(PROJECT_FILES
     source/Daedalus/ECS/Entity.h
     source/Daedalus/ECS/Entity.cpp
     source/Daedalus/ECS/Scene.h
+    source/Daedalus/ECS/SceneComponents.inl
     source/Daedalus/ECS/Scene.cpp
     source/Daedalus/ECS/NativeScript.h
     source/Daedalus/ECS/NativeScriptComponent.h

@@ -1,4 +1,6 @@
-PBR
+Volume lights
+Shader optimizations
+Clean up gamepad input
 
 - Systems
 Physics
@@ -16,8 +18,8 @@ Debug overlay + profiler
 
 
 - Graphics Tech dept:
+PBR
 Bias calculation
-Volume lights
 LOD
 Particle
 Temporal AA

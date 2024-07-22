@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Daedalus/Renderer/Objects/Camera.h"
+#include "Daedalus/Renderer/Objects/LightSource.h"
 #include "Daedalus/Utils/DeltaTime.h"
 
 #include <entt/entt.hpp>
@@ -19,6 +20,9 @@ namespace Daedalus
 
         void SetCamera(Camera* camera) { m_camera = camera; }
         void SetViewportSize(int width, int height);
+
+        void AddLight(LightSource* light) const;
+        void RemoveLight(LightSource* light) const;
 
     private:
         void RenderSkybox() const;

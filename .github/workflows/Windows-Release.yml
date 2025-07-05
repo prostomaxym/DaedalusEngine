@@ -51,6 +51,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         release-name: "Daedalus Development Sandbox"
-        tag-name: 'v0.1.2'
-        asset-name: 'Daedalus Development Sandbox-0.1.2-win64.exe'
-        file: '${{github.workspace}}/install/Daedalus Development Sandbox-0.1.2-win64.exe'
+        tag-name: 'v0.4.3'
+        asset-name: 'Daedalus Development Sandbox-0.4.3-win64.exe'
+        file: '${{github.workspace}}/install/Daedalus Development Sandbox-0.4.3-win64.exe'

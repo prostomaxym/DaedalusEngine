@@ -24,6 +24,7 @@ add_subdirectory(Utils)
 
 set(PROJECT_FILES
     Daedalus.h
+    Daedalus.cpp
     dlpch.h
     dlpch.cpp
     DummyTest.h
@@ -46,9 +47,6 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/dlp
 target_include_directories(${PROJECT_NAME}
     PUBLIC 
 	    ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE 
-        ${STB_INCLUDE_DIRS}
-        ${SIMPLEINI_INCLUDE_DIRS}
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -59,6 +57,7 @@ target_link_libraries(${PROJECT_NAME}
         Core
         Debug
         ECS
+        Events
         Platform
         Renderer
         Threads

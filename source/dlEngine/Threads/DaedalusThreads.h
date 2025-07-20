@@ -5,7 +5,7 @@
 
 namespace Daedalus
 {
-	class DaedalusThreads : public ThreadPool
+	class DAEDALUS_API DaedalusThreads : public ThreadPool
 	{
 	public:
 		/**

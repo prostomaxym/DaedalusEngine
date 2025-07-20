@@ -70,7 +70,7 @@ namespace Daedalus
 			: model(path, parser_flags) {}
 	};
 
-	struct SkyboxComponent
+	struct DAEDALUS_API SkyboxComponent //TODO: investigate how to remove exporting
 	{
 		Cubemap cubemap;
 		float rotation_angle{ 0.f };

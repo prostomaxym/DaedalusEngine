@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 find_package(EnTT CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
 project(
@@ -43,7 +44,11 @@ target_compile_definitions(${PROJECT_NAME}
         DL_BUILD_STATIC
     )
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE    
+target_link_libraries(${PROJECT_NAME}  
+    PRIVATE
+        Core
+        Renderer
+        Utils
         EnTT::EnTT
+        glm::glm
     )

@@ -9,10 +9,10 @@
 
 namespace Daedalus
 {
-	class DAEDALUS_API Cubemap
+	class Cubemap
 	{
 	public:
-		Cubemap(std::vector<std::string>& faces);
+		Cubemap(const std::vector<std::string>& faces);
 
 		const std::shared_ptr<VertexArray>& GetVertexArray() const { return m_VAO; }
 		const std::shared_ptr<TextureCubemap>& GetCubemapTexture() const { return m_texture; }

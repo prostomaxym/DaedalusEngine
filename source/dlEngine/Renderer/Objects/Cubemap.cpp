@@ -51,7 +51,7 @@ namespace
 		 1.0f, -1.0f,  1.0f
 	};
 }
-Cubemap::Cubemap(std::vector<std::string>& faces)
+Cubemap::Cubemap(const std::vector<std::string>& faces)
 {
 	m_index_count = skybox_vertices.size();
 	m_texture = TextureCubemap::Create(faces);

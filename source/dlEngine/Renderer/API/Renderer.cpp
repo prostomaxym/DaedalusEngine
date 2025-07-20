@@ -10,7 +10,7 @@
 
 using namespace Daedalus;
 
-Renderer::Data Renderer::s_data = Renderer::Data();
+std::unique_ptr<Renderer::Data> Renderer::s_data = nullptr;
 
 namespace
 {
@@ -58,8 +58,9 @@ void Renderer::Init()
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading Graphic Settings");
 	RenderCommand::SetupGraphicSettings();
 
-	s_data.window_width = GraphicsConfig::GetWindowWidth();
-	s_data.window_height = GraphicsConfig::GetWindowHeight();
+	s_data = std::make_unique<Data>();
+	s_data->window_width = GraphicsConfig::GetWindowWidth();
+	s_data->window_height = GraphicsConfig::GetWindowHeight();
 
 	struct BufferData
 	{
@@ -80,12 +81,12 @@ void Renderer::Init()
 	data.csm_exponent = GraphicsConfig::GetShadowCSMExponent();
 	data.enable_ssao = GraphicsConfig::IsSSBOEnabled() ? 1 : 0;
 
-	s_data.UBO_graphic_config = UniformBuffer::Create(sizeof(BufferData), 1, UniformBuffer::Type::Static, &data);
-	s_data.UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
-	s_data.unit_quad = CreateUnitQuad();
+	s_data->UBO_graphic_config = UniformBuffer::Create(sizeof(BufferData), 1, UniformBuffer::Type::Static, &data);
+	s_data->UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
+	s_data->unit_quad = CreateUnitQuad();
 
-	s_data.geometry_pass.CreateGBuffer(s_data.window_width, s_data.window_height);
-	s_data.ssao_pass.CreateSSAOBuffers(s_data.window_width, s_data.window_height);
+	s_data->geometry_pass.CreateGBuffer(s_data->window_width, s_data->window_height);
+	s_data->ssao_pass.CreateSSAOBuffers(s_data->window_width, s_data->window_height);
 }
 
 void Renderer::Shutdown()
@@ -95,17 +96,17 @@ void Renderer::Shutdown()
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
 {
-	s_data.shader_library = std::make_unique<ShaderLibrary>(path, recompile);
+	s_data->shader_library = std::make_unique<ShaderLibrary>(path, recompile);
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 {
 	RenderCommand::SetViewport(0, 0, width, height);
-	s_data.window_width = width;
-	s_data.window_height = height;
+	s_data->window_width = width;
+	s_data->window_height = height;
 
-	s_data.geometry_pass.CreateGBuffer(width, height);
-	s_data.ssao_pass.CreateSSAOBuffers(width, height);
+	s_data->geometry_pass.CreateGBuffer(width, height);
+	s_data->ssao_pass.CreateSSAOBuffers(width, height);
 }
 
 void Renderer::BeginFrame(const Camera* camera, std::optional<int> number_of_objects)
@@ -115,41 +116,41 @@ void Renderer::BeginFrame(const Camera* camera, std::optional<int> number_of_obj
 	const auto pos = camera->GetPosition();
 	const auto znear = camera->GetNearPlane();
 	const auto zfar = camera->GetFarPlane();
-	s_data.scene_proj = camera->GetProjectionMatrix();
-	s_data.scene_view = V;
+	s_data->scene_proj = camera->GetProjectionMatrix();
+	s_data->scene_view = V;
 
-	s_data.UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
-	s_data.UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
-	s_data.UBO_scene_data->SetData(&pos, sizeof(float) * 3, 128);
-	s_data.UBO_scene_data->SetData(&znear, sizeof(float) * 1, 140);
-	s_data.UBO_scene_data->SetData(&zfar, sizeof(float) * 1, 144);
-	s_data.view_frustum = camera->GetViewFrustum();
+	s_data->UBO_scene_data->SetData(&PV, sizeof(float) * 16, 0);
+	s_data->UBO_scene_data->SetData(&V, sizeof(float) * 16, 64);
+	s_data->UBO_scene_data->SetData(&pos, sizeof(float) * 3, 128);
+	s_data->UBO_scene_data->SetData(&znear, sizeof(float) * 1, 140);
+	s_data->UBO_scene_data->SetData(&zfar, sizeof(float) * 1, 144);
+	s_data->view_frustum = camera->GetViewFrustum();
 
 	RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0 });
-	s_data.frame_models.clear();
+	s_data->frame_models.clear();
 
 	if (number_of_objects.has_value())
-		s_data.frame_models.reserve(number_of_objects.value());
+		s_data->frame_models.reserve(number_of_objects.value());
 }
 
 void Renderer::FlushPipeline()
 {
 	UpdateLightShaderData();
 
-	const auto shadow_output = s_data.shadow_pass.Render(ShadowPass::PassIn(s_data.frame_models));
+	const auto shadow_output = s_data->shadow_pass.Render(ShadowPass::PassIn(s_data->frame_models));
 
-	const auto geometry_output = s_data.geometry_pass.Render(DeferredGeometryPass::PassIn(s_data.frame_models, s_data.view_frustum, s_data.window_width, s_data.window_height));
-	DeferredLightPass::PassIn geom_out(geometry_output, shadow_output.shadow_map_id, s_data.window_width, s_data.window_height);
+	const auto geometry_output = s_data->geometry_pass.Render(DeferredGeometryPass::PassIn(s_data->frame_models, s_data->view_frustum, s_data->window_width, s_data->window_height));
+	DeferredLightPass::PassIn geom_out(geometry_output, shadow_output.shadow_map_id, s_data->window_width, s_data->window_height);
 
 	if (GraphicsConfig::IsSSBOEnabled())
 	{
-		const auto ssao_output = s_data.ssao_pass.Render(SSAOPass::PassIn(geometry_output.pos_texture, geometry_output.norm_texture, s_data.scene_proj, s_data.scene_view));
+		const auto ssao_output = s_data->ssao_pass.Render(SSAOPass::PassIn(geometry_output.pos_texture, geometry_output.norm_texture, s_data->scene_proj, s_data->scene_view));
 		geom_out.ssao_texture = ssao_output.ssao_texture;
 	}
 
-	s_data.light_pass.Render(geom_out);
+	s_data->light_pass.Render(geom_out);
 
-	const auto gbuffer = s_data.geometry_pass.GetBuffer();
+	const auto gbuffer = s_data->geometry_pass.GetBuffer();
 	const auto& spec = gbuffer->GetSpecification();
 	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 }
@@ -162,7 +163,7 @@ void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const
 
 void Renderer::Draw(const Shader* shader, const Mesh* mesh, const glm::mat4& transform)
 {
-	if (!mesh->IsVisible(s_data.view_frustum, transform))
+	if (!mesh->IsVisible(s_data->view_frustum, transform))
 		return;
 
 	shader->SetMat4(ShaderConstants::SceneModel, transform);
@@ -181,7 +182,7 @@ void Renderer::Draw(const Shader* shader, const Mesh* mesh, const glm::mat4& tra
 
 void Renderer::Submit(const Model* model, const glm::mat4& transform)
 {
-	s_data.frame_models.emplace_back(model, transform );
+	s_data->frame_models.emplace_back(model, transform );
 }
 
 void Renderer::Draw(const Shader* shader, const Cubemap* cubemap, const glm::mat4& transform)
@@ -198,7 +199,7 @@ void Renderer::Draw(const Shader* shader, const Cubemap* cubemap, const glm::mat
 
 void Renderer::DrawUnitQuad()
 {
-	RenderCommand::DrawIndexed(s_data.unit_quad.get());
+	RenderCommand::DrawIndexed(s_data->unit_quad.get());
 }
 
 void Renderer::UpdateLightShaderData()
@@ -206,12 +207,12 @@ void Renderer::UpdateLightShaderData()
 	std::vector<LightSSBO> light_SSBOs;
 	std::vector<glm::mat4> light_proj_view;
 
-	for (const auto light : s_data.lights)
+	for (const auto light : s_data->lights)
 	{
 		if (light->CastShadow())
 		{
 			light->SetShadowMapIndex(light_proj_view.size());
-			const auto cascades = light->CalculateCascadesProjView(s_data.scene_proj, s_data.scene_view);
+			const auto cascades = light->CalculateCascadesProjView(s_data->scene_proj, s_data->scene_view);
 			light_proj_view.insert(light_proj_view.end(), cascades.begin(), cascades.end());
 		}
 
@@ -254,7 +255,7 @@ void Renderer::UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_
 int Renderer::CalculateNumberOfShadowMaps()
 {
 	int number_of_shadowmaps = 0;
-	for (const auto light : s_data.lights)
+	for (const auto light : s_data->lights)
 	{
 		if (light->CastShadow())
 			number_of_shadowmaps += light->GetShadowNumberOfCascades();
@@ -265,27 +266,27 @@ int Renderer::CalculateNumberOfShadowMaps()
 
 void Renderer::SetLights(const std::vector<LightSource*>& lights)
 {
-	s_data.lights = lights;
-	s_data.shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+	s_data->lights = lights;
+	s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 }
 
 void Renderer::AddLight(LightSource* light)
 {
-	s_data.lights.push_back(light);
+	s_data->lights.push_back(light);
 
 	if (light->CastShadow())
-		s_data.shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+		s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 }
 
 void Renderer::RemoveLight(LightSource* light)
 {
-	auto it = std::find(s_data.lights.begin(), s_data.lights.end(), light);
-	if (it != s_data.lights.end())
+	auto it = std::find(s_data->lights.begin(), s_data->lights.end(), light);
+	if (it != s_data->lights.end())
 	{
-		s_data.lights.erase(it);
+		s_data->lights.erase(it);
 
 		if (light->CastShadow())
-			s_data.shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+			s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 	}
 	else
 	{

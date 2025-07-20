@@ -13,6 +13,7 @@
 #include "ECS/Scene.h"
 #include "ECS/Entity.h"
 #include "ECS/NativeScriptComponent.h"
+#include "ECS/NativeScripts/CameraController.h"
 
 #include "Threads/DaedalusThreads.h"
 

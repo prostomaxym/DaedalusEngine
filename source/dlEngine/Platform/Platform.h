@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Core.h>
 #include <Core/Window.h>
 #include <Core/Input.h>
 
@@ -7,7 +8,7 @@
 
 namespace Daedalus {
 
-	class Platform
+	class DAEDALUS_API Platform
 	{
 	public:
 		static std::unique_ptr<Window> createWindow(const WindowProps& props);

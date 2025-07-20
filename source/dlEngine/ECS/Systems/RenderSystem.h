@@ -10,7 +10,7 @@ namespace Daedalus
 {
     class Scene;
 
-    class RenderSystem
+    class DAEDALUS_API RenderSystem
     {
     public:
         RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}

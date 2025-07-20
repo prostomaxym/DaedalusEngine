@@ -101,7 +101,7 @@ target_compile_definitions(${PROJECT_NAME}
     )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE    
-        glm::glm
+    PRIVATE     
         assimp::assimp
+        glm::glm
     )

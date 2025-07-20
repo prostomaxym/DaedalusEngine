@@ -39,7 +39,7 @@ namespace Daedalus {
 	class TextureCubemap : public Texture
 	{
 	public:
-		static std::shared_ptr<TextureCubemap> Create(std::vector<std::string>& faces);
+		static std::shared_ptr<TextureCubemap> Create(const std::vector<std::string>& faces);
 	};
 
 }

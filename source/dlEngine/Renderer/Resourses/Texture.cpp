@@ -63,7 +63,7 @@ void Texture2D::BindTexture(uint32_t ID, uint32_t slot)
 	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
 }
 
-std::shared_ptr<TextureCubemap> TextureCubemap::Create(std::vector<std::string>& faces)
+std::shared_ptr<TextureCubemap> TextureCubemap::Create(const std::vector<std::string>& faces)
 {
 	switch (Renderer::GetAPI())
 	{

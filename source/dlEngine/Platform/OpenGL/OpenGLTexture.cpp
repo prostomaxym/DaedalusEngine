@@ -229,7 +229,7 @@ void OpenGLTexture2D::BindTextureImpl(uint32_t ID, uint32_t slot)
 	glBindTextureUnit(slot, ID);
 }
 
-OpenGLTextureCubemap::OpenGLTextureCubemap(std::vector<std::string>& faces)
+OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces)
 {
 	glGenTextures(1, &m_rendererID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_rendererID);

@@ -13,6 +13,9 @@ project(
     )
 
 set(PLATFORM_PROJECT_FILES
+    Platform.h
+    Platform.cpp
+    
     GLFW/GLFWInput.h
     GLFW/GLFWInput.cpp
     GLFW/GLFWWindow.h
@@ -69,7 +72,8 @@ target_compile_definitions(${PROJECT_NAME}
     )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE    
+    PRIVATE
+        Config
         ${OPENGL_LIBRARIES}
         glad::glad
         glfw

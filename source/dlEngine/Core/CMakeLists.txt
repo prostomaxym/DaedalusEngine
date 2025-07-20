@@ -42,4 +42,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Debug
         Renderer
+        Events
+        Platform
+        Utils
     )

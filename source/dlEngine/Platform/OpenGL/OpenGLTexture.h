@@ -46,7 +46,7 @@ namespace Daedalus {
 	class OpenGLTextureCubemap final : public TextureCubemap
 	{
 	public:
-		OpenGLTextureCubemap(std::vector<std::string>& faces);
+		OpenGLTextureCubemap(const std::vector<std::string>& faces);
 		~OpenGLTextureCubemap();
 
 		uint32_t GetRendererID() const override { return m_rendererID; }

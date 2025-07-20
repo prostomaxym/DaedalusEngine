@@ -5,7 +5,7 @@
 
 namespace Daedalus 
 {
-	class NativeScript
+	class DAEDALUS_API NativeScript
 	{
 	public:
 		NativeScript(Entity entity) : m_entity(entity) {}

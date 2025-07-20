@@ -5,7 +5,7 @@
 	#ifdef DL_BUILD_DLL
 		#define DAEDALUS_API __declspec(dllexport)
 	#elif DL_BUILD_STATIC
-		#define DAEDALUS_API
+		#define DAEDALUS_API __declspec(dllexport)
 	#else
 		#define DAEDALUS_API __declspec(dllimport)
 	#endif

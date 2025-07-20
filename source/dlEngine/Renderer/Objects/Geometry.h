@@ -13,7 +13,7 @@ namespace Daedalus {
         glm::vec3 bitangent{ 0.f,0.f,0.f };
     };
 
-    struct BoundingSphere
+    struct DAEDALUS_API BoundingSphere
     {
         glm::vec3 position{ 0.f,0.f,0.f };
         float radius = 0.f;
@@ -25,7 +25,7 @@ namespace Daedalus {
         static BoundingSphere CalculateCommonBoundingSphere(const std::vector<BoundingSphere>& spheres);
     };
 
-    struct AABB
+    struct DAEDALUS_API AABB
     {
         glm::vec3 center{ 0.f, 0.f, 0.f };
         glm::vec3 extents{ 0.f, 0.f, 0.f };
@@ -42,7 +42,7 @@ namespace Daedalus {
         static AABB CalculateCommonBoundingAABB(const std::vector<AABB>& aabbs);
     };
 
-    class Frustum
+    class DAEDALUS_API Frustum
     {
     public:
         Frustum() = default;

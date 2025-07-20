@@ -5,7 +5,7 @@
 
 namespace Daedalus
 {
-	struct NativeScriptComponent
+	struct DAEDALUS_API NativeScriptComponent
 	{
 		template <typename T, typename... Args>
 		T* AddScript(Entity ent, Args&&... args)

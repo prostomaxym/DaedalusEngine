@@ -7,6 +7,9 @@ set(PROJECT_FILES
 
     source/Daedalus/Config/GraphicsConfig.h
     source/Daedalus/Config/GraphicsConfig.cpp
+    source/Daedalus/Config/KeybindConfig.h
+    source/Daedalus/Config/KeybindConfig.cpp
+    source/Daedalus/Config/PathConfig.cpp
     source/Daedalus/Config/PathConfig.h
     source/Daedalus/Config/PathConfig.cpp
 

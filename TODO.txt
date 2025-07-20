@@ -1,7 +1,6 @@
 Clean events
-Clean Config
-Clean Renderer
-Add debug layer
+Debug overlay + profiler
+Log file
 
 - Systems
 Physics
@@ -14,8 +13,7 @@ Debug
 
 - General Tech dept
 Fps lock window swap
-Log file
-Debug overlay + profiler
+
 
 
 - Graphics Tech dept:

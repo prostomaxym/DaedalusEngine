@@ -2,6 +2,7 @@
 #include "CameraController.h"
 
 #include "Daedalus/Core/Input.h"
+#include "Daedalus/Config/KeybindConfig.h"
 
 using namespace Daedalus;
 
@@ -11,25 +12,22 @@ void CameraController::OnUpdate(DeltaTime ts)
 
 	const auto dt = ts.GetSeconds();
 
-	if (Input::IsKeyHold(DL_KEY_W))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
 		camera->ProcessKeyboard(CameraMovement::FORWARD, dt);
 
-	if (Input::IsKeyHold(DL_KEY_S))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
 		camera->ProcessKeyboard(CameraMovement::BACKWARD, dt);
 
-	if (Input::IsKeyHold(DL_KEY_A))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
 		camera->ProcessKeyboard(CameraMovement::LEFT, dt);
 
-	if (Input::IsKeyHold(DL_KEY_D))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
 		camera->ProcessKeyboard(CameraMovement::RIGHT, dt);
 
-	if (Input::IsKeyHold(DL_KEY_SPACE))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveUp")))
 		camera->ProcessKeyboard(CameraMovement::UP, dt);
 
-	if (Input::IsKeyHold(DL_KEY_C))
-		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
-
-	if (Input::IsKeyHold(DL_KEY_C))
+	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveDown")))
 		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();

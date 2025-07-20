@@ -1,6 +1,7 @@
 #include "WorkingDirectory.h"
 
 #include "Daedalus/Config/GraphicsConfig.h"
+#include "Daedalus/Config/KeybindConfig.h"
 #include "Daedalus/Config/PathConfig.h"
 #include "Daedalus/Debug/Log.h"
 
@@ -90,10 +91,12 @@ void WorkingDirectory::LoadConfigs()
 {
 	PathConfig::Load(WorkingDirectory::GetRootDirectory() / path_config_file);
 	GraphicsConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
+	KeybindConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
 }
 
 void WorkingDirectory::SaveConfigs()
 {
 	PathConfig::Save(WorkingDirectory::GetRootDirectory() / path_config_file);
 	GraphicsConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
+	KeybindConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
 }

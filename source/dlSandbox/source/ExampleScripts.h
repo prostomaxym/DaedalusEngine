@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Daedalus.h>
+#include <Daedalus/Config/KeybindConfig.h>
 
 #include "ExampleLayer.h"
 
@@ -134,7 +135,7 @@ namespace Daedalus
 
 		void UpdateSpotLight()
 		{
-			const auto key_pressed = Input::IsKeyReleased(DL_KEY_F);
+			const auto key_pressed = Input::IsKeyReleased(KeybindConfig::GetKeyboardBind("Flashlight"));
 
 			if (key_pressed && m_spotlight_enabled)
 			{
@@ -199,19 +200,19 @@ namespace Daedalus
 
 			glm::vec3 moveDirection(0.0f);
 
-			if (Input::IsKeyHold(DL_KEY_W))
+			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
 			{
 				moveDirection += camera_forward;
 			}
-			if (Input::IsKeyHold(DL_KEY_S))
+			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
 			{
 				moveDirection -= camera_forward;
 			}
-			if (Input::IsKeyHold(DL_KEY_A))
+			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
 			{
 				moveDirection -= camera_right;
 			}
-			if (Input::IsKeyHold(DL_KEY_D))
+			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
 			{
 				moveDirection += camera_right;
 			}
@@ -263,7 +264,7 @@ namespace Daedalus
 
 		void UpdatePlayerView()
 		{
-			const auto key_pressed = Input::IsKeyReleased(DL_KEY_V);
+			const auto key_pressed = Input::IsKeyReleased(KeybindConfig::GetKeyboardBind("ChangePOV"));
 			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 
 			if (key_pressed && m_thirdperson)

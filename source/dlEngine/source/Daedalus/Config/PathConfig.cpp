@@ -14,12 +14,14 @@ namespace
 	constexpr auto ConfigSectionName = "Config";
 	constexpr auto ConfigDirName = "ConfigsFolder";
 	constexpr auto GraphicConfigName = "GraphicsConfigFile";
+	constexpr auto KeybindConfigName = "KeybindConfigFile";
 }
 
 std::filesystem::path PathConfig::s_assets_subdir = "asset";
 std::filesystem::path PathConfig::s_shaders_subdir = "shader";
 std::filesystem::path PathConfig::s_config_subdir = "config";
 std::filesystem::path PathConfig::s_graphics_config = "graphics.ini";
+std::filesystem::path PathConfig::s_keybind_config = "keybinds.ini";
 		
 void PathConfig::Load(const std::filesystem::path& path)
 {
@@ -42,6 +44,7 @@ void PathConfig::Load(const std::filesystem::path& path)
 	s_shaders_subdir = ini.GetValue(PathSectionName, ShadersDirName, "shader");
 	s_config_subdir = ini.GetValue(ConfigSectionName, ConfigDirName, "config");
 	s_graphics_config = ini.GetValue(ConfigSectionName, GraphicConfigName, "graphics.ini");
+	s_keybind_config = ini.GetValue(ConfigSectionName, KeybindConfigName, "keybinds.ini");
 }
 
 void PathConfig::Save(const std::filesystem::path& path)
@@ -53,6 +56,7 @@ void PathConfig::Save(const std::filesystem::path& path)
 	ini.SetValue(PathSectionName, ShadersDirName, s_shaders_subdir.string().c_str());
 	ini.SetValue(ConfigSectionName, ConfigDirName, s_config_subdir.string().c_str());
 	ini.SetValue(ConfigSectionName, GraphicConfigName, s_graphics_config.string().c_str());
+	ini.SetValue(ConfigSectionName, KeybindConfigName, s_keybind_config.string().c_str());
 	
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 
@@ -71,4 +75,5 @@ void PathConfig::LoadDefault()
 	s_shaders_subdir = "shader";
 	s_config_subdir = "config";
 	s_graphics_config = "graphics.ini";
+	s_keybind_config = "keybinds.ini";
 }

@@ -1,6 +1,7 @@
-Volume lights
-Shader optimizations
-Clean up gamepad input
+Clean events
+Clean Config
+Clean Renderer
+Add debug layer
 
 - Systems
 Physics

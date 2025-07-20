@@ -33,7 +33,7 @@ namespace Daedalus {
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 		static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
-		static ShaderLibrary* GetShaderLibrary() { return s_shader_library.get(); }
+		static ShaderLibrary* GetShaderLibrary() { return s_data.shader_library.get(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
@@ -56,25 +56,30 @@ namespace Daedalus {
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
 		static int CalculateNumberOfShadowMaps();
 
-		static std::unique_ptr<ShaderLibrary> s_shader_library;
+		struct Data
+		{
+			std::unique_ptr<ShaderLibrary> shader_library{ nullptr };
 
-		static std::shared_ptr<UniformBuffer> s_UBO_scene_data;
-		static std::shared_ptr<UniformBuffer> s_UBO_graphic_config;
-		static Frustum s_view_frustum;
-		static glm::mat4 s_scene_proj;
-		static glm::mat4 s_scene_view;
+			std::shared_ptr<UniformBuffer> UBO_scene_data{ nullptr };
+			std::shared_ptr<UniformBuffer> UBO_graphic_config{ nullptr };
+			Frustum view_frustum;
+			glm::mat4 scene_proj;
+			glm::mat4 scene_view;
 
-		static std::vector<LightSource*> s_lights;
-		static std::vector<std::pair<const Model*, glm::mat4>> s_frame_models;
+			std::vector<LightSource*> lights;
+			std::vector<std::pair<const Model*, glm::mat4>> frame_models;
 
-		static ShadowPass s_shadow_pass;
-		static DeferredGeometryPass s_geometry_pass;
-		static DeferredLightPass s_light_pass;
-		static SSAOPass s_ssao_pass;
+			ShadowPass shadow_pass;
+			DeferredGeometryPass geometry_pass;
+			DeferredLightPass light_pass;
+			SSAOPass ssao_pass;
 
-		static std::shared_ptr<VertexArray> s_unit_quad;
+			std::shared_ptr<VertexArray> unit_quad{ nullptr };
 
-		static int s_window_width;
-		static int s_window_height;
+			int window_width{ 0 };
+			int window_height{ 0 };
+		};
+
+		static Data s_data;
 	};
 }

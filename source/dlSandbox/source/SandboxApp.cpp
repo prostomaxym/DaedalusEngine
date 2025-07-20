@@ -1,7 +1,7 @@
 #include "SandboxApp.h"
 
 #include "ExampleLayer.h"
-#include "Daedalus/Config/KeybindConfig.h"
+#include "Config/KeybindConfig.h"
 using namespace Daedalus;
 
 Application* Daedalus::CreateApplication()

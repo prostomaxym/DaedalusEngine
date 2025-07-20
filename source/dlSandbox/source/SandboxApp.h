@@ -1,10 +1,10 @@
 #pragma once
 
 // ---Entry Point------------------------
-#include "Daedalus/Core/EntryPoint.h"
+#include "Core/EntryPoint.h"
 // --------------------------------------
 
-#include "Daedalus/Utils/HighPerformanceRequest.h"
+#include "Utils/HighPerformanceRequest.h"
 
 #include <Daedalus.h>
 

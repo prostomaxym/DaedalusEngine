@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Daedalus.h>
-#include <Daedalus/Config/KeybindConfig.h>
+#include <Config/KeybindConfig.h>
 
 #include "ExampleLayer.h"
 

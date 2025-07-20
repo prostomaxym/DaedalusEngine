@@ -1,6 +1,6 @@
 #include "ExampleLayer.h"
-#include "Daedalus/ECS/NativeScripts/CameraController.h"
-#include "Daedalus/Renderer/API/RenderConstants.h"
+#include "ECS/NativeScripts/CameraController.h"
+#include "Renderer/API/RenderConstants.h"
 
 #include "ExampleScripts.h"
 

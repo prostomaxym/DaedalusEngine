@@ -2,19 +2,8 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 #PATHS "${CMAKE_SOURCE_DIR}/vcpkg_installed"
-find_package(OpenGL REQUIRED)
-find_package(glad CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(imguizmo CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(assimp CONFIG REQUIRED)
-find_package(EnTT CONFIG REQUIRED)
 
-find_path(SIMPLEINI_INCLUDE_DIRS "SimpleIni.h")
-find_path(STB_INCLUDE_DIRS "stb_c_lexer.h")
-
+find_package(fmt CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
 project(
@@ -23,30 +12,40 @@ project(
     LANGUAGES CXX
     )
 
-# Import project files
-include(${CMAKE_CURRENT_SOURCE_DIR}/ProjectFiles.cmake)
+add_subdirectory(Config)
+add_subdirectory(Core)
+add_subdirectory(Debug)
+add_subdirectory(ECS)
+add_subdirectory(Events)
+add_subdirectory(Platform)
+add_subdirectory(Renderer)
+add_subdirectory(Threads)
+add_subdirectory(Utils)
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
+set(PROJECT_FILES
+    Daedalus.h
+    dlpch.h
+    dlpch.cpp
+    DummyTest.h
+)
 
 add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER dlEngine)
 
 target_compile_definitions(${PROJECT_NAME} 
     PUBLIC
-        GLFW_INCLUDE_NONE
         $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-        $<$<CONFIG:RelWithDebInfo>:DL_ENABLE_ASSERTS>
     PRIVATE 
         DL_BUILD_DLL
         NOMINMAX
         )
 
-target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/dlpch.h )
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/dlpch.h )
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC 
-	    ${CMAKE_CURRENT_SOURCE_DIR}/source/
+	    ${CMAKE_CURRENT_SOURCE_DIR}
     PRIVATE 
         ${STB_INCLUDE_DIRS}
         ${SIMPLEINI_INCLUDE_DIRS}
@@ -54,16 +53,16 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        spdlog::spdlog
-        imgui::imgui
-        imguizmo::imguizmo
-    PRIVATE    
-        ${OPENGL_LIBRARIES}
-        glad::glad
-        glfw
-        glm::glm
-        assimp::assimp
-        EnTT::EnTT
+        fmt::fmt
+    PRIVATE
+        Config
+        Core
+        Debug
+        ECS
+        Platform
+        Renderer
+        Threads
+        Utils
     )
 
 add_custom_command(

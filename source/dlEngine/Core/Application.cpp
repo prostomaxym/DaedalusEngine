@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "Application.h"
 
-#include "Core.h"
+#include "Macros.h"
 #include "Config/GraphicsConfig.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"

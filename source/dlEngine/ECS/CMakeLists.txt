@@ -29,7 +29,9 @@ set(ECS_PROJECT_FILES
 
 add_library(${PROJECT_NAME} STATIC ${ECS_PROJECT_FILES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER dlEngine)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER Engine)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ECS_PROJECT_FILES})
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../dlpch.h )
 

@@ -28,11 +28,12 @@ set(PROJECT_FILES
     dlpch.h
     dlpch.cpp
     DummyTest.h
+    Macros.h
 )
 
-add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER dlEngine)
+add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 
 target_compile_definitions(${PROJECT_NAME} 
     PUBLIC

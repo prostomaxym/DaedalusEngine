@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core.h"
+#include "Macros.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

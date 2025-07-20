@@ -1,6 +1,9 @@
+Asset manager
 Clean events
 Debug overlay + profiler
 Log file
+Fps lock window swap
+Multithread compilation
 
 - Systems
 Physics
@@ -9,12 +12,6 @@ Lua
 Level Editor
 Threads
 Debug
-
-
-- General Tech dept
-Fps lock window swap
-
-
 
 - Graphics Tech dept:
 PBR

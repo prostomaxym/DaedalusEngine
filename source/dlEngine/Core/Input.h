@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core.h"
+#include "Macros.h"
 #include "Utils/KeyCodes.h"
 
 #include <tuple>

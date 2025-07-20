@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core.h"
+#include "Macros.h"
 #include "ThreadPool.h"
 
 namespace Daedalus

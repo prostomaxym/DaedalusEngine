@@ -24,8 +24,6 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_custom_target(${PROJECT_NAME} SOURCES ${PROJECT_FILES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
-
 add_custom_command(
     TARGET ${PROJECT_NAME}
     POST_BUILD

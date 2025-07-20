@@ -91,7 +91,7 @@ void Renderer::Init()
 
 void Renderer::Shutdown()
 {
-
+	s_data.reset();
 }
 
 void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)

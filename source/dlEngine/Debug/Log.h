@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core.h"
+#include "Macros.h"
 
 #include <fmt/core.h>
 #include <fmt/ostream.h>

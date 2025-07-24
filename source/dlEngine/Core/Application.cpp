@@ -58,25 +58,29 @@ Application::~Application()
 
 void Application::Run()
 {
-	Timer timer;
+	Timer update_timer;
+	Timer frame_timer;
 
 	while (m_running)
 	{
+		const auto update_dt = update_timer.UpdateDeltaTime();
+
+		m_window->PollEvents();
 		Input::Update();
 
 		for (auto& layer : m_layer_stack)
 		{
-			layer->OnUpdate(timer.GetEllapsedTime());
+			layer->OnUpdate(update_dt);
 		}
-
-		timer.StartTimer();
 
 		//m_imgui_layer->Begin();
 		//m_imgui_layer->End();
 
-		m_window->OnUpdate();
+		m_window->SwapBuffers();
 
-		FPSLocker::LockFps(GraphicsConfig::GetFPSLock(), timer.GetEllapsedTime());
+		const auto frame_dt = frame_timer.GetEllapsedTime();
+		FPSLocker::LockFpsBusyWait(GraphicsConfig::GetFPSLock(), frame_dt);
+		frame_timer.StartTimer();
 	}
 }
 

@@ -217,11 +217,16 @@ void GLFWWindow::SetupCallbacks()
 		});
 }
 
-void GLFWWindow::OnUpdate()
+void GLFWWindow::SwapBuffers()
 {
-	glfwPollEvents();
 	m_context->SwapBuffers();
 }
+
+void GLFWWindow::PollEvents()
+{
+	glfwPollEvents();
+}
+
 
 void GLFWWindow::SetVSync(bool enabled)
 {

@@ -15,5 +15,7 @@ namespace Daedalus {
 		static void InitInputSystem();
 
 		static std::pair<int, int> GetMonitorResolution();
+
+		static void PreciseThreadSleep(long long nanoseconds);
 	};
 }

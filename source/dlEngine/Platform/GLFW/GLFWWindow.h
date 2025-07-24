@@ -19,7 +19,8 @@ namespace Daedalus {
 		static void InitGLFW();
 		static std::pair<int, int> GetMonitorResolution();
 
-		void OnUpdate() override;
+		void SwapBuffers() override;
+		void PollEvents() override;
 
 		inline void* GetNativeWindow() const override { return m_window; }
 		inline int GetWidth() const override { return m_data.width; }

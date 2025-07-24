@@ -20,6 +20,15 @@ namespace Daedalus
 			return DeltaTime(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - m_begin_time));
 		}
 
+		DeltaTime UpdateDeltaTime()
+		{
+			const auto now = std::chrono::steady_clock::now();
+			DeltaTime dt(std::chrono::duration_cast<std::chrono::nanoseconds>(now - m_begin_time));
+			m_begin_time = now;
+
+			return dt;
+		}
+
 	private:
 		std::chrono::steady_clock::time_point m_begin_time{};
 	};

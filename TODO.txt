@@ -1,8 +1,6 @@
 Asset manager
-Clean events
 Debug overlay + profiler
 Log file
-Fps lock window swap
 Multithread compilation
 
 - Systems

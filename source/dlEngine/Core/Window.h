@@ -39,7 +39,8 @@ namespace Daedalus {
 
 		virtual ~Window() = default;
 
-		virtual void OnUpdate() = 0;
+		virtual void SwapBuffers() = 0;
+		virtual void PollEvents() = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 		virtual int GetWidth() const = 0;

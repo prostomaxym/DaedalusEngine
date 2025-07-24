@@ -38,9 +38,9 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_FILES})
 target_compile_definitions(${PROJECT_NAME} 
     PUBLIC
         $<$<CONFIG:Debug>:DL_ENABLE_ASSERTS>
-    PRIVATE 
-        DL_BUILD_DLL
         NOMINMAX
+    PRIVATE 
+        DL_BUILD_DLL     
         )
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/dlpch.h )

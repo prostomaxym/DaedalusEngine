@@ -39,7 +39,7 @@ void GLFWWindow::InitGLFW()
 	}
 }
 
-std::pair<int, int> Daedalus::GLFWWindow::GetMonitorResolution()
+std::pair<int, int> GLFWWindow::GetMonitorResolution()
 {
 	InitGLFW();
 
@@ -290,4 +290,10 @@ void GLFWWindow::SetWindowMode(WindowProps::ScreenMode screenmode)
 
 	SetVSync(m_data.VSync);
 	glfwMakeContextCurrent(m_window);
+}
+
+void GLFWWindow::FreeCursor(bool free)
+{
+	glfwWindowHint(GLFW_CENTER_CURSOR, free ? GLFW_FALSE : GLFW_TRUE);
+	glfwSetInputMode(m_window, GLFW_CURSOR, free ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }

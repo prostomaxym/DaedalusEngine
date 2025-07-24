@@ -40,9 +40,10 @@ namespace Daedalus {
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResized(WindowResizeEvent& event);
+		bool OnKeyReleased(KeyReleasedEvent& event);
 
 		std::unique_ptr<Window> m_window;
-		ImGuiLayer* m_imgui_layer{ nullptr }; // LayerStack owns imgui_layer
+		ImGuiLayer* m_debug_layer{ nullptr }; // LayerStack owns imgui_layer
 		LayerStack m_layer_stack;
 		EventEngine m_event_engine;
 

@@ -24,6 +24,10 @@ ELSEIF(UNIX)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN'")
 ENDIF()
 
+if (MSVC)
+    add_compile_options(/utf-8)
+endif()
+
 # Binaries output dir config
 set(COMPILE_OUTPUT_FOLDER ${CMAKE_SOURCE_DIR}/runtime/bin/${PLATFORM_NAME}-x64/)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})

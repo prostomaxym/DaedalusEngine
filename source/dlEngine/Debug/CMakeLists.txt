@@ -14,6 +14,8 @@ project(
     )
 
 set(DEBUG_PROJECT_FILES
+    DebugLayer.h
+    DebugLayer.cpp
     Log.h
     Log.cpp
     ImGuiLayer.h
@@ -37,6 +39,7 @@ target_include_directories(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME} 
     PRIVATE 
         DL_BUILD_STATIC
+        NOMINMAX
     )
     
 target_link_libraries(${PROJECT_NAME} 

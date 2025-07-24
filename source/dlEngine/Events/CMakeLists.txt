@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+find_package(fmt CONFIG REQUIRED)
+
 #------------------ Project config ------------------------------#
 project(
     Events
@@ -41,4 +43,5 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Debug
+        fmt::fmt
     )

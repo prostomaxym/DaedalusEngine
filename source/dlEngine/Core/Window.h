@@ -53,5 +53,7 @@ namespace Daedalus {
 
 		virtual bool IsFullscreen() const = 0;
 		virtual void SetWindowMode(WindowProps::ScreenMode screenmode) = 0;
+
+		virtual void FreeCursor(bool free) = 0;
 	};
 }

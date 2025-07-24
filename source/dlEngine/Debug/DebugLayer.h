@@ -12,14 +12,15 @@ namespace Daedalus
 
 	protected:
 		void Update(DeltaTime dt) override;
-		void ConstructWindow() override;
+		void InitWindow() override;
 
 	private:
-		static const int FrametimeGraphSize = 200;
+		static const int FrametimeGraphSize = 500;
 
 		void RenderFPSSection(DeltaTime dt);
 		float CalculateLowPercentile(float percentile) const;
 
-		std::array<float, FrametimeGraphSize> m_frame_times;
+		std::vector<float> m_frame_times{};
+		std::vector<float> m_x_axe_values{};
 	};
 }

@@ -6,6 +6,7 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
+#include <implot.h>
 
 #include "Core/Application.h"
 #include "Macros.h"
@@ -24,6 +25,7 @@ void ImGuiLayer::OnAttach()
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImPlot::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -55,7 +57,7 @@ void ImGuiLayer::OnAttach()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450");
 
-	ConstructWindow();
+	InitWindow();
 
 	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "ImGui Layer is attached;");
 }
@@ -64,6 +66,7 @@ void ImGuiLayer::OnDetach()
 {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
+	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
 
 	Log::Write(Log::Levels::Warn, Log::Categories::EngineCore, "ImGui Layer is detached;");

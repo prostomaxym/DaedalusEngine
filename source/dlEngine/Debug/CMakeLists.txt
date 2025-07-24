@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16.3)
 find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
+find_package(implot CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
@@ -48,5 +49,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         spdlog::spdlog
         imgui::imgui
-        imguizmo::imguizmo     
+        imguizmo::imguizmo
+        implot::implot
     )

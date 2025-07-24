@@ -30,7 +30,7 @@ namespace Daedalus
 
 	protected:
 		virtual void Update(DeltaTime dt) {};
-		virtual void ConstructWindow() {};
+		virtual void InitWindow() {};
 
 	private:
 		bool m_block_events = true;

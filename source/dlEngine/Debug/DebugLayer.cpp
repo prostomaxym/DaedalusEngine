@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
+#include <implot.h>
 
 using namespace Daedalus;
 
@@ -44,33 +45,45 @@ void DebugLayer::Update(DeltaTime dt)
 	//ImGui::Text("Systems:  %d", ecs.system_count);
 }
 
-void DebugLayer::ConstructWindow()
+void DebugLayer::InitWindow()
 {
-	m_frame_times.fill(0.f);
+	m_frame_times.resize(FrametimeGraphSize, 0.f);
+	m_x_axe_values.resize(FrametimeGraphSize, 0.f);
+
+	for (auto i = 0; i < m_x_axe_values.size(); i++)
+	{
+		m_x_axe_values[i] = -5.f + 5.f / static_cast<float>(FrametimeGraphSize) * static_cast<float>(i);
+	}
 }
 
 void DebugLayer::RenderFPSSection(DeltaTime dt)
 {
-	static double time_accum = 0.0;
+	static float time_accum = 0.0;
 	static int frame_count = 0;
-	static double fps = 0.0;
-	static double ms = 0.0;
+	static float fps = 0.0;
+	static float ms = 0.0;
 
-	time_accum += dt.GetNanoseconds();
+	time_accum += dt.GetMilliseconds();
 	frame_count++;
 
-	if (time_accum >= 0.1f * NanoMult)
+	if (time_accum >= 0.025f * MilliMult)
 	{
-		fps = NanoMult * static_cast<double>(frame_count) / time_accum;
+		fps = MilliMult * static_cast<float>(frame_count) / time_accum;
 		ms = MilliMult / fps;
 		time_accum = 0.0f;
-		frame_count = 0;
+		frame_count = 0.f;
+
+		static int frame_index = 0;
+		if (frame_index < m_frame_times.size())
+		{
+			m_frame_times[frame_index++] = ms;
+		}
+		else
+		{
+			std::move(m_frame_times.begin() + 1, m_frame_times.end(), m_frame_times.begin());
+			m_frame_times.back() = ms;
+		}
 	}
-
-	static int frame_index = 0;
-
-	m_frame_times[frame_index] = ms;
-	frame_index = (frame_index + 1) % m_frame_times.size();
 
 	const auto frametime_1 = CalculateLowPercentile(0.01f);
 	const auto frametime_01 = CalculateLowPercentile(0.001f);
@@ -80,26 +93,20 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 	ImGui::Text("0.1%% FPS: %.2f", MilliMult / frametime_01);
 	ImGui::Text("Frame Time: %.2f ms", ms);
 
-	const float plot_height = 200.0f;
-	const float plot_width = 400.0f;
-	const float plot_max = 50.0f;
-	const float plot_min = 0.0f;
+	constexpr float plot_height = 300.0f;
+	constexpr float plot_width = 500.0f;
+	constexpr float plot_max = 50.0f;
+	constexpr float plot_min = 0.0f;
 
-	ImGui::BeginGroup();
-	ImGui::Text("ms");
-	ImGui::Text("%.0f", plot_max);
-	ImGui::Dummy(ImVec2(0, plot_height / 2 - ImGui::GetTextLineHeight() / 2));
-	ImGui::Text("%.0f", (plot_max + plot_min) / 2);
-	ImGui::Dummy(ImVec2(0, plot_height / 2 - ImGui::GetTextLineHeight() / 2));
-	ImGui::Text("%.0f", plot_min);
-	ImGui::EndGroup();
+	if (ImPlot::BeginPlot("Frame Time", ImVec2(plot_width, plot_height), ImPlotFlags_NoLegend))
+	{
+		ImPlot::SetupAxes("Realtime (s)", "Frametime (ms)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
+		ImPlot::SetupAxesLimits(-5.f, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
-	ImGui::SameLine();
+		ImPlot::PlotLine("Frame Time", m_x_axe_values.data(), m_frame_times.data(), static_cast<int>(m_frame_times.size()));
 
-	ImGui::PlotLines(
-		"##frametime", m_frame_times.data(), static_cast<int>(m_frame_times.size()),
-		frame_index, nullptr, plot_min, plot_max, ImVec2(plot_width, plot_height)
-	);
+		ImPlot::EndPlot();
+	}
 }
 
 float DebugLayer::CalculateLowPercentile(float percentile) const
@@ -107,15 +114,15 @@ float DebugLayer::CalculateLowPercentile(float percentile) const
 	if (m_frame_times.empty())
 		return 1.0f;
 
-	std::array<float, FrametimeGraphSize> sorted = m_frame_times;
+	std::vector<float> sorted = m_frame_times;
 	std::sort(sorted.begin(), sorted.end());
 
 	size_t count = static_cast<size_t>(percentile * sorted.size());
 	count = std::max(count, size_t(1));
 
 	float sum = 0.0f;
-	for (size_t i = 0; i < count; ++i)
-		sum += sorted[i];
+	for (size_t i = 1; i <= count; ++i)
+		sum += sorted[sorted.size() - i];
 
 	return sum > 0.f ? sum / static_cast<float>(count) : 1.f;
 }

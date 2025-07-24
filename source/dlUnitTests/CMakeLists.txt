@@ -13,15 +13,13 @@ project(
 
 set(PROJECT_FILES
 
-    source/main.cpp
-    source/DummyTest.cpp
+    main.cpp
+    DummyTest.cpp
     )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    

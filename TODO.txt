@@ -1,6 +1,7 @@
-Volume lights
-Shader optimizations
-Clean up gamepad input
+Asset manager
+Debug overlay + profiler
+Log file
+Multithread compilation
 
 - Systems
 Physics
@@ -9,13 +10,6 @@ Lua
 Level Editor
 Threads
 Debug
-
-
-- General Tech dept
-Fps lock window swap
-Log file
-Debug overlay + profiler
-
 
 - Graphics Tech dept:
 PBR

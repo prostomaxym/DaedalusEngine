@@ -18,6 +18,7 @@ namespace
 			PdhOpenQuery(nullptr, 0, &query_);
 			PdhAddCounter(query_, "\\Processor(_Total)\\% Processor Time", 0, &counter_);
 			PdhCollectQueryData(query_);
+			last_sample_time_ = std::chrono::steady_clock::now();
 		}
 
 		~CpuUsageMonitor()
@@ -27,15 +28,27 @@ namespace
 
 		double Get()
 		{
-			PDH_FMT_COUNTERVALUE val;
+			using namespace std::chrono;
+			auto now = steady_clock::now();
+			if (duration_cast<milliseconds>(now - last_sample_time_).count() < 200)
+				return last_value_;  // avoid oversampling
+
+			last_sample_time_ = now;
+
 			PdhCollectQueryData(query_);
-			PdhGetFormattedCounterValue(counter_, PDH_FMT_DOUBLE, nullptr, &val);
-			return val.doubleValue;
+
+			PDH_FMT_COUNTERVALUE val;
+			if (PdhGetFormattedCounterValue(counter_, PDH_FMT_DOUBLE, nullptr, &val) == ERROR_SUCCESS)
+				last_value_ = val.doubleValue;
+
+			return last_value_;
 		}
 
 	private:
-		PDH_HQUERY query_;
-		PDH_HCOUNTER counter_;
+		PDH_HQUERY query_{};
+		PDH_HCOUNTER counter_{};
+		std::chrono::steady_clock::time_point last_sample_time_;
+		double last_value_ = 0.0;
 	};
 
 	class AppCpuUsageMonitor

@@ -3,6 +3,7 @@
 #include "DebugLayer.h"
 
 #include "Threads/DaedalusThreads.h"
+#include "Platform/ResourcesMonitor.h"
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
@@ -20,6 +21,8 @@ void DebugLayer::Update(DeltaTime dt)
 {
 	RenderFPSSection(dt);
 
+	const auto cpu = ResourcesMonitor::GetAppCPUUsage();
+	const auto ram = ResourcesMonitor::GetAppRAMUsageInMB();
 	//// Renderer info
 	//const auto& renderer = Renderer::Get();
 	//ImGui::SeparatorText("Renderer");
@@ -45,6 +48,7 @@ void DebugLayer::Update(DeltaTime dt)
 	//ImGui::SeparatorText("ECS");
 	//ImGui::Text("Entities: %d", ecs.entity_count);
 	//ImGui::Text("Systems:  %d", ecs.system_count);
+	int a = 10;
 }
 
 void DebugLayer::InitWindow()

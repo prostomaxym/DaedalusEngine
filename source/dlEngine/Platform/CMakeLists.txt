@@ -15,7 +15,9 @@ project(
 set(PLATFORM_PROJECT_FILES
     Platform.h
     Platform.cpp
-    
+    ResourcesMonitor.h
+    ResourcesMonitor.cpp
+
     GLFW/GLFWInput.h
     GLFW/GLFWInput.cpp
     GLFW/GLFWWindow.h
@@ -47,10 +49,14 @@ set(PLATFORM_PROJECT_FILES
     Windows/WindowsInput.h
     Windows/WindowsWindow.h
     Windows/WindowsWindow.cpp
+    Windows/WindowsResourcesMonitor.h
+     Windows/WindowsResourcesMonitor.cpp
 
     Linux/LinuxInput.h
     Linux/LinuxWindow.h
     Linux/LinuxWindow.cpp
+    Linux/LinuxResourcesMonitor.h
+    Linux/LinuxResourcesMonitor.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${PLATFORM_PROJECT_FILES})
@@ -80,4 +86,7 @@ target_link_libraries(${PROJECT_NAME}
         glad::glad
         glfw
 )
-        
+
+IF(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE pdh)
+ENDIF()

@@ -13,117 +13,141 @@ namespace
 	class CpuUsageMonitor
 	{
 	public:
+
 		CpuUsageMonitor()
 		{
-			PdhOpenQuery(nullptr, 0, &query_);
-			PdhAddCounter(query_, "\\Processor(_Total)\\% Processor Time", 0, &counter_);
-			PdhCollectQueryData(query_);
-			last_sample_time_ = std::chrono::steady_clock::now();
+			InitAppInfo();
+			InitTotalInfo();
 		}
 
-		~CpuUsageMonitor()
+		double GetAppLoadPercent()
 		{
-			PdhCloseQuery(query_);
+			FILETIME ftime, fsys, fuser;
+			ULARGE_INTEGER now, sys, user;
+			double percent;
+
+			GetSystemTimeAsFileTime(&ftime);
+			memcpy(&now, &ftime, sizeof(FILETIME));
+
+			GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
+			memcpy(&sys, &fsys, sizeof(FILETIME));
+			memcpy(&user, &fuser, sizeof(FILETIME));
+			percent = (sys.QuadPart - lastSysCPU.QuadPart) +
+				(user.QuadPart - lastUserCPU.QuadPart);
+			percent /= (now.QuadPart - lastCPU.QuadPart);
+			percent /= numProcessors;
+			lastCPU = now;
+			lastUserCPU = user;
+			lastSysCPU = sys;
+
+			return percent * 100;
 		}
 
-		double Get()
+		double GetTotalLoadPercent()
 		{
-			using namespace std::chrono;
-			auto now = steady_clock::now();
-			if (duration_cast<milliseconds>(now - last_sample_time_).count() < 200)
-				return last_value_;  // avoid oversampling
+			PDH_FMT_COUNTERVALUE counterVal;
 
-			last_sample_time_ = now;
-
-			PdhCollectQueryData(query_);
-
-			PDH_FMT_COUNTERVALUE val;
-			if (PdhGetFormattedCounterValue(counter_, PDH_FMT_DOUBLE, nullptr, &val) == ERROR_SUCCESS)
-				last_value_ = val.doubleValue;
-
-			return last_value_;
+			PdhCollectQueryData(cpuQuery);
+			PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
+			return counterVal.doubleValue;
 		}
 
 	private:
-		PDH_HQUERY query_{};
-		PDH_HCOUNTER counter_{};
-		std::chrono::steady_clock::time_point last_sample_time_;
-		double last_value_ = 0.0;
+		void InitAppInfo()
+		{
+			SYSTEM_INFO sysInfo;
+			FILETIME ftime, fsys, fuser;
+
+			GetSystemInfo(&sysInfo);
+			numProcessors = sysInfo.dwNumberOfProcessors;
+
+			GetSystemTimeAsFileTime(&ftime);
+			memcpy(&lastCPU, &ftime, sizeof(FILETIME));
+
+			self = GetCurrentProcess();
+			GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
+			memcpy(&lastSysCPU, &fsys, sizeof(FILETIME));
+			memcpy(&lastUserCPU, &fuser, sizeof(FILETIME));
+		}
+
+		void InitTotalInfo()
+		{
+			PdhOpenQuery(NULL, NULL, &cpuQuery);
+			// You can also use L"\\Processor(*)\\% Processor Time" and get individual CPU values with PdhGetFormattedCounterArray()
+			PdhAddEnglishCounter(cpuQuery, "\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal);
+			PdhCollectQueryData(cpuQuery);
+		}
+
+		ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
+		int numProcessors{ 0 };
+		HANDLE self{ nullptr };
+
+		PDH_HQUERY cpuQuery{ nullptr };
+		PDH_HCOUNTER cpuTotal{ nullptr };
 	};
 
-	class AppCpuUsageMonitor
+	class RAMUsageMonitor
 	{
 	public:
-		AppCpuUsageMonitor()
+		static DWORDLONG GetTotalMemoryUsedInBytes()
 		{
-			char processName[MAX_PATH] = { 0 };
-			GetModuleFileName(nullptr, processName, MAX_PATH);
-
-			std::string name = processName;
-			name = name.substr(name.find_last_of("\\") + 1);
-			if (EndsWith(name, ".exe"))
-				name = name.substr(0, name.size() - 4);
-
-			std::string counterPath = "\\Process(" + name + ")\\% Processor Time";
-
-			PdhOpenQuery(nullptr, 0, &query_);
-			PdhAddCounter(query_, counterPath.c_str(), 0, &counter_);
-			PdhCollectQueryData(query_);
+			MEMORYSTATUSEX memInfo = GetMemoryStatus();
+			DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;
+			return physMemUsed;
 		}
 
-		~AppCpuUsageMonitor()
+		static DWORDLONG GetAppMemoryUsedInBytes()
 		{
-			PdhCloseQuery(query_);
+			PROCESS_MEMORY_COUNTERS_EX pmc;
+			GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+			SIZE_T virtualMemUsedByMe = pmc.PrivateUsage;
+			SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
+			return physMemUsedByMe;
 		}
 
-		double Get()
+		static DWORDLONG GetSystemRAMInBytes()
 		{
-			PDH_FMT_COUNTERVALUE val;
-			PdhCollectQueryData(query_);
-			PdhGetFormattedCounterValue(counter_, PDH_FMT_DOUBLE, nullptr, &val);
-			return val.doubleValue / static_cast<double>(std::thread::hardware_concurrency());
+			MEMORYSTATUSEX memInfo = GetMemoryStatus();
+			return memInfo.ullTotalPhys;
 		}
 
 	private:
-		bool EndsWith(const std::string& str, const std::string& suffix)
+		static MEMORYSTATUSEX GetMemoryStatus()
 		{
-			return str.size() >= suffix.size() &&
-				str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+			MEMORYSTATUSEX memInfo;
+			memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+			GlobalMemoryStatusEx(&memInfo);
+			return memInfo;
 		}
-		PDH_HQUERY query_;
-		PDH_HCOUNTER counter_;
 	};
 
-	CpuUsageMonitor cpu_total;
-	AppCpuUsageMonitor cpu_app;
-
-	SIZE_T GetUsedRAM()
-	{
-		PROCESS_MEMORY_COUNTERS memInfo;
-		GetProcessMemoryInfo(GetCurrentProcess(), &memInfo, sizeof(memInfo));
-		return memInfo.WorkingSetSize;
-	}
+    CpuUsageMonitor cpu_monitor;
 }
 
 using namespace Daedalus;
 
 float WindowsResourcesMonitor::GetAppCPUUsage()
 {
-	return cpu_app.Get();
+	return cpu_monitor.GetAppLoadPercent();
 }
 
 float WindowsResourcesMonitor::GetTotalCPUUsage()
 {
-	return cpu_total.Get();
+	return cpu_monitor.GetTotalLoadPercent();
 }
 
-float WindowsResourcesMonitor::GetAppRAMUsage()
+unsigned long long WindowsResourcesMonitor::GetAppRAMUsageInBytes()
 {
-	return GetUsedRAM();
+	return RAMUsageMonitor::GetAppMemoryUsedInBytes();
 }
 
-float WindowsResourcesMonitor::GetTotalRAMUsage()
+unsigned long long WindowsResourcesMonitor::GetTotalRAMUsageInBytes()
 {
-	return GetUsedRAM();
+	return RAMUsageMonitor::GetTotalMemoryUsedInBytes();
+}
+
+unsigned long long WindowsResourcesMonitor::GetSystemRAMInBytes()
+{
+	return RAMUsageMonitor::GetSystemRAMInBytes();
 }
 #endif

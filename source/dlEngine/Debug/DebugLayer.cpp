@@ -63,12 +63,16 @@ void DebugLayer::InitWindow()
 	m_frame_times.resize(GraphSize, 0.f);
 	m_cpu_app_load.resize(GraphSize, 0.f);
 	m_cpu_total_load.resize(GraphSize, 0.f);
+	m_ram_app_load.resize(GraphSize, 0.f);
+	m_ram_total_load.resize(GraphSize, 0.f);
 	m_x_axe_values.resize(GraphSize, 0.f);
 
 	for (auto i = 0; i < m_x_axe_values.size(); i++)
 	{
 		m_x_axe_values[i] = -5.f + 5.f / static_cast<float>(GraphSize) * static_cast<float>(i);
 	}
+
+	m_total_ram = ResourcesMonitor::GetSystemRAMInGB();
 }
 
 void DebugLayer::RenderGeneralPage(DeltaTime dt)
@@ -212,8 +216,62 @@ void DebugLayer::RenderCPUSection(DeltaTime dt)
 
 void DebugLayer::RenderRAMSection(DeltaTime dt)
 {
-	ImGui::BeginChild("RAM", ImVec2(300, 300), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("RAM", ImVec2(540, 440), ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("RAM", ImGuiTreeNodeFlags_Bullet);
+
+	static float time_accum = 0.f;
+	static int frame_count = 0;
+	static float app_load = 0.f;
+	static float total_load = 0.f;
+	static float accum_app_load = 0.f;
+	static float accum_total_load = 0.f;
+	static float avg_app_load = 0.f;
+	static float avg_total_load = 0.f;\
+
+	app_load += ResourcesMonitor::GetAppRAMUsageInGB();
+	total_load += ResourcesMonitor::GetTotalRAMUsageInGB();
+	time_accum += dt.GetMilliseconds();
+	frame_count++;
+
+	if (time_accum >= 0.025f * MilliMult)
+	{
+		accum_app_load = app_load / frame_count;
+		accum_total_load = total_load / frame_count;
+		time_accum = 0.0f;
+		frame_count = 0;
+		app_load = 0.f;
+		total_load = 0.f;
+
+		m_ram_app_load.push(accum_app_load);
+		m_ram_total_load.push(accum_total_load);
+
+		const std::vector<float> last_sec_app(m_ram_app_load.begin() + LastSecondIdx, m_ram_app_load.end());
+		const std::vector<float> last_sec_total(m_ram_total_load.begin() + LastSecondIdx, m_ram_total_load.end());
+		avg_app_load = Average(last_sec_app);
+		avg_total_load = Average(last_sec_total);
+	}
+
+	ImGui::Text("Application RAM load: %.3f GB", avg_app_load);
+	ImGui::Text("Total RAM load: %.3f GB", avg_total_load);
+
+	constexpr float plot_height = 300.0f;
+	constexpr float plot_width = 500.0f;
+	float plot_max = m_total_ram;
+	constexpr float plot_min = 0.0f;
+
+	if (ImPlot::BeginPlot("RAM Load", ImVec2(plot_width, plot_height), ImPlotFlags_None))
+	{
+		ImPlot::SetupAxes("Realtime (s)", "CPU (%)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
+		ImPlot::SetupAxesLimits(-5.f, 0.f, plot_min, plot_max, ImPlotCond_Once);
+
+		const auto app_data = m_ram_app_load.linearize();
+		const auto total_data = m_ram_total_load.linearize();
+		ImPlot::PlotLine("Total RAM", m_x_axe_values.data(), total_data.data(), static_cast<int>(m_ram_total_load.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("App RAM", m_x_axe_values.data(), app_data.data(), static_cast<int>(m_ram_app_load.size()), ImPlotLineFlags_Shaded);
+
+		ImPlot::EndPlot();
+	}
+
 	ImGui::EndChild();
 }
 

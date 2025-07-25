@@ -30,6 +30,9 @@ namespace Daedalus
 		RingVector<float> m_frame_times{ GraphSize };
 		RingVector<float> m_cpu_app_load{ GraphSize };
 		RingVector<float> m_cpu_total_load{ GraphSize };
+		RingVector<float> m_ram_app_load{ GraphSize };
+		RingVector<float> m_ram_total_load{ GraphSize };
 		std::vector<float> m_x_axe_values{ GraphSize };
+		float m_total_ram{ 0.f };
 	};
 }

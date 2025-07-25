@@ -7,8 +7,10 @@ namespace Daedalus
 	public:
 		static float GetAppCPUUsage();
 		static float GetTotalCPUUsage();
-		static float GetAppRAMUsage();
-		static float GetTotalRAMUsage();
+
+		static unsigned long long GetAppRAMUsageInBytes();
+		static unsigned long long GetTotalRAMUsageInBytes();
+		static unsigned long long GetSystemRAMInBytes();
 	};
 }
 #endif

@@ -2,6 +2,8 @@
 
 #include "DebugLayer.h"
 
+#include "Threads/DaedalusThreads.h"
+
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
@@ -58,35 +60,44 @@ void DebugLayer::InitWindow()
 
 void DebugLayer::RenderFPSSection(DeltaTime dt)
 {
-	static float time_accum = 0.0;
+	static float time_accum = 0.f;
 	static int frame_count = 0;
-	static float fps = 0.0;
-	static float ms = 0.0;
+	static float fps = 0.f;
+	static float ms = 0.f;
+	static float frametime_1 = 0.f;
+	static float frametime_01 = 0.f;
 
-	time_accum += dt.GetMilliseconds();
-	frame_count++;
-
-	if (time_accum >= 0.025f * MilliMult)
-	{
-		fps = MilliMult * static_cast<float>(frame_count) / time_accum;
-		ms = MilliMult / fps;
-		time_accum = 0.0f;
-		frame_count = 0.f;
-
-		static int frame_index = 0;
-		if (frame_index < m_frame_times.size())
+	// Calculate heavy processing in background to not slow down main loop
+	// Order of submiting frames is reserved so eventually all frametimes buffer members are calculated
+	// Practically only few last frames will data race, so it wont impact avg stats but greatly reduce CPU load
+	DaedalusThreads::Inst().Submit(
+		[&]()
 		{
-			m_frame_times[frame_index++] = ms;
-		}
-		else
-		{
-			std::move(m_frame_times.begin() + 1, m_frame_times.end(), m_frame_times.begin());
-			m_frame_times.back() = ms;
-		}
-	}
+			time_accum += dt.GetMilliseconds();
+			frame_count++;
 
-	const auto frametime_1 = CalculateLowPercentile(0.01f);
-	const auto frametime_01 = CalculateLowPercentile(0.001f);
+			if (time_accum >= 0.025f * MilliMult)
+			{
+				fps = MilliMult * static_cast<float>(frame_count) / time_accum;
+				ms = MilliMult / fps;
+				time_accum = 0.0f;
+				frame_count = 0.f;
+
+				static int frame_index = 0;
+				if (frame_index < m_frame_times.size())
+				{
+					m_frame_times[frame_index++] = ms;
+				}
+				else
+				{
+					std::move(m_frame_times.begin() + 1, m_frame_times.end(), m_frame_times.begin());
+					m_frame_times.back() = ms;
+				}
+			}
+
+			frametime_1 = CalculateLowPercentile(0.01f);
+			frametime_01 = CalculateLowPercentile(0.001f);
+		});
 
 	ImGui::Text("Average FPS: %.2f", fps);
 	ImGui::Text("1%% FPS: %.2f", MilliMult / frametime_1);

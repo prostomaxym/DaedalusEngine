@@ -14,7 +14,12 @@ namespace
 	{
 	public:
 
-		CpuUsageMonitor()
+		CpuUsageMonitor() :
+			last_load_total(0.0)
+			, last_load_app(0.0)
+			, last_query_time_app(std::chrono::steady_clock::now())
+			, last_query_time_total(std::chrono::steady_clock::now())
+		
 		{
 			InitAppInfo();
 			InitTotalInfo();
@@ -22,6 +27,12 @@ namespace
 
 		double GetAppLoadPercent()
 		{
+			auto now_time = std::chrono::steady_clock::now();
+			auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now_time - last_query_time_app);
+
+			if (elapsed.count() < window_interval_ms)
+				return last_load_app;
+
 			FILETIME ftime, fsys, fuser;
 			ULARGE_INTEGER now, sys, user;
 			double percent;
@@ -39,17 +50,27 @@ namespace
 			lastCPU = now;
 			lastUserCPU = user;
 			lastSysCPU = sys;
+			last_load_app = percent * 100;
+			last_query_time_app = now_time;
 
-			return percent * 100;
+			return last_load_app;
 		}
 
 		double GetTotalLoadPercent()
 		{
+			auto now_time = std::chrono::steady_clock::now();
+			auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now_time - last_query_time_total);
+
+			if (elapsed.count() < window_interval_ms)
+				return last_load_total;
+
 			PDH_FMT_COUNTERVALUE counterVal;
 
 			PdhCollectQueryData(cpuQuery);
 			PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
-			return counterVal.doubleValue;
+			last_query_time_total = now_time;
+			last_load_total = counterVal.doubleValue;
+			return last_load_total;
 		}
 
 	private:
@@ -84,6 +105,12 @@ namespace
 
 		PDH_HQUERY cpuQuery{ nullptr };
 		PDH_HCOUNTER cpuTotal{ nullptr };
+		std::chrono::steady_clock::time_point last_query_time_total;
+		std::chrono::steady_clock::time_point last_query_time_app;
+		double last_load_total;
+		double last_load_app;
+
+		const int window_interval_ms{ 1000 };
 	};
 
 	class RAMUsageMonitor

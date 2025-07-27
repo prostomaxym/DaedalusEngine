@@ -7,7 +7,7 @@ namespace Daedalus
 	class ExampleLayer final : public Layer
 	{
 	public:
-		ExampleLayer() : Layer("Example") {}
+		ExampleLayer() : Layer("Example", true) {}
 
 		void OnAttach() override;
 		void OnDetach() override;
@@ -18,7 +18,5 @@ namespace Daedalus
 	private:
 		void PrepareNukeScene();
 		void PrepareAnorLondoScene();
-
-		Scene m_scene;
 	};
 }

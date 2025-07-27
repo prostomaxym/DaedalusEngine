@@ -1,6 +1,7 @@
 #include "dlpch.h"
 
 #include "DebugLayer.h"
+#include "Core/Application.h"
 
 #include "Platform/ResourcesMonitor.h"
 
@@ -14,6 +15,7 @@ using namespace Daedalus;
 namespace
 {
 	constexpr auto MilliMult = 1000.f;
+	const ImVec2 SectionDefaultSize(540, 440);
 
 	float Average(const std::vector<float>& v)
 	{
@@ -36,7 +38,7 @@ namespace
 
 void DebugLayer::Update(DeltaTime dt)
 {
-	ImGui::Begin("Debug Overlay");
+	ImGui::Begin("Debug Overlay", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 	if (ImGui::BeginTabBar("Debug Overlay", ImGuiTabBarFlags_None))
 	{
 		RenderGeneralPage(dt);
@@ -69,7 +71,7 @@ void DebugLayer::InitWindow()
 
 	for (auto i = 0; i < m_x_axe_values.size(); i++)
 	{
-		m_x_axe_values[i] = -5.f + 5.f / static_cast<float>(GraphSize) * static_cast<float>(i);
+		m_x_axe_values[i] = -NumberOfSecondsTracked + NumberOfSecondsTracked / static_cast<float>(GraphSize) * static_cast<float>(i);
 	}
 
 	m_total_ram = ResourcesMonitor::GetSystemRAMInGB();
@@ -87,13 +89,18 @@ void DebugLayer::RenderGeneralPage(DeltaTime dt)
 		ImGui::SameLine();
 		RenderRAMSection(dt);
 
+		RenderWorldSection();
+
+		ImGui::SameLine();
+		RenderGPUSection(dt);
+
 		ImGui::EndTabItem();
 	}
 }
 
 void DebugLayer::RenderFPSSection(DeltaTime dt)
 {
-	ImGui::BeginChild("FPS", ImVec2(540, 440), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("FPS", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("FPS", ImGuiTreeNodeFlags_Bullet);
 
 	static float time_accum = 0.f;
@@ -109,7 +116,7 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 	time_accum += dt.GetMilliseconds();
 	frame_count++;
 
-	if (time_accum >= 0.025f * MilliMult)
+	if (time_accum >= NumberOfSecondsTracked / GraphSize * MilliMult)
 	{
 		fps = MilliMult * static_cast<float>(frame_count) / time_accum;
 		ms = MilliMult / fps;
@@ -142,7 +149,7 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 	if (ImPlot::BeginPlot("Frame Time", ImVec2(plot_width, plot_height), ImPlotFlags_NoLegend))
 	{
 		ImPlot::SetupAxes("Realtime (s)", "Frametime (ms)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
-		ImPlot::SetupAxesLimits(-5.f, 0.f, plot_min, plot_max, ImPlotCond_Once);
+		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
 		const auto ft_data = m_frame_times.linearize();
 		ImPlot::PlotLine("Frame Time", m_x_axe_values.data(), ft_data.data(), static_cast<int>(m_frame_times.size()), ImPlotLineFlags_Shaded);
@@ -155,7 +162,7 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 
 void DebugLayer::RenderCPUSection(DeltaTime dt)
 {
-	ImGui::BeginChild("CPU", ImVec2(540, 440), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("CPU", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("CPU", ImGuiTreeNodeFlags_Bullet);
 
 	static float time_accum = 0.f;
@@ -172,7 +179,7 @@ void DebugLayer::RenderCPUSection(DeltaTime dt)
 	time_accum += dt.GetMilliseconds();
 	frame_count++;
 
-	if (time_accum >= 0.025f * MilliMult)
+	if (time_accum >= NumberOfSecondsTracked / GraphSize * MilliMult)
 	{
 		accum_app_load = app_load / frame_count;
 		accum_total_load = total_load / frame_count;
@@ -201,7 +208,7 @@ void DebugLayer::RenderCPUSection(DeltaTime dt)
 	if (ImPlot::BeginPlot("CPU Load", ImVec2(plot_width, plot_height), ImPlotFlags_None))
 	{
 		ImPlot::SetupAxes("Realtime (s)", "CPU (%)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
-		ImPlot::SetupAxesLimits(-5.f, 0.f, plot_min, plot_max, ImPlotCond_Once);
+		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
 		const auto app_data = m_cpu_app_load.linearize();
 		const auto total_data = m_cpu_total_load.linearize();
@@ -216,7 +223,7 @@ void DebugLayer::RenderCPUSection(DeltaTime dt)
 
 void DebugLayer::RenderRAMSection(DeltaTime dt)
 {
-	ImGui::BeginChild("RAM", ImVec2(540, 440), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("RAM", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("RAM", ImGuiTreeNodeFlags_Bullet);
 
 	static float time_accum = 0.f;
@@ -233,7 +240,7 @@ void DebugLayer::RenderRAMSection(DeltaTime dt)
 	time_accum += dt.GetMilliseconds();
 	frame_count++;
 
-	if (time_accum >= 0.025f * MilliMult)
+	if (time_accum >= NumberOfSecondsTracked / GraphSize * MilliMult)
 	{
 		accum_app_load = app_load / frame_count;
 		accum_total_load = total_load / frame_count;
@@ -262,7 +269,7 @@ void DebugLayer::RenderRAMSection(DeltaTime dt)
 	if (ImPlot::BeginPlot("RAM Load", ImVec2(plot_width, plot_height), ImPlotFlags_None))
 	{
 		ImPlot::SetupAxes("Realtime (s)", "RAM (GB)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
-		ImPlot::SetupAxesLimits(-5.f, 0.f, plot_min, plot_max, ImPlotCond_Once);
+		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
 		const auto app_data = m_ram_app_load.linearize();
 		const auto total_data = m_ram_total_load.linearize();
@@ -271,6 +278,50 @@ void DebugLayer::RenderRAMSection(DeltaTime dt)
 
 		ImPlot::EndPlot();
 	}
+
+	ImGui::EndChild();
+}
+
+void DebugLayer::RenderWorldSection()
+{
+	ImGui::BeginChild("World", SectionDefaultSize, ImGuiChildFlags_Borders);
+	ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_Bullet);
+
+	const auto scene = Application::GetInstance()->GetMainScene();
+	const auto& scene_name = scene->GetSceneName();
+	ImGui::Text("Scene name: %s", scene_name.c_str());
+
+	const auto camera = scene->GetCamera();
+	glm::vec3 pos = camera->GetPosition();
+	glm::vec3 dir = camera->GetDirection();
+	glm::vec3 up = camera->GetUp();
+	glm::vec3 right = glm::cross(dir, up);
+
+	ImGui::Text("Camera pos (x,y,z):  { %.2f; %.2f; %.2f; }", pos.x, pos.y, pos.z);
+	ImGui::Text("Camera dir (x,y,z):  { %.2f; %.2f; %.2f; }", dir.x, dir.y, dir.z);
+
+	if (ImPlot::BeginPlot("Camera Vectors", "X", "Y", ImVec2(300, 300)))
+	{
+		double origin[2] = { 0.f, 0.f };
+
+		double dir_vec[2] = { dir.x, dir.y };
+		double up_vec[2] = { up.x, up.y };
+		double right_vec[2] = { right.x, right.y };
+
+		ImPlot::PlotLine("Forward", origin, dir_vec, 2);
+		ImPlot::PlotLine("Up", origin, up_vec, 2);
+		ImPlot::PlotLine("Right", origin, right_vec, 2);
+
+		ImPlot::EndPlot();
+	}
+
+	ImGui::EndChild();
+}
+
+void DebugLayer::RenderGPUSection(DeltaTime dt)
+{
+	ImGui::BeginChild("GPU", SectionDefaultSize, ImGuiChildFlags_Borders);
+	ImGui::CollapsingHeader("GPU", ImGuiTreeNodeFlags_Bullet);
 
 	ImGui::EndChild();
 }

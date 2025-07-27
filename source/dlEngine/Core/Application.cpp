@@ -109,6 +109,13 @@ void Application::PushOverlay(std::unique_ptr<Layer>&& overlay)
 	m_layer_stack.PushOverlay(std::move(overlay));
 }
 
+Scene* Application::GetMainScene()
+{
+	auto layer = m_layer_stack.GetMainLayer();
+
+	return layer ? layer->GetScene() : nullptr;
+}
+
 bool Application::OnWindowClosed(WindowCloseEvent& event)
 {
 	m_running = false;

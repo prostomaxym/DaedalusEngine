@@ -14,6 +14,17 @@ LayerStack::~LayerStack()
 	}
 }
 
+Layer* LayerStack::GetMainLayer()
+{
+	const auto it = std::find_if(m_layers.begin(), m_layers.end(),
+		[](const auto& lay)
+		{
+			return lay->IsMain();
+		});
+
+	return it != m_layers.end() ? it->get() : nullptr;
+}
+
 void LayerStack::PushLayer(std::unique_ptr<Layer>&& layer)
 {
 	layer->OnAttach();

@@ -32,6 +32,8 @@ namespace Daedalus {
 		void PushLayer(std::unique_ptr<Layer>&& layer);
 		void PushOverlay(std::unique_ptr<Layer>&& overlay);
 
+		Scene* GetMainScene(); //Use it only for debugging
+
 	protected:
 		Application();
 

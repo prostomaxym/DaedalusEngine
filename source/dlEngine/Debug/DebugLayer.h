@@ -19,11 +19,14 @@ namespace Daedalus
 	private:
 		static const int GraphSize = 500;
 		static const int LastSecondIdx = GraphSize * 4 / 5;
+		static inline float NumberOfSecondsTracked = 10.f;
 
 		void RenderGeneralPage(DeltaTime dt);
 		void RenderFPSSection(DeltaTime dt);
 		void RenderCPUSection(DeltaTime dt);
 		void RenderRAMSection(DeltaTime dt);
+		void RenderWorldSection();
+		void RenderGPUSection(DeltaTime dt);
 
 		float CalculateLowPercentile(float percentile) const;
 

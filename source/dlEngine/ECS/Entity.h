@@ -18,6 +18,8 @@ namespace Daedalus
 		Entity(entt::entity handle, Scene* scene);
 		Entity(const Entity& other) = default;
 
+		bool IsValid() const { return m_entity_handle != entt::null; }
+
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{

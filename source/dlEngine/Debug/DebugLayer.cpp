@@ -5,10 +5,8 @@
 
 #include "Platform/ResourcesMonitor.h"
 
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_glfw.h>
-#include <ImGuizmo.h>
 #include <implot.h>
+#include <implot3d.h>
 
 using namespace Daedalus;
 
@@ -33,6 +31,15 @@ namespace
 			return sum / v.size();
 		else
 			return 0.f;
+	}
+
+	glm::vec3 RotateAxisFromGLtoPlot(const glm::vec3& vec)
+	{
+		auto copy = vec;
+		copy.y = -vec.z;
+		copy.z = vec.y;
+
+		return copy;
 	}
 }
 
@@ -294,25 +301,75 @@ void DebugLayer::RenderWorldSection()
 	const auto camera = scene->GetCamera();
 	glm::vec3 pos = camera->GetPosition();
 	glm::vec3 dir = camera->GetDirection();
-	glm::vec3 up = camera->GetUp();
-	glm::vec3 right = glm::cross(dir, up);
 
 	ImGui::Text("Camera pos (x,y,z):  { %.2f; %.2f; %.2f; }", pos.x, pos.y, pos.z);
 	ImGui::Text("Camera dir (x,y,z):  { %.2f; %.2f; %.2f; }", dir.x, dir.y, dir.z);
 
-	if (ImPlot::BeginPlot("Camera Vectors", "X", "Y", ImVec2(300, 300)))
+	ImPlot3DFlags flags = ImPlot3DFlags_CanvasOnly |
+		ImPlot3DFlags_NoTitle |
+		ImPlot3DFlags_NoClip;
+
+	if (ImPlot3D::BeginPlot("##WorldAxes", ImVec2(300, 300), flags))
 	{
-		double origin[2] = { 0.f, 0.f };
+		glm::vec3 cam_dir = glm::normalize(dir);
+		glm::vec3 cam_up = glm::normalize(camera->GetUp());
+		glm::vec3 cam_right = glm::normalize(glm::cross(cam_dir, cam_up));
 
-		double dir_vec[2] = { dir.x, dir.y };
-		double up_vec[2] = { up.x, up.y };
-		double right_vec[2] = { right.x, right.y };
+		glm::mat3 cam_rotation = glm::mat3(
+			cam_right,
+			cam_up,
+			cam_dir
+		);
 
-		ImPlot::PlotLine("Forward", origin, dir_vec, 2);
-		ImPlot::PlotLine("Up", origin, up_vec, 2);
-		ImPlot::PlotLine("Right", origin, right_vec, 2);
+		glm::vec3 x_axis = cam_rotation * glm::vec3(1.f, 0, 0);
+		glm::vec3 y_axis = cam_rotation * glm::vec3(0, 1.f, 0);
+		glm::vec3 z_axis = cam_rotation * glm::vec3(0, 0, 1.f);
 
-		ImPlot::EndPlot();
+		pos = RotateAxisFromGLtoPlot(pos);
+		x_axis = RotateAxisFromGLtoPlot(x_axis);
+		y_axis = RotateAxisFromGLtoPlot(y_axis);
+		z_axis = RotateAxisFromGLtoPlot(z_axis);
+
+		ImPlot3D::SetupAxesLimits(pos.x - 1.f, pos.x + 1.f, pos.y - 1.f, pos.y + 1.f, pos.z - 1.f, pos.z + 1.f, ImPlot3DCond_Always);
+		ImPlot3D::SetupAxes("X", "Y", "Z"
+			, ImPlot3DAxisFlags_NoDecorations
+			, ImPlot3DAxisFlags_NoDecorations | ImPlot3DAxisFlags_Invert
+			, ImPlot3DAxisFlags_NoDecorations);
+
+		ImPlot3D::SetupBoxRotation(0.f, 0.f, false, ImPlot3DCond_Always);
+		ImPlot3D::SetupBoxScale(1.5f, 1.5f, 1.5f);
+
+		// X axis
+		{
+			float x[2] = { pos.x, pos.x + x_axis.x };
+			float y[2] = { pos.y, pos.y + x_axis.y };
+			float z[2] = { pos.z, pos.z + x_axis.z };
+			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(1, 0, 0, 1));
+			ImPlot3D::PlotLine("X", x, y, z, 2);
+			ImPlot3D::PopStyleColor();
+		}
+
+		// Y axis
+		{
+			float x[2] = { pos.x, pos.x + y_axis.x };
+			float y[2] = { pos.y, pos.y + y_axis.y };
+			float z[2] = { pos.z, pos.z + y_axis.z };
+			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(0, 1, 0, 1));
+			ImPlot3D::PlotLine("Y", x, y, z, 2);
+			ImPlot3D::PopStyleColor();
+		}
+
+		// Z axis
+		{
+			float x[2] = { pos.x, pos.x + z_axis.x };
+			float y[2] = { pos.y, pos.y + z_axis.y };
+			float z[2] = { pos.z, pos.z + z_axis.z };
+			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(0, 0.5f, 1, 1));
+			ImPlot3D::PlotLine("Z", x, y, z, 2);
+			ImPlot3D::PopStyleColor();
+		}
+
+		ImPlot3D::EndPlot();
 	}
 
 	ImGui::EndChild();

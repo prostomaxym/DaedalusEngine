@@ -5,6 +5,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
+find_package(implot3d CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
@@ -51,4 +52,5 @@ target_link_libraries(${PROJECT_NAME}
         imgui::imgui
         imguizmo::imguizmo
         implot::implot
+        implot3d::implot3d 
     )

@@ -7,6 +7,7 @@
 #include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
 #include <implot.h>
+#include <implot3d.h>
 
 #include "Core/Application.h"
 #include "Macros.h"
@@ -26,6 +27,7 @@ void ImGuiLayer::OnAttach()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImPlot::CreateContext();
+	ImPlot3D::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -68,6 +70,7 @@ void ImGuiLayer::OnDetach()
 	ImGui_ImplGlfw_Shutdown();
 	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
+	ImPlot3D::DestroyContext();
 
 	Log::Write(Log::Levels::Warn, Log::Categories::EngineCore, "ImGui Layer is detached;");
 }

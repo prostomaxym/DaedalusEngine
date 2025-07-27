@@ -31,11 +31,20 @@ namespace Daedalus
 		float CalculateLowPercentile(float percentile) const;
 
 		RingVector<float> m_frame_times{ GraphSize };
+
 		RingVector<float> m_cpu_app_load{ GraphSize };
 		RingVector<float> m_cpu_total_load{ GraphSize };
 		RingVector<float> m_ram_app_load{ GraphSize };
 		RingVector<float> m_ram_total_load{ GraphSize };
+
+		RingVector<float> m_gpu_utillization{ GraphSize };
+		RingVector<float> m_gpu_memory_utillization{ GraphSize };
+		RingVector<float> m_gpu_memory_used{ GraphSize };
+
 		std::vector<float> m_x_axe_values{ GraphSize };
-		float m_total_ram{ 0.f };
+		float m_total_ram_GB{ 0.f };
+		float m_total_gpu_ram_GB{ 0.f };
+		std::string m_processor_name;
+		std::string m_gpu_name;
 	};
 }

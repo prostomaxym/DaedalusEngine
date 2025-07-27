@@ -2,20 +2,18 @@
 
 #include "Linux/LinuxResourcesMonitor.h"
 #include "Windows/WindowsResourcesMonitor.h"
+#include "Nvidia/NvidiaGPUMonitor.h"
 
 using namespace Daedalus;
 
-namespace
+float Daedalus::ConvertBytesToMB(unsigned long long bytes)
 {
-	float ConvertBytesToMB(unsigned long long bytes)
-	{
-		return static_cast<float>(bytes / (1024ull * 1024ull));
-	}
+	return static_cast<float>(bytes / (1024ull * 1024ull));
+}
 
-	float ConvertBytesToGB(unsigned long long bytes)
-	{
-		return static_cast<float>(bytes / (1024ull * 1024ull)) / 1024.f;
-	}
+float Daedalus::ConvertBytesToGB(unsigned long long bytes)
+{
+	return static_cast<float>(bytes / (1024ull * 1024ull)) / 1024.f;
 }
 
 float ResourcesMonitor::GetAppCPUUsage()
@@ -105,4 +103,21 @@ float ResourcesMonitor::GetSystemRAMInGB()
 #else
 	static_assert(false, "Unsupported Platfrom")
 #endif
+}
+
+const std::string& Daedalus::ResourcesMonitor::GetProcessorName()
+{
+#ifdef DL_PLATFORM_WINDOWS
+	return WindowsResourcesMonitor::GetProcessorName();
+#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+	return ConvertBytesToGB(LinuxResourcesMonitor::GetProcessorName();
+#else
+	static_assert(false, "Unsupported Platfrom")
+#endif
+}
+
+const GpuInfo& ResourcesMonitor::GetGPUInfo()
+{
+	// As I have only Nvidia GPUs I do not bother to implement for Intel and AMD, sorry..
+	return NvidiaGPUMonitor::GetInfo();
 }

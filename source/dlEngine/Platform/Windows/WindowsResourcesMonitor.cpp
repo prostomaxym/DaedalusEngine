@@ -73,6 +73,8 @@ namespace
 			return last_load_total;
 		}
 
+		const std::string& GetProcessorName() const { return processor_name; }
+
 	private:
 		void InitAppInfo()
 		{
@@ -93,6 +95,25 @@ namespace
 
 		void InitTotalInfo()
 		{
+
+			HKEY hKey;
+			const char* subkey = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+			char value[256];
+			DWORD size = sizeof(value);
+
+			if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, subkey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+				processor_name = "Unknown CPU";
+
+			if (RegQueryValueExA(hKey, "ProcessorNameString", nullptr, nullptr, reinterpret_cast<LPBYTE>(value), &size) != ERROR_SUCCESS)
+			{
+				RegCloseKey(hKey);
+				processor_name = "Unknown CPU";
+			}
+
+			processor_name = value;
+
+			RegCloseKey(hKey);
+
 			PdhOpenQuery(NULL, NULL, &cpuQuery);
 			// You can also use L"\\Processor(*)\\% Processor Time" and get individual CPU values with PdhGetFormattedCounterArray()
 			PdhAddEnglishCounter(cpuQuery, "\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal);
@@ -102,6 +123,7 @@ namespace
 		ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
 		int numProcessors{ 0 };
 		HANDLE self{ nullptr };
+		std::string processor_name;
 
 		PDH_HQUERY cpuQuery{ nullptr };
 		PDH_HCOUNTER cpuTotal{ nullptr };
@@ -176,5 +198,9 @@ unsigned long long WindowsResourcesMonitor::GetTotalRAMUsageInBytes()
 unsigned long long WindowsResourcesMonitor::GetSystemRAMInBytes()
 {
 	return RAMUsageMonitor::GetSystemRAMInBytes();
+}
+const std::string& WindowsResourcesMonitor::GetProcessorName()
+{
+	return cpu_monitor.GetProcessorName();
 }
 #endif

@@ -11,6 +11,8 @@ namespace Daedalus
 		static unsigned long long GetAppRAMUsageInBytes();
 		static unsigned long long GetTotalRAMUsageInBytes();
 		static unsigned long long GetSystemRAMInBytes();
+
+		static const std::string& GetProcessorName();
 	};
 }
 #endif

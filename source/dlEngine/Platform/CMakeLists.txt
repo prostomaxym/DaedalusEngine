@@ -50,13 +50,16 @@ set(PLATFORM_PROJECT_FILES
     Windows/WindowsWindow.h
     Windows/WindowsWindow.cpp
     Windows/WindowsResourcesMonitor.h
-     Windows/WindowsResourcesMonitor.cpp
+    Windows/WindowsResourcesMonitor.cpp
 
     Linux/LinuxInput.h
     Linux/LinuxWindow.h
     Linux/LinuxWindow.cpp
     Linux/LinuxResourcesMonitor.h
     Linux/LinuxResourcesMonitor.cpp
+
+    Nvidia/NvidiaGPUMonitor.h
+    Nvidia/NvidiaGPUMonitor.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${PLATFORM_PROJECT_FILES})

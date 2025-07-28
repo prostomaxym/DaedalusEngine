@@ -28,6 +28,14 @@ namespace Daedalus {
 	class DAEDALUS_API Renderer
 	{
 	public:
+		struct DebugInfo
+		{
+			ShadowPass::PassOut shadow;
+			DeferredGeometryPass::PassOut geom;
+			SSAOPass::PassOut ssao;
+		};
+
+	public:
 		static void Init();
 		static void Shutdown();
 
@@ -36,6 +44,8 @@ namespace Daedalus {
 		static ShaderLibrary* GetShaderLibrary() { return s_data->shader_library.get(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
+		static std::pair<int, int> GetResolution() { return { s_data->window_width, s_data->window_height }; }
+		static float GetAspectRatio() { return static_cast<float>(s_data->window_width) / static_cast<float>(s_data->window_height); }
 
 		static void BeginFrame(const Camera* camera,std::optional<int> number_of_objects = std::nullopt);
 		static void FlushPipeline();
@@ -49,6 +59,8 @@ namespace Daedalus {
 		static void SetLights(const std::vector<LightSource*>& lights);
 		static void AddLight(LightSource* light);
 		static void RemoveLight(LightSource* light);
+
+		static const DebugInfo* GetDebugInfo() { return s_debug.get(); }
 
 	private:
 		static void UpdateLightShaderData();
@@ -80,6 +92,7 @@ namespace Daedalus {
 			int window_height{ 0 };
 		};
 
+		static std::unique_ptr<DebugInfo> s_debug;
 		static std::unique_ptr<Data> s_data;
 	};
 }

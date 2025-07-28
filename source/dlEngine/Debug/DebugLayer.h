@@ -28,6 +28,9 @@ namespace Daedalus
 		void RenderWorldSection();
 		void RenderGPUSection(DeltaTime dt);
 
+		void RenderRenderingPage();
+		void RenderTexture(std::string_view name, uint32_t texture_id);
+
 		float CalculateLowPercentile(float percentile) const;
 
 		RingVector<float> m_frame_times{ GraphSize };

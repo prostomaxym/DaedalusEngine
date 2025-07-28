@@ -11,6 +11,7 @@
 using namespace Daedalus;
 
 std::unique_ptr<Renderer::Data> Renderer::s_data = nullptr;
+std::unique_ptr<Renderer::DebugInfo> Renderer::s_debug = nullptr;
 
 namespace
 {
@@ -87,6 +88,8 @@ void Renderer::Init()
 
 	s_data->geometry_pass.CreateGBuffer(s_data->window_width, s_data->window_height);
 	s_data->ssao_pass.CreateSSAOBuffers(s_data->window_width, s_data->window_height);
+
+	s_debug = std::make_unique<DebugInfo>();
 }
 
 void Renderer::Shutdown()
@@ -137,15 +140,15 @@ void Renderer::FlushPipeline()
 {
 	UpdateLightShaderData();
 
-	const auto shadow_output = s_data->shadow_pass.Render(ShadowPass::PassIn(s_data->frame_models));
+	s_debug->shadow = s_data->shadow_pass.Render(ShadowPass::PassIn(s_data->frame_models));
 
-	const auto geometry_output = s_data->geometry_pass.Render(DeferredGeometryPass::PassIn(s_data->frame_models, s_data->view_frustum, s_data->window_width, s_data->window_height));
-	DeferredLightPass::PassIn geom_out(geometry_output, shadow_output.shadow_map_id, s_data->window_width, s_data->window_height);
+	s_debug->geom = s_data->geometry_pass.Render(DeferredGeometryPass::PassIn(s_data->frame_models, s_data->view_frustum, s_data->window_width, s_data->window_height));
+	DeferredLightPass::PassIn geom_out(s_debug->geom, s_debug->shadow.shadow_map_id, s_data->window_width, s_data->window_height);
 
 	if (GraphicsConfig::IsSSBOEnabled())
 	{
-		const auto ssao_output = s_data->ssao_pass.Render(SSAOPass::PassIn(geometry_output.pos_texture, geometry_output.norm_texture, s_data->scene_proj, s_data->scene_view));
-		geom_out.ssao_texture = ssao_output.ssao_texture;
+		s_debug->ssao = s_data->ssao_pass.Render(SSAOPass::PassIn(s_debug->geom.pos_texture, s_debug->geom.norm_texture, s_data->scene_proj, s_data->scene_view));
+		geom_out.ssao_texture = s_debug->ssao.ssao_texture;
 	}
 
 	s_data->light_pass.Render(geom_out);

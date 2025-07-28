@@ -3,6 +3,7 @@
 #include "DebugLayer.h"
 #include "Core/Application.h"
 
+#include "Renderer/API/Renderer.h"
 #include "Platform/ResourcesMonitor.h"
 
 #include <implot.h>
@@ -49,12 +50,7 @@ void DebugLayer::Update(DeltaTime dt)
 	if (ImGui::BeginTabBar("Debug Overlay", ImGuiTabBarFlags_None))
 	{
 		RenderGeneralPage(dt);
-
-		if (ImGui::BeginTabItem("Tab 2"))
-		{
-			ImGui::Text("This is Tab 2");
-			ImGui::EndTabItem();
-		}
+		RenderRenderingPage();
 
 		if (ImGui::BeginTabItem("Tab 3"))
 		{
@@ -459,6 +455,46 @@ void DebugLayer::RenderGPUSection(DeltaTime dt)
 
 		ImPlot::EndPlot();
 	}
+	ImGui::EndChild();
+}
+
+void DebugLayer::RenderRenderingPage()
+{
+	if (ImGui::BeginTabItem("Rendering"))
+	{
+		const auto info = Renderer::GetDebugInfo();
+	
+		RenderTexture("Position", info->geom.pos_texture);
+		ImGui::SameLine();
+		RenderTexture("Normal", info->geom.norm_texture);
+		ImGui::SameLine();
+		RenderTexture("Albedo", info->geom.albedo_texture);
+		ImGui::SameLine();
+		RenderTexture("Ambient", info->geom.ambient_texture);
+
+		RenderTexture("Specular", info->geom.spec_texture);
+		ImGui::SameLine();
+		RenderTexture("Shininess", info->geom.shininess_texture);
+		ImGui::SameLine();
+		RenderTexture("SSAO", info->ssao.ssao_texture);
+		ImGui::SameLine();
+		RenderTexture("Shadow", info->shadow.shadow_map_id);
+		ImGui::SameLine();
+
+		ImGui::EndTabItem();
+	}
+}
+
+void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id)
+{
+	ImGui::BeginChild(name.data(), SectionDefaultSize, ImGuiChildFlags_Borders);
+	ImGui::CollapsingHeader(name.data(), ImGuiTreeNodeFlags_Bullet);
+
+	const auto aspect = Renderer::GetAspectRatio();
+	const auto tex_size = SectionDefaultSize.x - 20.f;
+	const ImVec2 size = ImVec2(tex_size, tex_size / aspect);
+	ImGui::Image((ImTextureID)(intptr_t)texture_id, size, ImVec2(0, 1), ImVec2(1, 0));
+
 	ImGui::EndChild();
 }
 

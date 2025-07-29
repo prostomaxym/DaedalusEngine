@@ -4,12 +4,13 @@
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Config/GraphicsConfig.h"
+#include "Core/ResourceManager.h"
 
 using namespace Daedalus;
 
 DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) const
 {
-	const auto gbuffer_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredGShader);
+	const auto gbuffer_shader = ResourceManager::GetShader(ShaderConstants::DeferredGShader);
 
 	m_gbuffer->Bind();
 	RenderCommand::SetViewport(0, 0, data.viewport_width, data.viewport_height);
@@ -31,12 +32,12 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 
 			const auto& material = materials[mesh->GetMaterialIndex()];
 
-			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKAmbient, material.GetAmbientK());
-			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material.GetDiffuseK());
-			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKSpecular, material.GetSpecularK());
-			gbuffer_shader->SetFloat(ShaderConstants::MaterialShininess, material.GetShininess());
+			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKAmbient, material->GetAmbientK());
+			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKDiffuse, material->GetDiffuseK());
+			gbuffer_shader->SetFloat3(ShaderConstants::MaterialKSpecular, material->GetSpecularK());
+			gbuffer_shader->SetFloat(ShaderConstants::MaterialShininess, material->GetShininess());
 
-			if (const auto& diffuse_map = material.GetDiffuseMap(); diffuse_map)
+			if (const auto& diffuse_map = material->GetDiffuseMap(); diffuse_map)
 			{
 				diffuse_map->Bind(0);
 				gbuffer_shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 1);
@@ -48,7 +49,7 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 				gbuffer_shader->SetInt(ShaderConstants::ConfigDiffuseMapUsed, 0);
 			}
 
-			if (const auto& specular_map = material.GetSpecularMap(); specular_map)
+			if (const auto& specular_map = material->GetSpecularMap(); specular_map)
 			{
 				specular_map->Bind(1);
 				gbuffer_shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 1);
@@ -60,7 +61,7 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 				gbuffer_shader->SetInt(ShaderConstants::ConfigSpecularMapUsed, 0);
 			}
 
-			if (const auto& normal_map = material.GetNormalMap(); normal_map)
+			if (const auto& normal_map = material->GetNormalMap(); normal_map)
 			{
 				normal_map->Bind(2);
 				gbuffer_shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 1);
@@ -72,7 +73,7 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 				gbuffer_shader->SetInt(ShaderConstants::ConfigNormalMapUsed, 0);
 			}
 
-			if (const auto& height_map = material.GetHeightMap(); height_map)
+			if (const auto& height_map = material->GetHeightMap(); height_map)
 			{
 				height_map->Bind(3);
 				gbuffer_shader->SetInt(ShaderConstants::ConfigHeightMapUsed, 1);

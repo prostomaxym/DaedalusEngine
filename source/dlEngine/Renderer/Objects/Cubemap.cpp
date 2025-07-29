@@ -2,6 +2,8 @@
 
 #include "Cubemap.h"
 
+#include "Core/ResourceManager.h"
+
 using namespace Daedalus;
 
 namespace
@@ -54,7 +56,7 @@ namespace
 Cubemap::Cubemap(const std::vector<std::string>& faces)
 {
 	m_index_count = skybox_vertices.size();
-	m_texture = TextureCubemap::Create(faces);
+	m_texture = ResourceManager::LoadCubemap(faces);
 
 	m_VAO = VertexArray::Create();
 	m_VAO->Bind();

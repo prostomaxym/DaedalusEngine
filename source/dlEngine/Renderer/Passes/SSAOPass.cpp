@@ -2,6 +2,7 @@
 
 #include "SSAOPass.h"
 
+#include "Core/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Renderer/API/Renderer.h"
@@ -15,7 +16,7 @@ SSAOPass::PassOut SSAOPass::Render(const PassIn& data) const
 	ssao_buffer->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer);
 
-	const auto ssao_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::SSAOShader);
+	const auto ssao_shader = ResourceManager::GetShader(ShaderConstants::SSAOShader);
 	ssao_shader->Bind();
 	Texture2D::BindTexture(data.position_texture, 0);
 	Texture2D::BindTexture(data.normal_texture, 1);
@@ -35,7 +36,7 @@ SSAOPass::PassOut SSAOPass::Render(const PassIn& data) const
 	blur_buffer->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer);
 
-	const auto blue_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::BlurShader);
+	const auto blue_shader = ResourceManager::GetShader(ShaderConstants::BlurShader);
 	blue_shader->Bind();
 	Texture2D::BindTexture(m_ssao->GetSSAOFramebuffer()->GetColorAttachmentRendererID(0), 0);
 	blue_shader->SetInt(ShaderConstants::SSAOBlurBufferNoise, 0);

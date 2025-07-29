@@ -1,4 +1,6 @@
 #include "dlpch.h"
+
+#include "Core/ResourceManager.h"
 #include "Model.h"
 #include "Texture.h"
 #include "Threads/DaedalusThreads.h"
@@ -105,7 +107,7 @@ const std::vector<std::shared_ptr<Mesh>>& Model::GetMeshes() const
 	return m_meshes;
 }
 
-const std::vector<Material>& Daedalus::Model::GetMaterials() const
+const std::vector<std::shared_ptr<Material>>& Daedalus::Model::GetMaterials() const
 {
 	return m_material_data;
 }
@@ -125,7 +127,7 @@ bool Model::IsVisible(const Frustum& frust, const glm::mat4& transform) const
 	return frust.SphereInFrustum(m_bounding_sphere, transform);
 }
 
-bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<Material>& material_data, ModelParserFlags parser_flags)
+bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector<std::shared_ptr<Mesh>>& meshes, std::vector<std::shared_ptr<Material>>& material_data, ModelParserFlags parser_flags)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(file_name.string(), static_cast<unsigned int>(parser_flags));
@@ -142,7 +144,7 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 	return true;
 }
 
-void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>& material_data, const std::filesystem::path& file_name)
+void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::shared_ptr<Material>>& material_data, const std::filesystem::path& file_name)
 {
 	// We cannot create for OpenGL textures in parallel. So at least we can read files threaded
 	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
@@ -164,7 +166,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 			material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
 			material->Get(AI_MATKEY_SHININESS, shininess);
 
-			material_data[i] = Material(name.C_Str()
+			material_data[i] = ResourceManager::LoadMaterial(name.C_Str()
 				, glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b)
 				, glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b)
 				, glm::vec3(specularColor.r, specularColor.g, specularColor.b)
@@ -195,7 +197,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 		}
 		else
 		{
-			material_data[i] = Material();
+			material_data[i] = ResourceManager::LoadMaterial();
 		}
 	}
 
@@ -210,19 +212,19 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<Material>&
 		switch (tex_type)
 		{
 		case aiTextureType_DIFFUSE:
-			material_data[material_index].SetDiffuseMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetDiffuseMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_SPECULAR:
-			material_data[material_index].SetSpecularMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetSpecularMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_NORMALS:
-			material_data[material_index].SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_HEIGHT:
-			material_data[material_index].SetHeightMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetHeightMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		default:
@@ -243,8 +245,9 @@ void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* sce
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		
 		ProcessMesh(&nodeTransformation, mesh, scene, vertices, indices);
-		meshes.push_back(std::make_unique<Mesh>(vertices, indices, mesh->mMaterialIndex));
+		meshes.push_back(ResourceManager::LoadMesh(mesh->mName.C_Str(), vertices, indices, mesh->mMaterialIndex));
 	}
 
 	// Then do the same for each of its children

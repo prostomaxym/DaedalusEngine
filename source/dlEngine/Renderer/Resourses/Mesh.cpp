@@ -5,7 +5,8 @@
 
 using namespace Daedalus;
 
-Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t material_index) :
+Mesh::Mesh(std::string_view name, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t material_index) :
+	m_name(name),
 	m_vertex_count(static_cast<uint32_t>(vertices.size())),
 	m_indices_count(static_cast<uint32_t>(indices.size())),
 	m_material_index(material_index)

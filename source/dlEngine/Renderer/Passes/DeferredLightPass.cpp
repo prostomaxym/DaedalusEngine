@@ -4,6 +4,7 @@
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Config/GraphicsConfig.h"
+#include "Core/ResourceManager.h"
 
 using namespace Daedalus;
 
@@ -11,7 +12,7 @@ void DeferredLightPass::Render(const PassIn& data) const
 {
 	RenderCommand::SetViewport(0, 0, data.width, data.height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
-	const auto light_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::DeferredLightShader);
+	const auto light_shader = ResourceManager::GetShader(ShaderConstants::DeferredLightShader);
 	light_shader->Bind();
 
 	Texture2D::BindTexture(data.pos_texture, 0);

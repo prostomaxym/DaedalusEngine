@@ -9,6 +9,7 @@ namespace Daedalus {
 
 	class DAEDALUS_API Shader
 	{
+		friend class ShaderLibrary;
 	public:
 		struct ShaderBinaryData
 		{
@@ -17,9 +18,6 @@ namespace Daedalus {
 			std::vector<unsigned char> binary;
 		};
 	public:
-		static std::shared_ptr<Shader> CreateFromCode(const std::string& code);
-		static std::shared_ptr<Shader> CreateFromFile(const std::filesystem::path& file_path);
-		static std::shared_ptr<Shader> CreateFromBinary(const std::filesystem::path& binary_path);
 
 		static std::string GetSourceFileExtention();
 		static std::string GetBinaryFileExtention();
@@ -44,5 +42,10 @@ namespace Daedalus {
 		virtual void SetMat4(const std::string& name, const glm::mat4& value) const = 0;
 
 		virtual void DispatchCompute(uint32_t w, uint32_t h, int local_size) const = 0;
+
+	private:
+		static std::shared_ptr<Shader> CreateFromCode(const std::string& code);
+		static std::shared_ptr<Shader> CreateFromFile(const std::filesystem::path& file_path);
+		static std::shared_ptr<Shader> CreateFromBinary(const std::filesystem::path& binary_path);
 	};
 }

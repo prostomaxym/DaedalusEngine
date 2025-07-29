@@ -5,6 +5,7 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
+#include <filesystem>
 
 namespace Daedalus
 {
@@ -27,6 +28,10 @@ namespace Daedalus
 		void Show(bool show) { m_show = show; }
 		void Toggle() { m_show = !m_show; BlockEvents(!m_show); }
 		bool IsShown() { return m_show; }
+
+		static void LoadConfig();
+		static void SaveConfig();
+		void DoLoadConfig();
 
 	protected:
 		virtual void Update(DeltaTime dt) {};

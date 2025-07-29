@@ -9,12 +9,18 @@
 #include <implot.h>
 #include <implot3d.h>
 
-#include "Core/Application.h"
 #include "Macros.h"
+#include "Core/Application.h"
 #include "Events/EventDispatcher.h"
 #include "Utils/WorkingDirectory.h"
+#include "Config/PathConfig.h"
 
 using namespace Daedalus;
+
+namespace
+{
+	bool WantToLoadConfig = false;
+}
 
 ImGuiLayer::ImGuiLayer()
 	: Layer("ImGuiLayer")
@@ -34,6 +40,10 @@ void ImGuiLayer::OnAttach()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigWindowsMoveFromTitleBarOnly = true;
+	io.IniFilename = nullptr;
+
+	if (WantToLoadConfig)
+		DoLoadConfig();
 
 	float fontSize = 18.0f;// *2.0f;
 
@@ -145,4 +155,22 @@ void ImGuiLayer::SetDarkThemeColors()
 	colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 	colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 	colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
+}
+
+void ImGuiLayer::LoadConfig()
+{
+	WantToLoadConfig = true; // Postpone loading until contex is created
+}
+
+void ImGuiLayer::SaveConfig()
+{
+	auto ini_path = WorkingDirectory::GetRootDirectory() / PathConfig::GetConfigPath() / "imgui.ini";
+	ImGui::SaveIniSettingsToDisk(ini_path.string().c_str());
+}
+
+void ImGuiLayer::DoLoadConfig()
+{
+	auto ini_path = PathConfig::GetConfigPath() / "imgui.ini";
+	if (std::filesystem::exists(ini_path))
+		ImGui::LoadIniSettingsFromDisk(ini_path.string().c_str());
 }

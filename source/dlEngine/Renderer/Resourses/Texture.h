@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 namespace Daedalus {
 
@@ -29,7 +30,7 @@ namespace Daedalus {
 		virtual uint32_t GetHeight() const { return 0; };
 		virtual uint32_t GetRendererID() const = 0;
 
-		virtual const std::string& GetPath() const;
+		virtual const std::filesystem::path& GetPath() const;
 
 		virtual void SetData(void* data, uint32_t size) {};
 
@@ -40,13 +41,17 @@ namespace Daedalus {
 		virtual bool operator==(const Texture& other) const = 0;
 	};
 
+	class ResourceManager;
+
 	class Texture2D : public Texture
 	{
-	public:
+		friend class ResourceManager;
+
 		static std::shared_ptr<Texture2D> Create(uint32_t width, uint32_t height, int channels = 4);
-		static std::shared_ptr<Texture2D> Create(const std::string& path);
+		static std::shared_ptr<Texture2D> Create(const std::filesystem::path& path);
 		static std::shared_ptr<Texture2D> Create(unsigned char* data, int width, int height, int channels);
 		static std::shared_ptr<Texture2D> Create(float* data, int width, int height, int channels);
+	public:
 
 		static void BindTexture(uint32_t ID, uint32_t slot);
 		static void BindTextureImage(uint32_t ID, uint32_t slot, ColorFormat format, bool read, bool write);
@@ -54,8 +59,7 @@ namespace Daedalus {
 
 	class TextureCubemap : public Texture
 	{
-	public:
+		friend class ResourceManager;
 		static std::shared_ptr<TextureCubemap> Create(const std::vector<std::string>& faces);
 	};
-
 }

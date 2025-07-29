@@ -6,8 +6,8 @@
 #include <set>
 #include <vector>
 
-namespace Daedalus {
-
+namespace Daedalus
+{
 	class DAEDALUS_API ShaderLibrary final
 	{
 	public:
@@ -30,5 +30,4 @@ namespace Daedalus {
 
 		std::unordered_map<std::string, std::shared_ptr<Shader>> m_shaders;
 	};
-
 }

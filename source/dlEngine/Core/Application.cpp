@@ -2,6 +2,7 @@
 #include "Application.h"
 
 #include "Macros.h"
+#include "ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
 #include "Debug/DebugLayer.h"
@@ -44,7 +45,8 @@ Application::Application()
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
-	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
+	ResourceManager::Init();
+	ResourceManager::LoadShaders(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
 
 	m_debug_layer = new DebugLayer();
 	PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
@@ -55,6 +57,7 @@ Application::~Application()
 	WorkingDirectory::SaveConfigs();
 	Input::Shutdown();
 	Renderer::Shutdown();
+	ResourceManager::Shutdown();
 }
 
 void Application::Run()

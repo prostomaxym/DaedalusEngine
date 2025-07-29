@@ -4,6 +4,7 @@
 #include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
 #include "Debug/Log.h"
+#include "Debug/ImGuiLayer.h"
 
 using namespace Daedalus;
 
@@ -92,6 +93,7 @@ void WorkingDirectory::LoadConfigs()
 	PathConfig::Load(WorkingDirectory::GetRootDirectory() / path_config_file);
 	GraphicsConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
 	KeybindConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
+	ImGuiLayer::LoadConfig();
 }
 
 void WorkingDirectory::SaveConfigs()
@@ -99,4 +101,5 @@ void WorkingDirectory::SaveConfigs()
 	PathConfig::Save(WorkingDirectory::GetRootDirectory() / path_config_file);
 	GraphicsConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
 	KeybindConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
+	ImGuiLayer::SaveConfig();
 }

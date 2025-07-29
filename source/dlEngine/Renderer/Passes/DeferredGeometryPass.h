@@ -25,12 +25,12 @@ namespace Daedalus
 
 		struct PassOut
 		{
-			uint32_t pos_texture;
-			uint32_t norm_texture;
-			uint32_t ambient_texture;
-			uint32_t spec_texture;
-			uint32_t albedo_texture;
-			uint32_t shininess_texture;
+			uint32_t pos_texture{ 0 };
+			uint32_t norm_texture{ 0 };
+			uint32_t ambient_texture{ 0 };
+			uint32_t spec_texture{ 0 };
+			uint32_t albedo_texture{ 0 };
+			uint32_t shininess_texture{ 0 };
 		};
 
 	public:

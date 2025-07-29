@@ -20,6 +20,7 @@ set(PROJECT_FILES
     SSAO.glsl
     TextureArrayToGrayScale.glsl
     TextureToGrayScale.glsl
+    DepthToGrayScale.glsl
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})

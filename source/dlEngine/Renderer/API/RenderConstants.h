@@ -14,6 +14,9 @@ namespace Daedalus
 		constexpr auto BlurShader{ "Blur" };
 		constexpr auto CubemapShader{ "Cubemap" };
 		constexpr auto ShadowShader{ "ShadowPass" };
+		constexpr auto ArrayToGrayScaleShader{ "TextureArrayToGrayScale" };
+		constexpr auto TextureToGrayScaleShader{ "TextureToGrayScale" };
+		constexpr auto DepthToGrayScaleShader{ "DepthToGrayScale" };
 		
 		constexpr auto SceneModel{ "u_object.model_mat" };
 		constexpr auto ShadowModel{ "u_model" };
@@ -60,7 +63,7 @@ namespace Daedalus
 		constexpr auto ComputeArray{ "u_input_array" };
 		constexpr auto ComputeOutput{ "u_compute_image" };
 		constexpr auto LayerIndex{ "u_layer_index" };
-		constexpr auto ArrayToGrayScaleShader{ "TextureArrayToGrayScale" };
-		constexpr auto TextureToGrayScaleShader{ "TextureToGrayScale" };
+		constexpr auto Zfar{ "u_zfar" };
+		constexpr auto Znear{ "u_znear" };
 	}
 }

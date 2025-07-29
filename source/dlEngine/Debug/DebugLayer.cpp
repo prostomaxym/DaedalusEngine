@@ -152,7 +152,7 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 		frametime_01 = CalculateLowPercentile(0.001f);
 
 		const std::vector<float> last_sec_ft(m_frame_times.begin() + LastSecondIdx, m_frame_times.end());
-		const auto avg_ms = Average(last_sec_ft);
+		avg_ms = Average(last_sec_ft);
 		if (avg_ms > 0.f)
 		{
 			avg_fps = MilliMult / avg_ms;
@@ -440,8 +440,8 @@ void DebugLayer::RenderGPUSection(DeltaTime dt)
 
 		const auto gpu = m_gpu_utillization.linearize();
 		const auto memory = m_gpu_memory_utillization.linearize();
-		ImPlot::PlotLine("GPU", m_x_axe_values.data(), gpu.data(), static_cast<int>(m_gpu_utillization.size()), ImPlotLineFlags_Shaded);
-		ImPlot::PlotLine("Memory", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_utillization.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("GPU Load", m_x_axe_values.data(), gpu.data(), static_cast<int>(m_gpu_utillization.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("Memory Load", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_utillization.size()), ImPlotLineFlags_Shaded);
 
 		ImPlot::EndPlot();
 	}
@@ -456,7 +456,7 @@ void DebugLayer::RenderGPUSection(DeltaTime dt)
 	ImGui::Text("GPU Memory Utilization: %.2f %%", avg_gpu_memory_util);
 	ImGui::Text("Memory Load: %.2f/%.2f GB", avg_memory, m_total_gpu_ram_GB);
 
-	if (ImPlot::BeginPlot("GPU Memory", ImVec2(plot_width, plot_height), ImPlotFlags_None))
+	if (ImPlot::BeginPlot("Memory", ImVec2(plot_width, plot_height), ImPlotFlags_None))
 	{
 		ImPlot::SetupAxes("Realtime (s)", "Memory (GB)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
 		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, m_total_gpu_ram_GB, ImPlotCond_Once);
@@ -473,7 +473,7 @@ void DebugLayer::RenderRenderingPage()
 {
 	if (ImGui::BeginTabItem("Rendering"))
 	{
-		const auto info = Renderer::GetDebugInfo();
+		auto info = Renderer::GetDebugInfo();
 	
 		if (ImGui::BeginTabBar("Framebuffers", ImGuiTabBarFlags_None))
 		{
@@ -498,8 +498,24 @@ void DebugLayer::RenderRenderingPage()
 				RenderTexture("SSAO", info->greyscale_ssao->GetRendererID(), TextureSectionSize);
 				ImGui::SameLine();
 				RenderTexture("Shininess", info->greyscale_shininess->GetRendererID(), TextureSectionSize);
-						
+				
 				RenderTexture("Shadow", info->greyscale_shadow->GetRendererID(), QuadTextureSectionSize, false);
+
+				static int current_item = 0;
+				int number_of_maps = info->number_of_shadow_maps;
+				auto getter = [](void* data, int idx, const char** out_text)
+					{
+						//God forgive me for this c style piece of shit
+						static char buf[16];
+						snprintf(buf, sizeof(buf), "%d", idx);
+						*out_text = buf;
+						return true;
+					};
+
+				if (ImGui::Combo("Select Shadowmap", &current_item, getter, nullptr, number_of_maps, 4))
+				{
+					info->current_shadow_map = current_item;
+				}	
 
 				ImGui::EndTabItem();
 			}

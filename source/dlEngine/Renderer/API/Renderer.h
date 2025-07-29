@@ -34,6 +34,8 @@ namespace Daedalus {
 			DeferredGeometryPass::PassOut geom;
 			SSAOPass::PassOut ssao;
 			uint32_t depth_id{ 0 };
+			int number_of_shadow_maps{ 0 };
+			int current_shadow_map{ 0 };
 
 			std::shared_ptr<Texture2D> greyscale_depth{ nullptr };
 			std::shared_ptr<Texture2D> greyscale_shadow{ nullptr };
@@ -66,7 +68,7 @@ namespace Daedalus {
 		static void AddLight(LightSource* light);
 		static void RemoveLight(LightSource* light);
 
-		static const DebugInfo* GetDebugInfo() { return s_debug.get(); }
+		static DebugInfo* GetDebugInfo() { return s_debug.get(); }
 
 	private:
 		static void UpdateLightShaderData();
@@ -76,8 +78,9 @@ namespace Daedalus {
 
 		static void ComputeDebugInfo();
 
-		static void ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int );
+		static void ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h);
 		static void ComputeTextureArray(std::string_view shader, uint32_t id, uint32_t id_out, int w, int h, int layer);
+		static void ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h);
 
 		struct Data
 		{
@@ -88,6 +91,8 @@ namespace Daedalus {
 			Frustum view_frustum;
 			glm::mat4 scene_proj;
 			glm::mat4 scene_view;
+			float znear{ 0.f };
+			float zfar{ 0.f };
 
 			std::vector<LightSource*> lights;
 			std::vector<std::pair<const Model*, glm::mat4>> frame_models;

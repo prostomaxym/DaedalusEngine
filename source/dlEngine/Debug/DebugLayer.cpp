@@ -1,9 +1,11 @@
 #include "dlpch.h"
 
 #include "DebugLayer.h"
+#include "Log.h"
 #include "Core/Application.h"
 #include "Config/PathConfig.h"
 #include "Renderer/API/Renderer.h"
+#include "Platform/Platform.h"
 #include "Platform/ResourcesMonitor.h"
 #include "Utils/WorkingDirectory.h"
 
@@ -45,6 +47,19 @@ namespace
 
 		return copy;
 	}
+
+	ImVec4 GetColorForLevel(Log::Levels level)
+	{
+		switch (level)
+		{
+		case Log::Levels::Trace:    return ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+		case Log::Levels::Info:     return ImVec4(0.0f, 0.8f, 0.0f, 1.0f);
+		case Log::Levels::Warn:     return ImVec4(0.8f, 0.8f, 0.0f, 1.0f);
+		case Log::Levels::Error:    return ImVec4(0.8f, 0.0f, 0.0f, 1.0f);
+		case Log::Levels::Critical: return ImVec4(0.8f, 0.0f, 0.8f, 1.0f);
+		default:                   return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+	}
 }
 
 void DebugLayer::Update(DeltaTime dt)
@@ -56,9 +71,9 @@ void DebugLayer::Update(DeltaTime dt)
 		RenderGeneralPage(dt);
 		RenderRenderingPage();
 
-		if (ImGui::BeginTabItem("Tab 3"))
+		if (ImGui::BeginTabItem("Logs"))
 		{
-			ImGui::Text("This is Tab 3");
+			RenderLogsPage();
 			ImGui::EndTabItem();
 		}
 
@@ -540,6 +555,30 @@ void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id, ImVec
 	ImGui::Image((ImTextureID)(intptr_t)texture_id, size, ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();
+}
+
+void DebugLayer::RenderLogsPage()
+{
+	static bool open = false;
+	ImGui::Begin("Log Viewer", &open, ImGuiWindowFlags_MenuBar);
+
+	ImGui::BeginChild("LogEntries", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+	const auto& entries = Log::Storage::GetEntries();
+	for (const auto& entry : entries)
+	{
+		ImGui::TextColored(GetColorForLevel(entry.level), "[%s][%s][%s]: %s",
+			Platform::FormatTimestamp(entry.timestamp).c_str(),
+			Log::ToString(entry.level),
+			Log::ToString(entry.category),
+			entry.message.c_str());
+	}
+
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+		ImGui::SetScrollHereY(1.0f); // auto-scroll to bottom
+
+	ImGui::EndChild();
+	ImGui::End();
 }
 
 float DebugLayer::CalculateLowPercentile(float percentile) const

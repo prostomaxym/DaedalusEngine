@@ -87,3 +87,17 @@ void Platform::PreciseThreadSleep(long long ns)
 	static_assert(false, "Unsupported Platfrom")
 #endif
 }
+
+std::string Platform::FormatTimestamp(const std::chrono::system_clock::time_point& tp)
+{
+	const std::time_t time = std::chrono::system_clock::to_time_t(tp);
+	std::tm local_tm;
+#if defined(DL_PLATFORM_WINDOWS)
+	localtime_s(&local_tm, &time);
+#else
+	localtime_r(&time, &local_tm);
+#endif
+	std::ostringstream oss;
+	oss << std::put_time(&local_tm, "%H:%M:%S");
+	return oss.str();
+}

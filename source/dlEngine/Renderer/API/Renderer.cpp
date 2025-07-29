@@ -50,8 +50,6 @@ namespace
 
 		return vertex_array;
 	}
-
-	constexpr auto DebugEnabled = true;
 }
 
 void Renderer::Init()
@@ -93,7 +91,7 @@ void Renderer::Init()
 
 	s_debug = std::make_unique<DebugInfo>();
 
-	if (DebugEnabled)
+	if (IsDevBuild())
 	{
 		const auto width = GraphicsConfig::GetShadowBufferWidth();
 		const auto height = GraphicsConfig::GetShadowBufferHeight();
@@ -169,7 +167,8 @@ void Renderer::FlushPipeline()
 	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 	s_debug->depth_id = gbuffer->GetDepthAttachmentID();
 
-	ComputeDebugInfo();
+	if (IsDevBuild())
+		ComputeDebugInfo();
 }
 
 void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
@@ -283,9 +282,6 @@ int Renderer::CalculateNumberOfShadowMaps()
 
 void Renderer::ComputeDebugInfo()
 {
-	if (!DebugEnabled)
-		return;
-
 	const auto shadow_w = GraphicsConfig::GetShadowBufferWidth();
 	const auto shadow_h = GraphicsConfig::GetShadowBufferHeight();
 	const auto win_w = s_data->window_width;

@@ -33,6 +33,8 @@ namespace Daedalus
 		void RenderRenderingPage();
 		void RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 size, bool use_aspect = true);
 
+		void RenderLogsPage();
+
 		float CalculateLowPercentile(float percentile) const;
 
 		RingVector<float> m_frame_times{ GraphSize };

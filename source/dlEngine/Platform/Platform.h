@@ -17,5 +17,7 @@ namespace Daedalus {
 		static std::pair<int, int> GetMonitorResolution();
 
 		static void PreciseThreadSleep(long long nanoseconds);
+
+		static inline std::string FormatTimestamp(const std::chrono::system_clock::time_point& tp);
 	};
 }

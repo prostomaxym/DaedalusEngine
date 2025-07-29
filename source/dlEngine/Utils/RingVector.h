@@ -5,12 +5,19 @@
 
 namespace Daedalus
 {
-	template <typename T>
+	template <typename T, size_t Capacity = 0>
 	class DAEDALUS_API RingVector
 	{
 	public:
+		template <size_t C = Capacity, std::enable_if_t<C == 0, int> = 0>
 		explicit RingVector(size_t capacity)
 			: data_(capacity), capacity_(capacity)
+		{
+		}
+
+		template <size_t C = Capacity, std::enable_if_t<C != 0, int> = 0>
+		explicit RingVector()
+			: data_(C), capacity_(C)
 		{
 		}
 
@@ -49,6 +56,13 @@ namespace Daedalus
 		bool empty() const
 		{
 			return size_ == 0;
+		}
+
+		void clear()
+		{
+			data_.clear();
+			start_ = 0;
+			size_ = 0;
 		}
 
 		const T& operator[](size_t index) const

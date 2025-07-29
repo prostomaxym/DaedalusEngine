@@ -109,3 +109,9 @@ void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value) cons
 	GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
+
+void OpenGLShader::DispatchCompute(uint32_t w, uint32_t h, int local_size) const
+{
+	glDispatchCompute((w + local_size - 1) / local_size, (h + local_size - 1) / local_size, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+}

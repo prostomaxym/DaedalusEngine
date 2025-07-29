@@ -4,6 +4,8 @@
 
 #include "Utils/RingVector.h"
 
+#include <ImGui.h>
+
 namespace Daedalus
 {
 	class DAEDALUS_API DebugLayer : public ImGuiLayer
@@ -29,7 +31,7 @@ namespace Daedalus
 		void RenderGPUSection(DeltaTime dt);
 
 		void RenderRenderingPage();
-		void RenderTexture(std::string_view name, uint32_t texture_id);
+		void RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 size, bool use_aspect = true);
 
 		float CalculateLowPercentile(float percentile) const;
 

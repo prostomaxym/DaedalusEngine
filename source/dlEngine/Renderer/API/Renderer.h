@@ -33,6 +33,12 @@ namespace Daedalus {
 			ShadowPass::PassOut shadow;
 			DeferredGeometryPass::PassOut geom;
 			SSAOPass::PassOut ssao;
+			uint32_t depth_id{ 0 };
+
+			std::shared_ptr<Texture2D> greyscale_depth{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_shadow{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_ssao{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_shininess{ nullptr };
 		};
 
 	public:
@@ -67,6 +73,11 @@ namespace Daedalus {
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
 		static int CalculateNumberOfShadowMaps();
+
+		static void ComputeDebugInfo();
+
+		static void ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int );
+		static void ComputeTextureArray(std::string_view shader, uint32_t id, uint32_t id_out, int w, int h, int layer);
 
 		struct Data
 		{

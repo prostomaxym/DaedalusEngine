@@ -14,7 +14,7 @@ namespace Daedalus
 		constexpr auto BlurShader{ "Blur" };
 		constexpr auto CubemapShader{ "Cubemap" };
 		constexpr auto ShadowShader{ "ShadowPass" };
-
+		
 		constexpr auto SceneModel{ "u_object.model_mat" };
 		constexpr auto ShadowModel{ "u_model" };
 		constexpr auto ShadowMaps{ "u_shadowmaps" };
@@ -55,5 +55,12 @@ namespace Daedalus
 		constexpr auto SSAOBufferNoise{ "u_tex_noise" };
 		constexpr auto SSAOBlurBufferNoise{ "u_tex_input" };
 		constexpr auto SSAOFinalBuffer{ "u_gSSAO" };
+	
+		constexpr auto ComputeInput{ "u_input_image" };
+		constexpr auto ComputeArray{ "u_input_array" };
+		constexpr auto ComputeOutput{ "u_compute_image" };
+		constexpr auto LayerIndex{ "u_layer_index" };
+		constexpr auto ArrayToGrayScaleShader{ "TextureArrayToGrayScale" };
+		constexpr auto TextureToGrayScaleShader{ "TextureToGrayScale" };
 	}
 }

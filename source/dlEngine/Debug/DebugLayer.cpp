@@ -15,6 +15,8 @@ namespace
 {
 	constexpr auto MilliMult = 1000.f;
 	const ImVec2 SectionDefaultSize(540, 460);
+	const ImVec2 TextureSectionSize(640, 400);
+	const ImVec2 QuadTextureSectionSize(640, 680);
 
 	float Average(const std::vector<float>& v)
 	{
@@ -47,6 +49,7 @@ namespace
 void DebugLayer::Update(DeltaTime dt)
 {
 	ImGui::Begin("Debug Overlay", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
 	if (ImGui::BeginTabBar("Debug Overlay", ImGuiTabBarFlags_None))
 	{
 		RenderGeneralPage(dt);
@@ -75,7 +78,6 @@ void DebugLayer::InitWindow()
 	m_gpu_memory_utillization.resize(GraphSize, 0.f);
 	m_gpu_memory_used.resize(GraphSize, 0.f);
 
-
 	for (auto i = 0; i < m_x_axe_values.size(); i++)
 	{
 		m_x_axe_values[i] = -NumberOfSecondsTracked + NumberOfSecondsTracked / static_cast<float>(GraphSize) * static_cast<float>(i);
@@ -87,6 +89,15 @@ void DebugLayer::InitWindow()
 	m_total_gpu_ram_GB = info.memory_total_GB;
 	m_processor_name = ResourcesMonitor::GetProcessorName();
 	m_gpu_name = !info.name.empty() ? info.name : "Unsupported";
+
+	// All sizes are suitable for QHD, scale for big for FHD to fit everything on screen
+	// Maybe will implement scalability of debug layer later, right now just scale
+	const auto [w,h] = Renderer::GetResolution();
+	if (w <= 1920)
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.ScaleAllSizes(1.0 / 1.33f);
+	}
 }
 
 void DebugLayer::RenderGeneralPage(DeltaTime dt)
@@ -464,35 +475,51 @@ void DebugLayer::RenderRenderingPage()
 	{
 		const auto info = Renderer::GetDebugInfo();
 	
-		RenderTexture("Position", info->geom.pos_texture);
-		ImGui::SameLine();
-		RenderTexture("Normal", info->geom.norm_texture);
-		ImGui::SameLine();
-		RenderTexture("Albedo", info->geom.albedo_texture);
-		ImGui::SameLine();
-		RenderTexture("Ambient", info->geom.ambient_texture);
+		if (ImGui::BeginTabBar("Framebuffers", ImGuiTabBarFlags_None))
+		{
+			if (ImGui::BeginTabItem("Geometry"))
+			{
+				RenderTexture("Albedo", info->geom.albedo_texture, TextureSectionSize);
+				ImGui::SameLine();
+				RenderTexture("Ambient", info->geom.ambient_texture, TextureSectionSize);
+				ImGui::SameLine();
+				RenderTexture("Specular", info->geom.spec_texture, TextureSectionSize);
 
-		RenderTexture("Specular", info->geom.spec_texture);
-		ImGui::SameLine();
-		RenderTexture("Shininess", info->geom.shininess_texture);
-		ImGui::SameLine();
-		RenderTexture("SSAO", info->ssao.ssao_texture);
-		ImGui::SameLine();
-		RenderTexture("Shadow", info->shadow.shadow_map_id);
-		ImGui::SameLine();
+				RenderTexture("Normal", info->geom.norm_texture, TextureSectionSize);
+				ImGui::SameLine();
+				RenderTexture("Position", info->geom.pos_texture, TextureSectionSize);
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("Depth"))
+			{
+				RenderTexture("Depth", info->greyscale_depth->GetRendererID(), TextureSectionSize);	
+				ImGui::SameLine();
+				RenderTexture("SSAO", info->greyscale_ssao->GetRendererID(), TextureSectionSize);
+				ImGui::SameLine();
+				RenderTexture("Shininess", info->greyscale_shininess->GetRendererID(), TextureSectionSize);
+						
+				RenderTexture("Shadow", info->greyscale_shadow->GetRendererID(), QuadTextureSectionSize, false);
+
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
 
 		ImGui::EndTabItem();
 	}
 }
 
-void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id)
+void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 section_size, bool use_aspect)
 {
-	ImGui::BeginChild(name.data(), SectionDefaultSize, ImGuiChildFlags_Borders);
+	ImGui::BeginChild(name.data(), section_size, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader(name.data(), ImGuiTreeNodeFlags_Bullet);
 
 	const auto aspect = Renderer::GetAspectRatio();
-	const auto tex_size = SectionDefaultSize.x - 20.f;
-	const ImVec2 size = ImVec2(tex_size, tex_size / aspect);
+	const auto tex_size_x = section_size.x - 10.f;
+	const auto tex_size_y = use_aspect ? (tex_size_x / aspect) : tex_size_x;
+	const ImVec2 size = ImVec2(tex_size_x, tex_size_y);
 	ImGui::Image((ImTextureID)(intptr_t)texture_id, size, ImVec2(0, 1), ImVec2(1, 0));
 
 	ImGui::EndChild();

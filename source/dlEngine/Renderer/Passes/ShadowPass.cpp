@@ -18,7 +18,7 @@ void ShadowPass::SetNumberOfShadowMaps(int number)
 		specs.width = GraphicsConfig::GetShadowBufferWidth();
 		specs.height = GraphicsConfig::GetShadowBufferHeight();
 		specs.samples = GraphicsConfig::GetShadowBufferSamples();
-		specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+		specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(Texture::ColorFormat::Depth) });
 		specs.layers = number;
 
 		m_framebuffer = Framebuffer::Create(specs);

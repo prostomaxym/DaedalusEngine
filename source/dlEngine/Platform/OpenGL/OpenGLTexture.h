@@ -9,7 +9,34 @@ namespace Daedalus {
 	class OpenGLTexture2D final : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(uint32_t width, uint32_t height);
+		static bool IsDepthFormat(ColorFormat format)
+		{
+			switch (format)
+			{
+			case ColorFormat::Depth:  return true;
+			}
+
+			return false;
+		}
+
+		static GLenum DaedalusTextureFormatToGL(ColorFormat format)
+		{
+			switch (format)
+			{
+			case ColorFormat::RGBA8:        return GL_RGBA8;
+			case ColorFormat::RGBA16F:      return GL_RGBA16F;
+			case ColorFormat::RGBA32U:      return GL_RGBA;
+			case ColorFormat::RED16F:       return GL_R16F;
+			case ColorFormat::RED_INTEGER:  return GL_RED_INTEGER;
+			case ColorFormat::RED_FLOAT:    return GL_RED;
+			case ColorFormat::Depth:		return GL_DEPTH24_STENCIL8;
+			}
+
+			return 0;
+		}
+
+	public:
+		OpenGLTexture2D(uint32_t width, uint32_t height, int channels = 4);
 		OpenGLTexture2D(const std::string& path);	
 		OpenGLTexture2D(unsigned char* data, int width, int heith, int channels);
 		OpenGLTexture2D(float* data, int width, int heith, int channels);
@@ -33,6 +60,7 @@ namespace Daedalus {
 		}
 
 		static void BindTextureImpl(uint32_t ID, uint32_t slot);
+		static void BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorFormat format, bool read, bool write);
 
 	private:
 		std::string m_path;

@@ -50,6 +50,8 @@ namespace
 
 		return vertex_array;
 	}
+
+	constexpr auto DebugEnabled = true;
 }
 
 void Renderer::Init()
@@ -90,6 +92,16 @@ void Renderer::Init()
 	s_data->ssao_pass.CreateSSAOBuffers(s_data->window_width, s_data->window_height);
 
 	s_debug = std::make_unique<DebugInfo>();
+
+	if (DebugEnabled)
+	{
+		const auto width = GraphicsConfig::GetShadowBufferWidth();
+		const auto height = GraphicsConfig::GetShadowBufferHeight();
+		s_debug->greyscale_shadow = Texture2D::Create(width, height);
+		s_debug->greyscale_depth = Texture2D::Create(s_data->window_width, s_data->window_height);
+		s_debug->greyscale_ssao = Texture2D::Create(s_data->window_width, s_data->window_height);
+		s_debug->greyscale_shininess = Texture2D::Create(s_data->window_width, s_data->window_height);
+	}
 }
 
 void Renderer::Shutdown()
@@ -156,6 +168,9 @@ void Renderer::FlushPipeline()
 	const auto gbuffer = s_data->geometry_pass.GetBuffer();
 	const auto& spec = gbuffer->GetSpecification();
 	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
+	s_debug->depth_id = gbuffer->GetDepthAttachmentID();
+
+	ComputeDebugInfo();
 }
 
 void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)
@@ -265,6 +280,50 @@ int Renderer::CalculateNumberOfShadowMaps()
 	}
 
 	return number_of_shadowmaps;
+}
+
+void Renderer::ComputeDebugInfo()
+{
+	if (!DebugEnabled)
+		return;
+
+	ComputeTextureArray(ShaderConstants::ArrayToGrayScaleShader, s_debug->shadow.shadow_map_id, s_debug->greyscale_shadow->GetRendererID(), GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight(), 0);
+	ComputeTexture(ShaderConstants::TextureToGrayScaleShader, s_debug->depth_id, s_debug->greyscale_depth->GetRendererID(), s_data->window_width, s_data->window_height);
+	ComputeTexture(ShaderConstants::TextureToGrayScaleShader, s_debug->ssao.ssao_texture, s_debug->greyscale_ssao->GetRendererID(), s_data->window_width, s_data->window_height);
+	ComputeTexture(ShaderConstants::TextureToGrayScaleShader, s_debug->geom.shininess_texture, s_debug->greyscale_shininess->GetRendererID(), s_data->window_width, s_data->window_height);
+
+	const auto compute_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::ArrayToGrayScaleShader);
+}
+
+void Renderer::ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h)
+{
+	const auto compute_shader = Renderer::GetShaderLibrary()->Get(shader.data());
+	compute_shader->Bind();
+
+	Texture2D::BindTexture(id_in, 0);
+	compute_shader->SetInt(ShaderConstants::ComputeInput, 0);
+
+	Texture2D::BindTextureImage(id_out, 1, Texture::ColorFormat::RGBA8, false, true);
+	compute_shader->SetInt(ShaderConstants::ComputeOutput, 1);
+
+	compute_shader->DispatchCompute(w, h, 16);
+	compute_shader->Unbind();
+}
+
+void Renderer::ComputeTextureArray(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h, int layer)
+{
+	const auto compute_shader = Renderer::GetShaderLibrary()->Get(shader.data());
+	compute_shader->Bind();
+
+	Texture2D::BindTexture(id_in, 0);
+	compute_shader->SetInt(ShaderConstants::ComputeArray, 0);
+
+	Texture2D::BindTextureImage(id_out, 1, Texture::ColorFormat::RGBA8, false, true);
+	compute_shader->SetInt(ShaderConstants::ComputeOutput, 1);
+	compute_shader->SetInt(ShaderConstants::LayerIndex, layer);
+
+	compute_shader->DispatchCompute(w, h, 16);
+	compute_shader->Unbind();
 }
 
 void Renderer::SetLights(const std::vector<LightSource*>& lights)

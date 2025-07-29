@@ -14,6 +14,7 @@ set(UTILS_PROJECT_FILES
    KeyCodes.h
    Random.h
    Random.cpp
+   RingVector.h
    Timer.h
    WorkingDirectory.h
    WorkingDirectory.cpp

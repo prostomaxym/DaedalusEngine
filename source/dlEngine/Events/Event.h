@@ -44,10 +44,14 @@ namespace Daedalus
 		DeltaTime m_time_to_live{};
 		Timer m_timer{};
 	};
-
-	inline std::ostream& operator<<(std::ostream& os, const Event& e)
-	{
-		return os << e.GetInfo();
-	}
-
 }
+
+template <>
+struct fmt::formatter<Daedalus::Event> : fmt::formatter<std::string>
+{
+	template <typename FormatContext>
+	auto format(const Daedalus::Event& e, FormatContext& ctx) const
+	{
+		return fmt::formatter<std::string>::format(e.GetInfo(), ctx);
+	}
+};

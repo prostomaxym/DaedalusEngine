@@ -8,6 +8,9 @@
 #ifdef DL_PLATFORM_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#include <thread>
+
 namespace
 {
 	struct HandleDeleter
@@ -79,7 +82,7 @@ void Platform::PreciseThreadSleep(long long ns)
     }
     WaitForSingleObject(timer_ptr, INFINITE);
 #elif defined DL_PLATFORM_LINUX //TODO: not implemented, using nonprecise timer
-	std::this_thread::sleep_for(sleep_nanos);
+	std::this_thread::sleep_for(ns);
 #else
 	static_assert(false, "Unsupported Platfrom")
 #endif

@@ -35,9 +35,25 @@ namespace
 	}
 }
 
-OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
+OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, int channels)
 	: m_width(width), m_height(height)
 {
+
+	if (channels == 4)
+	{
+		m_internal_format = GL_RGBA8;
+		m_data_format = GL_RGBA;
+	}
+	else if (channels == 3)
+	{
+		m_internal_format = GL_RGB8;
+		m_data_format = GL_RGB;
+	}
+	else if (channels == 1)
+	{
+		m_internal_format = GL_RGB8;
+		m_data_format = GL_RGB;
+	}
 
 	m_internal_format = GL_RGBA8;
 	m_data_format = GL_RGBA;
@@ -227,6 +243,20 @@ void OpenGLTexture2D::Bind(uint32_t slot) const
 void OpenGLTexture2D::BindTextureImpl(uint32_t ID, uint32_t slot)
 {
 	glBindTextureUnit(slot, ID);
+}
+
+void OpenGLTexture2D::BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorFormat format, bool read, bool write)
+{
+	GLenum access = 0;
+
+	if (read && write)
+		access = GL_READ_WRITE;
+	else if (write)
+		access = GL_WRITE_ONLY;
+	else
+		access = GL_READ_ONLY;
+
+	glBindImageTexture(slot, ID, 0, GL_FALSE, 0, access, DaedalusTextureFormatToGL(format));
 }
 
 OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces)

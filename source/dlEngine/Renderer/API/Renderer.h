@@ -28,6 +28,22 @@ namespace Daedalus {
 	class DAEDALUS_API Renderer
 	{
 	public:
+		struct DebugInfo
+		{
+			ShadowPass::PassOut shadow;
+			DeferredGeometryPass::PassOut geom;
+			SSAOPass::PassOut ssao;
+			uint32_t depth_id{ 0 };
+			int number_of_shadow_maps{ 0 };
+			int current_shadow_map{ 0 };
+
+			std::shared_ptr<Texture2D> greyscale_depth{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_shadow{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_ssao{ nullptr };
+			std::shared_ptr<Texture2D> greyscale_shininess{ nullptr };
+		};
+
+	public:
 		static void Init();
 		static void Shutdown();
 
@@ -36,6 +52,8 @@ namespace Daedalus {
 		static ShaderLibrary* GetShaderLibrary() { return s_data->shader_library.get(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
+		static std::pair<int, int> GetResolution() { return { s_data->window_width, s_data->window_height }; }
+		static float GetAspectRatio() { return static_cast<float>(s_data->window_width) / static_cast<float>(s_data->window_height); }
 
 		static void BeginFrame(const Camera* camera,std::optional<int> number_of_objects = std::nullopt);
 		static void FlushPipeline();
@@ -50,11 +68,19 @@ namespace Daedalus {
 		static void AddLight(LightSource* light);
 		static void RemoveLight(LightSource* light);
 
+		static DebugInfo* GetDebugInfo() { return s_debug.get(); }
+
 	private:
 		static void UpdateLightShaderData();
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
 		static int CalculateNumberOfShadowMaps();
+
+		static void ComputeDebugInfo();
+
+		static void ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h);
+		static void ComputeTextureArray(std::string_view shader, uint32_t id, uint32_t id_out, int w, int h, int layer);
+		static void ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h);
 
 		struct Data
 		{
@@ -65,6 +91,8 @@ namespace Daedalus {
 			Frustum view_frustum;
 			glm::mat4 scene_proj;
 			glm::mat4 scene_view;
+			float znear{ 0.f };
+			float zfar{ 0.f };
 
 			std::vector<LightSource*> lights;
 			std::vector<std::pair<const Model*, glm::mat4>> frame_models;
@@ -80,6 +108,7 @@ namespace Daedalus {
 			int window_height{ 0 };
 		};
 
+		static std::unique_ptr<DebugInfo> s_debug;
 		static std::unique_ptr<Data> s_data;
 	};
 }

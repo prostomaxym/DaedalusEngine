@@ -8,14 +8,14 @@
         {"name": "spdlog"},
         {"name": "imgui", "features": ["opengl3-binding", "glfw-binding", "docking-experimental"]},
         {"name": "imguizmo"},
+        {"name": "implot"},
+        {"name": "implot3d"},
         {"name": "glm"},
         {"name": "stb"},
         {"name": "assimp"},
         {"name": "entt"},
-        {"name": "simpleini"}
+        {"name": "simpleini"},
+        {"name": "fmt"}
     ],
-    "builtin-baseline":"6b99cf12ef42b9a1bda5a9ebc83720129540b9b0",
-    "overrides": [
-    {"name": "fmt", "version-string": "8.1.1"}
-    ]
+    "builtin-baseline":"c0f2272fa7934cf52d33b098f24a7757b14ff15e"
 }

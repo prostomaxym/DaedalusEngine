@@ -3,29 +3,17 @@
 #include <memory>
 #include <vector>
 
+#include "Renderer/Resourses/Texture.h"
+
 namespace Daedalus {
-
-	enum class FramebufferTextureFormat
-	{
-		None = 0,
-
-		// Color
-		RGBA8,
-		RGBA16F,
-		RGBA32U,
-		RED_INTEGER,
-		RED_FLOAT,
-		RED16F,
-		Depth
-	};
 
 	struct FramebufferTextureSpecification
 	{
 		FramebufferTextureSpecification() = default;
-		FramebufferTextureSpecification(FramebufferTextureFormat format)
+		FramebufferTextureSpecification(Texture::ColorFormat format)
 			: texture_format(format) {}
 
-		FramebufferTextureFormat texture_format = FramebufferTextureFormat::None;
+		Texture::ColorFormat texture_format = Texture::ColorFormat::None;
 	};
 
 	struct FramebufferAttachmentSpecification

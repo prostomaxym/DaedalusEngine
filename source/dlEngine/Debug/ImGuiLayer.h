@@ -6,8 +6,8 @@
 #include "Events/MouseEvent.h"
 
 
-namespace Daedalus {
-
+namespace Daedalus
+{
 	class DAEDALUS_API ImGuiLayer : public Layer
 	{
 	public:
@@ -18,14 +18,22 @@ namespace Daedalus {
 		virtual void OnDetach() override;
 		virtual void OnEvent(Event& e) override;
 
-		void Begin();
-		void End();
+		virtual void OnUpdate(DeltaTime dt) override;
 
 		void BlockEvents(bool block) { m_block_events = block; }
 
 		void SetDarkThemeColors();
+
+		void Show(bool show) { m_show = show; }
+		void Toggle() { m_show = !m_show; BlockEvents(!m_show); }
+		bool IsShown() { return m_show; }
+
+	protected:
+		virtual void Update(DeltaTime dt) {};
+		virtual void InitWindow() {};
+
 	private:
 		bool m_block_events = true;
+		bool m_show = false;
 	};
-
 }

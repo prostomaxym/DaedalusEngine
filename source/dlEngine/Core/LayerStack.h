@@ -13,6 +13,8 @@ namespace Daedalus {
 		LayerStack() = default;
 		~LayerStack();
 
+		Layer* GetMainLayer();
+
 		LayerStack(const LayerStack&) = delete;
 		LayerStack(LayerStack&&) = delete;
 		LayerStack& operator=(const LayerStack&) = delete;

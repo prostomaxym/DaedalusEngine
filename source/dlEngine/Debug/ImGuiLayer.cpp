@@ -6,6 +6,8 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
+#include <implot.h>
+#include <implot3d.h>
 
 #include "Core/Application.h"
 #include "Macros.h"
@@ -24,11 +26,14 @@ void ImGuiLayer::OnAttach()
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImPlot::CreateContext();
+	ImPlot3D::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigWindowsMoveFromTitleBarOnly = true;
 
 	float fontSize = 18.0f;// *2.0f;
 
@@ -55,6 +60,8 @@ void ImGuiLayer::OnAttach()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450");
 
+	InitWindow();
+
 	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "ImGui Layer is attached;");
 }
 
@@ -62,7 +69,9 @@ void ImGuiLayer::OnDetach()
 {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
+	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
+	ImPlot3D::DestroyContext();
 
 	Log::Write(Log::Levels::Warn, Log::Categories::EngineCore, "ImGui Layer is detached;");
 }
@@ -72,23 +81,23 @@ void ImGuiLayer::OnEvent(Event& evt)
 	if (m_block_events)
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		evt.AddHandle(evt.IsInCategory(EventCategory::MouseEvent) & io.WantCaptureMouse);
-		evt.AddHandle(evt.IsInCategory(EventCategory::KeyboardEvent) & io.WantCaptureKeyboard);
+		evt.AddHandle(evt.IsInCategory(EventCategory::MouseEvent) && io.WantCaptureMouse);
+		evt.AddHandle(evt.IsInCategory(EventCategory::KeyboardEvent) && io.WantCaptureKeyboard);
 	}
 }
 
-void ImGuiLayer::Begin()
+void ImGuiLayer::OnUpdate(DeltaTime dt)
 {
+	if (!m_show)
+		return;
+
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
-	static bool show = true;
-	ImGui::ShowDemoWindow(&show);
-}
+	
+	Update(dt);
 
-void ImGuiLayer::End()
-{
 	ImGuiIO& io = ImGui::GetIO();
 	const auto app = Application::GetInstance();
 	io.DisplaySize = ImVec2(static_cast<float>(app->GetWindow().GetWidth()), static_cast<float>(app->GetWindow().GetHeight()));

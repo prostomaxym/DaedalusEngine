@@ -57,7 +57,7 @@ void SSAO::CreateFramebuffer(int width, int height)
     ssao_spec.width = width;
     ssao_spec.height = height;
     ssao_spec.samples = 1;
-    ssao_spec.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT) });
+    ssao_spec.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(Texture::ColorFormat::RED_FLOAT) });
     ssao_spec.layers = -1;
     m_ssao_buffer = Framebuffer::Create(ssao_spec);
 
@@ -65,7 +65,7 @@ void SSAO::CreateFramebuffer(int width, int height)
     blur_specs.width = width;
     blur_specs.height = height;
     blur_specs.samples = 1;
-    blur_specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(FramebufferTextureFormat::RED_FLOAT) });
+    blur_specs.attachments = FramebufferAttachmentSpecification({ FramebufferTextureSpecification(Texture::ColorFormat::RED_FLOAT) });
     blur_specs.layers = -1;
     m_blur_buffer = Framebuffer::Create(blur_specs);
 }

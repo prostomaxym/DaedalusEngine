@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
+#include "OpenGLTexture.h"
 
 #include <glad/glad.h>
 
@@ -191,32 +192,6 @@ namespace
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled, false), id, 0);
 	}
 
-	bool IsDepthFormat(FramebufferTextureFormat format)
-	{
-		switch (format)
-		{
-			case FramebufferTextureFormat::Depth:  return true;
-		}
-
-		return false;
-	}
-
-	GLenum DaedalusFBTextureFormatToGL(FramebufferTextureFormat format)
-	{
-		switch (format)
-		{
-			case FramebufferTextureFormat::RGBA8:        return GL_RGBA8;
-			case FramebufferTextureFormat::RGBA16F:      return GL_RGBA16F;
-			case FramebufferTextureFormat::RGBA32U:      return GL_RGBA;
-			case FramebufferTextureFormat::RED16F:       return GL_R16F;
-			case FramebufferTextureFormat::RED_INTEGER:  return GL_RED_INTEGER;
-			case FramebufferTextureFormat::RED_FLOAT:    return GL_RED;
-		}
-
-		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unsupported FramebufferTextureFormat");
-		return 0;
-	}
-
 }
 
 void OpenGLFramebuffer::CopyFramebufferImpl(unsigned int src_id, unsigned int dest_id, int width, int height)
@@ -295,7 +270,7 @@ OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
 
 	for (auto spec : m_specification.attachments.attachments)
 	{
-		if (!IsDepthFormat(spec.texture_format))
+		if (!OpenGLTexture2D::IsDepthFormat(spec.texture_format))
 			m_color_attachment_specifications.emplace_back(spec);
 		else
 			m_depth_attachment_specification = spec;
@@ -340,35 +315,35 @@ void OpenGLFramebuffer::Invalidate()
 			BindTexture(multisample, multilayer, m_color_attachments[i]);
 			switch (m_color_attachment_specifications[i].texture_format)
 			{
-				case FramebufferTextureFormat::RGBA8:
+			case Texture::ColorFormat::RGBA8:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RGBA16F:
+				case Texture::ColorFormat::RGBA16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RGBA32U:
+				case Texture::ColorFormat::RGBA32U:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RED_INTEGER:
+				case Texture::ColorFormat::RED_INTEGER:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RED16F:
+				case Texture::ColorFormat::RED16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R16F, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
-				case FramebufferTextureFormat::RED_FLOAT:
+				case Texture::ColorFormat::RED_FLOAT:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RED, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 				break;
 			}
 		}
 	}
 
-	if (m_depth_attachment_specification.texture_format != FramebufferTextureFormat::None)
+	if (m_depth_attachment_specification.texture_format != Texture::ColorFormat::None)
 	{
 		CreateTextures(multisample, multilayer , &m_depth_attachment, 1);
 		BindTexture(multisample, multilayer, m_depth_attachment);
 		switch (m_depth_attachment_specification.texture_format)
 		{
-			case FramebufferTextureFormat::Depth:
+			case Texture::ColorFormat::Depth:
 				AttachDepthTexture(m_depth_attachment, m_specification.samples, m_specification.layers, GetMainFramebufferFormat(m_rendererID), GL_DEPTH_ATTACHMENT, m_specification.width, m_specification.height);
 				break;
 		}
@@ -458,5 +433,5 @@ void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 
 	auto& spec = m_color_attachment_specifications[attachmentIndex];
 	glClearTexImage(m_color_attachments[attachmentIndex], 0,
-		DaedalusFBTextureFormatToGL(spec.texture_format), GL_INT, &value);
+		OpenGLTexture2D::DaedalusTextureFormatToGL(spec.texture_format), GL_INT, &value);
 }

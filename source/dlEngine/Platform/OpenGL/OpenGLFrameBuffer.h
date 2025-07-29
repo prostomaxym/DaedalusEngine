@@ -41,7 +41,7 @@ namespace Daedalus {
 		FramebufferSpecification m_specification;
 
 		std::vector<FramebufferTextureSpecification> m_color_attachment_specifications;
-		FramebufferTextureSpecification m_depth_attachment_specification = FramebufferTextureFormat::None;
+		FramebufferTextureSpecification m_depth_attachment_specification{ Texture::ColorFormat::None };
 
 		std::vector<uint32_t> m_color_attachments;
 		uint32_t m_depth_attachment = 0;

@@ -3,6 +3,8 @@
 
 #include "Macros.h"
 #include "Config/GraphicsConfig.h"
+#include "Config/KeybindConfig.h"
+#include "Debug/DebugLayer.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
 #include "Utils/FPSLocker.h"
@@ -44,9 +46,8 @@ Application::Application()
 	Renderer::Init();
 	Renderer::LoadShaderLibrary(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
 
-	//std::unique_ptr<ImGuiLayer> lay = std::make_unique<ImGuiLayer>();
-	//m_imgui_layer = lay.get();
-	//PushOverlay(std::move(lay));
+	m_debug_layer = new DebugLayer();
+	PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
 }
 
 Application::~Application()
@@ -73,13 +74,10 @@ void Application::Run()
 			layer->OnUpdate(update_dt);
 		}
 
-		//m_imgui_layer->Begin();
-		//m_imgui_layer->End();
-
 		m_window->SwapBuffers();
 
 		const auto frame_dt = frame_timer.GetEllapsedTime();
-		FPSLocker::LockFpsBusyWait(GraphicsConfig::GetFPSLock(), frame_dt);
+		FPSLocker::LockFpsThreadSleep(GraphicsConfig::GetFPSLock(), frame_dt);
 		frame_timer.StartTimer();
 	}
 }
@@ -88,7 +86,8 @@ void Application::OnEvent(Event& event)
 {
 	EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
 	EventDispatcher::ProcessEvent<WindowResizeEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowResized));
-
+	EventDispatcher::ProcessEvent<KeyReleasedEvent>(event, DL_BIND_EVENT_FN(Application::OnKeyReleased));
+	
 	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
 
 	for (auto it = m_layer_stack.end(); it != m_layer_stack.begin();)
@@ -110,6 +109,13 @@ void Application::PushOverlay(std::unique_ptr<Layer>&& overlay)
 	m_layer_stack.PushOverlay(std::move(overlay));
 }
 
+Scene* Application::GetMainScene()
+{
+	auto layer = m_layer_stack.GetMainLayer();
+
+	return layer ? layer->GetScene() : nullptr;
+}
+
 bool Application::OnWindowClosed(WindowCloseEvent& event)
 {
 	m_running = false;
@@ -120,5 +126,18 @@ bool Application::OnWindowResized(WindowResizeEvent& event)
 {
 	RenderCommand::SetViewport(0,0, event.GetWidth(), event.GetHeight());
 
+	return true;
+}
+
+bool Application::OnKeyReleased(KeyReleasedEvent& event)
+{
+	const auto key_code = event.GetKeyCode();
+
+	if (key_code == KeybindConfig::GetKeyboardBind("Debug"))
+	{
+		m_debug_layer->Toggle();
+		m_window->FreeCursor(m_debug_layer->IsShown());
+	}
+	
 	return true;
 }

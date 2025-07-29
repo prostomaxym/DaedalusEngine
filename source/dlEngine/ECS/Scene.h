@@ -18,7 +18,7 @@ namespace Daedalus
 		Scene();
 		~Scene() = default;
 
-		void OnRuntimeStart();
+		void OnRuntimeStart(const std::string& scenename = "");
 		void OnRuntimeStop();
 		void OnUpdateRuntime(DeltaTime dt);
 
@@ -36,6 +36,8 @@ namespace Daedalus
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
 
+		const std::string& GetSceneName() const { return m_scene_name; }
+		Camera* GetCamera();
 	private:
 		template<typename T>
 		void OnComponentAdded(T& component)
@@ -51,8 +53,7 @@ namespace Daedalus
 		
 		#include "SceneComponents.inl" // Sorry for that, only way I figured out to make it. All other options give me linking errors because circular dependencies
 
-		void PrepareScene();
-
+		std::string m_scene_name;
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 

@@ -111,13 +111,13 @@ void DeferredGeometryPass::CreateGBuffer(int width, int height)
 	gbuffer_specs.height = height;
 	gbuffer_specs.samples = 1;
 	gbuffer_specs.attachments = FramebufferAttachmentSpecification({
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RGBA32U),
-		FramebufferTextureSpecification(FramebufferTextureFormat::RED16F),
-		FramebufferTextureSpecification(FramebufferTextureFormat::Depth) });
+		FramebufferTextureSpecification(Texture::ColorFormat::RGBA16F),
+		FramebufferTextureSpecification(Texture::ColorFormat::RGBA16F),
+		FramebufferTextureSpecification(Texture::ColorFormat::RGBA32U),
+		FramebufferTextureSpecification(Texture::ColorFormat::RGBA32U),
+		FramebufferTextureSpecification(Texture::ColorFormat::RGBA32U),
+		FramebufferTextureSpecification(Texture::ColorFormat::RED16F),
+		FramebufferTextureSpecification(Texture::ColorFormat::Depth) });
 	gbuffer_specs.layers = -1;
 	m_gbuffer = Framebuffer::Create(gbuffer_specs);
 }

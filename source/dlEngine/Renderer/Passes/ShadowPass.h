@@ -26,6 +26,7 @@ namespace Daedalus
 		PassOut Render(const PassIn& data) const;
 
 		void SetNumberOfShadowMaps(int number);
+		int GetNumberOfShadowMaps() const { return m_number_of_shadowmaps;}
 
 	private:
 		std::unique_ptr<Framebuffer> m_framebuffer;

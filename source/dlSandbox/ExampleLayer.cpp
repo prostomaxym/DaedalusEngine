@@ -43,7 +43,7 @@ void ExampleLayer::OnAttach()
 	PrepareNukeScene();
 	//PrepareAnorLondoScene();
 
-	m_scene.OnRuntimeStart();
+	m_scene.OnRuntimeStart("Nuke Scene");
 }
 
 void ExampleLayer::OnDetach()

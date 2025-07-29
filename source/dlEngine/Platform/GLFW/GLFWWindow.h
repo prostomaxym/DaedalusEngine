@@ -34,6 +34,8 @@ namespace Daedalus {
 		bool IsFullscreen() const override;
 		virtual void SetWindowMode(WindowProps::ScreenMode screenmode) override;
 
+		void FreeCursor(bool free) override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();

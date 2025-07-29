@@ -4,7 +4,7 @@
 
 #include "Utils/RingVector.h"
 
-#include <ImGui.h>
+#include <imgui.h>
 
 namespace Daedalus
 {

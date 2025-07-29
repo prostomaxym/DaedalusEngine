@@ -17,6 +17,8 @@ set(CORE_PROJECT_FILES
     Layer.cpp
     LayerStack.h
     LayerStack.cpp
+    ResourceManager.h
+    ResourceManager.cpp
     Window.h  
 )
 

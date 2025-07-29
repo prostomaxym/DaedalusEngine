@@ -2,6 +2,8 @@
 
 #include "Material.h"
 
+#include "Core/ResourceManager.h"
+
 using namespace Daedalus;
 
 Material::Material(const std::string& material_name, glm::vec3 kambient, glm::vec3 kdiffuse, glm::vec3 kspecular, float shininess) :
@@ -15,20 +17,20 @@ Material::Material(const std::string& material_name, glm::vec3 kambient, glm::ve
 
 void Material::SetDiffuseMap(unsigned char* data, int width, int height, int channels)
 {
-	m_map_diffuse = Texture2D::Create(data, width, height, channels);
+	m_map_diffuse = ResourceManager::LoadTexture2D(data, width, height, channels);
 }
 
 void Material::SetSpecularMap(unsigned char* data, int width, int height, int channels)
 {
-	m_map_specular = Texture2D::Create(data, width, height, channels);
+	m_map_specular = ResourceManager::LoadTexture2D(data, width, height, channels);
 }
 
 void Material::SetNormalMap(unsigned char* data, int width, int height, int channels)
 {
-	m_map_normal = Texture2D::Create(data, width, height, channels);
+	m_map_normal = ResourceManager::LoadTexture2D(data, width, height, channels);
 }
 
 void Material::SetHeightMap(unsigned char* data, int width, int height, int channels)
 {
-	m_map_height = Texture2D::Create(data, width, height, channels);
+	m_map_height = ResourceManager::LoadTexture2D(data, width, height, channels);
 }

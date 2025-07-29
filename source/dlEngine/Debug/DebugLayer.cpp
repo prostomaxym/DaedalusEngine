@@ -2,9 +2,10 @@
 
 #include "DebugLayer.h"
 #include "Core/Application.h"
-
+#include "Config/PathConfig.h"
 #include "Renderer/API/Renderer.h"
 #include "Platform/ResourcesMonitor.h"
+#include "Utils/WorkingDirectory.h"
 
 #include <implot.h>
 #include <implot3d.h>

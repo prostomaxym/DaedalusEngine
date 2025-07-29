@@ -69,12 +69,12 @@ OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, int channels)
 	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
-OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
+OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
 	: m_path(path)
 {
 	int width, height, channels;
 	stbi_set_flip_vertically_on_load(1);
-	stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+	stbi_uc* data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
 	auto img_data = data;
 	std::vector<unsigned char> converted_data;
 

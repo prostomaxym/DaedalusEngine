@@ -7,15 +7,19 @@
 
 #include <glm/glm.hpp>
 
+#include <string_view>
 #include <vector>
 
 namespace Daedalus {
 
+	class ResourceManager;
+
 	class Mesh
 	{
-	public:
-		Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t material_index);
+		friend class ResourceManager;
+		Mesh(std::string_view name, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t material_index);
 
+	public:
 		void Bind() const;
 		void Unbind() const;
 
@@ -35,6 +39,7 @@ namespace Daedalus {
 		void ComputeBoundingAABB(const std::vector<Vertex>& vertices);
 
 	private:
+		std::string m_name;
 		const uint32_t m_vertex_count;
 		const uint32_t m_indices_count;
 		const uint32_t m_material_index;

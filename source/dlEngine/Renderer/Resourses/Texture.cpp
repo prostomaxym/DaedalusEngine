@@ -8,10 +8,10 @@ using namespace Daedalus;
 
 namespace
 {
-    std::string empty_str;
+    std::filesystem::path empty_str;
 }
 
-const std::string& Texture::GetPath() const
+const std::filesystem::path& Texture::GetPath() const
 {
     return empty_str;
 }
@@ -28,7 +28,7 @@ std::shared_ptr<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, in
 	return nullptr;
 }
 
-std::shared_ptr<Texture2D> Texture2D::Create(const std::string& path)
+std::shared_ptr<Texture2D> Texture2D::Create(const std::filesystem::path& path)
 {
 	switch (Renderer::GetAPI())
 	{

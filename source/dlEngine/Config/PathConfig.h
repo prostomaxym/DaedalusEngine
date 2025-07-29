@@ -17,6 +17,7 @@ namespace Daedalus
 		static std::filesystem::path GetShadersPath() { return s_shaders_subdir; }
 		static std::filesystem::path GetGraphicsConfigPath() { return s_config_subdir / s_graphics_config; }
 		static std::filesystem::path GetKeybindConfigPath() { return s_config_subdir / s_keybind_config; }
+		static std::filesystem::path GetConfigPath() { return s_config_subdir; }
 		
 	private:
 		static std::filesystem::path s_assets_subdir;

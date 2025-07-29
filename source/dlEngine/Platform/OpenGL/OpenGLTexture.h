@@ -37,16 +37,16 @@ namespace Daedalus {
 
 	public:
 		OpenGLTexture2D(uint32_t width, uint32_t height, int channels = 4);
-		OpenGLTexture2D(const std::string& path);	
+		OpenGLTexture2D(const std::filesystem::path& path);
 		OpenGLTexture2D(unsigned char* data, int width, int heith, int channels);
 		OpenGLTexture2D(float* data, int width, int heith, int channels);
-		~OpenGLTexture2D();
+		virtual ~OpenGLTexture2D();
 
 		uint32_t GetWidth() const override { return m_width; }
 		uint32_t GetHeight() const override { return m_height; }
 		uint32_t GetRendererID() const override { return m_rendererID; }
 
-		const std::string& GetPath() const override { return m_path; }
+		const std::filesystem::path& GetPath() const override { return m_path; }
 
 		void SetData(void* data, uint32_t size) override;
 
@@ -63,7 +63,7 @@ namespace Daedalus {
 		static void BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorFormat format, bool read, bool write);
 
 	private:
-		std::string m_path;
+		std::filesystem::path m_path;
 		bool m_is_loaded = false;
 		uint32_t m_width{ 0 }, m_height{ 0 };
 		uint32_t m_rendererID{ 0 };

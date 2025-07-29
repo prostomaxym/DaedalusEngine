@@ -1,6 +1,8 @@
 #pragma once
 
 #include "UUID.h"
+
+#include "Core/ResourceManager.h"
 #include "Renderer/Objects/Cubemap.h"
 #include "Renderer/Objects/DirectionalLightSource.h"
 #include "Renderer/Objects/PointLightSource.h"
@@ -62,12 +64,12 @@ namespace Daedalus
 
 	struct RenderableObjectComponent
 	{
-		Model model;
+		std::shared_ptr<Model> model;
 
 		RenderableObjectComponent() = default;
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;
 		explicit RenderableObjectComponent(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE)
-			: model(path, parser_flags) {}
+			: model(ResourceManager::LoadModel(path, parser_flags)) {}
 	};
 
 	struct DAEDALUS_API SkyboxComponent //TODO: investigate how to remove exporting

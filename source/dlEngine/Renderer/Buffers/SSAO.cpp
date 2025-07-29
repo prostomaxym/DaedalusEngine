@@ -1,6 +1,8 @@
 #include "dlpch.h"
 
 #include "SSAO.h"
+
+#include "Core/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Utils/Random.h"
@@ -101,5 +103,5 @@ void SSAO::CreateNoiseTexture(int noise_width, int noise_height)
         ssao_noise.push_back(glm::normalize(noise));
     }
 
-    m_noise_texture = Texture2D::Create(&ssao_noise[0].x, noise_width, noise_height, 3);
+    m_noise_texture = ResourceManager::LoadTexture2D(&ssao_noise[0].x, noise_width, noise_height, 3);
 }

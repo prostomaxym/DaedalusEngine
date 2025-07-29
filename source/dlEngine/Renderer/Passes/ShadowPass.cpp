@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "ShadowPass.h"
 
+#include "Core/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/RenderCommand.h"
 #include "Renderer/API/Renderer.h"
@@ -36,7 +37,7 @@ ShadowPass::PassOut ShadowPass::Render(const PassIn& data)const
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
 	RenderCommand::SetViewport(0, 0, GraphicsConfig::GetShadowBufferWidth(), GraphicsConfig::GetShadowBufferHeight());
 	 
-	const auto shadow_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::ShadowShader);
+	const auto shadow_shader = ResourceManager::GetShader(ShaderConstants::ShadowShader);
 	shadow_shader->Bind();
 
 	for (const auto& model_data : data.frame_models)

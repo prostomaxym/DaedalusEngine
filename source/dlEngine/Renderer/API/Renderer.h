@@ -4,7 +4,6 @@
 #include "Renderer/Resourses/Mesh.h"
 #include "Renderer/Resourses/Model.h"
 #include "Renderer/Resourses/Shader.h"
-#include "Renderer/Resourses/ShaderLibrary.h"
 #include "Renderer/Objects/Cubemap.h"
 #include "Renderer/Objects/Geometry.h"
 #include "Renderer/Objects/LightSource.h"
@@ -48,8 +47,6 @@ namespace Daedalus {
 		static void Shutdown();
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-		static void LoadShaderLibrary(const std::filesystem::path& path, bool recompile = false);
-		static ShaderLibrary* GetShaderLibrary() { return s_data->shader_library.get(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 		static std::pair<int, int> GetResolution() { return { s_data->window_width, s_data->window_height }; }
@@ -84,8 +81,6 @@ namespace Daedalus {
 
 		struct Data
 		{
-			std::unique_ptr<ShaderLibrary> shader_library{ nullptr };
-
 			std::shared_ptr<UniformBuffer> UBO_scene_data{ nullptr };
 			std::shared_ptr<UniformBuffer> UBO_graphic_config{ nullptr };
 			Frustum view_frustum;

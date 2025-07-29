@@ -3,6 +3,8 @@
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/Renderer.h"
 
+#include "Core/ResourceManager.h"
+
 #include <glad/glad.h>
 
 using namespace Daedalus;
@@ -115,7 +117,7 @@ void OpenGLRendererAPI::UnbindTextureSlot(uint32_t slot_number)
 	if (!blank_texture)
 	{
 		unsigned char black_pixel[] = { 255, 255, 255, 255 };
-		blank_texture = Texture2D::Create(black_pixel, 1, 1, 4);
+		blank_texture = ResourceManager::LoadTexture2D(black_pixel, 1, 1, 4);
 		blank_texture->Bind(slot_number);
 	}
 	else

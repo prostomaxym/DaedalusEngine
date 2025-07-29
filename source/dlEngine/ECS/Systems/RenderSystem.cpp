@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "RenderSystem.h"
 
+#include "Core/ResourceManager.h"
 #include "ECS/Components.h"
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
@@ -70,7 +71,7 @@ void RenderSystem::RemoveLight(LightSource* light) const
 
 void RenderSystem::RenderSkybox() const
 {
-	const auto cubemap_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::CubemapShader);
+	const auto cubemap_shader = ResourceManager::GetShader(ShaderConstants::CubemapShader);
 	cubemap_shader->Bind();
 	const auto cubemap_view = m_registry.view<SkyboxComponent>();
 	for (const auto e : cubemap_view)
@@ -94,7 +95,7 @@ void RenderSystem::SubmitModels() const
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
 		const auto& transform_component = entity.GetComponent<TransformComponent>().GetTransform();
 
-		Renderer::Submit(&model_component.model, transform_component);
+		Renderer::Submit(model_component.model.get(), transform_component);
 	}
 }
 
@@ -110,7 +111,7 @@ BoundingSphere RenderSystem::CalculateSceneBoundingSphere() const
 		Entity entity = { e, m_scene };
 
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		spheres.push_back(model_component.model.GetBoundingSphere());
+		spheres.push_back(model_component.model->GetBoundingSphere());
 	}
 
 	return BoundingSphere::CalculateCommonBoundingSphere(spheres);
@@ -128,7 +129,7 @@ AABB RenderSystem::CalculateSceneBoundingAABB() const
 		Entity entity = { e, m_scene };
 
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
-		aabbs.push_back(model_component.model.GetBoundingAABB());
+		aabbs.push_back(model_component.model->GetBoundingAABB());
 	}
 
 	return AABB::CalculateCommonBoundingAABB(aabbs);

@@ -2,8 +2,8 @@
 
 #include "Renderer.h"
 
+#include "Core/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
-#include "Renderer/Resourses/ShaderLibrary.h"
 #include "RenderConstants.h"
 
 #include <filesystem>
@@ -97,21 +97,17 @@ void Renderer::Init()
 	{
 		const auto width = GraphicsConfig::GetShadowBufferWidth();
 		const auto height = GraphicsConfig::GetShadowBufferHeight();
-		s_debug->greyscale_shadow = Texture2D::Create(width, height);
-		s_debug->greyscale_depth = Texture2D::Create(s_data->window_width, s_data->window_height);
-		s_debug->greyscale_ssao = Texture2D::Create(s_data->window_width, s_data->window_height);
-		s_debug->greyscale_shininess = Texture2D::Create(s_data->window_width, s_data->window_height);
+		s_debug->greyscale_shadow = ResourceManager::LoadTexture2D(width, height);
+		s_debug->greyscale_depth = ResourceManager::LoadTexture2D(s_data->window_width, s_data->window_height);
+		s_debug->greyscale_ssao = ResourceManager::LoadTexture2D(s_data->window_width, s_data->window_height);
+		s_debug->greyscale_shininess = ResourceManager::LoadTexture2D(s_data->window_width, s_data->window_height);
 	}
 }
 
 void Renderer::Shutdown()
 {
 	s_data.reset();
-}
-
-void Renderer::LoadShaderLibrary(const std::filesystem::path& path, bool recompile)
-{
-	s_data->shader_library = std::make_unique<ShaderLibrary>(path, recompile);
+	s_debug.reset();
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)
@@ -300,12 +296,12 @@ void Renderer::ComputeDebugInfo()
 	ComputeTexture(ShaderConstants::TextureToGrayScaleShader, s_debug->ssao.ssao_texture, s_debug->greyscale_ssao->GetRendererID(), win_w, win_h);
 	ComputeTexture(ShaderConstants::TextureToGrayScaleShader, s_debug->geom.shininess_texture, s_debug->greyscale_shininess->GetRendererID(), win_w, win_h);
 
-	const auto compute_shader = Renderer::GetShaderLibrary()->Get(ShaderConstants::ArrayToGrayScaleShader);
+	const auto compute_shader = ResourceManager::GetShader(ShaderConstants::ArrayToGrayScaleShader);
 }
 
 void Renderer::ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h)
 {
-	const auto compute_shader = Renderer::GetShaderLibrary()->Get(shader.data());
+	const auto compute_shader = ResourceManager::GetShader(shader);
 	compute_shader->Bind();
 
 	Texture2D::BindTexture(id_in, 0);
@@ -320,7 +316,7 @@ void Renderer::ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t 
 
 void Renderer::ComputeTextureArray(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h, int layer)
 {
-	const auto compute_shader = Renderer::GetShaderLibrary()->Get(shader.data());
+	const auto compute_shader = ResourceManager::GetShader(shader.data());
 	compute_shader->Bind();
 
 	Texture2D::BindTexture(id_in, 0);
@@ -336,7 +332,7 @@ void Renderer::ComputeTextureArray(std::string_view shader, uint32_t id_in, uint
 
 void Renderer::ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h)
 {
-	const auto compute_shader = Renderer::GetShaderLibrary()->Get(shader.data());
+	const auto compute_shader = ResourceManager::GetShader(shader);
 	compute_shader->Bind();
 	compute_shader->SetFloat(ShaderConstants::Znear, s_data->znear);
 	compute_shader->SetFloat(ShaderConstants::Zfar, s_data->zfar);

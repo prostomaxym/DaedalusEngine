@@ -6,11 +6,14 @@
 
 namespace Daedalus
 {
+	class ResourceManager;
+
 	class Material
 	{
-	public:
-		Material(const std::string& material_name = { "Default Material" }, glm::vec3 kambient = { 1.f, 1.f, 0.1f }, glm::vec3 kdiffuse = { 1.f, 1.f, 1.f }, 
+		friend class Daedalus::ResourceManager;
+		Material(const std::string& material_name = { "Default Material" }, glm::vec3 kambient = { 1.f, 1.f, 0.1f }, glm::vec3 kdiffuse = { 1.f, 1.f, 1.f },
 			glm::vec3 kspecular = { 1.f, 1.f, 1.f }, float shininess = { 16.f });
+	public:
 
 		void SetDiffuseMap(unsigned char* data, int width, int height, int channels);
 		void SetSpecularMap(unsigned char* data, int width, int height, int channels);

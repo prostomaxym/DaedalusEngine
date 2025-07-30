@@ -6,6 +6,10 @@
 #include "Core/Input.h"
 #include "Core/Layer.h"
 
+#include "Config/GraphicsConfig.h"
+#include "Config/PathConfig.h"
+#include "Config/KeybindConfig.h"
+
 #include "Debug/Log.h"
 
 #include "Renderer/API/Renderer.h"
@@ -16,8 +20,6 @@
 #include "ECS/NativeScripts/CameraController.h"
 
 #include "Threads/DaedalusThreads.h"
-
-#include "Debug/ImGuiLayer.h"
 
 #include "Utils/DeltaTime.h"
 #include "Utils/FPSLocker.h"

@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
+#include "Config/PathConfig.h"
 #include "Debug/DebugLayer.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
@@ -29,6 +30,7 @@ Application* Application::GetInstance()
 
 Application::Application()
 {
+	Platform::SetupSegfaultHandler();
 	s_instance = this;
 	WorkingDirectory::LoadConfigs();
 	
@@ -46,9 +48,9 @@ Application::Application()
 
 	Renderer::Init();
 	ResourceManager::Init();
-	ResourceManager::LoadShaders(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
+	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
-	if (IsDevBuild)
+	if (IsDevBuild())
 	{
 		m_debug_layer = new DebugLayer();
 		PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
@@ -61,6 +63,7 @@ Application::~Application()
 	Input::Shutdown();
 	Renderer::Shutdown();
 	ResourceManager::Shutdown();
+	Log::Shutdown();
 }
 
 void Application::Run()

@@ -12,9 +12,7 @@ namespace Daedalus
 	public:
 		static void SetRootDirectory(const std::filesystem::path& path = std::filesystem::path());
 		static std::filesystem::path GetRootDirectory();
-		static std::filesystem::path GetAssetsDirectory();
-		static std::filesystem::path GetShaderDirectory();
-		
+
 		static void LoadConfigs();
 		static void SaveConfigs();
 

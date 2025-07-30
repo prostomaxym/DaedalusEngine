@@ -13,11 +13,12 @@ namespace Daedalus {
 	public:
 		static std::unique_ptr<Window> createWindow(const WindowProps& props);
 		static void InitInputSystem();
+		static void SetupSegfaultHandler();
 
 		static std::pair<int, int> GetMonitorResolution();
 
 		static void PreciseThreadSleep(long long nanoseconds);
 
-		static inline std::string FormatTimestamp(const std::chrono::system_clock::time_point& tp);
+		static std::string FormatTimestamp(const std::chrono::system_clock::time_point& tp);
 	};
 }

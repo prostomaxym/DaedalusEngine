@@ -22,9 +22,9 @@ namespace {
 	{
 		switch (severity)
 		{
-		case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::Renderer, message); return;
-		case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::Renderer, message); return;
-		case GL_DEBUG_SEVERITY_LOW:         Log::Write(Log::Levels::Warn, Log::Categories::Renderer, message); return;
+		case GL_DEBUG_SEVERITY_HIGH:         Log::Write(Log::Levels::Critical, Log::Categories::RendererAPI, message); return;
+		case GL_DEBUG_SEVERITY_MEDIUM:       Log::Write(Log::Levels::Error, Log::Categories::RendererAPI, message); return;
+		case GL_DEBUG_SEVERITY_LOW:         Log::Write(Log::Levels::Warn, Log::Categories::RendererAPI, message); return;
 		case GL_DEBUG_SEVERITY_NOTIFICATION: /*Log::Write(Log::Levels::Trace, Log::Categories::Renderer, message)*/; return;
 		}
 	}

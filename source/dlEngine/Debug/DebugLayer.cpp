@@ -606,11 +606,12 @@ void DebugLayer::LogFilterPanel::Draw()
 {
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_Framed))
 	{
-		ImGui::BeginChild("Cat:", { 200.f, 200.f }, 0, ImGuiChildFlags_Borders);
+		ImGui::BeginChild("Cat:", { 200.f, 220.f }, 0, ImGuiChildFlags_Borders);
 		ImGui::Text("Categories:");
 		DrawCategoryCheckbox(Log::Categories::EngineCore);
 		DrawCategoryCheckbox(Log::Categories::ECS);
 		DrawCategoryCheckbox(Log::Categories::Renderer);
+		DrawCategoryCheckbox(Log::Categories::RendererAPI);
 		DrawCategoryCheckbox(Log::Categories::Events);
 		DrawCategoryCheckbox(Log::Categories::Platform);
 		DrawCategoryCheckbox(Log::Categories::Application);
@@ -618,8 +619,8 @@ void DebugLayer::LogFilterPanel::Draw()
 
 		ImGui::SameLine();
 
-		ImGui::BeginChild("Lev:", { 200.f, 200.f }, 0, ImGuiChildFlags_Borders);
-		ImGui::Text("Levels");
+		ImGui::BeginChild("Lev:", { 200.f, 220.f }, 0, ImGuiChildFlags_Borders);
+		ImGui::Text("Levels:");
 		DrawLevelCheckbox(Log::Levels::Trace);
 		DrawLevelCheckbox(Log::Levels::Info);
 		DrawLevelCheckbox(Log::Levels::Warn);

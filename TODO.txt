@@ -1,6 +1,5 @@
-Asset manager
-Debug overlay + profiler
-Log file
+Debug resource
+Profiler
 Multithread compilation
 
 - Systems

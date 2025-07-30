@@ -5,10 +5,12 @@
 #include "Windows/WindowsInput.h"
 #include "Windows/WindowsWindow.h"
 
+#include "Debug/Log.h"
+
 #ifdef DL_PLATFORM_WINDOWS
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
+#include <windows.h>
+#include <iostream>
 #include <thread>
 
 namespace
@@ -25,7 +27,35 @@ namespace
 	};
 	using UniqueHandle = std::unique_ptr<std::remove_pointer<HANDLE>::type, HandleDeleter>;
 	UniqueHandle timer(CreateWaitableTimerEx(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, EVENT_ALL_ACCESS));
+
+	LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo)
+	{
+		if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION
+			|| ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ARRAY_BOUNDS_EXCEEDED
+			|| ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW)
+		{
+			Daedalus::Log::SaveLogs("Fatal error : access violation\n");
+			ExitProcess(EXIT_FAILURE);
+		}
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
 }
+
+#elif defined DL_PLATFORM_LINUX
+include <signal.h>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstdio>
+
+void SegfaultHandler(int signal)
+{
+	const char* msg = "Fatal error: segmentation fault\n";
+	write(STDERR_FILENO, msg, strlen(msg));
+	Daedalus::Log::SaveLogs("Fatal error: segmentation fault\n");
+
+	std::_Exit(EXIT_FAILURE);
+}
+
 #endif
 
 using namespace Daedalus;
@@ -39,7 +69,7 @@ std::unique_ptr<Window> Platform::createWindow(const WindowProps& props)
 #elif defined DL_PLATFORM_LINUX
 	return std::make_unique<LinuxWindow>(props);
 #else
-	static_assert(false, "Unsupported Platfrom")
+	static_assert(false, "Unsupported Platform")
 #endif
 }
 
@@ -54,6 +84,21 @@ void Platform::InitInputSystem()
 #endif
 }
 
+void Platform::SetupSegfaultHandler()
+{
+	std::set_terminate([]()
+		{
+			Log::SaveLogs("Unhandled exception. Terminating.");
+			std::abort(); // or exit(EXIT_FAILURE);
+		});
+
+#ifdef DL_PLATFORM_WINDOWS
+	SetUnhandledExceptionFilter(ExceptionFilter);
+#elif defined DL_PLATFORM_LINUX
+	signal(SIGSEGV, SegfaultHandler);
+#endif
+}
+
 std::pair<int, int> Platform::GetMonitorResolution()
 {
 #ifdef DL_PLATFORM_WINDOWS
@@ -61,7 +106,7 @@ std::pair<int, int> Platform::GetMonitorResolution()
 #elif defined DL_PLATFORM_LINUX
 	return LinuxWindow::GetMonitorResolution();
 #else
-	static_assert(false, "Unsupported Platfrom")
+	static_assert(false, "Unsupported Platform")
 #endif
 	
 }
@@ -84,7 +129,7 @@ void Platform::PreciseThreadSleep(long long ns)
 #elif defined DL_PLATFORM_LINUX //TODO: not implemented, using nonprecise timer
 	std::this_thread::sleep_for(ns);
 #else
-	static_assert(false, "Unsupported Platfrom")
+	static_assert(false, "Unsupported Platform")
 #endif
 }
 

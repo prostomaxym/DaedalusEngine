@@ -294,6 +294,7 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
     std::ifstream file(file_path);
     if (!file.is_open())
     {
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - " + file_path.string());
         throw std::runtime_error("Failed to open shader file");
     }
 
@@ -308,8 +309,11 @@ std::string OpenGLShaderCompiler::ReadHeaderFile(const std::filesystem::path& pa
 {
     std::ifstream file(path);
     if (!file.is_open())
+    {
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - " + path.string());
         throw std::runtime_error("Failed to open GLSL header file: " + path.string());
-
+    }
+        
     std::stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();

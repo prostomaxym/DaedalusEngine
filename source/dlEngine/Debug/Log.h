@@ -23,7 +23,8 @@ namespace Daedalus {
 			Renderer = BITMASK(2),
 			Events = BITMASK(3),
 			Platform = BITMASK(4),
-			Application = BITMASK(5)
+			Application = BITMASK(5),
+			RendererAPI = BITMASK(6) // Use for renderer backend api only
 		};
 
 		enum class Levels
@@ -42,6 +43,7 @@ namespace Daedalus {
 			case Log::Categories::EngineCore: return "EngineCore";
 			case Log::Categories::ECS:        return "ECS";
 			case Log::Categories::Renderer:   return "Renderer";
+			case Log::Categories::RendererAPI:return "RendererAPI";
 			case Log::Categories::Events:     return "Events";
 			case Log::Categories::Platform:   return "Platform";
 			case Log::Categories::Application:return "Application";
@@ -66,8 +68,8 @@ namespace Daedalus {
 		struct Entry
 		{
 			std::chrono::system_clock::time_point timestamp;
-			Levels level;
-			Categories category;
+			Levels level = Levels::Info;
+			Categories category = Categories::EngineCore;
 			std::string message;
 		};
 
@@ -100,6 +102,8 @@ namespace Daedalus {
 
 	public:
 		static void Init();
+		static void Shutdown();
+		static void SaveLogs(const std::string& exit_msg);
 
 		static void EnableAllCategories();
 		static void EnableCategory(Categories category) { s_allowed_categories |= category; }
@@ -135,8 +139,8 @@ namespace Daedalus {
 				case Log::Levels::Trace:    TraceImpl(msg); break;
 				case Log::Levels::Info:     InfoImpl(msg); break;
 				case Log::Levels::Warn:     WarnImpl(msg); break;
-				case Log::Levels::Error:    ErrorImpl(msg); break;
-				case Log::Levels::Critical: CriticalImpl(msg); break;
+				case Log::Levels::Error:    ErrorImpl(msg, category); break;
+				case Log::Levels::Critical: CriticalImpl(msg, category); break;
 				default: break;
 			}
 		}
@@ -145,8 +149,8 @@ namespace Daedalus {
 		static void TraceImpl(const std::string& msg);
 		static void InfoImpl(const std::string& msg);
 		static void WarnImpl(const std::string& msg);
-		static void ErrorImpl(const std::string& msg);
-		static void CriticalImpl(const std::string& msg);
+		static void ErrorImpl(const std::string& msg, Log::Categories category);
+		static void CriticalImpl(const std::string& msg, Log::Categories category);
 
 		static int& GetAllowedCategories() { return s_allowed_categories; }
 		static bool& GetLockUpdating() { return s_stop_updating; }

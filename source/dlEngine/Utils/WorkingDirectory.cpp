@@ -26,18 +26,6 @@ std::filesystem::path WorkingDirectory::GetRootDirectory()
 	return std::filesystem::current_path();
 }
 
-std::filesystem::path WorkingDirectory::GetAssetsDirectory()
-{
-	auto path = std::filesystem::current_path();
-	return path / PathConfig::GetAssetsPath();
-}
-
-std::filesystem::path WorkingDirectory::GetShaderDirectory()
-{
-	auto path = std::filesystem::current_path();
-	return path / PathConfig::GetShadersPath();
-}
-
 std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
 {
 	int dir_depth = 0;
@@ -91,15 +79,15 @@ std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
 void WorkingDirectory::LoadConfigs()
 {
 	PathConfig::Load(WorkingDirectory::GetRootDirectory() / path_config_file);
-	GraphicsConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
-	KeybindConfig::Load(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
+	GraphicsConfig::Load(PathConfig::GetGraphicsConfigPath());
+	KeybindConfig::Load(PathConfig::GetKeybindConfigPath());
 	ImGuiLayer::LoadConfig();
 }
 
 void WorkingDirectory::SaveConfigs()
 {
 	PathConfig::Save(WorkingDirectory::GetRootDirectory() / path_config_file);
-	GraphicsConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetGraphicsConfigPath());
-	KeybindConfig::Save(WorkingDirectory::GetRootDirectory() / PathConfig::GetKeybindConfigPath());
+	GraphicsConfig::Save(PathConfig::GetGraphicsConfigPath());
+	KeybindConfig::Save(PathConfig::GetKeybindConfigPath());
 	ImGuiLayer::SaveConfig();
 }

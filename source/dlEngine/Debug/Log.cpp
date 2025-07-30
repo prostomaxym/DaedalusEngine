@@ -9,6 +9,7 @@ using namespace Daedalus;
 
 std::shared_ptr<spdlog::logger> s_impl = nullptr;
 int Log::s_allowed_categories = 0;
+bool Log::s_stop_updating = false;
 
 void Log::Init()
 {

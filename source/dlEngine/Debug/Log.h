@@ -105,7 +105,7 @@ namespace Daedalus {
 		static void EnableCategory(Categories category) { s_allowed_categories |= category; }
 		static void DisableCategory(Categories category) { s_allowed_categories ^= category; }
 		static void ToggleCategory(Categories category, bool enable);
-		static bool IsEnabled(Categories category) { return category & s_allowed_categories; }
+		static bool IsEnabled(Categories category) { return category & s_allowed_categories; }	
 
 		static void SkipProcessing() {}
 
@@ -120,7 +120,7 @@ namespace Daedalus {
 
 			const std::string msg = fmt::format(fmt, std::forward<Args>(args)...);
 
-			if (IsDevBuild())
+			if (IsDevBuild() && !s_stop_updating)
 			{
 				Storage::Add({
 					std::chrono::system_clock::now(),
@@ -148,7 +148,10 @@ namespace Daedalus {
 		static void ErrorImpl(const std::string& msg);
 		static void CriticalImpl(const std::string& msg);
 
-		static int s_allowed_categories;
-	};
+		static int& GetAllowedCategories() { return s_allowed_categories; }
+		static bool& GetLockUpdating() { return s_stop_updating; }
 
+		static int s_allowed_categories;
+		static bool s_stop_updating;
+	};
 }

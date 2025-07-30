@@ -20,12 +20,12 @@ void KeybindConfig::Load(const std::filesystem::path& path)
 	SI_Error rc = ini.LoadFile(path.string().c_str());
 	if (rc < 0)
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to load keybind config from " + path.string());
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load keybind config from " + path.string());
 		return;
 	}
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loaded keybind config from " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded keybind config from " + path.string());
 	}
 
 	std::list<CSimpleIniA::Entry> binds;
@@ -51,11 +51,11 @@ void KeybindConfig::Save(const std::filesystem::path& path)
 	SI_Error rc = ini.SaveFile(path.string().c_str());
 	if (rc < 0)
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to save keybind config to " + path.string() + "\n");
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save keybind config to " + path.string() + "\n");
 	}
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Saved keybind config to " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved keybind config to " + path.string());
 	}
 }
 

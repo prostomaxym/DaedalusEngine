@@ -31,13 +31,13 @@ void PathConfig::Load(const std::filesystem::path& path)
     SI_Error rc = ini.LoadFile(path.string().c_str());
     if (rc < 0)
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to load path config from " + path.string() + "\nLoading default config");
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load path config from " + path.string() + "\nLoading default config");
         LoadDefault();
 		return;
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loaded path config from " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded path config from " + path.string());
 	}
 
 	s_assets_subdir = ini.GetValue(PathSectionName, AssetsDirName, "asset");
@@ -61,11 +61,11 @@ void PathConfig::Save(const std::filesystem::path& path)
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 
 	{
-        Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Failed to save path config to " + path.string() + "\n");
+        Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save path config to " + path.string() + "\n");
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Saved path config to " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved path config to " + path.string());
 	}
 }
 

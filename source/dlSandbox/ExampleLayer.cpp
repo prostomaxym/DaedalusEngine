@@ -1,6 +1,4 @@
 #include "ExampleLayer.h"
-#include "ECS/NativeScripts/CameraController.h"
-#include "Renderer/API/RenderConstants.h"
 
 #include "ExampleScripts.h"
 
@@ -81,7 +79,7 @@ void ExampleLayer::PrepareNukeScene()
 	//camera_scripts.AddScript<LogPositionScript>(camera_entity);
 	camera_scripts.AddScript<PlayerControllerScript>(camera_entity);
 
-	camera_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", s_enhance_model_flags);
+	camera_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", s_enhance_model_flags);
 	auto& miran_transform = camera_entity.GetComponent<TransformComponent>();
 	miran_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miran_transform.translation = glm::vec3(0.f, 0.f, 0.f);
@@ -130,7 +128,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto spot_entity = m_scene.CreateEntity("Spot Light");
-	spot_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Light/Light.blend", ExampleLayer::s_enhance_model_flags);
+	spot_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Light/Light.blend", ExampleLayer::s_enhance_model_flags);
 	auto& spot_transform = spot_entity.GetComponent<TransformComponent>();
 	spot_transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
 	spot_transform.translation = glm::vec3(-37.f, 13.6f, -29.7f),
@@ -164,7 +162,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto nuke_entity = m_scene.CreateEntity("Nuke");
-	nuke_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Nuke/Nuke.obj", ExampleLayer::s_enhance_model_flags);
+	nuke_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Nuke/Nuke.obj", ExampleLayer::s_enhance_model_flags);
 	auto& nuke_transfrom = nuke_entity.GetComponent<TransformComponent>();
 	nuke_transfrom.scale = glm::vec3(2.f, 2.f, 2.f);
 	nuke_transfrom.translation = glm::vec3(-50.f, 18.f, -120.f);
@@ -174,7 +172,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto kratos_model = m_scene.CreateEntity("Kratos");
-	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", ExampleLayer::s_enhance_model_flags);
+	kratos_model.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Kratos/Kratos.obj", ExampleLayer::s_enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	kratos_transform.translation = glm::vec3(0.f, -2.8f, -18.f);
@@ -184,7 +182,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto miranda_entity = m_scene.CreateEntity("Miranda");
-	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", ExampleLayer::s_enhance_model_flags);
+	miranda_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", ExampleLayer::s_enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miranda_transform.translation = glm::vec3(-12.f, -2.8f, -18.f);
@@ -196,7 +194,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 	auto tank_entity = m_scene.CreateEntity("Tank");
-	tank_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/WoT_LTP/LTP.obj", ExampleLayer::s_enhance_model_flags);
+	tank_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/WoT_LTP/LTP.obj", ExampleLayer::s_enhance_model_flags);
 	auto& tank_transform = tank_entity.GetComponent<TransformComponent>();
 	tank_transform.scale = glm::vec3(3.f, 3.f, 3.f);
 	tank_transform.translation = glm::vec3(-25.f, -2.8f, -23.f);
@@ -219,7 +217,7 @@ void ExampleLayer::PrepareNukeScene()
 
 	for (auto& face : faces)
 	{
-		face = WorkingDirectory::GetAssetsDirectory().string() + face;
+		face = PathConfig::GetAssetsPath().string() + face;
 	}
 
 	auto cubemap_entity = m_scene.CreateEntity("Cubemap");
@@ -261,17 +259,17 @@ void ExampleLayer::PrepareAnorLondoScene()
 	transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	transform.translation = glm::vec3(510.f, -240.f, 730.f);
 	transform.rotation = glm::vec3(0.f, -90.f, 0.f);
-	CreateEntitiesForOBJFiles(WorkingDirectory::GetAssetsDirectory().string() + "/models/Anor Londo/", m_scene, transform);
+	CreateEntitiesForOBJFiles(PathConfig::GetAssetsPath().string() + "/models/Anor Londo/", m_scene, transform);
 
 	auto kratos_model = m_scene.CreateEntity("Kratos");
-	kratos_model.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Kratos/Kratos.obj", ExampleLayer::s_enhance_model_flags);
+	kratos_model.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Kratos/Kratos.obj", ExampleLayer::s_enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	kratos_transform.translation = glm::vec3(9.f, -6.f, -20.f);
 	kratos_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
 
 	auto miranda_entity = m_scene.CreateEntity("Miranda");
-	miranda_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", ExampleLayer::s_enhance_model_flags);
+	miranda_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", ExampleLayer::s_enhance_model_flags);
 	auto& miranda_transform = miranda_entity.GetComponent<TransformComponent>();
 	miranda_transform.scale = glm::vec3(2.f, 2.f, 2.f);
 	miranda_transform.translation = glm::vec3(-9.f, -6.f, -20.f);
@@ -280,7 +278,7 @@ void ExampleLayer::PrepareAnorLondoScene()
 	miranda_scripts.AddScript<RotationModelScript>(miranda_entity, 0.1f);
 
 	auto marci_entity = m_scene.CreateEntity("Marci");
-	marci_entity.AddComponent<RenderableObjectComponent>(WorkingDirectory::GetAssetsDirectory() / "models/Marci/marci.fbx", ExampleLayer::s_enhance_model_flags);
+	marci_entity.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Marci/marci.fbx", ExampleLayer::s_enhance_model_flags);
 	auto& marci_transform = marci_entity.GetComponent<TransformComponent>();
 	marci_transform.scale = glm::vec3(0.0002f, 0.0002f, 0.0002f);
 	marci_transform.translation = glm::vec3(-9.f, -6.f, -35.f);

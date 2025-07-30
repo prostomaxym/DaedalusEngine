@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
+#include "Config/PathConfig.h"
 #include "Debug/DebugLayer.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
@@ -29,6 +30,7 @@ Application* Application::GetInstance()
 
 Application::Application()
 {
+	Platform::SetupSegfaultHandler();
 	s_instance = this;
 	WorkingDirectory::LoadConfigs();
 	
@@ -46,10 +48,13 @@ Application::Application()
 
 	Renderer::Init();
 	ResourceManager::Init();
-	ResourceManager::LoadShaders(WorkingDirectory::GetShaderDirectory(), GraphicsConfig::RecompilingShadersEnabled());
+	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
-	m_debug_layer = new DebugLayer();
-	PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+	if (IsDevBuild())
+	{
+		m_debug_layer = new DebugLayer();
+		PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+	}
 }
 
 Application::~Application()
@@ -58,6 +63,7 @@ Application::~Application()
 	Input::Shutdown();
 	Renderer::Shutdown();
 	ResourceManager::Shutdown();
+	Log::Shutdown();
 }
 
 void Application::Run()
@@ -136,7 +142,7 @@ bool Application::OnKeyReleased(KeyReleasedEvent& event)
 {
 	const auto key_code = event.GetKeyCode();
 
-	if (key_code == KeybindConfig::GetKeyboardBind("Debug"))
+	if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Debug"))
 	{
 		m_debug_layer->Toggle();
 		m_window->FreeCursor(m_debug_layer->IsShown());

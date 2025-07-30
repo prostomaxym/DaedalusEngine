@@ -22,10 +22,20 @@
 #endif
 
 
-// Evil macros
-
-#define DL_DEBUG_BUILD //TODO: define it from project config
 #define DL_DEV_BUILD //TODO: define it from project config
+
+namespace Daedalus
+{
+	// Use it hide/unhide dev tools
+	constexpr auto IsDevBuild()
+	{
+#ifdef DL_DEV_BUILD
+		return true;
+#else
+		return false;
+#endif
+	}
+}
 
 #ifdef SIGTRAP
 #define PLATFORM_DEBUG_BREAK raise(SIGTRAP)

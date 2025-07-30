@@ -5,12 +5,19 @@
 
 namespace Daedalus
 {
-	template <typename T>
+	template <typename T, size_t Capacity = 0>
 	class DAEDALUS_API RingVector
 	{
 	public:
+		template <size_t C = Capacity, std::enable_if_t<C == 0, int> = 0>
 		explicit RingVector(size_t capacity)
 			: data_(capacity), capacity_(capacity)
+		{
+		}
+
+		template <size_t C = Capacity, std::enable_if_t<C != 0, int> = 0>
+		explicit RingVector()
+			: data_(C), capacity_(C)
 		{
 		}
 
@@ -49,6 +56,13 @@ namespace Daedalus
 		bool empty() const
 		{
 			return size_ == 0;
+		}
+
+		void clear()
+		{
+			data_.clear();
+			start_ = 0;
+			size_ = 0;
 		}
 
 		const T& operator[](size_t index) const
@@ -157,9 +171,21 @@ namespace Daedalus
 		ConstIterator begin() const { return ConstIterator(this, 0); }
 		ConstIterator end() const { return ConstIterator(this, size_); }
 
+		using reverse_iterator = std::reverse_iterator<Iterator>;
+		using const_reverse_iterator = std::reverse_iterator<ConstIterator>;
+
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
+		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
+
 	private:
 		std::vector<T> data_;
-		size_t capacity_;
+		size_t capacity_ = 0;
 		size_t start_ = 0;
 		size_t size_ = 0;
 	};

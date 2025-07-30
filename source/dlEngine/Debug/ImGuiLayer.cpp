@@ -12,7 +12,6 @@
 #include "Macros.h"
 #include "Core/Application.h"
 #include "Events/EventDispatcher.h"
-#include "Utils/WorkingDirectory.h"
 #include "Config/PathConfig.h"
 
 using namespace Daedalus;
@@ -47,7 +46,7 @@ void ImGuiLayer::OnAttach()
 
 	float fontSize = 18.0f;// *2.0f;
 
-	const auto font_filename = (WorkingDirectory::GetAssetsDirectory() / "fonts/calibrib.ttf").string();
+	const auto font_filename = (PathConfig::GetAssetsPath() / "fonts/calibrib.ttf").string();
 
 	io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
 	io.FontDefault = io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
@@ -164,13 +163,21 @@ void ImGuiLayer::LoadConfig()
 
 void ImGuiLayer::SaveConfig()
 {
-	auto ini_path = WorkingDirectory::GetRootDirectory() / PathConfig::GetConfigPath() / "imgui.ini";
+	auto ini_path = PathConfig::GetConfigPath() / "imgui.ini";
 	ImGui::SaveIniSettingsToDisk(ini_path.string().c_str());
+	Log::Write(Log::Levels::Info, Log::Categories::Application, "Save ImGui config to " + ini_path.string());
 }
 
 void ImGuiLayer::DoLoadConfig()
 {
 	auto ini_path = PathConfig::GetConfigPath() / "imgui.ini";
 	if (std::filesystem::exists(ini_path))
+	{
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded ImGui config from " + ini_path.string());
 		ImGui::LoadIniSettingsFromDisk(ini_path.string().c_str());
+	}
+	else
+	{
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Loaded default ImGui config");
+	}
 }

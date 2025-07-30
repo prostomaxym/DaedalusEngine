@@ -61,7 +61,7 @@ void ShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cached_sha
 		}
 		catch (std::runtime_error& er)
 		{
-			const auto shader_name_with_ext = shader_name + "." + Shader::GetSourceFileExtention();
+			const auto shader_name_with_ext = shader_name + Shader::GetSourceFileExtention();
 			shader = Shader::CreateFromFile(path / shader_name_with_ext);
 			shader->SaveBinary(path.string() + "/" + cache_dir + "/" + shader_name + Shader::GetBinaryFileExtention());
 		}

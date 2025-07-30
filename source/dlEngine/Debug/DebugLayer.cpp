@@ -1,9 +1,11 @@
 #include "dlpch.h"
 
 #include "DebugLayer.h"
+#include "Log.h"
 #include "Core/Application.h"
 #include "Config/PathConfig.h"
 #include "Renderer/API/Renderer.h"
+#include "Platform/Platform.h"
 #include "Platform/ResourcesMonitor.h"
 #include "Utils/WorkingDirectory.h"
 
@@ -45,26 +47,19 @@ namespace
 
 		return copy;
 	}
-}
 
-void DebugLayer::Update(DeltaTime dt)
-{
-	ImGui::Begin("Debug Overlay", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-
-	if (ImGui::BeginTabBar("Debug Overlay", ImGuiTabBarFlags_None))
+	ImVec4 GetColorForLevel(Log::Levels level)
 	{
-		RenderGeneralPage(dt);
-		RenderRenderingPage();
-
-		if (ImGui::BeginTabItem("Tab 3"))
+		switch (level)
 		{
-			ImGui::Text("This is Tab 3");
-			ImGui::EndTabItem();
+		case Log::Levels::Trace:    return ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+		case Log::Levels::Info:     return ImVec4(0.0f, 0.7f, 0.0f, 1.0f);
+		case Log::Levels::Warn:     return ImVec4(0.7f, 0.7f, 0.0f, 1.0f);
+		case Log::Levels::Error:    return ImVec4(0.7f, 0.0f, 0.0f, 1.0f);
+		case Log::Levels::Critical: return ImVec4(0.7f, 0.0f, 0.7f, 1.0f);
+		default:                   return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
-
-		ImGui::EndTabBar();
 	}
-	ImGui::End();
 }
 
 void DebugLayer::InitWindow()
@@ -99,6 +94,27 @@ void DebugLayer::InitWindow()
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.ScaleAllSizes(1.0 / 1.33f);
 	}
+}
+
+void DebugLayer::Update(DeltaTime dt)
+{
+	ImGui::Begin("Debug Overlay", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+
+	if (ImGui::BeginTabBar("Debug Overlay", ImGuiTabBarFlags_None))
+	{
+		RenderGeneralPage(dt);
+		RenderRenderingPage();
+
+		if (ImGui::BeginTabItem("Logging"))
+		{
+			m_log_selection_panel.Draw();
+			RenderLogsPage();
+			ImGui::EndTabItem();
+		}
+
+		ImGui::EndTabBar();
+	}
+	ImGui::End();
 }
 
 void DebugLayer::RenderGeneralPage(DeltaTime dt)
@@ -542,6 +558,31 @@ void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id, ImVec
 	ImGui::EndChild();
 }
 
+void DebugLayer::RenderLogsPage()
+{
+	//static bool open = false;
+	ImGui::BeginChild("Log Viewer", {0, 0}, 0, ImGuiWindowFlags_NoSavedSettings);
+
+	const auto& entries = Log::Storage::GetEntries();
+	for (const auto& entry : entries)
+	{
+		if (!m_log_selection_panel.IsCategoryEnabled(entry.category)
+			|| !m_log_selection_panel.IsLevelEnabled(entry.level))
+			continue;
+
+		ImGui::TextColored(GetColorForLevel(entry.level), "[%s][%s][%s]: %s",
+			Platform::FormatTimestamp(entry.timestamp).c_str(),
+			Log::ToString(entry.level),
+			Log::ToString(entry.category),
+			entry.message.c_str());
+	}
+
+	if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+		ImGui::SetScrollHereY(1.0f); // auto-scroll to bottom
+
+	ImGui::EndChild();
+}
+
 float DebugLayer::CalculateLowPercentile(float percentile) const
 {
 	if (m_frame_times.empty())
@@ -559,4 +600,69 @@ float DebugLayer::CalculateLowPercentile(float percentile) const
 		sum += sorted[sorted.size() - i];
 
 	return sum > 0.f ? sum / static_cast<float>(count) : 1.f;
+}
+
+void DebugLayer::LogFilterPanel::Draw()
+{
+	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_Framed))
+	{
+		ImGui::BeginChild("Cat:", { 200.f, 220.f }, 0, ImGuiChildFlags_Borders);
+		ImGui::Text("Categories:");
+		DrawCategoryCheckbox(Log::Categories::EngineCore);
+		DrawCategoryCheckbox(Log::Categories::ECS);
+		DrawCategoryCheckbox(Log::Categories::Renderer);
+		DrawCategoryCheckbox(Log::Categories::RendererAPI);
+		DrawCategoryCheckbox(Log::Categories::Events);
+		DrawCategoryCheckbox(Log::Categories::Platform);
+		DrawCategoryCheckbox(Log::Categories::Application);
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		ImGui::BeginChild("Lev:", { 200.f, 220.f }, 0, ImGuiChildFlags_Borders);
+		ImGui::Text("Levels:");
+		DrawLevelCheckbox(Log::Levels::Trace);
+		DrawLevelCheckbox(Log::Levels::Info);
+		DrawLevelCheckbox(Log::Levels::Warn);
+		DrawLevelCheckbox(Log::Levels::Error);
+		DrawLevelCheckbox(Log::Levels::Critical);
+		ImGui::Separator();
+		ImGui::Checkbox("Stop updating", &Log::GetLockUpdating());
+		ImGui::EndChild();
+		ImGui::Separator();
+	}
+}
+
+DebugLayer::LogFilterPanel::LogFilterPanel()
+{
+	std::fill(level_flags_.begin(), level_flags_.end(), true);
+}
+
+bool DebugLayer::LogFilterPanel::IsLevelEnabled(Log::Levels level) const
+{
+	return level_flags_[static_cast<int>(level)];
+}
+
+bool DebugLayer::LogFilterPanel::IsCategoryEnabled(Log::Categories category_bit) const
+{
+	return (Log::GetAllowedCategories() & category_bit) != 0;
+}
+
+void DebugLayer::LogFilterPanel::DrawCategoryCheckbox(Log::Categories cat)
+{
+	const int bit = static_cast<int>(cat);
+	bool enabled = (Log::GetAllowedCategories() & bit) != 0;
+	if (ImGui::Checkbox(Log::ToString(cat), &enabled))
+	{
+		if (enabled)
+			Log::EnableCategory(cat);
+		else
+			Log::DisableCategory(cat);
+	}
+}
+
+void DebugLayer::LogFilterPanel::DrawLevelCheckbox(Log::Levels level)
+{
+	int i = static_cast<int>(level);
+	ImGui::Checkbox(Log::ToString(level), &level_flags_[i]);
 }

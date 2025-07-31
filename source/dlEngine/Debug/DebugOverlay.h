@@ -1,22 +1,25 @@
 #pragma once
 
-#include "ImGuiLayer.h"
+#include "ImGuiWindow.h"
+
+#include "Events/KeyEvent.h"
 
 #include "Utils/RingVector.h"
 
-#include <imgui.h>
-
 namespace Daedalus
 {
-	class DAEDALUS_API DebugLayer : public ImGuiLayer
+	class DAEDALUS_API DebugOverlay : public ImGuiWindow
 	{
 	public:
-		DebugLayer() = default;
-		virtual ~DebugLayer() = default;
+		DebugOverlay() = default;
+		virtual ~DebugOverlay() = default;
 
-	protected:
+		bool OnKeyReleased(KeyReleasedEvent& event);
+		virtual void OnEvent(Event& evt) override;
+
+	private:
 		void Update(DeltaTime dt) override;
-		void InitWindow() override;
+		void Init() override;
 
 	private:
 		static const int GraphSize = 500;
@@ -36,9 +39,10 @@ namespace Daedalus
 		void RenderLogsPage();
 
 		float CalculateLowPercentile(float percentile) const;
+	
 
 	private:
-		RingVector<float> m_frame_times{ GraphSize };
+		RingVector<float, GraphSize> m_frame_times;
 
 		RingVector<float, GraphSize> m_cpu_app_load;
 		RingVector<float, GraphSize> m_cpu_total_load;

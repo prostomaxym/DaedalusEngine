@@ -11,8 +11,8 @@
 
 #include "Macros.h"
 #include "Core/Application.h"
-#include "Events/EventDispatcher.h"
 #include "Config/PathConfig.h"
+#include "ImGuiWindow.h"
 
 using namespace Daedalus;
 
@@ -69,8 +69,6 @@ void ImGuiLayer::OnAttach()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 450");
 
-	InitWindow();
-
 	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "ImGui Layer is attached;");
 }
 
@@ -87,6 +85,14 @@ void ImGuiLayer::OnDetach()
 
 void ImGuiLayer::OnEvent(Event& evt)
 {
+	for (auto& wnd : m_windows)
+	{
+		if (evt.IsHandled())
+			break;
+
+		wnd->OnEvent(evt);
+	}
+
 	if (m_block_events)
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -97,16 +103,17 @@ void ImGuiLayer::OnEvent(Event& evt)
 
 void ImGuiLayer::OnUpdate(DeltaTime dt)
 {
-	if (!m_show)
-		return;
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
 	
-	Update(dt);
-
+	for (auto& window : m_windows)
+	{
+		if (window->IsShown())
+			window->Update(dt);
+	}
+	
 	ImGuiIO& io = ImGui::GetIO();
 	const auto app = Application::GetInstance();
 	io.DisplaySize = ImVec2(static_cast<float>(app->GetWindow().GetWidth()), static_cast<float>(app->GetWindow().GetHeight()));
@@ -180,4 +187,10 @@ void ImGuiLayer::DoLoadConfig()
 	{
 		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Loaded default ImGui config");
 	}
+}
+
+void ImGuiLayer::AddWindow(std::unique_ptr<ImGuiWindow>&& window)
+{
+	window->Init();
+	m_windows.push_back(std::move(window));
 }

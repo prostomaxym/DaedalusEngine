@@ -1,12 +1,13 @@
 #pragma once
 
-#include "EventTable.h"
-#include "Utils/DeltaTime.h"
-#include "Utils/Timer.h"
-
 #include <chrono>
 #include <ostream>
 #include <string>
+#include <fmt/format.h>
+
+#include "EventTable.h"
+#include "Utils/DeltaTime.h"
+#include "Utils/Timer.h"
 
 namespace Daedalus 
 {

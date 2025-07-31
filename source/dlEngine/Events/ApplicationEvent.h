@@ -17,7 +17,7 @@ namespace Daedalus {
 
 		std::string GetInfo() const override
 		{
-			return "WindowReiseEvent: " + std::to_string(m_width) + ", " + std::to_string(m_height);
+			return "WindowResizeEvent: " + std::to_string(m_width) + ", " + std::to_string(m_height);
 		}
 
 	private:

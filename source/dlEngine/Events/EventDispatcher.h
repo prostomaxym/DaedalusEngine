@@ -39,6 +39,10 @@ namespace Daedalus {
 	class EventDispatcher
 	{
 	public:
+		static void Dispatch(Event& event)
+		{
+			Application::GetInstance()->OnEvent(event);
+		}
 
 		// @brief Blocking processing of events
 		template<typename T, typename F>

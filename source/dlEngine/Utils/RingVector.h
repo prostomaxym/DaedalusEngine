@@ -21,7 +21,7 @@ namespace Daedalus
 		{
 		}
 
-		void push(const T& value)
+		void push_back(const T& value)
 		{
 			data_[(start_ + size_) % capacity_] = value;
 			if (size_ < capacity_)
@@ -45,7 +45,7 @@ namespace Daedalus
 			return result;
 		}
 
-		void resize(size_t new_capacity, const T& value)
+		void resize(size_t new_capacity, const T& value = {})
 		{
 			data_.assign(new_capacity, value);
 			capacity_ = new_capacity;
@@ -61,8 +61,23 @@ namespace Daedalus
 		void clear()
 		{
 			data_.clear();
+			data_.resize(capacity_);
 			start_ = 0;
 			size_ = 0;
+		}
+
+		const T& back() const
+		{
+			if (empty())
+				throw std::out_of_range("RingVector::back() called on empty buffer");
+			return data_[(start_ + size_ - 1) % capacity_];
+		}
+
+		T& back()
+		{
+			if (empty())
+				throw std::out_of_range("RingVector::back() called on empty buffer");
+			return data_[(start_ + size_ - 1) % capacity_];
 		}
 
 		const T& operator[](size_t index) const

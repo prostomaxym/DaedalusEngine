@@ -1,4 +1,5 @@
 Debug resource
+Clean keybind config
 Profiler
 Multithread compilation
 

@@ -14,7 +14,7 @@ namespace Daedalus {
 
 	class DAEDALUS_API Log
 	{
-		friend class DebugLayer;
+		friend class DebugOverlay;
 	public:
 		enum Categories
 		{
@@ -81,7 +81,7 @@ namespace Daedalus {
 			static void Add(Entry entry)
 			{
 				std::lock_guard lock(s_mutex);
-				s_entries.push(std::move(entry));
+				s_entries.push_back(std::move(entry));
 			}
 
 			static const RingVector<Entry, MaxEntrySize>& GetEntries()

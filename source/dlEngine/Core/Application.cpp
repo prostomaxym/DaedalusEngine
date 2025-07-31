@@ -6,7 +6,8 @@
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
-#include "Debug/DebugLayer.h"
+#include "Debug/ConsoleWindow.h"
+#include "Debug/DebugOverlay.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
 #include "Utils/FPSLocker.h"
@@ -30,8 +31,9 @@ Application* Application::GetInstance()
 
 Application::Application()
 {
-	Platform::SetupSegfaultHandler();
 	s_instance = this;
+
+	Platform::SetupSegfaultHandler();	
 	WorkingDirectory::LoadConfigs();
 	
 	WindowProps props;
@@ -50,11 +52,18 @@ Application::Application()
 	ResourceManager::Init();
 	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
+	auto imgui = std::make_unique<ImGuiLayer>();
+	m_imgui_layer = imgui.get();
+	PushOverlay(std::move(imgui));
+
+	auto debug_overlay = std::make_unique<DebugOverlay>();
 	if (IsDevBuild())
 	{
-		m_debug_layer = new DebugLayer();
-		PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+		m_imgui_layer->AddWindow(std::move(debug_overlay));
 	}
+	
+	auto console = std::make_unique<ConsoleWindow>();
+	m_imgui_layer->AddWindow(std::move(console));
 }
 
 Application::~Application()
@@ -95,7 +104,6 @@ void Application::OnEvent(Event& event)
 {
 	EventDispatcher::ProcessEvent<WindowCloseEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowClosed));
 	EventDispatcher::ProcessEvent<WindowResizeEvent>(event, DL_BIND_EVENT_FN(Application::OnWindowResized));
-	EventDispatcher::ProcessEvent<KeyReleasedEvent>(event, DL_BIND_EVENT_FN(Application::OnKeyReleased));
 	
 	Log::Write(Log::Levels::Trace, Log::Categories::Events, "{0}", event);
 
@@ -135,18 +143,5 @@ bool Application::OnWindowResized(WindowResizeEvent& event)
 {
 	RenderCommand::SetViewport(0,0, event.GetWidth(), event.GetHeight());
 
-	return true;
-}
-
-bool Application::OnKeyReleased(KeyReleasedEvent& event)
-{
-	const auto key_code = event.GetKeyCode();
-
-	if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Debug"))
-	{
-		m_debug_layer->Toggle();
-		m_window->FreeCursor(m_debug_layer->IsShown());
-	}
-	
 	return true;
 }

@@ -26,6 +26,7 @@ ENDIF()
 
 if (MSVC)
     add_compile_options(/utf-8)
+    add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 endif()
 
 # Binaries output dir config

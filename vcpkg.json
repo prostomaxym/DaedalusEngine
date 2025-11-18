@@ -15,7 +15,8 @@
         {"name": "assimp"},
         {"name": "entt"},
         {"name": "simpleini"},
-        {"name": "fmt"}
+        {"name": "fmt"},
+        {"name": "bullet3", "features": ["multithreading"]}
     ],
     "builtin-baseline":"c0f2272fa7934cf52d33b098f24a7757b14ff15e"
 }

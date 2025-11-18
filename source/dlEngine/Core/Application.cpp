@@ -9,6 +9,7 @@
 #include "Debug/DebugLayer.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
+#include "Physics/Physics.h"
 #include "Utils/FPSLocker.h"
 #include "Utils/WorkingDirectory.h"
 
@@ -47,6 +48,7 @@ Application::Application()
 	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
 
 	Renderer::Init();
+	Physics::Init();
 	ResourceManager::Init();
 	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
@@ -62,6 +64,7 @@ Application::~Application()
 	WorkingDirectory::SaveConfigs();
 	Input::Shutdown();
 	Renderer::Shutdown();
+	Physics::Shutdown();
 	ResourceManager::Shutdown();
 	Log::Shutdown();
 }

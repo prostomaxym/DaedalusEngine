@@ -7,6 +7,7 @@
 #include "Entity.h"
 #include "NativeScript.h"
 #include "NativeScriptComponent.h"
+#include "Physics/Physics.h"
 
 using namespace Daedalus;
 
@@ -42,9 +43,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		}
 
 		// Physics
-		{
-
-		}
+		Physics::StepSimulation(dt.GetSeconds());
 	}
 
 	// Graphics

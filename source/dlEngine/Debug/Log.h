@@ -24,7 +24,8 @@ namespace Daedalus {
 			Events = BITMASK(3),
 			Platform = BITMASK(4),
 			Application = BITMASK(5),
-			RendererAPI = BITMASK(6) // Use for renderer backend api only
+			RendererAPI = BITMASK(6), // Use for renderer backend api only
+			Physics = BITMASK(7)
 		};
 
 		enum class Levels

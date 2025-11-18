@@ -17,6 +17,7 @@ add_subdirectory(Core)
 add_subdirectory(Debug)
 add_subdirectory(ECS)
 add_subdirectory(Events)
+add_subdirectory(Physics)
 add_subdirectory(Platform)
 add_subdirectory(Renderer)
 add_subdirectory(Threads)
@@ -59,6 +60,7 @@ target_link_libraries(${PROJECT_NAME}
         Debug
         ECS
         Events
+        Physics
         Platform
         Renderer
         Threads

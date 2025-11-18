@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
   find_package(Bullet CONFIG REQUIRED)
-  
+  find_package(glm CONFIG REQUIRED)
+
 #------------------ Project config ------------------------------#
 project(
     Physics
@@ -35,6 +36,8 @@ target_compile_definitions(${PROJECT_NAME}
     )
 
 target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        glm::glm
     PRIVATE     
         ${BULLET_LIBRARIES}  
     )

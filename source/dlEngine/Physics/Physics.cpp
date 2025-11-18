@@ -48,6 +48,7 @@ struct Physics::Impl
 
 		collisionConfig = std::make_unique<btDefaultCollisionConfiguration>();
 		dispatcher = std::make_unique<btCollisionDispatcher>(collisionConfig.get());
+		dispatcher->setDispatcherFlags(dispatcher->getDispatcherFlags());
 		broadphase = std::make_unique<btDbvtBroadphase>();
 		solver = std::make_unique<btSequentialImpulseConstraintSolver>();
 
@@ -108,7 +109,7 @@ struct Physics::Impl
 		ownedShapes.push_back(box);
 
 		btVector3 localInertia(0, 0, 0);
-		if (mass != 0.0f)
+		if (mass > 0.0f)
 			box->calculateLocalInertia(mass, localInertia);
 
 		btQuaternion rot(orientation.x, orientation.y, orientation.z, orientation.w);
@@ -122,6 +123,7 @@ struct Physics::Impl
 		dynamicsWorld->addRigidBody(body);
 
 		ownedBodies.push_back(body);
+		body->activate();
 		return ToHandle(body);
 	}
 
@@ -133,7 +135,7 @@ struct Physics::Impl
 		ownedShapes.push_back(sphere);
 
 		btVector3 localInertia(0, 0, 0);
-		if (mass != 0.0f)
+		if (mass > 0.0f)
 			sphere->calculateLocalInertia(mass, localInertia);
 
 		btQuaternion rot(orientation.x, orientation.y, orientation.z, orientation.w);
@@ -147,13 +149,14 @@ struct Physics::Impl
 		dynamicsWorld->addRigidBody(body);
 
 		ownedBodies.push_back(body);
+		body->activate();
 		return ToHandle(body);
 	}
 
 	void RemoveRigidBody(RigidBodyHandle handle)
 	{
 		btRigidBody* body = FromHandle(handle);
-		if (!body || !dynamicsWorld) return;
+		if (ownedBodies.empty() || dynamicsWorld == nullptr || body == nullptr) return;
 
 		dynamicsWorld->removeRigidBody(body);
 
@@ -221,20 +224,26 @@ struct Physics::Impl
 		collisionCallback = std::move(cb);
 	}
 
+	bool IsStaticBody(RigidBodyHandle body)
+	{
+		btRigidBody* rb = FromHandle(body);
+		if (!rb) return false;
+		return rb->getInvMass() == btScalar(0.0);
+	}
+
 private:
 	void ProcessCollisions()
 	{
-		if (!dynamicsWorld || !collisionCallback) return;
+		if (!dynamicsWorld) return;
 
 		btDispatcher* disp = dynamicsWorld->getDispatcher();
 		int numManifolds = disp->getNumManifolds();
 
-		// To avoid duplicate callbacks for the same pair, we'll use an unordered_set of ordered pair keys.
+		// To avoid duplicate callbacks for the same pair, use an unordered_set of ordered pair keys.
 		struct PairHash
 		{
 			size_t operator()(const std::pair<const void*, const void*>& p) const noexcept
 			{
-				// simple pointer hashing combination
 				return (std::hash<const void*>()(p.first) * 31) ^ std::hash<const void*>()(p.second);
 			}
 		};
@@ -257,11 +266,34 @@ private:
 
 			btRigidBody* rbA = const_cast<btRigidBody*>(btRigidBody::upcast(a));
 			btRigidBody* rbB = const_cast<btRigidBody*>(btRigidBody::upcast(b));
-			if (rbA && rbB)
-			{
-				// forward opaque handles
+			if (!rbA && !rbB) continue;
+
+			// Helper: stop a dynamic body (zero velocities, clear forces, put to sleep).
+			auto stopIfDynamic = [](btRigidBody* rb)
+				{
+					if (!rb) return;
+					// Skip static (inv mass == 0) and kinematic bodies
+					if (rb->getInvMass() == btScalar(0.0)) return;
+					if (rb->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) return;
+
+					// Zero linear & angular velocity
+					rb->setLinearVelocity(btVector3(0, 0, 0));
+					rb->setAngularVelocity(btVector3(0, 0, 0));
+
+					// Clear accumulated forces/torques
+					rb->clearForces();
+
+					// Put the body to sleep to avoid tiny numerical motion
+					rb->setActivationState(ISLAND_SLEEPING);
+				};
+
+			// Apply stopping logic. This makes colliding dynamic objects immediately stop.
+			stopIfDynamic(rbA);
+			stopIfDynamic(rbB);
+
+			// Preserve previous behavior: forward opaque handles to registered callback (if any)
+			if (collisionCallback && rbA && rbB)
 				collisionCallback(ToHandle(rbA), ToHandle(rbB));
-			}
 		}
 	}
 
@@ -285,6 +317,9 @@ void Physics::Init(const glm::vec3& gravity)
 void Physics::Shutdown()
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return;
+
 	s_impl->Shutdown();
 	s_impl.reset();
 }
@@ -292,47 +327,80 @@ void Physics::Shutdown()
 void Physics::StepSimulation(float deltaTime, int maxSubSteps, float fixedTimeStep)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return;
+
 	s_impl->StepSimulation(deltaTime, maxSubSteps, fixedTimeStep);
 }
 
 RigidBodyHandle Physics::CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return 0;
+
 	return s_impl->CreateBoxRigidBody(mass, halfExtents, position, orientation);
 }
 
 RigidBodyHandle Physics::CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return 0;
+
 	return s_impl->CreateSphereRigidBody(mass, radius, position, orientation);
 }
 
 void Physics::RemoveRigidBody(RigidBodyHandle body)
 {
-	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	DL_ASSERT(s_impl, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return;
+
 	s_impl->RemoveRigidBody(body);
 }
 
 void Physics::SetGravity(const glm::vec3& gravity)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return;
+
 	s_impl->SetGravity(gravity);
 }
 
 bool Physics::GetRigidBodyTransform(RigidBodyHandle body, glm::vec3& outPosition, glm::quat& outOrientation)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return false;
+
 	return s_impl->GetRigidBodyTransform(body, outPosition, outOrientation);
 }
 
 bool Physics::SetRigidBodyTransform(RigidBodyHandle body, const glm::vec3& position, const glm::quat& orientation)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return false;
+
 	return s_impl->SetRigidBodyTransform(body, position, orientation);
 }
 
 void Physics::RegisterCollisionCallback(CollisionCallback cb)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return;
+
 	s_impl->RegisterCollisionCallback(std::move(cb));
+}
+
+bool Physics::IsStaticBody(RigidBodyHandle body)
+{
+	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
+	if (s_impl == nullptr)
+		return true;
+
+	return s_impl->IsStaticBody(body);
 }

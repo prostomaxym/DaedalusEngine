@@ -11,6 +11,7 @@
 #include "Renderer/Objects/OrthographicCamera.h"
 #include "Renderer/Resourses/Model.h"
 #include "Renderer/Resourses/Shader.h"
+#include "Physics/Physics.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -59,6 +60,18 @@ namespace Daedalus
 			return glm::translate(glm::mat4(1.0f), translation)
 				* rotation_mat
 				* glm::scale(glm::mat4(1.0f), scale);
+		}
+
+		glm::quat GetOrientationQuat() const
+		{
+			// glm::quat constructor expects radians for Euler angles
+			return glm::quat(glm::radians(rotation));
+		}
+
+		void SetOrientationQuat(const glm::quat& q)
+		{
+			// glm::eulerAngles returns radians; convert to degrees and store as (pitch, yaw, roll)
+			rotation = glm::degrees(glm::eulerAngles(q));
 		}
 	};
 
@@ -121,5 +134,34 @@ namespace Daedalus
 		SpotLightComponent() = default;
 		SpotLightComponent(const SpotLightComponent&) = default;
 		explicit SpotLightComponent(const LightProps& props) : light(props) {}
+	};
+
+	struct RigidBodyComponent
+	{
+		RigidBodyHandle handle = 0;
+
+		RigidBodyComponent(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+		{
+			handle = Physics::CreateBoxRigidBody(mass, halfExtents, position, orientation);
+		}
+
+		RigidBodyComponent(float mass, float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+		{
+			handle = Physics::CreateSphereRigidBody(mass, radius, position, orientation);
+		}
+
+		RigidBodyComponent() = default;
+		RigidBodyComponent(const RigidBodyComponent&) = default;
+		RigidBodyComponent(RigidBodyComponent&&) noexcept = default;
+		RigidBodyComponent& operator=(const RigidBodyComponent&) = default;
+		RigidBodyComponent& operator=(RigidBodyComponent&&) noexcept = default;
+
+		~RigidBodyComponent()
+		{
+			if (handle != 0)
+			{
+				Physics::RemoveRigidBody(handle);
+			}
+		}
 	};
 }

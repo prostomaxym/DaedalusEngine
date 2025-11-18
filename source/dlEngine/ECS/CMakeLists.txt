@@ -25,6 +25,8 @@ set(ECS_PROJECT_FILES
     NativeScripts/CameraController.cpp
     Systems/RenderSystem.h
     Systems/RenderSystem.cpp
+    Systems/PhysicsSystem.h
+    Systems/PhysicsSystem.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${ECS_PROJECT_FILES})

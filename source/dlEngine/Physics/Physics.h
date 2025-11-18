@@ -11,7 +11,7 @@ namespace Daedalus
     // Opaque handle for rigid bodies. Implementation maps this to Bullet objects.
     using RigidBodyHandle = uint64_t;
 
-    class Physics
+    class DAEDALUS_API Physics
     {
     public:
         using CollisionCallback = std::function<void(RigidBodyHandle a, RigidBodyHandle b)>;
@@ -34,6 +34,7 @@ namespace Daedalus
         // Get/set transform of a rigid body (returns false if handle invalid).
         static bool GetRigidBodyTransform(RigidBodyHandle body, glm::vec3& outPosition, glm::quat& outOrientation);
         static bool SetRigidBodyTransform(RigidBodyHandle body, const glm::vec3& position, const glm::quat& orientation);
+		static bool IsStaticBody(RigidBodyHandle body);
 
         static void RegisterCollisionCallback(CollisionCallback cb);
 

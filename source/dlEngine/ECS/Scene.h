@@ -2,6 +2,7 @@
 
 #include "UUID.h"
 #include "Systems/RenderSystem.h"
+#include "Systems/PhysicsSystem.h"
 #include "Utils/DeltaTime.h"
 #include "Components.h"
 
@@ -58,6 +59,7 @@ namespace Daedalus
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 
 		RenderSystem m_render_system;
+		PhysicsSystem m_physics_system;
 
 		bool m_is_running{ false };
 		bool m_is_paused{ false };

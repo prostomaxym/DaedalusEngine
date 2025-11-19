@@ -97,6 +97,10 @@ void ExampleLayer::PrepareNukeScene()
 	props.cast_shadows = false;
 	props.number_of_shadow_cascades = 1;
 	camera_entity.AddComponent<SpotLightComponent>(props);
+
+	auto& camera_obj = camera_entity.GetComponent<RenderableObjectComponent>();
+	const auto camera_sphere = camera_obj.model->GetBoundingSphere();
+	camera_entity.AddComponent<KinematicBodyComponent>(camera_sphere.radius, miran_transform.translation, miran_transform.GetOrientationQuat());
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */

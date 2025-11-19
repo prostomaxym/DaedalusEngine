@@ -101,7 +101,7 @@ struct Physics::Impl
 		collisionCallback = nullptr;
 	}
 
-	RigidBodyHandle CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation)
+	RigidBodyHandle CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation, bool is_kinematic)
 	{
 		if (!dynamicsWorld) return 0;
 
@@ -120,6 +120,12 @@ struct Physics::Impl
 
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, box, localInertia);
 		btRigidBody* body = new btRigidBody(rbInfo);
+
+		if (is_kinematic)
+		{
+			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+
 		dynamicsWorld->addRigidBody(body);
 
 		ownedBodies.push_back(body);
@@ -127,7 +133,7 @@ struct Physics::Impl
 		return ToHandle(body);
 	}
 
-	RigidBodyHandle CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation)
+	RigidBodyHandle CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation, bool is_kinematic)
 	{
 		if (!dynamicsWorld) return 0;
 
@@ -146,6 +152,11 @@ struct Physics::Impl
 
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, sphere, localInertia);
 		btRigidBody* body = new btRigidBody(rbInfo);
+		if (is_kinematic)
+		{
+			body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+		}
+
 		dynamicsWorld->addRigidBody(body);
 
 		ownedBodies.push_back(body);
@@ -268,30 +279,84 @@ private:
 			btRigidBody* rbB = const_cast<btRigidBody*>(btRigidBody::upcast(b));
 			if (!rbA && !rbB) continue;
 
-			// Helper: stop a dynamic body (zero velocities, clear forces, put to sleep).
-			auto stopIfDynamic = [](btRigidBody* rb)
-				{
-					if (!rb) return;
-					// Skip static (inv mass == 0) and kinematic bodies
-					if (rb->getInvMass() == btScalar(0.0)) return;
-					if (rb->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) return;
+			// Let Bullet perform its normal contact resolution first,
+			// then optionally add a custom impulse transfer per contact.
+			// We'll apply an additional impulse that transfers relative normal
+			// velocity from one body to the other instead of zeroing velocities.
 
-					// Zero linear & angular velocity
-					rb->setLinearVelocity(btVector3(0, 0, 0));
-					rb->setAngularVelocity(btVector3(0, 0, 0));
+			for (int ci = 0; ci < numContacts; ++ci)
+			{
+				btManifoldPoint& pt = manifold->getContactPoint(ci);
 
-					// Clear accumulated forces/torques
-					rb->clearForces();
+				// Skip separated points
+				if (pt.getDistance() > 0) continue;
 
-					// Put the body to sleep to avoid tiny numerical motion
-					rb->setActivationState(ISLAND_SLEEPING);
-				};
+				// Normal is expressed as "world normal on B" in manifold point
+				const btVector3 normal = pt.m_normalWorldOnB.normalize();
 
-			// Apply stopping logic. This makes colliding dynamic objects immediately stop.
-			stopIfDynamic(rbA);
-			stopIfDynamic(rbB);
+				// Positions of contact measured in world space
+				btVector3 posA = pt.getPositionWorldOnA();
+				btVector3 posB = pt.getPositionWorldOnB();
 
-			// Preserve previous behavior: forward opaque handles to registered callback (if any)
+				// If either body missing, skip
+				if (!rbA || !rbB) break;
+
+				// Relative positions from centers of mass
+				btVector3 relA = posA - rbA->getCenterOfMassPosition();
+				btVector3 relB = posB - rbB->getCenterOfMassPosition();
+
+				// Velocities at the contact point
+				btVector3 velA = rbA->getVelocityInLocalPoint(relA);
+				btVector3 velB = rbB->getVelocityInLocalPoint(relB);
+
+				btVector3 relVel = velA - velB;
+				btScalar velAlongNormal = relVel.dot(normal);
+
+				// If bodies are separating along normal, skip impulse (they're moving apart)
+				if (velAlongNormal >= btScalar(0.0)) continue;
+
+				// restitution (bounce). Use contact's combined restitution if available,
+				// otherwise fallback to average or a default.
+				btScalar e = btScalar(0.0);
+				// try to use manifold point restitution if set (m_combinedRestitution is public)
+				// fall back to small restitution if zero
+				e = pt.m_combinedRestitution;
+				// if combined restitution is uninitialized, optional: use min of body restitutions (if methods available)
+				// e = btMin(rbA->getRestitution(), rbB->getRestitution()); // if getRestitution exists
+
+				// Compute effective impulse denominator for both bodies
+				btScalar denomA = rbA->computeImpulseDenominator(relA, normal);
+				btScalar denomB = rbB->computeImpulseDenominator(relB, normal);
+
+				btScalar denom = denomA + denomB;
+				if (denom <= SIMD_EPSILON) continue; // can't apply meaningful impulse
+
+				// Impulse scalar (normal impulse)
+				btScalar j = -(btScalar(1.0) + e) * velAlongNormal / denom;
+
+				// Optionally clamp j to reasonable range to avoid instability
+				// j = btMax(j, btScalar(0.0));
+
+				btVector3 impulse = normal * j;
+
+				// Apply impulses: A receives +impulse, B receives -impulse
+				// Only apply to dynamic (non-static) and non-kinematic bodies.
+				auto applyIfDynamic = [&](btRigidBody* rb, const btVector3& imp, const btVector3& rel)
+					{
+						if (!rb) return;
+						// skip static objects
+						if (rb->getInvMass() == btScalar(0.0)) return;
+						// skip kinematic objects
+						if (rb->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) return;
+						rb->applyImpulse(imp, rel);
+						rb->activate();
+					};
+
+				applyIfDynamic(rbA, impulse, relA);
+				applyIfDynamic(rbB, -impulse, relB);
+			}
+
+			// Forward opaque handles to registered callback (if any)
 			if (collisionCallback && rbA && rbB)
 				collisionCallback(ToHandle(rbA), ToHandle(rbB));
 		}
@@ -333,22 +398,22 @@ void Physics::StepSimulation(float deltaTime, int maxSubSteps, float fixedTimeSt
 	s_impl->StepSimulation(deltaTime, maxSubSteps, fixedTimeStep);
 }
 
-RigidBodyHandle Physics::CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation)
+RigidBodyHandle Physics::CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation, bool is_kinematic)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
 	if (s_impl == nullptr)
 		return 0;
 
-	return s_impl->CreateBoxRigidBody(mass, halfExtents, position, orientation);
+	return s_impl->CreateBoxRigidBody(mass, halfExtents, position, orientation, is_kinematic);
 }
 
-RigidBodyHandle Physics::CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation)
+RigidBodyHandle Physics::CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation, bool is_kinematic)
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");
 	if (s_impl == nullptr)
 		return 0;
 
-	return s_impl->CreateSphereRigidBody(mass, radius, position, orientation);
+	return s_impl->CreateSphereRigidBody(mass, radius, position, orientation, is_kinematic);
 }
 
 void Physics::RemoveRigidBody(RigidBodyHandle body)

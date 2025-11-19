@@ -24,8 +24,8 @@ namespace Daedalus
 
         // Create simple rigid bodies. Returns an opaque handle owned by the engine.
         // halfExtents is the half-size for the box (x,y,z).
-        static RigidBodyHandle CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-        static RigidBodyHandle CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+        static RigidBodyHandle CreateBoxRigidBody(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f), bool is_kinematic = false);
+        static RigidBodyHandle CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f), bool is_kinematic = false);
 
         static void RemoveRigidBody(RigidBodyHandle body);
 

@@ -142,12 +142,12 @@ namespace Daedalus
 
 		RigidBodyComponent(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
 		{
-			handle = Physics::CreateBoxRigidBody(mass, halfExtents, position, orientation);
+			handle = Physics::CreateBoxRigidBody(mass, halfExtents, position, orientation, false);
 		}
 
 		RigidBodyComponent(float mass, float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
 		{
-			handle = Physics::CreateSphereRigidBody(mass, radius, position, orientation);
+			handle = Physics::CreateSphereRigidBody(mass, radius, position, orientation, false);
 		}
 
 		RigidBodyComponent() = default;
@@ -157,6 +157,35 @@ namespace Daedalus
 		RigidBodyComponent& operator=(RigidBodyComponent&&) noexcept = default;
 
 		~RigidBodyComponent()
+		{
+			if (handle != 0)
+			{
+				Physics::RemoveRigidBody(handle);
+			}
+		}
+	};
+
+	struct KinematicBodyComponent
+	{
+		RigidBodyHandle handle = 0;
+
+		KinematicBodyComponent(const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+		{
+			handle = Physics::CreateBoxRigidBody(0.f, halfExtents, position, orientation, true);
+		}
+
+		KinematicBodyComponent(float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+		{
+			handle = Physics::CreateSphereRigidBody(0.f, radius, position, orientation, true);
+		}
+
+		KinematicBodyComponent() = default;
+		KinematicBodyComponent(const KinematicBodyComponent&) = default;
+		KinematicBodyComponent(KinematicBodyComponent&&) noexcept = default;
+		KinematicBodyComponent& operator=(const KinematicBodyComponent&) = default;
+		KinematicBodyComponent& operator=(KinematicBodyComponent&&) noexcept = default;
+
+		~KinematicBodyComponent()
 		{
 			if (handle != 0)
 			{

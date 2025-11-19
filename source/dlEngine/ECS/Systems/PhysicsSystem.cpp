@@ -10,13 +10,37 @@ using namespace Daedalus;
 
 void PhysicsSystem::OnStartRuntime() const
 {
-	const auto rigid_body_view = m_registry.view<RigidBodyComponent>();
+	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
+
+	for (const auto e : kinematic_body_view)
+	{
+		Entity entity = { e, m_scene };
+		auto& kb = entity.GetComponent<KinematicBodyComponent>();
+		auto& tf = entity.GetComponent<TransformComponent>();
+		if (kb.handle == 0)
+			continue;
+		// Set initial transform from TransformComponent to physics body
+		Physics::SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
+	}
 
 	// Initialize physics bodies in the scene
 }
 
 void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 {
+	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
+
+	for (const auto e : kinematic_body_view)
+	{
+		Entity entity = { e, m_scene };
+		auto& kb = entity.GetComponent<KinematicBodyComponent>();
+		auto& tf = entity.GetComponent<TransformComponent>();
+		if (kb.handle == 0)
+			continue;
+
+		Physics::SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
+	}
+
 	Physics::StepSimulation(dt.GetSeconds());
 
 	// Update transforms from physics for entities that have both a rigid body and a transform.

@@ -1,6 +1,5 @@
 Debug resource
 Profiler
-Multithread compilation
 
 - Systems
 Physics

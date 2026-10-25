@@ -12,6 +12,18 @@ using namespace Daedalus;
 
 namespace
 {
+	uint32_t BytesPerPixel(GLenum internal_format)
+	{
+		switch (internal_format)
+		{
+		case GL_RGBA8:    return 4;
+		case GL_RGB8:     return 3;
+		case GL_RGBA32F:  return 16;
+		case GL_RGB32F:   return 12;
+		default:          return 0;
+		}
+	}
+
 	std::vector<unsigned char> ConvertToRGB(unsigned char* grayscaleImage, int width, int height)
 	{
 		// Allocate memory for the new RGB image
@@ -223,6 +235,24 @@ OpenGLTexture2D::OpenGLTexture2D(float* data, int width, int height, int channel
 	}
 }
 
+uint64_t OpenGLTexture2D::GetMemorySizeBytes() const
+{
+	// Storage is always allocated with a single mip level
+	return static_cast<uint64_t>(m_width) * m_height * BytesPerPixel(m_internal_format);
+}
+
+const char* OpenGLTexture2D::GetFormatName() const
+{
+	switch (m_internal_format)
+	{
+	case GL_RGBA8:    return "RGBA8";
+	case GL_RGB8:     return "RGB8";
+	case GL_RGBA32F:  return "RGBA32F";
+	case GL_RGB32F:   return "RGB32F";
+	default:          return "unknown";
+	}
+}
+
 OpenGLTexture2D::~OpenGLTexture2D()
 {
 	glDeleteTextures(1, &m_rendererID);
@@ -272,6 +302,9 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			m_width = static_cast<uint32_t>(width);
+			m_height = static_cast<uint32_t>(height);
+			m_faces_loaded++;
 		}
 		else
 		{
@@ -285,6 +318,11 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+uint64_t OpenGLTextureCubemap::GetMemorySizeBytes() const
+{
+	return static_cast<uint64_t>(m_width) * m_height * BytesPerPixel(GL_RGB8) * m_faces_loaded;
 }
 
 OpenGLTextureCubemap::~OpenGLTextureCubemap()

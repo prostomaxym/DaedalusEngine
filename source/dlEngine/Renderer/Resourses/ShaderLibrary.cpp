@@ -42,11 +42,13 @@ void ShaderLibrary::RecompileAllShaders(const std::set<std::string>& shader_name
 {
 	for (auto& shader_name : shader_names)
 	{
+		const auto start = std::chrono::steady_clock::now();
 		const auto shader_name_with_ext = shader_name + Shader::GetSourceFileExtention();
 		auto shader = Shader::CreateFromFile(path / shader_name_with_ext);
 		shader->SaveBinary(path.string() + "/" + cache_dir + "/" + shader_name + Shader::GetBinaryFileExtention());
 		shader->SetName(shader_name);
 		m_shaders.insert({ shader_name, shader });
+		RecordLoadInfo(shader_name, "compiled from source (forced recompile)", start, path);
 	}
 }
 
@@ -54,6 +56,8 @@ void ShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cached_sha
 {
 	for (auto& shader_name : cached_shader_names)
 	{
+		const auto start = std::chrono::steady_clock::now();
+		const char* origin = "binary cache";
 		std::shared_ptr<Shader> shader;
 		try
 		{
@@ -64,10 +68,12 @@ void ShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cached_sha
 			const auto shader_name_with_ext = shader_name + Shader::GetSourceFileExtention();
 			shader = Shader::CreateFromFile(path / shader_name_with_ext);
 			shader->SaveBinary(path.string() + "/" + cache_dir + "/" + shader_name + Shader::GetBinaryFileExtention());
+			origin = "compiled from source (binary cache failed)";
 		}
 
 		shader->SetName(shader_name);
 		m_shaders.insert({ shader_name, shader });
+		RecordLoadInfo(shader_name, origin, start, path);
 	}
 }
 
@@ -78,14 +84,45 @@ void ShaderLibrary::LoadNotCachedShaders(const std::set<std::string>& all_shader
 	{
 		if (!shader_name.empty() && std::find(cached_shader_names.begin(), cached_shader_names.end(), shader_name) == cached_shader_names.end())
 		{
+			const auto start = std::chrono::steady_clock::now();
 			const auto shader_name_with_ext = shader_name + Shader::GetSourceFileExtention();
 			auto shader = Shader::CreateFromFile(path / shader_name_with_ext);
 			shader->SaveBinary(path.string() + "/" + cache_dir + "/" + shader_name +Shader::GetBinaryFileExtention());
 			shader->SetName(shader_name);
 			m_shaders.insert({ shader_name, shader });
+			RecordLoadInfo(shader_name, "compiled from source (not cached)", start, path);
 		}
 	}
 }
+
+void ShaderLibrary::RecordLoadInfo(const std::string& name, const char* origin, std::chrono::steady_clock::time_point start, const std::filesystem::path& path)
+{
+	ShaderLoadInfo info;
+	info.origin = origin;
+	info.load_time_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+
+	const auto source_file = path / (name + Shader::GetSourceFileExtention());
+	info.source_path = source_file.string();
+
+	std::error_code ec;
+	const auto write_time = std::filesystem::last_write_time(source_file, ec);
+	if (!ec)
+	{
+		// C++17 has no portable file_clock -> system_clock conversion
+		info.last_modified = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+			write_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+		info.has_last_modified = true;
+	}
+
+	m_load_info[name] = std::move(info);
+}
+
+const ShaderLoadInfo* ShaderLibrary::GetLoadInfo(const std::string& name) const
+{
+	const auto it = m_load_info.find(name);
+	return it != m_load_info.end() ? &it->second : nullptr;
+}
+
 
 std::set<std::string> ShaderLibrary::QueryFileNames(const std::filesystem::path& path
 	, const std::string& extention

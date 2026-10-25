@@ -87,6 +87,7 @@ void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<
 	m_VAO->Bind();
 
 	m_VBO = VertexBuffer::Create(vertex_data.data(), vertex_data.size() * sizeof(float));
+	m_vertex_buffer_bytes = vertex_data.size() * sizeof(float);
 	m_VBO->SetLayout(BufferLayout
 		{ 
 			BufferElement{ ShaderDataType::Float3, std::string(ShaderConstants::VerticesVar), false },

@@ -16,8 +16,10 @@ project(
     )
 
 set(DEBUG_PROJECT_FILES
-    DebugLayer.h
-    DebugLayer.cpp
+    DebugOverlay.h
+    DebugOverlay.cpp
+    ConsoleOverlay.h
+    ConsoleOverlay.cpp
     Log.h
     Log.cpp
     ImGuiLayer.h

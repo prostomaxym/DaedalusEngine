@@ -8,11 +8,11 @@
 
 namespace Daedalus
 {
-	class DAEDALUS_API DebugLayer : public ImGuiLayer
+	class DAEDALUS_API DebugOverlay : public ImGuiLayer
 	{
 	public:
-		DebugLayer() = default;
-		virtual ~DebugLayer() = default;
+		DebugOverlay() = default;
+		virtual ~DebugOverlay() = default;
 
 	protected:
 		void Update(DeltaTime dt) override;

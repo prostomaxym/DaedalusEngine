@@ -1,6 +1,6 @@
 #include "dlpch.h"
 
-#include "DebugLayer.h"
+#include "DebugOverlay.h"
 #include "Log.h"
 #include "Core/Application.h"
 #include "Config/PathConfig.h"
@@ -62,7 +62,7 @@ namespace
 	}
 }
 
-void DebugLayer::InitWindow()
+void DebugOverlay::InitWindow()
 {
 	m_frame_times.resize(GraphSize, 0.f);
 	m_cpu_app_load.resize(GraphSize, 0.f);
@@ -96,7 +96,7 @@ void DebugLayer::InitWindow()
 	}
 }
 
-void DebugLayer::Update(DeltaTime dt)
+void DebugOverlay::Update(DeltaTime dt)
 {
 	ImGui::Begin("Debug Overlay", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 
@@ -117,7 +117,7 @@ void DebugLayer::Update(DeltaTime dt)
 	ImGui::End();
 }
 
-void DebugLayer::RenderGeneralPage(DeltaTime dt)
+void DebugOverlay::RenderGeneralPage(DeltaTime dt)
 {
 	if (ImGui::BeginTabItem("General"))
 	{
@@ -138,7 +138,7 @@ void DebugLayer::RenderGeneralPage(DeltaTime dt)
 	}
 }
 
-void DebugLayer::RenderFPSSection(DeltaTime dt)
+void DebugOverlay::RenderFPSSection(DeltaTime dt)
 {
 	ImGui::BeginChild("FPS", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("FPS", ImGuiTreeNodeFlags_Bullet);
@@ -200,7 +200,7 @@ void DebugLayer::RenderFPSSection(DeltaTime dt)
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderCPUSection(DeltaTime dt)
+void DebugOverlay::RenderCPUSection(DeltaTime dt)
 {
 	ImGui::BeginChild("CPU", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("CPU", ImGuiTreeNodeFlags_Bullet);
@@ -253,7 +253,7 @@ void DebugLayer::RenderCPUSection(DeltaTime dt)
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderRAMSection(DeltaTime dt)
+void DebugOverlay::RenderRAMSection(DeltaTime dt)
 {
 	ImGui::BeginChild("RAM", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("RAM", ImGuiTreeNodeFlags_Bullet);
@@ -305,7 +305,7 @@ void DebugLayer::RenderRAMSection(DeltaTime dt)
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderWorldSection()
+void DebugOverlay::RenderWorldSection()
 {
 	ImGui::BeginChild("World", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_Bullet);
@@ -391,7 +391,7 @@ void DebugLayer::RenderWorldSection()
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderGPUSection(DeltaTime dt)
+void DebugOverlay::RenderGPUSection(DeltaTime dt)
 {
 	ImGui::BeginChild("GPU", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("GPU", ImGuiTreeNodeFlags_Bullet);
@@ -486,7 +486,7 @@ void DebugLayer::RenderGPUSection(DeltaTime dt)
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderRenderingPage()
+void DebugOverlay::RenderRenderingPage()
 {
 	if (ImGui::BeginTabItem("Rendering"))
 	{
@@ -544,7 +544,7 @@ void DebugLayer::RenderRenderingPage()
 	}
 }
 
-void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 section_size, bool use_aspect)
+void DebugOverlay::RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 section_size, bool use_aspect)
 {
 	ImGui::BeginChild(name.data(), section_size, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader(name.data(), ImGuiTreeNodeFlags_Bullet);
@@ -558,7 +558,7 @@ void DebugLayer::RenderTexture(std::string_view name, uint32_t texture_id, ImVec
 	ImGui::EndChild();
 }
 
-void DebugLayer::RenderLogsPage()
+void DebugOverlay::RenderLogsPage()
 {
 	//static bool open = false;
 	ImGui::BeginChild("Log Viewer", {0, 0}, 0, ImGuiWindowFlags_NoSavedSettings);
@@ -583,7 +583,7 @@ void DebugLayer::RenderLogsPage()
 	ImGui::EndChild();
 }
 
-float DebugLayer::CalculateLowPercentile(float percentile) const
+float DebugOverlay::CalculateLowPercentile(float percentile) const
 {
 	if (m_frame_times.empty())
 		return 1.0f;
@@ -602,7 +602,7 @@ float DebugLayer::CalculateLowPercentile(float percentile) const
 	return sum > 0.f ? sum / static_cast<float>(count) : 1.f;
 }
 
-void DebugLayer::LogFilterPanel::Draw()
+void DebugOverlay::LogFilterPanel::Draw()
 {
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_Framed))
 	{
@@ -633,22 +633,22 @@ void DebugLayer::LogFilterPanel::Draw()
 	}
 }
 
-DebugLayer::LogFilterPanel::LogFilterPanel()
+DebugOverlay::LogFilterPanel::LogFilterPanel()
 {
 	std::fill(level_flags_.begin(), level_flags_.end(), true);
 }
 
-bool DebugLayer::LogFilterPanel::IsLevelEnabled(Log::Levels level) const
+bool DebugOverlay::LogFilterPanel::IsLevelEnabled(Log::Levels level) const
 {
 	return level_flags_[static_cast<int>(level)];
 }
 
-bool DebugLayer::LogFilterPanel::IsCategoryEnabled(Log::Categories category_bit) const
+bool DebugOverlay::LogFilterPanel::IsCategoryEnabled(Log::Categories category_bit) const
 {
 	return (Log::GetAllowedCategories() & category_bit) != 0;
 }
 
-void DebugLayer::LogFilterPanel::DrawCategoryCheckbox(Log::Categories cat)
+void DebugOverlay::LogFilterPanel::DrawCategoryCheckbox(Log::Categories cat)
 {
 	const int bit = static_cast<int>(cat);
 	bool enabled = (Log::GetAllowedCategories() & bit) != 0;
@@ -661,7 +661,7 @@ void DebugLayer::LogFilterPanel::DrawCategoryCheckbox(Log::Categories cat)
 	}
 }
 
-void DebugLayer::LogFilterPanel::DrawLevelCheckbox(Log::Levels level)
+void DebugOverlay::LogFilterPanel::DrawLevelCheckbox(Log::Levels level)
 {
 	int i = static_cast<int>(level);
 	ImGui::Checkbox(Log::ToString(level), &level_flags_[i]);

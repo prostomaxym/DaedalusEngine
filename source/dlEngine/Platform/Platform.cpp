@@ -42,11 +42,16 @@ namespace
 }
 
 #elif defined DL_PLATFORM_LINUX
-include <signal.h>
+#include <signal.h>
 #include <unistd.h>
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
+#include <thread>
+#include <chrono>
 
+namespace
+{
 void SegfaultHandler(int signal)
 {
 	const char* msg = "Fatal error: segmentation fault\n";
@@ -54,6 +59,7 @@ void SegfaultHandler(int signal)
 	Daedalus::Log::SaveLogs("Fatal error: segmentation fault\n");
 
 	std::_Exit(EXIT_FAILURE);
+}
 }
 
 #endif
@@ -127,7 +133,7 @@ void Platform::PreciseThreadSleep(long long ns)
     }
     WaitForSingleObject(timer_ptr, INFINITE);
 #elif defined DL_PLATFORM_LINUX //TODO: not implemented, using nonprecise timer
-	std::this_thread::sleep_for(ns);
+	std::this_thread::sleep_for(std::chrono::nanoseconds(ns));
 #else
 	static_assert(false, "Unsupported Platform")
 #endif

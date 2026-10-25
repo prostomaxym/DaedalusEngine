@@ -2,10 +2,12 @@
 #include "LinuxResourcesMonitor.h"
 
 #include "sys/types.h"
+#include "sys/times.h"
 #include "sys/sysinfo.h"
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include <string>
 
 namespace
 {
@@ -123,15 +125,10 @@ namespace
 			struct sysinfo memInfo;
 
 			sysinfo(&memInfo);
-			long long totalVirtualMem = memInfo.totalram;
-			//Add other values in next statement to avoid int overflow on right hand side...
-			totalVirtualMem += memInfo.totalswap;
-			totalVirtualMem *= memInfo.mem_unit;
-			long long totalPhysMem = memInfo.totalram;
-			//Multiply in next statement to avoid int overflow on right hand side...
-			totalPhysMem *= memInfo.mem_unit
+			long long used_phys_mem = memInfo.totalram - memInfo.freeram;
+			used_phys_mem *= memInfo.mem_unit;
 
-			return totalPhysMem;
+			return used_phys_mem;
 		}
 
 		static long long GetAppMemoryUsedInBytes()
@@ -142,18 +139,53 @@ namespace
 
 			while (fgets(line, 128, file) != NULL) {
 				if (strncmp(line, "VmRSS:", 6) == 0) {
-					result = parseLine(line);
+					// Format: "VmRSS:   1234 kB"
+					result = atoi(line + 6);
 					break;
 				}
 			}
 			fclose(file);
-			return result * 1024;
+			return static_cast<long long>(result) * 1024;
 		}
 
 		static long long GetSystemRAMInBytes()
 		{
-			MEMORYSTATUSEX memInfo = GetMemoryStatus();
-			return memInfo.ullTotalPhys;
+			struct sysinfo memInfo;
+			sysinfo(&memInfo);
+			return static_cast<long long>(memInfo.totalram) * memInfo.mem_unit;
+		}
+
+		static const std::string& GetProcessorName()
+		{
+			static const std::string name = []()
+			{
+				std::string result = "Unknown";
+				FILE* file = fopen("/proc/cpuinfo", "r");
+				if (!file)
+				{
+					return result;
+				}
+
+				char line[256];
+				while (fgets(line, sizeof(line), file) != NULL)
+				{
+					if (strncmp(line, "model name", 10) == 0)
+					{
+						const char* colon = strchr(line, ':');
+						if (colon)
+						{
+							result = colon + 1;
+							const auto start = result.find_first_not_of(" \t");
+							const auto end = result.find_last_not_of(" \t\r\n");
+							result = start == std::string::npos ? "Unknown" : result.substr(start, end - start + 1);
+						}
+						break;
+					}
+				}
+				fclose(file);
+				return result;
+			}();
+			return name;
 		}
 
 	};
@@ -186,5 +218,10 @@ unsigned long long LinuxResourcesMonitor::GetTotalRAMUsageInBytes()
 unsigned long long LinuxResourcesMonitor::GetSystemRAMInBytes()
 {
 	return RAMUsageMonitor::GetSystemRAMInBytes();
+}
+
+const std::string& LinuxResourcesMonitor::GetProcessorName()
+{
+	return RAMUsageMonitor::GetProcessorName();
 }
 #endif

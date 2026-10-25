@@ -18,7 +18,11 @@ namespace Daedalus
         const GpuInfo& UpdateInfo();
         static const GpuInfo& GetInfo();
     private:
-        HMODULE nvml = nullptr;
+        #ifdef DL_PLATFORM_WINDOWS
+                HMODULE nvml = nullptr;
+        #else
+                void* nvml = nullptr;
+        #endif
         nvmlDevice_t device = nullptr;
         bool initialized = false;
         GpuInfo info;

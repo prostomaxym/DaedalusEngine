@@ -12,6 +12,8 @@ project(
     LANGUAGES CXX
     )
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_subdirectory(Config)
 add_subdirectory(Core)
 add_subdirectory(Debug)
@@ -51,21 +53,36 @@ target_include_directories(${PROJECT_NAME}
 	    ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
+set(DL_ENGINE_MODULES
+    Config
+    Core
+    Debug
+    ECS
+    Events
+    Physics
+    Platform
+    Renderer
+    Threads
+    Utils
+)
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         fmt::fmt
-    PRIVATE
-        Config
-        Core
-        Debug
-        ECS
-        Events
-        Physics
-        Platform
-        Renderer
-        Threads
-        Utils
     )
+
+if(UNIX)
+    # GNU ld drops unreferenced objects from static archives; without --whole-archive the
+    # shared library would not contain the module symbols (MSVC keeps them via dllexport).
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            -Wl,--whole-archive
+            ${DL_ENGINE_MODULES}
+            -Wl,--no-whole-archive
+        )
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${DL_ENGINE_MODULES})
+endif()
 
 add_custom_command(
     TARGET dlEngine

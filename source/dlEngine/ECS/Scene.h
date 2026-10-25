@@ -52,8 +52,6 @@ namespace Daedalus
 			static_assert(sizeof(T) == 0);
 		}
 		
-		#include "SceneComponents.inl" // Sorry for that, only way I figured out to make it. All other options give me linking errors because circular dependencies
-
 		std::string m_scene_name;
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
@@ -66,4 +64,7 @@ namespace Daedalus
 
 		friend class Entity;
 	};
+
+	// Explicit specializations must be at namespace scope for GCC/Clang; they are inline to avoid ODR violations.
+	#include "SceneComponents.inl"
 }

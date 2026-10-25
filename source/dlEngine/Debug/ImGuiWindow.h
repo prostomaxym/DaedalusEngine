@@ -3,7 +3,7 @@
 #include "Events/Event.h"
 #include "Utils/DeltaTime.h"
 
-#include <ImGui.h>
+#include <imgui.h>
 
 namespace Daedalus
 {

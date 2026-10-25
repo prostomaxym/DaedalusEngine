@@ -13,7 +13,7 @@ namespace Daedalus
 		PointLightSource() = default;
 		PointLightSource(const LightProps& props);
 
-		virtual std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const override;
+		virtual std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view, float cascade_exponent) const override;
 
 		virtual int GetShadowNumberOfCascades() const override { return 6; }
 

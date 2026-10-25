@@ -131,7 +131,7 @@ TEST(LightSourceTest, point_light_faces_use_90_degree_fov)
 	const PointLightSource light(props);
 	const glm::mat4 camera_proj = glm::perspective(glm::radians(70.f), 1.f, 0.1f, 100.f);
 
-	const auto faces = light.CalculateCascadesProjView(camera_proj, glm::mat4(1.f));
+	const auto faces = light.CalculateCascadesProjView(camera_proj, glm::mat4(1.f), 1.5f);
 	ASSERT_EQ(faces.size(), 6u);
 
 	// A point 5 units along +X and 4.5 sideways is inside a 90 degree face (4.5 / 5 < 1).

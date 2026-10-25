@@ -15,5 +15,7 @@ int main(int argc, char** argv)
 	app->Run();
 	delete app;
 
+	Daedalus::Log::Shutdown();
+
 	return 0;
 }

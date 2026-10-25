@@ -47,6 +47,7 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Keep the render loop allocation-free where possible; do not add per-frame heap allocations casually.
 - Platform-specific code goes in `Platform/<OS>`; the rest of the engine uses abstractions (`Window`, etc.). Renderer API-specific code goes behind `Renderer/API` abstractions.
 - Prefer small focused classes/files. Don't add comments that restate code; comment the "why".
+- Keep the Renderer as a static facade.
 
 ## Working rules for AI changes
 - Make minimal, focused changes. Do not reformat unrelated code or rename things without being asked.
@@ -57,3 +58,5 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Never commit secrets, generated folders or binary assets without being asked.
 - Do not edit `ThirdParty/`, `vcpkg_installed/`, `build/`, `runtime/`.
 - If a task has several valid designs (architecture, public API shape), propose the options briefly before implementing.
+- Events may be queued from any thread and must be processed safely.
+- Keep CMake targets as is (each module a static library linked into one engine DLL).

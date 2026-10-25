@@ -34,7 +34,12 @@ namespace Daedalus
 		void AddEvent(std::unique_ptr<EventT> event)
 		{
 			event->StartTimer();
-			m_event_queue.emplace_back(std::move(event));
+
+			{
+				std::lock_guard<std::mutex> lock(m_runner_mutex);
+				m_event_queue.emplace_back(std::move(event));
+			}
+			m_pause_condition.notify_one();
 		}
 	};
 }

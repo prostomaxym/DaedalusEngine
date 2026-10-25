@@ -9,8 +9,12 @@
 
 using namespace Daedalus;
 
-SSAOPass::PassOut SSAOPass::Render(const PassIn& data) const
+void SSAOPass::Render(FrameContext& context)
 {
+	if (!GraphicsConfig::IsSSBOEnabled())
+		return;
+
+
 	// ----------------------------------------- Main SSAO Pass --------------------------------------------- //
 	const auto ssao_buffer = m_ssao->GetSSAOFramebuffer();
 	ssao_buffer->Bind();
@@ -18,14 +22,14 @@ SSAOPass::PassOut SSAOPass::Render(const PassIn& data) const
 
 	const auto ssao_shader = ResourceManager::GetShader(ShaderConstants::SSAOShader);
 	ssao_shader->Bind();
-	Texture2D::BindTexture(data.position_texture, 0);
-	Texture2D::BindTexture(data.normal_texture, 1);
+	Texture2D::BindTexture(context.GetTexture(PassTexture::Position), 0);
+	Texture2D::BindTexture(context.GetTexture(PassTexture::Normal), 1);
 	Texture2D::BindTexture(m_ssao->GetNoiseTexture()->GetRendererID(), 2);
 	ssao_shader->SetInt(ShaderConstants::GBufferPos, 0);
 	ssao_shader->SetInt(ShaderConstants::GBufferNorm, 1);
 	ssao_shader->SetInt(ShaderConstants::SSAOBufferNoise, 2);
-	ssao_shader->SetMat4(ShaderConstants::SSAOProjection, data.proj);
-	ssao_shader->SetMat4(ShaderConstants::SSAOView, data.view);
+	ssao_shader->SetMat4(ShaderConstants::SSAOProjection, context.scene_proj);
+	ssao_shader->SetMat4(ShaderConstants::SSAOView, context.scene_view);
 
 	Renderer::DrawUnitQuad();
 	ssao_shader->Unbind();
@@ -45,7 +49,7 @@ SSAOPass::PassOut SSAOPass::Render(const PassIn& data) const
 	blue_shader->Unbind();
 	blur_buffer->Unbind();
 
-	return PassOut{ m_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0) };
+	context.SetTexture(PassTexture::SSAO, m_ssao->GetBlurFramebuffer()->GetColorAttachmentRendererID(0));
 }
 
 void SSAOPass::CreateSSAOBuffers(int width, int height)

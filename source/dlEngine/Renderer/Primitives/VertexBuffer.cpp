@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "VertexBuffer.h"
 
-#include "Renderer/API/Renderer.h"
+#include "Renderer/API/RendererAPI.h"
 #include "Platform/OpenGL/OpenGLVertexBuffer.h"
 
 
@@ -9,7 +9,7 @@ using namespace Daedalus;
 
 std::shared_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 	case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(size);
@@ -21,7 +21,7 @@ std::shared_ptr<VertexBuffer> VertexBuffer::Create(uint32_t size)
 
 std::shared_ptr<VertexBuffer> VertexBuffer::Create(const float* vertices, uint32_t size)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 	case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexBuffer>(vertices, size);

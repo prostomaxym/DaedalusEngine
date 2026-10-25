@@ -19,9 +19,9 @@ namespace Daedalus {
 		virtual ~Application();
 
 		Application(const Application&) = delete;
-		Application(const Application&&) = delete;
+		Application(Application&&) = delete;
 		Application& operator=(const Application&) = delete;
-		Application& operator=(const Application&&) = delete;
+		Application& operator=(Application&&) = delete;
 
 		inline Window& GetWindow() { return *m_window; }
 		EventEngine& GetEventEngine() { return m_event_engine; }
@@ -55,6 +55,3 @@ namespace Daedalus {
 	//Define in client
 	Application* CreateApplication();
 }
-
-
-

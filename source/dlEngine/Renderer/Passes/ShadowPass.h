@@ -1,32 +1,20 @@
 #pragma once
 
+#include "RenderPass.h"
+#include "Config/GraphicsConfig.h"
 #include "Renderer/Primitives/FrameBuffer.h"
-
-#include "Renderer/Resourses/Model.h"
 
 namespace Daedalus
 {
-	class ShadowPass
+	// Reads: frame_models. Writes: PassTexture::ShadowMap
+	class ShadowPass : public RenderPass
 	{
 	public:
-		struct PassIn
-		{
-			PassIn(std::vector<std::pair<const Model*, glm::mat4>>& models) : frame_models(models) { }
-
-			const std::vector<std::pair<const Model*, glm::mat4>>& frame_models;
-		};
-
-		struct PassOut
-		{
-			uint32_t shadow_map_id{ 0 };
-		};
-
-	public:
-		ShadowPass() = default;
-		PassOut Render(const PassIn& data) const;
+		explicit ShadowPass() {}
+		void Render(FrameContext& context) override;
 
 		void SetNumberOfShadowMaps(int number);
-		int GetNumberOfShadowMaps() const { return m_number_of_shadowmaps;}
+		int GetNumberOfShadowMaps() const { return m_number_of_shadowmaps; }
 
 	private:
 		std::unique_ptr<Framebuffer> m_framebuffer;

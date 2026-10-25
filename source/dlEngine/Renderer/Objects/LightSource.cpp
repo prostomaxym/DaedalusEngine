@@ -80,10 +80,9 @@ namespace
         return { projection[3][2] / (projection[2][2] - 1.0f), projection[3][2] / (projection[2][2] + 1.0f) };
     }
 
-    float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_number, int number_of_cascades)
+    float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_number, int number_of_cascades, float cascade_exponent)
     {
         float percent = static_cast<float>(cascade_plane_number) / static_cast<float>(number_of_cascades);
-        const auto cascade_exponent = GraphicsConfig::GetShadowCSMExponent();
         return znear + (zfar - znear) * std::pow(percent, cascade_exponent);
     }
 }
@@ -93,7 +92,7 @@ LightSource::LightSource(LightSourceType type, const LightProps& props) :
 {
 }
 
-std::vector<glm::mat4> LightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view) const
+std::vector<glm::mat4> LightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view, float cascade_exponent) const
 {
 	std::vector<glm::mat4> light_proj_view;
 	light_proj_view.reserve(m_params.number_of_cascades);
@@ -101,8 +100,8 @@ std::vector<glm::mat4> LightSource::CalculateCascadesProjView(const glm::mat4& p
     const auto [original_near, original_far] = ExtractNearFar(proj);
 	for (auto i = 0; i < m_params.number_of_cascades; ++i)
 	{
-        const auto new_znear = CalculateCascadePlaneDistance(original_near, original_far, i, m_params.number_of_cascades);
-        const auto new_zfar = CalculateCascadePlaneDistance(original_near, original_far, i + 1, m_params.number_of_cascades);
+        const auto new_znear = CalculateCascadePlaneDistance(original_near, original_far, i, m_params.number_of_cascades, cascade_exponent);
+        const auto new_zfar = CalculateCascadePlaneDistance(original_near, original_far, i + 1, m_params.number_of_cascades, cascade_exponent);
         const auto proj_clipped = UpdateNearFar(proj, new_znear, new_zfar);
 		light_proj_view.push_back(CalculateProjViewForFrustum(proj_clipped, view));
 	}

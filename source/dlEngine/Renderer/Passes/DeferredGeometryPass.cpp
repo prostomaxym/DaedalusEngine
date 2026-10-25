@@ -8,17 +8,17 @@
 
 using namespace Daedalus;
 
-DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) const
+void DeferredGeometryPass::Render(FrameContext& context)
 {
 	const auto gbuffer_shader = ResourceManager::GetShader(ShaderConstants::DeferredGShader);
 
 	m_gbuffer->Bind();
-	RenderCommand::SetViewport(0, 0, data.viewport_width, data.viewport_height);
+	RenderCommand::SetViewport(0, 0, context.viewport_width, context.viewport_height);
 	RenderCommand::Clear(RendererAPI::ClearMode::ColorBuffer | RendererAPI::ClearMode::DepthBuffer);
 
 	gbuffer_shader->Bind();
 
-	for (const auto& model_data : data.frame_models)
+	for (const auto& model_data : *context.frame_models)
 	{
 		gbuffer_shader->SetMat4(ShaderConstants::SceneModel, model_data.second);
 
@@ -27,7 +27,7 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 
 		for (const auto& mesh : meshes)
 		{
-			if (!mesh->IsVisible(data.view_frustum, model_data.second))
+			if (!mesh->IsVisible(context.view_frustum, model_data.second))
 				continue;
 
 			const auto& material = materials[mesh->GetMaterialIndex()];
@@ -93,16 +93,13 @@ DeferredGeometryPass::PassOut DeferredGeometryPass::Render(const PassIn& data) c
 	gbuffer_shader->Unbind();
 	m_gbuffer->Unbind();
 
-	PassOut out;
-
-	out.pos_texture = m_gbuffer->GetColorAttachmentRendererID(0);
-	out.norm_texture = m_gbuffer->GetColorAttachmentRendererID(1);
-	out.ambient_texture = m_gbuffer->GetColorAttachmentRendererID(2);
-	out.spec_texture = m_gbuffer->GetColorAttachmentRendererID(3);
-	out.albedo_texture = m_gbuffer->GetColorAttachmentRendererID(4);
-	out.shininess_texture = m_gbuffer->GetColorAttachmentRendererID(5);
-
-	return out;
+	context.SetTexture(PassTexture::Position, m_gbuffer->GetColorAttachmentRendererID(0));
+	context.SetTexture(PassTexture::Normal, m_gbuffer->GetColorAttachmentRendererID(1));
+	context.SetTexture(PassTexture::Ambient, m_gbuffer->GetColorAttachmentRendererID(2));
+	context.SetTexture(PassTexture::Specular, m_gbuffer->GetColorAttachmentRendererID(3));
+	context.SetTexture(PassTexture::Albedo, m_gbuffer->GetColorAttachmentRendererID(4));
+	context.SetTexture(PassTexture::Shininess, m_gbuffer->GetColorAttachmentRendererID(5));
+	context.SetTexture(PassTexture::Depth, m_gbuffer->GetDepthAttachmentID());
 }
 
 void DeferredGeometryPass::CreateGBuffer(int width, int height)

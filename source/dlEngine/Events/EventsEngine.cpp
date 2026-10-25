@@ -17,21 +17,19 @@ void EventEngine::ProcessEvents()
 
 		{
 			std::unique_lock<std::mutex> lock(m_runner_mutex);
-			m_pause_condition.wait(lock, [this] { return !m_paused || !m_running; });
+			m_pause_condition.wait(lock, [this] { return !m_running || (!m_paused && !m_event_queue.empty()); });
 
 			if (!m_running)
 				break;
 
-			if (m_event_queue.empty())
-				continue;
-
 			event = std::move(m_event_queue.front());
 			m_event_queue.pop_front();
+		}
 
-			if (event->GetEllapsedTime() < event->GetTimeToLive())
-			{
-				event->Dispatch();
-			}
+		// Dispatch outside the lock so handlers can queue new events
+		if (event->GetEllapsedTime() < event->GetTimeToLive())
+		{
+			event->Dispatch();
 		}
 	}
 }
@@ -48,6 +46,7 @@ void Daedalus::EventEngine::OnStop()
 
 void Daedalus::EventEngine::OnResume()
 {
+	// Called by ThreadRunner::Resume() with m_runner_mutex held
 	for (auto& event : m_event_queue)
 		event->StartTimer();
 }

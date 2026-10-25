@@ -33,6 +33,7 @@ set(ECS_TEST_FILES
 
 set(EVENTS_TEST_FILES
     EventsTests/EventDispatcherTest.cpp
+    EventsTests/EventEngineTest.cpp
     EventsTests/EventTest.cpp
     EventsTests/GamepadEventTest.cpp
     )

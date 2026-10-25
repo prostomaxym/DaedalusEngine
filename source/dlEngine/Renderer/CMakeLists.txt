@@ -19,6 +19,7 @@ set(RENDERER_PROJECT_FILES
     API/Renderer.cpp
     API/RendererAPI.h
     API/RendererAPI.cpp
+    API/RendererDebugInfo.h
 
     Buffers/SSAO.h
     Buffers/SSAO.cpp
@@ -42,6 +43,8 @@ set(RENDERER_PROJECT_FILES
     Objects/PointLightSource.h
     Objects/PointLightSource.cpp
 
+    Passes/FrameContext.h
+    Passes/RenderPass.h
     Passes/DeferredGeometryPass.h
     Passes/DeferredGeometryPass.cpp
     Passes/DeferredLightPass.h

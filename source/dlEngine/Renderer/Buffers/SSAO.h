@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Config/GraphicsConfig.h"
 #include "Renderer/Primitives/FrameBuffer.h"
 #include "Renderer/Primitives/UniformBuffer.h"
 #include "Renderer/Resourses/Texture.h"

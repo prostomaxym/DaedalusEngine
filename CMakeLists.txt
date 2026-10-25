@@ -10,6 +10,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Build configurations: Debug, Release (clean production) and ReleaseDevTools (Release + dev tools)
+get_property(IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if (IS_MULTI_CONFIG)
+  set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseDevTools" CACHE STRING "Available build configurations" FORCE)
+elseif (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# ReleaseDevTools inherits Release flags
+foreach(lang C CXX)
+  set(CMAKE_${lang}_FLAGS_RELEASEDEVTOOLS "${CMAKE_${lang}_FLAGS_RELEASE}")
+endforeach()
+set(CMAKE_EXE_LINKER_FLAGS_RELEASEDEVTOOLS "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASEDEVTOOLS "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+set(CMAKE_STATIC_LINKER_FLAGS_RELEASEDEVTOOLS "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}")
+# Third-party packages only provide Debug/Release binaries
+set(CMAKE_MAP_IMPORTED_CONFIG_RELEASEDEVTOOLS Release)
+
+add_compile_definitions($<$<OR:$<CONFIG:Debug>,$<CONFIG:ReleaseDevTools>>:DL_DEV_TOOLS>)
+
 # Platform specific config
 IF(WIN32)
   set(PLATFORM_NAME "windows")

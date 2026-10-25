@@ -20,7 +20,8 @@
     },
     {
       "name": "linux-release",
-      "displayName": "Linux Release",
+      "displayName": "Linux Release (WSL)",
+      "vendor": { "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}", "copySources": true } },
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -34,6 +35,7 @@
   "buildPresets": [
     { "name": "windows-release", "configurePreset": "windows", "configuration": "Release" },
     { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug" },
+    { "name": "windows-release-devtools", "configurePreset": "windows", "configuration": "ReleaseDevTools" },
     { "name": "linux-release", "configurePreset": "linux-release" }
   ],
   "testPresets": [

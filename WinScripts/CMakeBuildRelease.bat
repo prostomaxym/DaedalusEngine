@@ -1,7 +1,7 @@
 @echo off
 
 cd ../
-cd build
-cmake --build . --config Release
+
+cmake --build --preset windows-release
 
 PAUSE

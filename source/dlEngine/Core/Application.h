@@ -7,6 +7,7 @@
 #include "Events/Event.h"
 #include "Events/EventsEngine.h"
 #include "Events/ApplicationEvent.h"
+#include "Events/KeyEvent.h"
 #include "Debug/ImGuiLayer.h"
 
 namespace Daedalus {
@@ -42,7 +43,6 @@ namespace Daedalus {
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResized(WindowResizeEvent& event);
-		bool OnKeyReleased(KeyReleasedEvent& event);
 
 		std::unique_ptr<Window> m_window;
 		ImGuiLayer* m_debug_layer{ nullptr }; // LayerStack owns imgui_layer

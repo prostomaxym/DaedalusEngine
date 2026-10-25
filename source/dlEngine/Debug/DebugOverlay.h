@@ -1,22 +1,25 @@
 #pragma once
 
-#include "ImGuiLayer.h"
+#include "ImGuiWindow.h"
 
+#include "Events/KeyEvent.h"
 #include "Utils/RingVector.h"
 
 #include <imgui.h>
 
 namespace Daedalus
 {
-	class DAEDALUS_API DebugLayer : public ImGuiLayer
+	class DAEDALUS_API DebugOverlay : public ImGuiWindow
 	{
 	public:
-		DebugLayer() = default;
-		virtual ~DebugLayer() = default;
+		DebugOverlay() = default;
+		virtual ~DebugOverlay() = default;
 
-	protected:
+		void Init() override;
 		void Update(DeltaTime dt) override;
-		void InitWindow() override;
+
+		void OnEvent(Event& evt) override;
+		bool OnKeyReleased(KeyReleasedEvent& event);
 
 	private:
 		static const int GraphSize = 500;

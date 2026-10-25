@@ -16,12 +16,16 @@ project(
     )
 
 set(DEBUG_PROJECT_FILES
-    DebugLayer.h
-    DebugLayer.cpp
+    DebugOverlay.h
+    DebugOverlay.cpp
+    ConsoleOverlay.h
+    ConsoleOverlay.cpp
     Log.h
     Log.cpp
     ImGuiLayer.h
     ImGuiLayer.cpp
+    ImGuiWindow.h
+    ImGuiWindow.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${DEBUG_PROJECT_FILES})

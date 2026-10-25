@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Core/Layer.h"
-#include "Events/ApplicationEvent.h"
-#include "Events/KeyEvent.h"
-#include "Events/MouseEvent.h"
+#include "Events/Event.h"
+#include "ImGuiWindow.h"
 
 #include <filesystem>
+#include <vector>
 
 namespace Daedalus
 {
@@ -25,20 +25,14 @@ namespace Daedalus
 
 		void SetDarkThemeColors();
 
-		void Show(bool show) { m_show = show; }
-		void Toggle() { m_show = !m_show; BlockEvents(!m_show); }
-		bool IsShown() { return m_show; }
-
 		static void LoadConfig();
 		static void SaveConfig();
 		void DoLoadConfig();
 
-	protected:
-		virtual void Update(DeltaTime dt) {};
-		virtual void InitWindow() {};
+		void AddWindow(std::unique_ptr<ImGuiWindow>&& window);
 
 	private:
-		bool m_block_events = true;
-		bool m_show = false;
+		std::vector<std::unique_ptr<ImGuiWindow>> m_windows;
+		bool m_block_events = true;	
 	};
 }

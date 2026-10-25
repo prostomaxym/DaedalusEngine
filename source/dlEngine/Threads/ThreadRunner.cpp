@@ -30,7 +30,8 @@ void ThreadRunner::Stop()
 		}
 	}
 
-	m_runner_thread.join();
+	if (m_runner_thread.joinable())
+		m_runner_thread.join();
 
 	OnStop();
 }

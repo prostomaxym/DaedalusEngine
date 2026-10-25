@@ -13,7 +13,7 @@ std::vector<glm::mat4> PointLightSource::CalculateCascadesProjView(const glm::ma
 {
 	float fov = 0.f, aspect = 0.f, znear = 0.f, zfar = 0.f;
 	ExtractPerspectiveParams(proj, fov, aspect, znear, zfar);
-	const glm::mat4 shadow_proj = glm::perspective(90.f, 1.f, znear, zfar);//std::min(zfar, m_max_distance));
+	const glm::mat4 shadow_proj = glm::perspective(glm::radians(90.f), 1.f, znear, zfar);//std::min(zfar, m_max_distance));
 
     std::vector<glm::mat4> shadow_transforms;
 

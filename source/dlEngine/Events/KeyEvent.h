@@ -46,7 +46,7 @@ public:
 
 	std::string GetInfo() const override
 	{
-		return "KeyPressedEvent: " + std::to_string(m_keycode);
+		return "KeyReleasedEvent: " + std::to_string(m_keycode);
 	}
 };
 

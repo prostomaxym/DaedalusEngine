@@ -80,12 +80,11 @@ public:
 
 public:
 	GpadStickEvent(int keycode, float perc_pushed, StickType type) : GpadAnalogEvent(keycode), m_percent_pushed(perc_pushed), m_type(type) {}
-	inline int GetPercentagePushed() const { return m_percent_pushed; }
+	inline float GetPercentagePushed() const { return m_percent_pushed; }
 	std::string GetInfo() const override
 	{
 		std::string type(m_type == StickType::Left ? " -Left" : " -Right");
-		return "GpadStickEvent: " + std::to_string(m_keycode) + type +" (" + std::to_string(m_percent_pushed * 100) + "% pushed)";
-	}
+		return "GpadStickEvent: " + std::to_string(m_keycode) + type + " (" + std::to_string(m_percent_pushed * 100) + "% pushed)";	}
 
 private:
 	float m_percent_pushed;
@@ -105,12 +104,11 @@ public:
 
 public:
 	GpadTriggerEvent(int keycode, float perc_pushed, TriggerType type) : GpadAnalogEvent(keycode), m_percent_pushed(perc_pushed), m_type(type) {}
-	inline int GetPercentagePushed() const { return m_percent_pushed; }
+	inline float GetPercentagePushed() const { return m_percent_pushed; }
 	std::string GetInfo() const override
 	{
 		std::string type(m_type == TriggerType::Left ? " -Left" : " -Right");
-		return "GpadTriggerEvent: " + std::to_string(m_keycode) + type + " (" + std::to_string(m_percent_pushed * 100) + "% pushed)";
-	}
+		return "GpadTriggerEvent: " + std::to_string(m_keycode) + type + " (" + std::to_string(m_percent_pushed * 100) + "% pushed)";	}
 
 private:
 	float m_percent_pushed;

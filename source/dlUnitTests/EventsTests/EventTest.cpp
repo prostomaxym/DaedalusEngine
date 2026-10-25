@@ -57,6 +57,21 @@ TEST(EventTest, event_info_contains_payload)
 	EXPECT_NE(info.find("2"), std::string::npos);
 }
 
+TEST(EventTest, mouse_scrolled_event_keeps_fractional_offsets)
+{
+	MouseScrolledEvent event(0.5f, -1.25f);
+
+	EXPECT_FLOAT_EQ(event.GetOffsetX(), 0.5f);
+	EXPECT_FLOAT_EQ(event.GetOffsetY(), -1.25f);
+}
+
+TEST(EventTest, event_info_names_the_right_event)
+{
+	EXPECT_EQ(WindowResizeEvent(1, 2).GetInfo().rfind("WindowResizeEvent", 0), 0u);
+	EXPECT_EQ(KeyPressedEvent(1, 0).GetInfo().rfind("KeyPressedEvent", 0), 0u);
+	EXPECT_EQ(KeyReleasedEvent(1).GetInfo().rfind("KeyReleasedEvent", 0), 0u);
+}
+
 TEST(EventTest, handled_flag_set_and_add)
 {
 	WindowCloseEvent event;

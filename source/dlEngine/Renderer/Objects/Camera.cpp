@@ -8,6 +8,7 @@ Camera::Camera(CameraPositionProps pos_props) :
 	, m_yaw(pos_props.yaw)
 	, m_pitch(pos_props.pitch)
 {
+	UpdateView();
 }
 
 Frustum Camera::GetViewFrustum() const

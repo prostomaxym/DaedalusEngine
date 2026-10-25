@@ -125,7 +125,7 @@ void Log::ToggleCategory(Categories category, bool enable)
 	if (enable)
 		s_allowed_categories |= category;
 	else
-		s_allowed_categories &= category;
+		s_allowed_categories &= ~category;
 }
 
 void Log::TraceImpl(const std::string& msg)
@@ -164,4 +164,5 @@ void Log::EnableAllCategories()
 	EnableCategory(Categories::RendererAPI);
 	EnableCategory(Categories::Platform);
 	EnableCategory(Categories::Application);
+	EnableCategory(Categories::Physics);
 }

@@ -33,10 +33,10 @@
     }
   ],
   "buildPresets": [
-    { "name": "windows-release", "configurePreset": "windows", "configuration": "Release" },
-    { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug" },
-    { "name": "windows-release-devtools", "configurePreset": "windows", "configuration": "ReleaseDevTools" },
-    { "name": "linux-release", "configurePreset": "linux-release" }
+    { "name": "windows-release", "configurePreset": "windows", "configuration": "Release", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
+    { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
+    { "name": "windows-release-devtools", "configurePreset": "windows", "configuration": "ReleaseDevTools", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
+   { "name": "linux-release", "configurePreset": "linux-release" }
   ],
   "testPresets": [
     {

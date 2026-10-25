@@ -8,7 +8,7 @@ Audio
 Lua
 Level Editor
 Threads
-Debug
+Animation
 
 - Graphics Tech dept:
 PBR

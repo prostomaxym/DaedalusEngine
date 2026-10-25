@@ -61,12 +61,12 @@ void RenderSystem::SetViewportSize(int width, int height)
 
 void RenderSystem::AddLight(LightSource* light) const
 {
-	Renderer::AddLight(light);
+	if (m_scene->IsRunning()) Renderer::AddLight(light);
 }
 
 void RenderSystem::RemoveLight(LightSource* light) const
 {
-	Renderer::RemoveLight(light);
+	if (m_scene->IsRunning()) Renderer::RemoveLight(light);
 }
 
 void RenderSystem::RenderSkybox() const

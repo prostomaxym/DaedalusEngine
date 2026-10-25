@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16.3)
 #----------------- Dependencies config --------------------------#
 find_package(EnTT CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
 project(
@@ -13,11 +14,19 @@ project(
 
 set(ECS_PROJECT_FILES
     Components.h
+    PhysicsBodyComponent.h
     Entity.h
     Entity.cpp
     Scene.h
     SceneComponents.inl
     Scene.cpp
+    Serialization/SceneRecord.h
+    Serialization/SceneJson.h
+    Serialization/SceneJson.cpp
+    Serialization/ScriptRegistry.h
+    Serialization/ScriptRegistry.cpp
+    Serialization/SceneSerializer.h
+    Serialization/SceneSerializer.cpp
     NativeScript.h
     NativeScriptComponent.h
     UUID.h
@@ -55,4 +64,5 @@ target_link_libraries(${PROJECT_NAME}
         Utils
         EnTT::EnTT
         glm::glm
+        nlohmann_json::nlohmann_json
     )

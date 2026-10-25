@@ -19,6 +19,7 @@ namespace Daedalus
 	{
 	public:
 		RotationModelScript(Entity entity, float speed) : NativeScript(entity), m_speed(speed) {}
+		float GetSpeed() const { return m_speed; }
 
 	protected:
 
@@ -50,6 +51,8 @@ namespace Daedalus
 	{
 	public:
 		TankMovementScript(Entity entity, glm::vec3 forward_dir, float distance) : NativeScript(entity), m_forward_dir(forward_dir), m_max_distance(distance) {}
+		glm::vec3 GetForwardDirection() const { return m_forward_dir; }
+		float GetMaxDistance() const { return m_max_distance; }
 
 	protected:
 

@@ -4,8 +4,40 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+#include <chrono>
 
 namespace Daedalus {
+
+	struct ShaderVariableInfo
+	{
+		std::string name;
+		std::string type;
+		int size{ 0 };
+		int location{ -1 };
+	};
+
+	struct ShaderInfo
+	{
+		uint32_t renderer_id{ 0 };
+		bool linked{ false };
+		int binary_length{ 0 };
+		int uniform_block_count{ 0 };
+		bool is_compute{ false };
+		int compute_work_group_size[3]{ 0, 0, 0 };
+		std::vector<ShaderVariableInfo> uniforms;
+		std::vector<ShaderVariableInfo> attributes;
+		std::string info_log;
+	};
+
+	struct ShaderLoadInfo
+	{
+		std::string origin;
+		std::string source_path;
+		double load_time_ms{ 0.0 };
+		bool has_last_modified{ false };
+		std::chrono::system_clock::time_point last_modified;
+	};
 
 	class DAEDALUS_API Shader
 	{
@@ -31,6 +63,8 @@ namespace Daedalus {
 
 		virtual const std::string& GetName() const = 0;
 		virtual void SetName(const std::string& name) = 0;
+
+		virtual ShaderInfo GetInfo() const = 0;
 
 		virtual void SetInt(const std::string& name, int value) const = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) const = 0;

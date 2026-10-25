@@ -19,6 +19,10 @@ public:
 	glm::mat4 GetProjectionMatrix(float z_close_limit, float z_far_limit) const override;
 	float GetNearPlane() const override { return m_near_plane; }
 	float GetFarPlane() const override { return m_far_plane; }
+	float GetLeftPlane() const { return m_left_plane; }
+	float GetRightPlane() const { return m_right_plane; }
+	float GetBottomPlane() const { return m_bottom_plane; }
+	float GetTopPlane() const { return m_top_plane; }
 
 	void ProcessZoom(float yoffset) override;
 

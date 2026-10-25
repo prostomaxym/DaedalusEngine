@@ -54,6 +54,9 @@ namespace Daedalus {
 
 		bool IsLoaded() const override { return m_is_loaded; }
 
+		uint64_t GetMemorySizeBytes() const override;
+		const char* GetFormatName() const override;
+
 		bool operator==(const Texture& other) const override
 		{
 			return m_rendererID == other.GetRendererID();
@@ -76,8 +79,14 @@ namespace Daedalus {
 	public:
 		OpenGLTextureCubemap(const std::vector<std::string>& faces);
 		~OpenGLTextureCubemap();
+		bool IsLoaded() const override { return m_faces_loaded == 6; }
 
 		uint32_t GetRendererID() const override { return m_rendererID; }
+
+		uint32_t GetWidth() const override { return m_width; }
+		uint32_t GetHeight() const override { return m_height; }
+		uint64_t GetMemorySizeBytes() const override;
+		const char* GetFormatName() const override { return "RGB8"; }
 
 		void Bind(uint32_t slot = 0) const override;
 
@@ -88,5 +97,8 @@ namespace Daedalus {
 
 	private:
 		uint32_t m_rendererID{ 0 };
+		uint32_t m_width{ 0 };
+		uint32_t m_height{ 0 };
+		uint32_t m_faces_loaded{ 0 };
 	};
 }

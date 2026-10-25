@@ -25,6 +25,10 @@ namespace Daedalus {
 
 		std::shared_ptr<VertexArray> GetVertexArray() const { return m_VAO; }
 
+		const std::string& GetName() const { return m_name; }
+		uint64_t GetVertexBufferBytes() const { return m_vertex_buffer_bytes; }
+		uint64_t GetIndexBufferBytes() const { return static_cast<uint64_t>(m_indices_count) * sizeof(uint32_t); }
+
 		uint32_t GetVertexCount() const;
 		uint32_t GetIndexCount() const;
 		uint32_t GetMaterialIndex() const;
@@ -43,6 +47,7 @@ namespace Daedalus {
 		const uint32_t m_vertex_count;
 		const uint32_t m_indices_count;
 		const uint32_t m_material_index;
+		uint64_t m_vertex_buffer_bytes{ 0 };
 
 		std::shared_ptr<VertexArray> m_VAO;
 		std::shared_ptr<VertexBuffer> m_VBO;

@@ -27,6 +27,8 @@ set(ECS_TEST_FILES
     ECSTests/EntityTest.cpp
     ECSTests/NativeScriptTest.cpp
     ECSTests/SceneTest.cpp
+    ECSTests/SceneJsonTest.cpp
+    ECSTests/SceneSerializerTest.cpp
     ECSTests/TransformComponentTest.cpp
     ECSTests/UUIDTest.cpp
     )
@@ -82,6 +84,11 @@ set(PROJECT_FILES
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    DL_SCENE_FIXTURES="${CMAKE_SOURCE_DIR}/source/dlSandbox/scenes"
+    DL_SCENE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/scene_test_data"
+)
 
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    

@@ -379,6 +379,11 @@ void Physics::Init(const glm::vec3& gravity)
 	DL_ASSERT(success, Log::Categories::Physics, "Failed to initialize Physics");
 }
 
+bool Physics::IsInitialized()
+{
+	return s_impl && s_impl->dynamicsWorld;
+}
+
 void Physics::Shutdown()
 {
 	DL_ASSERT(s_impl != nullptr, Log::Categories::Physics, "Physics does not exist");

@@ -1,9 +1,13 @@
 #include "dlpch.h"
 
 #include "DebugOverlay.h"
+
 #include "Log.h"
 #include "Core/Application.h"
+#include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
+#include "Events/EventDispatcher.h"
+#include "Events/ApplicationEvent.h"
 #include "Renderer/API/Renderer.h"
 #include "Platform/Platform.h"
 #include "Platform/ResourcesMonitor.h"
@@ -665,4 +669,24 @@ void DebugOverlay::LogFilterPanel::DrawLevelCheckbox(Log::Levels level)
 {
 	int i = static_cast<int>(level);
 	ImGui::Checkbox(Log::ToString(level), &level_flags_[i]);
+}
+
+void DebugOverlay::OnEvent(Event& evt)
+{
+	EventDispatcher::ProcessEvent<KeyReleasedEvent>(evt, DL_BIND_EVENT_FN(DebugOverlay::OnKeyReleased));
+}
+
+bool DebugOverlay::OnKeyReleased(KeyReleasedEvent& event)
+{
+	const auto key_code = event.GetKeyCode();
+	if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Debug"))
+	{
+		Toggle();
+		auto& wnd = Application::GetInstance()->GetWindow();
+		wnd.FreeCursor(IsShown());
+
+		return true;
+	}
+
+	return false;
 }

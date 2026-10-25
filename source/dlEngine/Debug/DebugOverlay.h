@@ -2,6 +2,7 @@
 
 #include "ImGuiWindow.h"
 
+#include "Events/KeyEvent.h"
 #include "Utils/RingVector.h"
 
 #include <imgui.h>
@@ -14,8 +15,11 @@ namespace Daedalus
 		DebugOverlay() = default;
 		virtual ~DebugOverlay() = default;
 
-		void Update(DeltaTime dt) override;
 		void Init() override;
+		void Update(DeltaTime dt) override;
+
+		void OnEvent(Event& evt) override;
+		bool OnKeyReleased(KeyReleasedEvent& event);
 
 	private:
 		static const int GraphSize = 500;

@@ -16,14 +16,15 @@ namespace Daedalus
         ConsoleOverlay() = default;
         virtual ~ConsoleOverlay() = default;
 
-        void OnEvent(Event& evt);
+        void Init() override;
+        void Update(DeltaTime dt) override;
+
+        void OnEvent(Event& evt) override;
         bool OnKeyReleased(KeyReleasedEvent& event);
 
     private:
         static int TextEditCallbackStub(ImGuiInputTextCallbackData* data);
 
-        void Update(DeltaTime dt) override;
-        void Init() override;
         void Clear();
 
         void AddLog(const std::string& msg);    

@@ -22,9 +22,20 @@ namespace Daedalus {
 			const auto sleep_time = desired_frametime - elapsed_time;
 
 			const auto sleep_nanos = sleep_time.GetTime();
-			if (sleep_nanos.count() > 0)
+			if (sleep_nanos.count() <= 0)
+				return;
+
+			// OS sleep overshoots by up to ~1ms+, so sleep only part of the time and spin for the rest
+			const auto deadline = std::chrono::steady_clock::now() + sleep_nanos;
+			constexpr std::chrono::nanoseconds spin_margin = std::chrono::milliseconds(2);
+
+			if (sleep_nanos > spin_margin)
 			{
-				Platform::PreciseThreadSleep(sleep_nanos.count());
+				Platform::PreciseThreadSleep((sleep_nanos - spin_margin).count());
+			}
+
+			while (std::chrono::steady_clock::now() < deadline)
+			{
 			}
 		}
 
@@ -40,13 +51,9 @@ namespace Daedalus {
 			if (remaining_time.GetTime().count() <= 0)
 				return;
 
-			const auto start = std::chrono::high_resolution_clock::now();
-			while (true)
+			const auto deadline = std::chrono::steady_clock::now() + remaining_time.GetTime();
+			while (std::chrono::steady_clock::now() < deadline)
 			{
-				const auto now = std::chrono::high_resolution_clock::now();
-				const std::chrono::duration<float> waited = now - start;
-				if (waited >= remaining_time.GetTime())
-					break;
 			}
 		}
 

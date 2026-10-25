@@ -89,6 +89,7 @@ namespace
 
 LightSource::LightSource(LightSourceType type, const LightProps& props) :
     m_params(type, props)
+    , m_props(props)
 {
 }
 
@@ -112,6 +113,7 @@ std::vector<glm::mat4> LightSource::CalculateCascadesProjView(const glm::mat4& p
 void LightSource::SetMaxDistance(float distance)
 {
 	m_params.SetMaxDistance(distance);
+    m_props.max_distance = distance;
 }
 
 LightSSBO::LightSSBO(LightSourceType light_type, const LightProps& props) :

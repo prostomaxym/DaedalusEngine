@@ -15,6 +15,7 @@
         {"name": "assimp"},
         {"name": "entt"},
         {"name": "simpleini"},
+        {"name": "nlohmann-json"},
         {"name": "fmt"},
         {"name": "bullet3", "features": ["multithreading"]}
     ],

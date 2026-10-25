@@ -14,7 +14,11 @@ namespace Daedalus
 		SpotLightSource() = default;
 		SpotLightSource(const LightProps& props);
 
-		void SetCutoffAngle(float theta_angle) { m_params.cutoff_angle = theta_angle; }
+		void SetCutoffAngle(float cutoff_cosine)
+		{
+			m_params.cutoff_angle = cutoff_cosine;
+			m_props.theta_angle = glm::degrees(glm::acos(cutoff_cosine));
+		}
 
 		glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const override;
 	};

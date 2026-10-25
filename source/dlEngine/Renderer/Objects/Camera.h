@@ -62,6 +62,12 @@ namespace Daedalus {
 
 		float GetYaw() const { return m_yaw; }
 		float GetPitch() const { return m_pitch; }
+		glm::vec3 GetWorldUp() const { return m_world_up; }
+		float GetMovementSpeed() const { return m_movement_speed; }
+		float GetSensitivity() const { return m_mouse_sensitivity; }
+		float GetZoomSpeed() const { return m_zoom_speed; }
+		float GetPersonDistance() const { return m_distance; }
+		float GetPersonHeight() const { return m_height; }
 
 		virtual float GetNearPlane() const = 0;
 		virtual float GetFarPlane() const = 0;

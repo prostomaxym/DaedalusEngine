@@ -36,6 +36,8 @@ namespace Daedalus
 		void RenderRenderingPage();
 		void RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 size, bool use_aspect = true);
 
+		void RenderResourcesPage();
+
 		void RenderLogsPage();
 
 		float CalculateLowPercentile(float percentile) const;

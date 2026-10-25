@@ -18,6 +18,8 @@
 #include "ECS/Entity.h"
 #include "ECS/NativeScriptComponent.h"
 #include "ECS/NativeScripts/CameraController.h"
+#include "ECS/Serialization/SceneJson.h"
+#include "ECS/Serialization/SceneSerializer.h"
 
 #include "Threads/DaedalusThreads.h"
 

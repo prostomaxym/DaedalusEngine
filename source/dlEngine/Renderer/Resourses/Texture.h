@@ -38,6 +38,10 @@ namespace Daedalus {
 
 		virtual bool IsLoaded() const { return true; };
 
+		virtual uint64_t GetMemorySizeBytes() const { return 0; }
+		virtual uint32_t GetMipLevels() const { return 1; }
+		virtual const char* GetFormatName() const { return "unknown"; }
+
 		virtual bool operator==(const Texture& other) const = 0;
 	};
 

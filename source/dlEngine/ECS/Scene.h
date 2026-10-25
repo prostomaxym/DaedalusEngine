@@ -11,15 +11,20 @@
 namespace Daedalus
 {
 	class Entity;
+	class SceneSerializer;
 	struct NativeScriptComponent;
 
 	class DAEDALUS_API Scene
 	{
 	public:
 		Scene();
-		~Scene() = default;
+		~Scene();
+		Scene(const Scene&) = delete;
+		Scene& operator=(const Scene&) = delete;
+		Scene(Scene&&) = delete;
+		Scene& operator=(Scene&&) = delete;
 
-		void OnRuntimeStart(const std::string& scenename = "");
+		bool OnRuntimeStart(const std::string& scenename = "");
 		void OnRuntimeStop();
 		void OnUpdateRuntime(DeltaTime dt);
 
@@ -33,11 +38,15 @@ namespace Daedalus
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
+		void Clear();
+		bool IsEmpty() const { return m_entity_map.empty(); }
+		bool SetPrimaryCamera(UUID uuid);
 
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
 
 		const std::string& GetSceneName() const { return m_scene_name; }
+		void SetSceneName(const std::string& name) { m_scene_name = name; }
 		Camera* GetCamera();
 	private:
 		template<typename T>
@@ -55,6 +64,7 @@ namespace Daedalus
 		std::string m_scene_name;
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
+		UUID m_primary_camera{ 0 };
 
 		RenderSystem m_render_system;
 		PhysicsSystem m_physics_system;
@@ -63,6 +73,7 @@ namespace Daedalus
 		bool m_is_paused{ false };
 
 		friend class Entity;
+		friend class SceneSerializer;
 	};
 
 	// Explicit specializations must be at namespace scope for GCC/Clang; they are inline to avoid ODR violations.

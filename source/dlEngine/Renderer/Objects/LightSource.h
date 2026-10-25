@@ -72,14 +72,15 @@ namespace Daedalus
 		virtual std::vector<glm::mat4> CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4& view, float cascade_exponent) const;
 		virtual glm::mat4 CalculateProjViewForFrustum(const glm::mat4& camera_proj, const glm::mat4& camera_view) const = 0;
 
-		void SetDirection(glm::vec3 direction) { m_params.direction = direction; }
-		void SetPower(float lpower) { m_params.power = lpower; }
+		void SetDirection(glm::vec3 direction) { m_params.direction = direction; m_props.direction = direction; }
+		void SetPower(float lpower) { m_params.power = lpower; m_props.light_power = lpower; }
 		void SetShadowMapIndex(int index) { m_params.shadow_map_index = index; }
-		void SetShadowNumberOfCascades(int num) { m_params.number_of_cascades = num; }
-		void SetPosition(glm::vec3 position) { m_params.position = position; }
+		void SetShadowNumberOfCascades(int num) { m_params.number_of_cascades = num; m_props.number_of_shadow_cascades = num; }
+		void SetPosition(glm::vec3 position) { m_params.position = position; m_props.light_pos = position; }
 		void SetMaxDistance(float distance);
 
 		const LightSSBO& GetShaderSSBO() const { return m_params; }
+		const LightProps& GetProps() const { return m_props; }
 		virtual int GetShadowNumberOfCascades() const { return m_params.number_of_cascades; }
 		bool CastShadow() const { return m_params.cast_shadows > 0; }
 
@@ -87,5 +88,6 @@ namespace Daedalus
 		void ExtractPerspectiveParams(const glm::mat4& projMatrix, float& fov, float& aspect, float& z_near, float& z_far) const;
 
 		LightSSBO m_params{};;
+		LightProps m_props;
 	};
 }

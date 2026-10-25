@@ -8,10 +8,18 @@ using namespace Daedalus;
 
 LayerStack::~LayerStack()
 {
-	for (auto& layer : m_layers)
+	Clear();
+}
+
+void LayerStack::Clear()
+{
+	for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it)
 	{
-		layer->OnDetach();
+		(*it)->OnDetach();
 	}
+
+	m_layers.clear();
+	m_layer_insert_index = 0;
 }
 
 Layer* LayerStack::GetMainLayer()
@@ -60,7 +68,7 @@ std::unique_ptr<Layer> LayerStack::PopLayer(Layer* layer)
 
 std::unique_ptr<Layer> LayerStack::PopOverlay(Layer* overlay)
 {
-	auto it = std::find_if(m_layers.begin(), m_layers.begin() + m_layer_insert_index,
+	auto it = std::find_if(m_layers.begin() + m_layer_insert_index, m_layers.end(),
 	[overlay](const auto& el)
 	{
 		return el.get() == overlay;

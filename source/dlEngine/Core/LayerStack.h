@@ -15,6 +15,9 @@ namespace Daedalus {
 
 		Layer* GetMainLayer();
 
+		// Detaches and destroys all layers; call before subsystems used by layers are shut down
+		void Clear();
+
 		LayerStack(const LayerStack&) = delete;
 		LayerStack(LayerStack&&) = delete;
 		LayerStack& operator=(const LayerStack&) = delete;

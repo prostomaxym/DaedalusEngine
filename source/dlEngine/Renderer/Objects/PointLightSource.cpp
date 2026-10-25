@@ -9,7 +9,7 @@ PointLightSource::PointLightSource(const LightProps& props)
 	LightSource(LightSourceType::Point, props)
 {}
 
-std::vector<glm::mat4> PointLightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4&) const
+std::vector<glm::mat4> PointLightSource::CalculateCascadesProjView(const glm::mat4& proj, const glm::mat4&, float) const
 {
 	float fov = 0.f, aspect = 0.f, znear = 0.f, zfar = 0.f;
 	ExtractPerspectiveParams(proj, fov, aspect, znear, zfar);

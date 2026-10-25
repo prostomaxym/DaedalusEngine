@@ -3,6 +3,8 @@
 #include <Core/LayerStack.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 using namespace Daedalus;
 
@@ -102,4 +104,50 @@ TEST(LayerStackTest, destructor_detaches_remaining_layers)
 		stack.PushOverlay(std::make_unique<TestLayer>(a, d));
 	}
 	EXPECT_EQ(d, 2);
+}
+
+TEST(LayerStackTest, clear_detaches_all_in_reverse_order_and_empties_stack)
+{
+	std::vector<std::string> order;
+	struct OrderLayer : Layer
+	{
+		OrderLayer(std::vector<std::string>& o, const std::string& n) : Layer(n), m_order(o) {}
+		void OnDetach() override { m_order.push_back(GetName()); }
+		std::vector<std::string>& m_order;
+	};
+
+	LayerStack stack;
+	stack.PushLayer(std::make_unique<OrderLayer>(order, "layer"));
+	stack.PushOverlay(std::make_unique<OrderLayer>(order, "overlay"));
+	stack.Clear();
+
+	ASSERT_EQ(order.size(), 2u);
+	EXPECT_EQ(order[0], "overlay");
+	EXPECT_EQ(order[1], "layer");
+	EXPECT_TRUE(stack.begin() == stack.end());
+}
+
+TEST(LayerStackTest, clear_does_not_detach_twice_on_destruction)
+{
+	int a = 0, d = 0;
+	{
+		LayerStack stack;
+		stack.PushLayer(std::make_unique<TestLayer>(a, d));
+		stack.Clear();
+	}
+	EXPECT_EQ(d, 1);
+}
+
+TEST(LayerStackTest, pop_overlay_finds_overlay_after_layers)
+{
+	int a = 0, d = 0;
+	LayerStack stack;
+	stack.PushLayer(std::make_unique<TestLayer>(a, d));
+	auto overlay = std::make_unique<TestLayer>(a, d, false, "overlay");
+	auto* raw = overlay.get();
+	stack.PushOverlay(std::move(overlay));
+
+	auto popped = stack.PopOverlay(raw);
+	EXPECT_EQ(popped.get(), raw);
+	EXPECT_EQ(d, 1);
 }

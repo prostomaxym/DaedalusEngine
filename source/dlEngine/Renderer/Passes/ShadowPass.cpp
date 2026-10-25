@@ -28,10 +28,10 @@ void ShadowPass::SetNumberOfShadowMaps(int number)
 	m_number_of_shadowmaps = number;
 }
 
-ShadowPass::PassOut ShadowPass::Render(const PassIn& data)const
+void ShadowPass::Render(FrameContext& context)
 {
-	if (m_number_of_shadowmaps <= 0)
-		return PassOut();
+	if (m_number_of_shadowmaps <= 0 || !context.frame_models)
+		return;
 
 	m_framebuffer->Bind();
 	RenderCommand::Clear(RendererAPI::ClearMode::DepthBuffer);
@@ -40,7 +40,7 @@ ShadowPass::PassOut ShadowPass::Render(const PassIn& data)const
 	const auto shadow_shader = ResourceManager::GetShader(ShaderConstants::ShadowShader);
 	shadow_shader->Bind();
 
-	for (const auto& model_data : data.frame_models)
+	for (const auto& model_data : *context.frame_models)
 	{
 		shadow_shader->SetMat4(ShaderConstants::ShadowModel, model_data.second);
 		const auto& meshes = model_data.first->GetMeshes();
@@ -55,5 +55,5 @@ ShadowPass::PassOut ShadowPass::Render(const PassIn& data)const
 	shadow_shader->Unbind();
 	m_framebuffer->Unbind();
 
-	return PassOut{ m_framebuffer->GetDepthAttachmentID() };
+	context.SetTexture(PassTexture::ShadowMap, m_framebuffer->GetDepthAttachmentID());
 }

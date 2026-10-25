@@ -22,11 +22,7 @@ Application* Application::s_instance = nullptr;
 
 Application* Application::GetInstance()
 {
-	if (!s_instance)
-	{
-		s_instance = new Application();
-	}
-
+	// Instance is created by the client (see CreateApplication); the base class is never instantiated lazily
 	return s_instance;
 }
 
@@ -53,8 +49,9 @@ Application::Application()
 	ResourceManager::Init();
 	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
-	m_debug_layer = new ImGuiLayer();
-	PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+	auto debug_layer = std::make_unique<ImGuiLayer>();
+	m_debug_layer = debug_layer.get();
+	PushOverlay(std::move(debug_layer));
 
 	if (IsDevBuild())
 	{
@@ -66,11 +63,16 @@ Application::Application()
 Application::~Application()
 {
 	WorkingDirectory::SaveConfigs();
-	Input::Shutdown();
-	Renderer::Shutdown();
-	Physics::Shutdown();
+
+	// Reverse of construction order; layers own scene/GPU resources so they go first
+	m_layer_stack.Clear();
+	m_debug_layer = nullptr;
+	
 	ResourceManager::Shutdown();
-	Log::Shutdown();
+	Physics::Shutdown();
+	Renderer::Shutdown();
+	Input::Shutdown();
+	m_event_engine.Stop();
 }
 
 void Application::Run()

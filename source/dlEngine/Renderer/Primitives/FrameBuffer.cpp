@@ -1,14 +1,14 @@
 #include "dlpch.h"
 #include "Renderer/Primitives/FrameBuffer.h"
 
-#include "Renderer/API/Renderer.h"
+#include "Renderer/API/RendererAPI.h"
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
 
 using namespace Daedalus;
 
 std::unique_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return nullptr;
 	case RendererAPI::API::OpenGL:  return std::make_unique<OpenGLFramebuffer>(spec);
@@ -20,7 +20,7 @@ std::unique_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification&
 
 void Framebuffer::BindMain()
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
 	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::BindDefault(); return;
@@ -31,7 +31,7 @@ void Framebuffer::BindMain()
 
 void Framebuffer::CopyFramebuffer(unsigned int src_id, unsigned int dest_id, int width, int height)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
 	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::CopyFramebufferImpl(src_id, dest_id, width, height); return;
@@ -42,7 +42,7 @@ void Framebuffer::CopyFramebuffer(unsigned int src_id, unsigned int dest_id, int
 
 void Framebuffer::CopyDepthFramebuffer(unsigned int src_id, unsigned int dest_id, int width, int height)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
 	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::CopyDepthFramebufferImpl(src_id, dest_id, width, height); return;
@@ -53,7 +53,7 @@ void Framebuffer::CopyDepthFramebuffer(unsigned int src_id, unsigned int dest_id
 
 void Framebuffer::CopyColorFramebuffer(unsigned int src_id, unsigned int dest_id, int width, int height)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
 	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::CopyColorFramebufferImpl(src_id, dest_id, width, height); return;
@@ -64,7 +64,7 @@ void Framebuffer::CopyColorFramebuffer(unsigned int src_id, unsigned int dest_id
 
 void Framebuffer::CopyColorAttachment(unsigned int src_id, unsigned int dest_id, int width, int height, int src_attach_id, int dest_attach_id)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 	case RendererAPI::API::None:    Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
 	case RendererAPI::API::OpenGL:  OpenGLFramebuffer::CopyColorAttachmentImpl(src_id, dest_id, width, height, src_attach_id, dest_attach_id); return;

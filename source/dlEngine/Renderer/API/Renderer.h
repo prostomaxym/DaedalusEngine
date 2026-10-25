@@ -8,13 +8,7 @@
 #include "Renderer/Objects/Geometry.h"
 #include "Renderer/Objects/LightSource.h"
 #include "Renderer/Objects/Camera.h"
-#include "Renderer/Passes/ShadowPass.h"
-#include "Renderer/Passes/DeferredGeometryPass.h"
-#include "Renderer/Passes/DeferredLightPass.h"
-#include "Renderer/Passes/SSAOPass.h"
-#include "Renderer/Primitives/FrameBuffer.h"
-#include "Renderer/Primitives/ShaderStorageBuffer.h"
-#include "Renderer/Primitives/UniformBuffer.h"
+#include "RendererDebugInfo.h"
 
 #include <glm/glm.hpp>
 
@@ -27,20 +21,7 @@ namespace Daedalus {
 	class DAEDALUS_API Renderer
 	{
 	public:
-		struct DebugInfo
-		{
-			ShadowPass::PassOut shadow;
-			DeferredGeometryPass::PassOut geom;
-			SSAOPass::PassOut ssao;
-			uint32_t depth_id{ 0 };
-			int number_of_shadow_maps{ 0 };
-			int current_shadow_map{ 0 };
-
-			std::shared_ptr<Texture2D> greyscale_depth{ nullptr };
-			std::shared_ptr<Texture2D> greyscale_shadow{ nullptr };
-			std::shared_ptr<Texture2D> greyscale_ssao{ nullptr };
-			std::shared_ptr<Texture2D> greyscale_shininess{ nullptr };
-		};
+		using DebugInfo = RendererDebugInfo;
 
 	public:
 		static void Init();
@@ -49,8 +30,8 @@ namespace Daedalus {
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
-		static std::pair<int, int> GetResolution() { return { s_data->window_width, s_data->window_height }; }
-		static float GetAspectRatio() { return static_cast<float>(s_data->window_width) / static_cast<float>(s_data->window_height); }
+		static std::pair<int, int> GetResolution();
+		static float GetAspectRatio();
 
 		static void BeginFrame(const Camera* camera,std::optional<int> number_of_objects = std::nullopt);
 		static void FlushPipeline();
@@ -79,29 +60,8 @@ namespace Daedalus {
 		static void ComputeTextureArray(std::string_view shader, uint32_t id, uint32_t id_out, int w, int h, int layer);
 		static void ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint32_t id_out, int w, int h);
 
-		struct Data
-		{
-			std::shared_ptr<UniformBuffer> UBO_scene_data{ nullptr };
-			std::shared_ptr<UniformBuffer> UBO_graphic_config{ nullptr };
-			Frustum view_frustum;
-			glm::mat4 scene_proj;
-			glm::mat4 scene_view;
-			float znear{ 0.f };
-			float zfar{ 0.f };
-
-			std::vector<LightSource*> lights;
-			std::vector<std::pair<const Model*, glm::mat4>> frame_models;
-
-			ShadowPass shadow_pass;
-			DeferredGeometryPass geometry_pass;
-			DeferredLightPass light_pass;
-			SSAOPass ssao_pass;
-
-			std::shared_ptr<VertexArray> unit_quad{ nullptr };
-
-			int window_width{ 0 };
-			int window_height{ 0 };
-		};
+		// Defined in Renderer.cpp to keep pass/buffer headers out of this header
+		struct Data;
 
 		static std::unique_ptr<DebugInfo> s_debug;
 		static std::unique_ptr<Data> s_data;

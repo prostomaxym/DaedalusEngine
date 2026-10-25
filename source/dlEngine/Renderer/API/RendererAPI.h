@@ -2,6 +2,7 @@
 
 #include "Renderer/Resourses/ShaderLibrary.h"
 #include "Renderer/Primitives/VertexArray.h"
+#include "Config/GraphicsConfig.h"
 
 #include <glm/vec4.hpp>
 

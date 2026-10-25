@@ -5,10 +5,50 @@
 #include "Core/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "RenderConstants.h"
+#include "Renderer/Passes/DeferredGeometryPass.h"
+#include "Renderer/Passes/DeferredLightPass.h"
+#include "Renderer/Passes/ShadowPass.h"
+#include "Renderer/Passes/SSAOPass.h"
+#include "Renderer/Primitives/FrameBuffer.h"
+#include "Renderer/Primitives/ShaderStorageBuffer.h"
+#include "Renderer/Primitives/UniformBuffer.h"
 
 #include <filesystem>
 
 using namespace Daedalus;
+
+struct Renderer::Data
+{
+	std::shared_ptr<UniformBuffer> UBO_scene_data{ nullptr };
+	std::shared_ptr<UniformBuffer> UBO_graphic_config{ nullptr };
+	Frustum view_frustum;
+	glm::mat4 scene_proj;
+	glm::mat4 scene_view;
+	float znear{ 0.f };
+	float zfar{ 0.f };
+
+	std::vector<LightSource*> lights;
+	FrameContext::ModelList frame_models;
+
+	std::vector<std::unique_ptr<RenderPass>> passes; // Executed in order
+	ShadowPass* shadow_pass{ nullptr }; // Non-owning, owned by passes
+	DeferredGeometryPass* geometry_pass{ nullptr }; // Non-owning, owned by passes
+
+	std::shared_ptr<VertexArray> unit_quad{ nullptr };
+
+	int window_width{ 0 };
+	int window_height{ 0 };
+};
+
+std::pair<int, int> Renderer::GetResolution()
+{
+	return { s_data->window_width, s_data->window_height };
+}
+
+float Renderer::GetAspectRatio()
+{
+	return static_cast<float>(s_data->window_width) / static_cast<float>(s_data->window_height);
+}
 
 std::unique_ptr<Renderer::Data> Renderer::s_data = nullptr;
 std::unique_ptr<Renderer::DebugInfo> Renderer::s_debug = nullptr;
@@ -86,8 +126,18 @@ void Renderer::Init()
 	s_data->UBO_scene_data = UniformBuffer::Create(sizeof(float) * 40, 0, UniformBuffer::Type::Dynamic);
 	s_data->unit_quad = CreateUnitQuad();
 
-	s_data->geometry_pass.CreateGBuffer(s_data->window_width, s_data->window_height);
-	s_data->ssao_pass.CreateSSAOBuffers(s_data->window_width, s_data->window_height);
+	// Order matters: each pass reads textures published by the previous ones
+	auto shadow_pass = std::make_unique<ShadowPass>();
+	auto geometry_pass = std::make_unique<DeferredGeometryPass>();
+	s_data->shadow_pass = shadow_pass.get();
+	s_data->geometry_pass = geometry_pass.get();
+	s_data->passes.push_back(std::move(shadow_pass));
+	s_data->passes.push_back(std::move(geometry_pass));
+	s_data->passes.push_back(std::make_unique<SSAOPass>());
+	s_data->passes.push_back(std::make_unique<DeferredLightPass>());
+
+	for (auto& pass : s_data->passes)
+		pass->OnResize(s_data->window_width, s_data->window_height);
 
 	s_debug = std::make_unique<DebugInfo>();
 
@@ -114,8 +164,8 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	s_data->window_width = width;
 	s_data->window_height = height;
 
-	s_data->geometry_pass.CreateGBuffer(width, height);
-	s_data->ssao_pass.CreateSSAOBuffers(width, height);
+	for (auto& pass : s_data->passes)
+		pass->OnResize(width, height);
 }
 
 void Renderer::BeginFrame(const Camera* camera, std::optional<int> number_of_objects)
@@ -148,24 +198,35 @@ void Renderer::FlushPipeline()
 {
 	UpdateLightShaderData();
 
-	s_debug->shadow = s_data->shadow_pass.Render(ShadowPass::PassIn(s_data->frame_models));
-	s_debug->number_of_shadow_maps = s_data->shadow_pass.GetNumberOfShadowMaps();
+	FrameContext context;
+	context.frame_models = &s_data->frame_models;
+	context.view_frustum = s_data->view_frustum;
+	context.scene_proj = s_data->scene_proj;
+	context.scene_view = s_data->scene_view;
+	context.viewport_width = s_data->window_width;
+	context.viewport_height = s_data->window_height;
 
-	s_debug->geom = s_data->geometry_pass.Render(DeferredGeometryPass::PassIn(s_data->frame_models, s_data->view_frustum, s_data->window_width, s_data->window_height));
-	DeferredLightPass::PassIn geom_out(s_debug->geom, s_debug->shadow.shadow_map_id, s_data->window_width, s_data->window_height);
+	for (auto& pass : s_data->passes)
+		pass->Render(context);
 
-	if (GraphicsConfig::IsSSBOEnabled())
+	if (IsDevBuild())
 	{
-		s_debug->ssao = s_data->ssao_pass.Render(SSAOPass::PassIn(s_debug->geom.pos_texture, s_debug->geom.norm_texture, s_data->scene_proj, s_data->scene_view));
-		geom_out.ssao_texture = s_debug->ssao.ssao_texture;
+		s_debug->shadow.shadow_map_id = context.GetTexture(PassTexture::ShadowMap);
+		s_debug->number_of_shadow_maps = s_data->shadow_pass->GetNumberOfShadowMaps();
+		s_debug->geom.pos_texture = context.GetTexture(PassTexture::Position);
+		s_debug->geom.norm_texture = context.GetTexture(PassTexture::Normal);
+		s_debug->geom.ambient_texture = context.GetTexture(PassTexture::Ambient);
+		s_debug->geom.spec_texture = context.GetTexture(PassTexture::Specular);
+		s_debug->geom.albedo_texture = context.GetTexture(PassTexture::Albedo);
+		s_debug->geom.shininess_texture = context.GetTexture(PassTexture::Shininess);
+		if (GraphicsConfig::IsSSBOEnabled())
+			s_debug->ssao.ssao_texture = context.GetTexture(PassTexture::SSAO);
+		s_debug->depth_id = context.GetTexture(PassTexture::Depth);
 	}
 
-	s_data->light_pass.Render(geom_out);
-
-	const auto gbuffer = s_data->geometry_pass.GetBuffer();
+	const auto gbuffer = s_data->geometry_pass->GetBuffer();
 	const auto& spec = gbuffer->GetSpecification();
 	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
-	s_debug->depth_id = gbuffer->GetDepthAttachmentID();
 
 	if (IsDevBuild())
 		ComputeDebugInfo();
@@ -228,7 +289,7 @@ void Renderer::UpdateLightShaderData()
 		if (light->CastShadow())
 		{
 			light->SetShadowMapIndex(light_proj_view.size());
-			const auto cascades = light->CalculateCascadesProjView(s_data->scene_proj, s_data->scene_view);
+			const auto cascades = light->CalculateCascadesProjView(s_data->scene_proj, s_data->scene_view, GraphicsConfig::GetShadowCSMExponent());
 			light_proj_view.insert(light_proj_view.end(), cascades.begin(), cascades.end());
 		}
 
@@ -346,7 +407,7 @@ void Renderer::ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint
 void Renderer::SetLights(const std::vector<LightSource*>& lights)
 {
 	s_data->lights = lights;
-	s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+	s_data->shadow_pass->SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 }
 
 void Renderer::AddLight(LightSource* light)
@@ -354,7 +415,7 @@ void Renderer::AddLight(LightSource* light)
 	s_data->lights.push_back(light);
 
 	if (light->CastShadow())
-		s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+		s_data->shadow_pass->SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 }
 
 void Renderer::RemoveLight(LightSource* light)
@@ -365,7 +426,7 @@ void Renderer::RemoveLight(LightSource* light)
 		s_data->lights.erase(it);
 
 		if (light->CastShadow())
-			s_data->shadow_pass.SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
+			s_data->shadow_pass->SetNumberOfShadowMaps(CalculateNumberOfShadowMaps());
 	}
 	else
 	{

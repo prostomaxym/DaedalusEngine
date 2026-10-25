@@ -1,6 +1,6 @@
-﻿#include "Shader.h"
+#include "Shader.h"
 
-#include "Renderer/API/Renderer.h"
+#include "Renderer/API/RendererAPI.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 
 using namespace Daedalus;
@@ -8,7 +8,7 @@ using namespace Daedalus;
 
 std::shared_ptr<Shader> Shader::CreateFromCode(const std::string& code)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 		case RendererAPI::API::None:
 		{
@@ -29,7 +29,7 @@ std::shared_ptr<Shader> Shader::CreateFromCode(const std::string& code)
 
 std::shared_ptr<Shader> Shader::CreateFromFile(const std::filesystem::path& file_path)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 		case RendererAPI::API::None:
 		{
@@ -50,7 +50,7 @@ std::shared_ptr<Shader> Shader::CreateFromFile(const std::filesystem::path& file
 
 std::shared_ptr<Shader> Shader::CreateFromBinary(const std::filesystem::path& binary_path)
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 		case RendererAPI::API::None:
 		{
@@ -71,7 +71,7 @@ std::shared_ptr<Shader> Shader::CreateFromBinary(const std::filesystem::path& bi
 
 std::string Shader::GetSourceFileExtention()
 {
-	switch (Renderer::GetAPI())
+	switch (RendererAPI::GetAPI())
 	{
 		case RendererAPI::API::None:
 		{

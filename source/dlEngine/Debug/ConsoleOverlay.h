@@ -33,8 +33,6 @@ namespace Daedalus
 
         RingVector<std::string, 50> m_items;
         RingVector<std::string, 50> m_history;
-        //std::vector<std::string> m_items;
-        //std::vector<std::string> m_history;
         int m_history_pos = -1;
         char m_input_buffer[256] = {};
         bool m_scroll_to_bottom = false;

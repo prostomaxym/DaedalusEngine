@@ -6,7 +6,7 @@
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
-#include "Debug/DebugLayer.h"
+#include "Debug/DebugOverlay.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
 #include "Physics/Physics.h"
@@ -52,10 +52,12 @@ Application::Application()
 	ResourceManager::Init();
 	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 
+	m_debug_layer = new ImGuiLayer();
+	PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+
 	if (IsDevBuild())
 	{
-		m_debug_layer = new DebugLayer();
-		PushOverlay(std::unique_ptr<ImGuiLayer>(m_debug_layer));
+		m_debug_layer->AddWindow(std::make_unique<DebugOverlay>());
 	}
 }
 

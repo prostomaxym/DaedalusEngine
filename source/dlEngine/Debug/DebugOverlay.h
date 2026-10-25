@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImGuiLayer.h"
+#include "ImGuiWindow.h"
 
 #include "Utils/RingVector.h"
 
@@ -8,15 +8,14 @@
 
 namespace Daedalus
 {
-	class DAEDALUS_API DebugOverlay : public ImGuiLayer
+	class DAEDALUS_API DebugOverlay : public ImGuiWindow
 	{
 	public:
 		DebugOverlay() = default;
 		virtual ~DebugOverlay() = default;
 
-	protected:
 		void Update(DeltaTime dt) override;
-		void InitWindow() override;
+		void Init() override;
 
 	private:
 		static const int GraphSize = 500;

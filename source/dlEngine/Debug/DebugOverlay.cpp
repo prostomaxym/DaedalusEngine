@@ -62,7 +62,7 @@ namespace
 	}
 }
 
-void DebugOverlay::InitWindow()
+void DebugOverlay::Init()
 {
 	m_frame_times.resize(GraphSize, 0.f);
 	m_cpu_app_load.resize(GraphSize, 0.f);
@@ -163,7 +163,7 @@ void DebugOverlay::RenderFPSSection(DeltaTime dt)
 		time_accum = 0.0f;
 		frame_count = 0;
 
-		m_frame_times.push(ms);
+		m_frame_times.push_back(ms);
 
 		frametime_1 = CalculateLowPercentile(0.01f);
 		frametime_01 = CalculateLowPercentile(0.001f);
@@ -219,8 +219,8 @@ void DebugOverlay::RenderCPUSection(DeltaTime dt)
 		total_load = ResourcesMonitor::GetTotalCPUUsage();
 		time_accum = 0.0f;;
 
-		m_cpu_app_load.push(app_load);
-		m_cpu_total_load.push(total_load);
+		m_cpu_app_load.push_back(app_load);
+		m_cpu_total_load.push_back(total_load);
 
 		const std::vector<float> last_sec_app(m_cpu_app_load.begin() + LastSecondIdx, m_cpu_app_load.end());
 		const std::vector<float> last_sec_total(m_cpu_total_load.begin() + LastSecondIdx, m_cpu_total_load.end());
@@ -272,8 +272,8 @@ void DebugOverlay::RenderRAMSection(DeltaTime dt)
 		total_load = ResourcesMonitor::GetTotalRAMUsageInGB();
 		time_accum = 0.0f;
 
-		m_ram_app_load.push(app_load);
-		m_ram_total_load.push(total_load);
+		m_ram_app_load.push_back(app_load);
+		m_ram_total_load.push_back(total_load);
 
 		const std::vector<float> last_sec_app(m_ram_app_load.begin() + LastSecondIdx, m_ram_app_load.end());
 		const std::vector<float> last_sec_total(m_ram_total_load.begin() + LastSecondIdx, m_ram_total_load.end());
@@ -427,9 +427,9 @@ void DebugOverlay::RenderGPUSection(DeltaTime dt)
 		memory_clock = static_cast<float>(info.memory_clock_mhz);
 		memory_used_GB = static_cast<float>(info.memory_used_GB);
 
-		m_gpu_utillization.push(gpu_load);
-		m_gpu_memory_utillization.push(memory_load);
-		m_gpu_memory_used.push(memory_used_GB);
+		m_gpu_utillization.push_back(gpu_load);
+		m_gpu_memory_utillization.push_back(memory_load);
+		m_gpu_memory_used.push_back(memory_used_GB);
 
 		const std::vector<float> last_sec_gpu(m_gpu_utillization.begin() + LastSecondIdx, m_gpu_utillization.end());
 		const std::vector<float> last_sec_gpumem(m_gpu_memory_utillization.begin() + LastSecondIdx, m_gpu_memory_utillization.end());

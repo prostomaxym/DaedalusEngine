@@ -24,6 +24,8 @@ set(DEBUG_PROJECT_FILES
     Log.cpp
     ImGuiLayer.h
     ImGuiLayer.cpp
+    ImGuiWindow.h
+    ImGuiWindow.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${DEBUG_PROJECT_FILES})

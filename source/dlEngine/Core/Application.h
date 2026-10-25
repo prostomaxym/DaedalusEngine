@@ -7,6 +7,7 @@
 #include "Events/Event.h"
 #include "Events/EventsEngine.h"
 #include "Events/ApplicationEvent.h"
+#include "Events/KeyEvent.h"
 #include "Debug/ImGuiLayer.h"
 
 namespace Daedalus {

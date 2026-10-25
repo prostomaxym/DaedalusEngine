@@ -97,6 +97,10 @@ void ExampleLayer::PrepareNukeScene()
 	props.cast_shadows = false;
 	props.number_of_shadow_cascades = 1;
 	camera_entity.AddComponent<SpotLightComponent>(props);
+
+	auto& camera_obj = camera_entity.GetComponent<RenderableObjectComponent>();
+	const auto camera_sphere = camera_obj.model->GetBoundingSphere();
+	camera_entity.AddComponent<KinematicBodyComponent>(camera_sphere.radius, miran_transform.translation, miran_transform.GetOrientationQuat());
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------ */
@@ -167,6 +171,11 @@ void ExampleLayer::PrepareNukeScene()
 	nuke_transfrom.scale = glm::vec3(2.f, 2.f, 2.f);
 	nuke_transfrom.translation = glm::vec3(-50.f, 18.f, -120.f);
 	nuke_transfrom.rotation = glm::vec3(-90.f, 0.f, 0.f);
+	auto& level_obj = nuke_entity.GetComponent<RenderableObjectComponent>();
+	const auto nuke_aabb = level_obj.model->GetBoundingAABB();
+	auto level_extents = nuke_aabb.extents;
+	level_extents.z = 0.1f;
+	nuke_entity.AddComponent<RigidBodyComponent>(0.0f, level_extents, glm::vec3(0.f, -4.8f, 0.f), nuke_transfrom.GetOrientationQuat());
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 
@@ -175,8 +184,12 @@ void ExampleLayer::PrepareNukeScene()
 	kratos_model.AddComponent<RenderableObjectComponent>(PathConfig::GetAssetsPath() / "models/Kratos/Kratos.obj", ExampleLayer::s_enhance_model_flags);
 	auto& kratos_transform = kratos_model.GetComponent<TransformComponent>();
 	kratos_transform.scale = glm::vec3(2.f, 2.f, 2.f);
-	kratos_transform.translation = glm::vec3(0.f, -2.8f, -18.f);
+	kratos_transform.translation = glm::vec3(0.f, 2.8f, -18.f);
 	kratos_transform.rotation = glm::vec3(0.f, 0.f, 0.f);
+
+	auto& kratos_obj = kratos_model.GetComponent<RenderableObjectComponent>();
+	const auto sphere = kratos_obj.model->GetBoundingSphere();
+	kratos_model.AddComponent<RigidBodyComponent>(100.f, sphere.radius, kratos_transform.translation, kratos_transform.GetOrientationQuat());
 	/* ------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 

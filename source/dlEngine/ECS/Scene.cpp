@@ -7,10 +7,15 @@
 #include "Entity.h"
 #include "NativeScript.h"
 #include "NativeScriptComponent.h"
+#include "Physics/Physics.h"
 
 using namespace Daedalus;
 
-Scene::Scene() : m_render_system(m_registry, this) {}
+Scene::Scene() :
+	m_render_system(m_registry, this)
+	, m_physics_system(m_registry, this)
+{
+}
 
 void Scene::OnRuntimeStart(const std::string& scenename)
 {
@@ -21,6 +26,7 @@ void Scene::OnRuntimeStart(const std::string& scenename)
 	m_render_system.SetViewportSize(wnd.GetWidth(), wnd.GetHeight());
 	m_render_system.SetCamera(FindEntityByName("Main Camera").GetComponent<CameraComponent>().camera.get());
 	m_render_system.OnStartRuntime();
+	m_physics_system.OnStartRuntime();
 }
 
 void Scene::OnRuntimeStop()
@@ -42,9 +48,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		}
 
 		// Physics
-		{
-
-		}
+		m_physics_system.OnUpdateRuntime(dt);
 	}
 
 	// Graphics

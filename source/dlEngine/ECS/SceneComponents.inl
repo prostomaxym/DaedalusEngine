@@ -16,6 +16,12 @@ template<> void Scene::OnComponentRemoved<SkyboxComponent>(SkyboxComponent& comp
 template<> void Scene::OnComponentAdded<CameraComponent>(CameraComponent& component) {}
 template<> void Scene::OnComponentRemoved<CameraComponent>(CameraComponent& component) {}
 
+template<> void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent& component) {}
+template<> void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent& component) {}
+
+template<> void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent& component) {}
+template<> void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent& component) {}
+
 template<> void Scene::OnComponentAdded<DirectionalLightComponent>(DirectionalLightComponent& component)
 {
 	m_render_system.AddLight(&component.light);

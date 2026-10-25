@@ -6,7 +6,7 @@
 namespace Daedalus
 {
 	template <typename T, size_t Capacity = 0>
-	class DAEDALUS_API RingVector
+	class RingVector
 	{
 	public:
 		template <size_t C = Capacity, std::enable_if_t<C == 0, int> = 0>

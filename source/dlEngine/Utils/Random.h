@@ -19,7 +19,7 @@ namespace Daedalus
 		template<typename T>
 		static T UniformIntDistribution(T from, T to)
 		{
-			std::uniform_int_distribution<T> distribution(from.value(), to.value());
+			std::uniform_int_distribution<T> distribution(from, to);
 			return distribution(s_engine);
 		}
 

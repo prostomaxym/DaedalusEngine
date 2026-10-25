@@ -35,6 +35,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 
+# Tests must be enabled in the root directory for ctest to work from the build root
+if (ENABLE_TESTS)
+  enable_testing()
+endif()
+
 # Subprojects config
 add_subdirectory(source)
 

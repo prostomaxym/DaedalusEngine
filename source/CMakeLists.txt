@@ -7,6 +7,5 @@ add_subdirectory(shader)
 
 # Tests setup
 if (ENABLE_TESTS)
-    enable_testing()
     add_subdirectory(dlUnitTests)
 endif()

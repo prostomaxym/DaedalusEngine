@@ -11,10 +11,24 @@ project(
     LANGUAGES CXX
     )
 
+set(UTILS_TEST_FILES
+    UtilsTests/DeltaTimeTest.cpp
+    UtilsTests/RandomTest.cpp
+    UtilsTests/RingVectorTest.cpp
+    UtilsTests/TimerTest.cpp
+    )
+
+set(EVENTS_TEST_FILES
+    EventsTests/EventDispatcherTest.cpp
+    EventsTests/EventTest.cpp
+    )
+
 set(PROJECT_FILES
 
     main.cpp
     DummyTest.cpp
+    ${UTILS_TEST_FILES}
+    ${EVENTS_TEST_FILES}
     )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})

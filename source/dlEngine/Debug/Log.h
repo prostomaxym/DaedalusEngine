@@ -48,6 +48,7 @@ namespace Daedalus {
 			case Log::Categories::Events:     return "Events";
 			case Log::Categories::Platform:   return "Platform";
 			case Log::Categories::Application:return "Application";
+			case Log::Categories::Physics:    return "Physics";
 			default:                         return "UnknownCategory";
 			}
 		}
@@ -108,7 +109,7 @@ namespace Daedalus {
 
 		static void EnableAllCategories();
 		static void EnableCategory(Categories category) { s_allowed_categories |= category; }
-		static void DisableCategory(Categories category) { s_allowed_categories ^= category; }
+		static void DisableCategory(Categories category) { s_allowed_categories &= ~category; }
 		static void ToggleCategory(Categories category, bool enable);
 		static bool IsEnabled(Categories category) { return category & s_allowed_categories; }	
 

@@ -34,8 +34,8 @@ public:
 public:
 	MouseScrolledEvent(float offsetX, float offsetY) : m_offsetX(offsetX), m_offsetY(offsetY) {}
 
-	inline int GetOffsetX() const { return m_offsetX; }
-	inline int GetOffsetY() const { return m_offsetY; }
+	inline float GetOffsetX() const { return m_offsetX; }
+	inline float GetOffsetY() const { return m_offsetY; }
 
 	std::string GetInfo() const override
 	{

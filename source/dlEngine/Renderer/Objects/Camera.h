@@ -61,7 +61,7 @@ namespace Daedalus {
 		glm::vec3 GetPosition() const { return m_position; }
 
 		float GetYaw() const { return m_yaw; }
-		float GetPitch() const { return m_yaw; }
+		float GetPitch() const { return m_pitch; }
 
 		virtual float GetNearPlane() const = 0;
 		virtual float GetFarPlane() const = 0;

@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "ENABLE_TESTS": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "windows",
+      "displayName": "Windows (Visual Studio generator)",
+      "inherits": "windows-base"
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release (WSL)",
+      "vendor": { "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}", "copySources": true } },
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_TESTS": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-release", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug" },
+    { "name": "windows-release-devtools", "configurePreset": "windows", "configuration": "ReleaseDevTools" },
+    { "name": "linux-release", "configurePreset": "linux-release" }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-release",
+      "configurePreset": "windows",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

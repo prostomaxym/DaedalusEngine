@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Macros.h"
+
 #include <vector>
 #include <thread>
 
@@ -8,7 +10,7 @@ namespace Daedalus
 	/**
 	* @brief Utility class which uses RAII idiom to join threads
 	*/
-	class ThreadJoiner final
+	class DAEDALUS_API ThreadJoiner final
 	{
 	public:
 		/**

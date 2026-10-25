@@ -252,6 +252,12 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
 
     while (std::getline(content_stream, line))
     {
+        // Shader files may have CRLF endings; text-mode streams only strip '\r' on Windows
+        if (!line.empty() && line.back() == '\r')
+        {
+            line.pop_back();
+        }
+
         if (line.rfind("#vertex", 0) == 0 || line.rfind("#fragment", 0) == 0 ||
             line.rfind("#geometry", 0) == 0 || line.rfind("#tessellation", 0) == 0 ||
             line.rfind("#compute", 0) == 0)

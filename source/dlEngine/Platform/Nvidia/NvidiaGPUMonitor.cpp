@@ -1,5 +1,5 @@
 #include "dlpch.h"
-#include "NVIDIAGPUMonitor.h"
+#include "NvidiaGPUMonitor.h"
 
 #ifdef DL_PLATFORM_WINDOWS
 #include <windows.h>

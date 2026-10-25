@@ -22,14 +22,12 @@
 #endif
 
 
-#define DL_DEV_BUILD //TODO: define it from project config
-
 namespace Daedalus
 {
 	// Use it hide/unhide dev tools
 	constexpr auto IsDevBuild()
 	{
-#ifdef DL_DEV_BUILD
+#ifdef DL_DEV_TOOLS
 		return true;
 #else
 		return false;

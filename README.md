@@ -1,6 +1,5 @@
-# Daedalus Engine
-Game Engine. Personal project. Under early stage of development
-
+﻿# Daedalus Engine
+Cross-platform (Windows + Linux) C++17 game engine. Personal project. Under early stage of development
 
 ## Builds
 
@@ -9,57 +8,82 @@ Game Engine. Personal project. Under early stage of development
 [![Linux-Master-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml/badge.svg?branch=master)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml)
 [![Linux-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml)
 
+## Requirements
+- CMake 3.21+ (required by `CMakePresets.json`)
+- Windows: Visual Studio with the C++ workload (MSVC), PowerShell
+- Linux: GCC or Clang, Make/Ninja
+- Git (vcpkg is a submodule)
+
+Dependencies (glfw3, glad, imgui, glm, assimp, entt, spdlog, bullet3, gtest, ...) are installed by vcpkg in manifest mode (`vcpkg.json`).
+
+## Build configurations
+
+| Configuration | Description |
+|---|---|
+| `Debug` | Unoptimized, with asserts and dev tools |
+| `Release` | Clean production build |
+| `ReleaseDevTools` | Release optimizations with the `DL_DEV_TOOLS` define (extra dev tools) |
+
+On Windows (Visual Studio generator) all three are available in the generated `.sln`.
+On Linux (single-config generators) pick one with `-DCMAKE_BUILD_TYPE=<config>`; the default is `Release`.
 
 ## How to Build
 
-#### Windows:
-- Install dependencies (only for first time building)<br>
- run InstallVCPKG.ps1 from WinScripts folder<br>
- run UpdatePackages.bat from WinScripts folder
-<br>
-<br>
+Clone with submodules:
+```console
+git clone --recursive https://github.com/prostomaxym/daedalus_engine
+```
+or run `git submodule update --init` in an existing clone.
 
-- Config cmake project<br>
-first time building: run CMakeConfigAndPackages.bat from WinScripts folder<br>
-regular building: run CMakeConfig.bat from WinScripts folder
-<br>
-<br>
+#### Windows
+1. Install dependencies (first time only), from the `WinScripts` folder:
+   - `InstallVCPKG.ps1` - bootstraps vcpkg
+   - `UpdatePackages.bat` - installs vcpkg packages
+2. Configure the project (generates `build/*.sln`):
+   - `WinScripts/CMakeConfig.bat` (same as `cmake --preset windows`)
+   - `WinScripts/CMakeCleanConfig.bat` deletes `build` and configures from scratch
+3. Build:
+   - Open the generated `.sln` in `build/` and select a configuration, or
+   - `WinScripts/CMakeBuildRelease.bat`, or from the root:
+```console
+cmake --build --preset windows-release
+cmake --build --preset windows-debug
+cmake --build --preset windows-release-devtools
+```
 
-- Build sources:<br>
-Build from IDE or CMakeBuildRelease.bat to build without IDE
-<br>
-<br>
+The preset enables unit tests (`ENABLE_TESTS=ON`). Output goes to `runtime/bin/windows-x64/<Configuration>/`.
 
-#### Linux:
-- Install dependencies
+#### Linux
+1. Install dependencies, from the `LinuxScripts` folder:
+```console
+sh InstallDependencies.sh
+sh UpdatePackages.sh
+```
+2. Configure, from the `LinuxScripts` folder:
+```console
+sh CMakeConfig.sh         # Makefiles
+sh CMakeConfigCB.sh       # CodeBlocks IDE
+sh CMakeConfigCL.sh       # CodeLite IDE (Release)
+sh CMakeConfigCLDebug.sh  # CodeLite IDE (Debug)
+```
+3. Build:
+```console
+sh CMakeBuildRelease.sh
+```
+or `cmake --build --preset linux-release` from the project root.
 
-From project root:
-````console
-        cd LinuxScripts
-        sh InstallDependencies.sh
-        sh UpdatePackages.sh
-````
-<br>
-<br>
+## Tests
+Unit tests (gtest) are built with `ENABLE_TESTS=ON`, which the presets set. From the project root:
+```console
+ctest --test-dir build -C Release --output-on-failure
+```
+or run `dlUnitTests` from `runtime/bin/<platform>-x64/`.
 
-- Config cmake project
+## Install and package
+- Windows: `WinScripts/CMakeInstall.bat` (installs to `runtime/install`), `WinScripts/CPackInstaller.bat` (creates the installer)
+- Linux: `LinuxScripts/CMakeInstall.sh`, `LinuxScripts/CPackInstaller.sh`
 
-From LinuxScripts folder:
-````console
-        sh CMakeConfig.sh      -for MakeFile
-                or
-        sh CMakeConfigCB.sh    -for CodeBlocks IDE
-                or
-        sh CMakeConfigCL.sh    -for CodeLite IDE
-````
-<br>
-<br>
+Install and package use the `Release` configuration.
 
-- Build sources:
-
-Build from IDE or `cmake --build $PROJECT_ROOT/build --config Release` from build folder
-<br>
-<br>
-
-
-For demo level runtime assets should be downloaded separately and put under $PROJECT_ROOT/runtime/assets 
+## Assets
+For the demo level, runtime assets should be downloaded separately and put under `$PROJECT_ROOT/runtime/assets`.

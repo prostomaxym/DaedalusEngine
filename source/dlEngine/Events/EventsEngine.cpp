@@ -1,4 +1,5 @@
 #include "EventsEngine.h"
+#include "GamepadEvent.h"
 
 using namespace Daedalus;
 

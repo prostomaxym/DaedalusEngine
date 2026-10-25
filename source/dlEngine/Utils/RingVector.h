@@ -6,7 +6,7 @@
 namespace Daedalus
 {
 	template <typename T, size_t Capacity = 0>
-	class DAEDALUS_API RingVector
+	class RingVector
 	{
 	public:
 		template <size_t C = Capacity, std::enable_if_t<C == 0, int> = 0>
@@ -15,10 +15,10 @@ namespace Daedalus
 		{
 		}
 
-		template <size_t C = Capacity, std::enable_if_t<C != 0, int> = 0>
-		explicit RingVector()
-			: data_(C), capacity_(C)
+		RingVector()
+			: data_(Capacity), capacity_(Capacity)
 		{
+			static_assert(Capacity != 0, "Default constructor requires a non-zero compile-time Capacity");
 		}
 
 		void push_back(const T& value)

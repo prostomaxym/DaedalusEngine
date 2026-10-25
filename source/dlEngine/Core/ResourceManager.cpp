@@ -352,14 +352,18 @@ std::shared_ptr<Model> ResourceManager::LoadModel(const std::filesystem::path& p
 	// Recursive lock: model parsing calls back into LoadMesh/LoadMaterial/LoadTexture2D
 	std::lock_guard<std::recursive_mutex> lock(s_mutex);
 
-	const auto name = path.string();
+	std::error_code ec;
+	const auto normalized_path = std::filesystem::weakly_canonical(path, ec);
+	if (ec || !std::filesystem::is_regular_file(normalized_path, ec) || ec) return nullptr;
+	const auto name = normalized_path.generic_u8string() + "|" + std::to_string(static_cast<uint32_t>(parser_flags));
 	auto it = s_models.find(name);
 
 	if (it == s_models.end())
 	{
 		const auto start = Clock::now();
 
-		auto model = std::shared_ptr<Model>(new Model(path, parser_flags));
+		auto model = std::shared_ptr<Model>(new Model(normalized_path, parser_flags));
+		if (model->GetMeshes().empty()) return nullptr;
 		s_models[name] = model;
 		s_load_times[model.get()] = ElapsedMs(start);
 		s_model_cache.misses++;
@@ -485,6 +489,7 @@ std::shared_ptr<TextureCubemap> ResourceManager::LoadCubemap(const std::vector<s
 	const auto start = Clock::now();
 
 	auto cubemap = TextureCubemap::Create(faces);
+	if (!cubemap || !cubemap->IsLoaded()) return nullptr;
 	s_unnamed_cubemaps.insert(cubemap);
 	s_load_times[cubemap.get()] = ElapsedMs(start);
 	s_revision++;

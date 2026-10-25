@@ -291,15 +291,19 @@ void OpenGLTexture2D::BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorForm
 
 OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces)
 {
+	if (faces.size() != 6) return;
 	glGenTextures(1, &m_rendererID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_rendererID);
+	GLint unpack_alignment = 0;
+	glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpack_alignment);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(0);
 	for (unsigned int i = 0; i < faces.size(); i++)
 	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, STBI_rgb);
+		if (data && width == height && (i == 0 || (static_cast<uint32_t>(width) == m_width && static_cast<uint32_t>(height) == m_height)))
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 			m_width = static_cast<uint32_t>(width);
@@ -313,6 +317,7 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces
 
 		stbi_image_free(data);
 	}
+	glPixelStorei(GL_UNPACK_ALIGNMENT, unpack_alignment);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

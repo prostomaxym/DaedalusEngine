@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UUID.h"
+#include "PhysicsBodyComponent.h"
 
 #include "Core/ResourceManager.h"
 #include "Renderer/Objects/Cubemap.h"
@@ -78,27 +79,31 @@ namespace Daedalus
 	struct RenderableObjectComponent
 	{
 		std::shared_ptr<Model> model;
+		std::filesystem::path source_path;
+		ModelParserFlags import_flags = ModelParserFlags::NONE;
 
 		RenderableObjectComponent() = default;
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;
 		explicit RenderableObjectComponent(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE)
-			: model(ResourceManager::LoadModel(path, parser_flags)) {}
+			: model(ResourceManager::LoadModel(path, parser_flags)), source_path(path), import_flags(parser_flags) {}
 	};
 
 	struct DAEDALUS_API SkyboxComponent //TODO: investigate how to remove exporting
 	{
 		Cubemap cubemap;
 		float rotation_angle{ 0.f };
+		std::vector<std::string> source_faces;
 
 		SkyboxComponent() = default;
 		SkyboxComponent(const SkyboxComponent&) = default;
-		explicit SkyboxComponent(std::vector<std::string>& faces, float rotation_ang = 0.f)
-			: cubemap(faces), rotation_angle(rotation_ang){}
+		explicit SkyboxComponent(const std::vector<std::string>& faces, float rotation_ang = 0.f)
+			: cubemap(faces), rotation_angle(rotation_ang), source_faces(faces) {}
 	};
 
 	struct CameraComponent
 	{
 		std::unique_ptr<Camera> camera;
+		bool viewport_aspect = true;
 
 		CameraComponent() = default;
 
@@ -136,61 +141,39 @@ namespace Daedalus
 		explicit SpotLightComponent(const LightProps& props) : light(props) {}
 	};
 
-	struct RigidBodyComponent
+	struct RigidBodyComponent : PhysicsBodyComponent
 	{
-		RigidBodyHandle handle = 0;
-
 		RigidBodyComponent(float mass, const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
-		{
-			handle = Physics::CreateBoxRigidBody(mass, halfExtents, position, orientation, false);
-		}
+			: PhysicsBodyComponent(Box(mass, halfExtents, position, orientation), false) {}
 
 		RigidBodyComponent(float mass, float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
-		{
-			handle = Physics::CreateSphereRigidBody(mass, radius, position, orientation, false);
-		}
+			: PhysicsBodyComponent(Sphere(mass, radius, position, orientation), false) {}
+
+		explicit RigidBodyComponent(const BodyRecord& record) : PhysicsBodyComponent(record, false) {}
 
 		RigidBodyComponent() = default;
-		RigidBodyComponent(const RigidBodyComponent&) = default;
+		RigidBodyComponent(const RigidBodyComponent&) = delete;
 		RigidBodyComponent(RigidBodyComponent&&) noexcept = default;
-		RigidBodyComponent& operator=(const RigidBodyComponent&) = default;
+		RigidBodyComponent& operator=(const RigidBodyComponent&) = delete;
 		RigidBodyComponent& operator=(RigidBodyComponent&&) noexcept = default;
 
-		~RigidBodyComponent()
-		{
-			if (handle != 0)
-			{
-				Physics::RemoveRigidBody(handle);
-			}
-		}
 	};
 
-	struct KinematicBodyComponent
+	struct KinematicBodyComponent : PhysicsBodyComponent
 	{
-		RigidBodyHandle handle = 0;
-
 		KinematicBodyComponent(const glm::vec3& halfExtents, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
-		{
-			handle = Physics::CreateBoxRigidBody(0.f, halfExtents, position, orientation, true);
-		}
+			: PhysicsBodyComponent(Box(0.f, halfExtents, position, orientation), true) {}
 
 		KinematicBodyComponent(float radius, const glm::vec3& position, const glm::quat& orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
-		{
-			handle = Physics::CreateSphereRigidBody(0.f, radius, position, orientation, true);
-		}
+			: PhysicsBodyComponent(Sphere(0.f, radius, position, orientation), true) {}
+
+		explicit KinematicBodyComponent(const BodyRecord& record) : PhysicsBodyComponent(record, true) {}
 
 		KinematicBodyComponent() = default;
-		KinematicBodyComponent(const KinematicBodyComponent&) = default;
+		KinematicBodyComponent(const KinematicBodyComponent&) = delete;
 		KinematicBodyComponent(KinematicBodyComponent&&) noexcept = default;
-		KinematicBodyComponent& operator=(const KinematicBodyComponent&) = default;
+		KinematicBodyComponent& operator=(const KinematicBodyComponent&) = delete;
 		KinematicBodyComponent& operator=(KinematicBodyComponent&&) noexcept = default;
 
-		~KinematicBodyComponent()
-		{
-			if (handle != 0)
-			{
-				Physics::RemoveRigidBody(handle);
-			}
-		}
 	};
 }

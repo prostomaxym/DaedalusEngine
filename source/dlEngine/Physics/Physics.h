@@ -18,6 +18,7 @@ namespace Daedalus
 
         static void Init(const glm::vec3& gravity = glm::vec3(0.0f, -9.81f, 0.0f));
         static void Shutdown();
+        static bool IsInitialized();
 
         // Advance simulation. Call once per frame.
         static void StepSimulation(float deltaTime, int maxSubSteps = 1, float fixedTimeStep = 1.0f / 60.0f);

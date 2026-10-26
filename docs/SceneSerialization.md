@@ -10,7 +10,11 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 4. If loading succeeds, call `scene.OnRuntimeStart()` and check its boolean result. The loaded name and primary-camera UUID are retained.
 5. Forward updates and viewport resizes as usual. `scene.Clear()` stops runtime and releases the scene's entities/resources.
 
-The sandbox defaults to `scenes/nuke.scene.json`, relative to `PathConfig::GetAssetsPath()`. Pass `"scenes/anor_londo.scene.json"` to `ExampleLayer`'s constructor to select the other example. CMake deploys the two source-owned files from `source/dlSandbox/scenes` to the runtime asset directory. Installation also includes them under `asset/scenes`. Edit the source copies, not generated runtime copies.
+The sandbox loads its startup scene from `PathConfig::GetScenePath()`. Set `SceneFile` in the `[Path]` section of the runtime root's `path.ini` (`runtime/path.ini` during development). It is resolved relative to `AssetsFolder`, which defaults to `asset` relative to the runtime root. The generic default is `scenes/startup.scene.json`; no scene is bundled or copied automatically.
+
+Place your scene JSON and its referenced models, textures, and skybox images under the runtime asset folder manually. The files in `source/dlSandbox/scenes` are reference examples only: they are not part of the sandbox target and are not automatically deployed by builds or explicitly installed from source. To try one, manually copy `nuke.scene.json` or `anor_londo.scene.json` into `runtime/asset/scenes`, supply its referenced assets under `runtime/asset`, and set `[Path]` `SceneFile=scenes/nuke.scene.json` or `SceneFile=scenes/anor_londo.scene.json`. Alternatively, name your deployed scene `startup.scene.json` to use the default. Switching scenes requires changing configuration, not rebuilding the application.
+
+Installation still packages the contents of the runtime asset folder like other manually supplied assets. Missing or invalid scene files produce a logged loading error; there is no fallback to an example scene.
 
 ### API responsibilities
 

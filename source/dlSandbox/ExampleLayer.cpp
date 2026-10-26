@@ -12,7 +12,7 @@ void ExampleLayer::OnAttach()
 		return;
 	}
 	const auto assets = PathConfig::GetAssetsPath();
-	if (!SceneSerializer::Load(assets / m_scene_file, m_scene, assets, m_scripts, error))
+	if (!SceneSerializer::Load(PathConfig::GetScenePath(), m_scene, assets, m_scripts, error))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Scene load failed: {}", error);
 		return;

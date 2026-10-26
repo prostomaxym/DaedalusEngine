@@ -11,7 +11,7 @@ Personal cross-platform (Windows + Linux) C++ game engine in early development. 
 
 ## Repository layout
 - `source/dlEngine` – engine library. Modules: `Config`, `Core`, `Debug`, `ECS`, `Events`, `Physics`, `Platform`, `Renderer`, `Threads`, `Utils`.
-- `source/dlSandbox` – sample/client application (implements `CreateApplication()`).
+- `source/dlSandbox` – sample/client application (intended to evolve into a generic game application that loads scenes entirely from runtime asset files selected through config paths). Keep example scenes only as reference files, excluded from the application project and automatic copying; runtime assets are supplied manually.
 - `source/dlUnitTests` – gtest unit tests (built only with `-DENABLE_TESTS=ON`).
 - `source/shader` – shaders.
 - `CMakeScripts/` – install/pack scripts. `WinScripts/`, `LinuxScripts/` – helper scripts.

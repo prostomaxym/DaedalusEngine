@@ -55,9 +55,3 @@ install(DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}/runtime/asset
         DESTINATION .
         )
-
-install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/scenes/nuke.scene.json
-        ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/scenes/anor_londo.scene.json
-        DESTINATION asset/scenes
-        COMPONENT SandboxScenes)

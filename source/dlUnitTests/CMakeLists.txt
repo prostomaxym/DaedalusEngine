@@ -13,6 +13,7 @@ project(
 
 set(CONFIG_TEST_FILES
     ConfigTests/KeybindConfigTest.cpp
+    ConfigTests/PathConfigTest.cpp
     )
 
 set(CORE_TEST_FILES

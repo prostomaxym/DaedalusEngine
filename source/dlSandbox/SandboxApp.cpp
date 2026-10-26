@@ -6,8 +6,8 @@ using namespace Daedalus;
 
 Application* Daedalus::CreateApplication()
 {
-	// Entry point is defined in engine
-	return Sandbox::GetInstance();
+	// Entry point is defined in engine and takes ownership of the returned application
+	return new Sandbox();
 }
 
 Sandbox::Sandbox()

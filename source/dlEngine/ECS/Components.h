@@ -10,8 +10,8 @@
 #include "Renderer/Objects/SpotLightSource.h"
 #include "Renderer/Objects/PerspectiveCamera.h"
 #include "Renderer/Objects/OrthographicCamera.h"
-#include "Renderer/Resourses/Model.h"
-#include "Renderer/Resourses/Shader.h"
+#include "Renderer/Resources/Model.h"
+#include "Renderer/Resources/Shader.h"
 #include "Physics/Physics.h"
 
 #include <glm/glm.hpp>

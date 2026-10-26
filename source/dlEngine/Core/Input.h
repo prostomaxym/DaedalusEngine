@@ -25,7 +25,7 @@ namespace Daedalus {
 		static void Update() { return GetInstance()->UpdateImpl(); }
 
 		//Input configuration
-		inline static void EnableKeyboardInput(bool enable) { GetInstance()->m_keyboard_connected = enable; } //TODO: not implemented
+		inline static void EnableKeyboardInput(bool enable) { GetInstance()->m_keyboard_connected = enable; }
 		inline static void EnableGamepadInput(bool enable) { GetInstance()->m_gamepad_connected = enable; }
 		inline static void SetSticksDeadZone(float perc) { GetInstance()->m_sticks_deadzone = perc; }
 
@@ -33,9 +33,9 @@ namespace Daedalus {
 		inline static bool IsGamepadInputEnabled() { return GetInstance()->m_gamepad_connected; }
 
 		// Keyboard + mouse input
-		inline static bool IsKeyPressed(int keycode) { return GetInstance()->IsKeyPressedImpl(keycode); }
-		inline static bool IsKeyHold(int keycode) { return GetInstance()->IsKeyHoldImpl(keycode); }
-		inline static bool IsKeyReleased(int keycode) { return GetInstance()->IsKeyReleasedImpl(keycode); }
+		inline static bool IsKeyPressed(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyPressedImpl(keycode); }
+		inline static bool IsKeyHold(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyHoldImpl(keycode); }
+		inline static bool IsKeyReleased(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyReleasedImpl(keycode); }
 
 		inline static bool IsMouseButtonPressed(int button) { return GetInstance()->IsMouseButtonPressedImpl(button); }
 		inline static std::pair<float, float> GetMousePos() { return GetInstance()->GetMousePosImpl(); }

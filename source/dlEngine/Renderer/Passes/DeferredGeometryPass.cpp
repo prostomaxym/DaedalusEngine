@@ -1,7 +1,7 @@
 #include "dlpch.h"
-#include "Renderer/Resourses/Material.h"
-#include "Renderer/Resourses/Mesh.h"
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/Material.h"
+#include "Renderer/Resources/Mesh.h"
+#include "Renderer/Resources/Texture.h"
 
 #include "DeferredGeometryPass.h"
 #include "Renderer/API/Renderer.h"

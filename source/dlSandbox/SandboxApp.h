@@ -13,19 +13,7 @@ namespace Daedalus
 	class Sandbox : public Application
 	{
 	public:
-		static Application* GetInstance()
-		{
-			if (!s_instance)
-			{
-				s_instance = new Sandbox();
-			}
-
-			return s_instance;
-		}
-
-		~Sandbox() = default;
-
-	private:
 		Sandbox();
+		~Sandbox() override = default;
 	};
 }

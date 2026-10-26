@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Resourses/Shader.h"
+#include "Renderer/Resources/Shader.h"
 
 #include <string>
 

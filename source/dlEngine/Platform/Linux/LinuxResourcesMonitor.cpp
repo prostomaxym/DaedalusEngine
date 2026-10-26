@@ -56,9 +56,17 @@ namespace
 			unsigned long long totalUser, totalUserLow, totalSys, totalIdle, total;
 
 			file = fopen("/proc/stat", "r");
-			fscanf(file, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow,
+			if (!file)
+			{
+				return -1.0;
+			}
+			const int read_count = fscanf(file, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow,
 				&totalSys, &totalIdle);
 			fclose(file);
+			if (read_count != 4)
+			{
+				return -1.0;
+			}
 
 			if (totalUser < lastTotalUser || totalUserLow < lastTotalUserLow ||
 				totalSys < lastTotalSys || totalIdle < lastTotalIdle)
@@ -97,24 +105,38 @@ namespace
 
 			file = fopen("/proc/cpuinfo", "r");
 			numProcessors = 0;
-			while (fgets(line, 128, file) != NULL)
+			if (file)
 			{
-				if (strncmp(line, "processor", 9) == 0) numProcessors++;
+				while (fgets(line, 128, file) != NULL)
+				{
+					if (strncmp(line, "processor", 9) == 0) numProcessors++;
+				}
+				fclose(file);
 			}
-			fclose(file);
+			if (numProcessors <= 0)
+			{
+				numProcessors = 1;
+			}
 		}
 
 		void InitTotalInfo()
 		{
 			FILE* file = fopen("/proc/stat", "r");
-			fscanf(file, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow,
-				&lastTotalSys, &lastTotalIdle);
+			if (!file)
+			{
+				return;
+			}
+			if (fscanf(file, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow,
+				&lastTotalSys, &lastTotalIdle) != 4)
+			{
+				lastTotalUser = lastTotalUserLow = lastTotalSys = lastTotalIdle = 0;
+			}
 			fclose(file);
 		}
 
-		clock_t lastCPU, lastSysCPU, lastUserCPU;
-		int numProcessors;
-		unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
+		clock_t lastCPU = 0, lastSysCPU = 0, lastUserCPU = 0;
+		int numProcessors = 1;
+		unsigned long long lastTotalUser = 0, lastTotalUserLow = 0, lastTotalSys = 0, lastTotalIdle = 0;
 	};
 
 	class RAMUsageMonitor
@@ -134,6 +156,10 @@ namespace
 		static long long GetAppMemoryUsedInBytes()
 		{
 			FILE* file = fopen("/proc/self/status", "r");
+			if (!file)
+			{
+				return 0;
+			}
 			int result = -1;
 			char line[128];
 

@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "Utils/WorkingDirectory.h"
 
+#include <memory>
+
 extern Daedalus::Application* Daedalus::CreateApplication();
 
 int main(int argc, char** argv)
@@ -11,9 +13,10 @@ int main(int argc, char** argv)
 	Daedalus::Log::Write(Daedalus::Log::Levels::Info, Daedalus::Log::Categories::EngineCore, "Initialized core logger;");
 
 	Daedalus::WorkingDirectory::SetRootDirectory();
-	auto app = Daedalus::CreateApplication();
-	app->Run();
-	delete app;
+	{
+		const std::unique_ptr<Daedalus::Application> app(Daedalus::CreateApplication());
+		app->Run();
+	}
 
 	Daedalus::Log::Shutdown();
 

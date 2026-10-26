@@ -20,7 +20,7 @@ float ResourcesMonitor::GetAppCPUUsage()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return WindowsResourcesMonitor::GetAppCPUUsage();
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return LinuxResourcesMonitor::GetAppCPUUsage();
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -31,7 +31,7 @@ float ResourcesMonitor::GetTotalCPUUsage()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return WindowsResourcesMonitor::GetTotalCPUUsage();
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return LinuxResourcesMonitor::GetTotalCPUUsage();
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -42,7 +42,7 @@ float ResourcesMonitor::GetAppRAMUsageInMB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToMB(WindowsResourcesMonitor::GetAppRAMUsageInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToMB(LinuxResourcesMonitor::GetAppRAMUsageInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -53,7 +53,7 @@ float ResourcesMonitor::GetTotalRAMUsageInMB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToMB(WindowsResourcesMonitor::GetTotalRAMUsageInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToMB(LinuxResourcesMonitor::GetTotalRAMUsageInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -64,7 +64,7 @@ float ResourcesMonitor::GetSystemRAMInMB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToMB(WindowsResourcesMonitor::GetSystemRAMInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToMB(LinuxResourcesMonitor::GetSystemRAMInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -75,7 +75,7 @@ float ResourcesMonitor::GetAppRAMUsageInGB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToGB(WindowsResourcesMonitor::GetAppRAMUsageInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToGB(LinuxResourcesMonitor::GetAppRAMUsageInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -86,7 +86,7 @@ float ResourcesMonitor::GetTotalRAMUsageInGB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToGB(WindowsResourcesMonitor::GetTotalRAMUsageInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToGB(LinuxResourcesMonitor::GetTotalRAMUsageInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -98,7 +98,7 @@ float ResourcesMonitor::GetSystemRAMInGB()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return ConvertBytesToGB(WindowsResourcesMonitor::GetSystemRAMInBytes());
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return ConvertBytesToGB(LinuxResourcesMonitor::GetSystemRAMInBytes());
 #else
 	static_assert(false, "Unsupported Platfrom")
@@ -109,7 +109,7 @@ const std::string& Daedalus::ResourcesMonitor::GetProcessorName()
 {
 #ifdef DL_PLATFORM_WINDOWS
 	return WindowsResourcesMonitor::GetProcessorName();
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented
+#elif defined DL_PLATFORM_LINUX
 	return LinuxResourcesMonitor::GetProcessorName();
 #else
 	static_assert(false, "Unsupported Platfrom")

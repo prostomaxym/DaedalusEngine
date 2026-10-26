@@ -50,6 +50,18 @@ void ThreadPool::DoWork()
 		m_q.pop();
 		ul.unlock();
 
-		func();
+		// A throwing task must not terminate the worker thread (and the process via std::terminate).
+		try
+		{
+			func();
+		}
+		catch (const std::exception& e)
+		{
+			Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "ThreadPool task threw an exception: {}", e.what());
+		}
+		catch (...)
+		{
+			Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "ThreadPool task threw an unknown exception");
+		}
 	}
 }

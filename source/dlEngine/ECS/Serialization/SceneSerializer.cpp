@@ -2,7 +2,7 @@
 #include "SceneSerializer.h"
 #include "SceneRecord.h"
 #include "ScriptRegistry.h"
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/Texture.h"
 #include "SceneJson.h"
 #include "ECS/Scene.h"
 #include "Utils/Utf8.h"

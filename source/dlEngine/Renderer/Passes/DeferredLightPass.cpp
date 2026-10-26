@@ -1,7 +1,7 @@
 #include "dlpch.h"
 
 #include "DeferredLightPass.h"
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/Texture.h"
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderCommand.h"
 #include "Renderer/API/RenderConstants.h"

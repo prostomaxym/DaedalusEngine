@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/Texture.h"
 
 namespace Daedalus {
 

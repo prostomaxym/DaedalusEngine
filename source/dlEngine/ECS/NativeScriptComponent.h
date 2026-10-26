@@ -12,14 +12,25 @@ namespace Daedalus
 {
 	struct DAEDALUS_API NativeScriptComponent
 	{
+		// Explicitly move-only: an exported (dllexport) class instantiates all implicit special members,
+		// which would otherwise try to copy the unique_ptr map.
+		NativeScriptComponent() = default;
+		~NativeScriptComponent() = default;
+		NativeScriptComponent(const NativeScriptComponent&) = delete;
+		NativeScriptComponent& operator=(const NativeScriptComponent&) = delete;
+		NativeScriptComponent(NativeScriptComponent&&) noexcept = default;
+		NativeScriptComponent& operator=(NativeScriptComponent&&) noexcept = default;
+
 		template <typename T, typename... Args>
 		T* AddScript(Entity ent, Args&&... args)
 		{
 			static_assert(std::is_base_of_v<NativeScript, T>, "T must be derived from NativeScript");
 			DL_ASSERT(!ScriptExists<T>(), Log::Categories::ECS, "NativeScriptComponent already has this script!");
 
-			native_scripts[typeid(T)] = std::make_shared<T>(ent, std::forward<Args>(args)...);
-			return dynamic_cast<T*>(native_scripts[typeid(T)].get());
+			auto script = std::make_unique<T>(ent, std::forward<Args>(args)...);
+			T* raw_script = script.get();
+			native_scripts[typeid(T)] = std::move(script);
+			return raw_script;
 		}
 
 		template <typename T>
@@ -48,8 +59,6 @@ namespace Daedalus
 			return native_scripts.find(typeid(T)) != native_scripts.end();
 		}
 
-		// TODO: It is not compiling with unique_ptr, something inside entt tries to copy it.
-		// Review and replace it with unique_ptr or convert to static polymorhism
-		std::unordered_map<std::type_index, std::shared_ptr<NativeScript>> native_scripts;
+		std::unordered_map<std::type_index, std::unique_ptr<NativeScript>> native_scripts;
 	};
 }

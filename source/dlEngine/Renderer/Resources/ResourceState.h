@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ResourceManager.h"
-#include "Renderer/Resourses/ShaderLibrary.h"
-#include "Renderer/Resourses/Material.h"
-#include "Renderer/Resourses/Mesh.h"
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/ShaderLibrary.h"
+#include "Renderer/Resources/Material.h"
+#include "Renderer/Resources/Mesh.h"
+#include "Renderer/Resources/Texture.h"
 #include <set>
 #include <thread>
 #include <unordered_map>

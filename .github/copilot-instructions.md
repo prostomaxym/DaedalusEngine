@@ -3,7 +3,7 @@
 Personal cross-platform (Windows + Linux) C++ game engine in early development. Long-term goal: a robust, production-quality, easy-to-use engine. Quality and maintainability matter more than speed of delivery.
 
 ## Tech stack
-- C++20 (`CMAKE_CXX_STANDARD 20`, required, compiler extensions disabled). Do not use features from newer standards unless the standard is raised in the root `CMakeLists.txt`.
+- C++20 (`CMAKE_CXX_STANDARD 20`). Do not use C++20 features unless the standard is raised in the root `CMakeLists.txt`.
 - Build system: CMake (min 3.16.3) + vcpkg manifest mode (`vcpkg.json`, vcpkg lives in `ThirdParty/vcpkg`).
 - Libraries: glfw3, glad (OpenGL), imgui (+docking), imguizmo, implot/implot3d, glm, stb, assimp, entt, spdlog, fmt, simpleini, bullet3, gtest/gmock.
 - Compilers: MSVC (primary, Visual Studio) and GCC/Clang on Linux (CI).
@@ -40,7 +40,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Members: `m_` prefix (`m_window`); static members: `s_` prefix (`s_instance`).
 - Exported engine classes use the `DAEDALUS_API` macro (see `Core/Macros.h`). Platform macros: `DL_PLATFORM_WINDOWS`, `DL_PLATFORM_LINUX`.
 - Ownership: `std::unique_ptr` by default; raw pointers are non-owning only (comment who owns). Avoid `new`/`delete`; prefer `std::make_unique`.
-- Prefer forward declarations over unnecessary includes in all first-party C++ headers while preserving public APIs; retain full definitions required by templates, inline implementations, inheritance, or value members, and put concrete dependencies in implementation files.
 - Const-correctness, `override`, `nullptr`, `enum class`, `[[nodiscard]]` where it helps.
 - Special members: follow rule of 0/5; delete copy/move explicitly for singletons.
 - Logging: use the engine logger (spdlog wrapper in `Debug`), not `std::cout`/`printf`.
@@ -61,3 +60,4 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - If a task has several valid designs (architecture, public API shape), propose the options briefly before implementing.
 - Events may be queued from any thread and must be processed safely.
 - Keep CMake targets as is (each module a static library linked into one engine DLL).
+- `ROADMAP.md` (repo root) is the source of truth for the engine audit and planned work. When a roadmap item is implemented, or a new gap/defect is found, update `ROADMAP.md` in the same change (mark items done, adjust module status, add new findings).

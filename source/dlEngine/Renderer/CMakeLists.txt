@@ -72,18 +72,18 @@ set(RENDERER_PROJECT_FILES
     Primitives/VertexBuffer.h
     Primitives/VertexBuffer.cpp
 
-    Resourses/Material.h
-    Resourses/Material.cpp
-    Resourses/Mesh.h
-    Resourses/Mesh.cpp
-    Resourses/Model.h
-    Resourses/Model.cpp
-    Resourses/Shader.h
-    Resourses/Shader.cpp
-    Resourses/ShaderLibrary.h
-    Resourses/ShaderLibrary.cpp
-    Resourses/Texture.h
-    Resourses/Texture.cpp
+    Resources/Material.h
+    Resources/Material.cpp
+    Resources/Mesh.h
+    Resources/Mesh.cpp
+    Resources/Model.h
+    Resources/Model.cpp
+    Resources/Shader.h
+    Resources/Shader.cpp
+    Resources/ShaderLibrary.h
+    Resources/ShaderLibrary.cpp
+    Resources/Texture.h
+    Resources/Texture.cpp
     Resources/ResourceManager.h
     Resources/ResourceManager.cpp
     Resources/ResourceStats.h

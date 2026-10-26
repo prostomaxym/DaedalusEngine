@@ -6,8 +6,8 @@
 #include "Renderer/Primitives/IndexBuffer.h"
 #include "Renderer/Primitives/VertexBuffer.h"
 #include "Renderer/Primitives/BufferLayout.h"
-#include "Renderer/Resourses/Shader.h"
-#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Resources/Shader.h"
+#include "Renderer/Resources/Texture.h"
 #include <glm/vec4.hpp>
 
 #include "Renderer/Resources/ResourceManager.h"

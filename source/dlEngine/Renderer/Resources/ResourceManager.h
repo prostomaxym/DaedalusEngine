@@ -5,7 +5,7 @@
 
 #include "Macros.h"
 
-#include "Renderer/Resourses/Model.h"
+#include "Renderer/Resources/Model.h"
 #include "ResourceStats.h"
 #include <string_view>
 

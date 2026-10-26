@@ -1,5 +1,8 @@
 #include <ECS/Serialization/SceneSerializer.h>
 #include <ECS/Serialization/SceneJson.h>
+#include <ECS/Serialization/ScriptRegistry.h>
+#include <ECS/Entity.h>
+#include <ECS/NativeScript.h>
 
 #include <gtest/gtest.h>
 #include <fstream>
@@ -296,9 +299,6 @@ TEST(SceneSerializerTest, scene_metadata_and_all_entities_exist_before_script_co
 
 class SceneBodyTest : public ::testing::Test
 {
-protected:
-	void SetUp() override { Physics::Init(); }
-	void TearDown() override { Physics::Shutdown(); }
 };
 
 TEST_F(SceneBodyTest, body_pose_remains_independent_of_entity_transform)
@@ -313,7 +313,7 @@ TEST_F(SceneBodyTest, body_pose_remains_independent_of_entity_transform)
 	const auto handle = scene.GetEntityByUUID(Daedalus::UUID(42)).GetComponent<RigidBodyComponent>().handle;
 	glm::vec3 position;
 	glm::quat orientation;
-	ASSERT_TRUE(Physics::GetRigidBodyTransform(handle, position, orientation));
+	ASSERT_TRUE(scene.GetPhysicsWorld().GetRigidBodyTransform(handle, position, orientation));
 	EXPECT_FLOAT_EQ(position.x, 10.f);
 	EXPECT_FLOAT_EQ(position.y, 20.f);
 	SceneRecord output;
@@ -327,17 +327,96 @@ TEST_F(SceneBodyTest, moving_component_transfers_body_ownership)
 	static_assert(!std::is_copy_constructible_v<RigidBodyComponent>);
 	static_assert(!std::is_copy_constructible_v<KinematicBodyComponent>);
 	RigidBodyComponent original(1.f, 0.5f, glm::vec3(1.f));
+	PhysicsWorld world;
+	original.Attach(world);
 	const auto handle = original.handle;
 	RigidBodyComponent moved(std::move(original));
 	EXPECT_EQ(original.handle, 0u);
 	EXPECT_EQ(moved.handle, handle);
 	RigidBodyComponent destination(2.f, 1.f, glm::vec3(2.f));
+	destination.Attach(world);
+	const auto replaced = destination.handle;
 	destination = std::move(moved);
 	EXPECT_EQ(moved.handle, 0u);
 	EXPECT_EQ(destination.handle, handle);
 	glm::vec3 position;
 	glm::quat orientation;
-	EXPECT_TRUE(Physics::GetRigidBodyTransform(destination.handle, position, orientation));
+	EXPECT_TRUE(world.GetRigidBodyTransform(destination.handle, position, orientation));
+	EXPECT_FALSE(world.GetRigidBodyTransform(replaced, position, orientation));
+}
+
+TEST_F(SceneBodyTest, simulation_and_cleanup_are_scene_local)
+{
+	Scene first, second;
+	auto a = first.CreateEntity();
+	auto b = second.CreateEntity();
+	const auto first_handle = a.AddComponent<RigidBodyComponent>(1.f, 0.5f, glm::vec3(0.f, 10.f, 0.f)).handle;
+	const auto second_handle = b.AddComponent<RigidBodyComponent>(1.f, 0.5f, glm::vec3(0.f, 10.f, 0.f)).handle;
+	first.GetPhysicsWorld().StepSimulation();
+	glm::vec3 position;
+	glm::quat orientation;
+	ASSERT_TRUE(first.GetPhysicsWorld().GetRigidBodyTransform(first_handle, position, orientation));
+	EXPECT_LT(position.y, 10.f);
+	ASSERT_TRUE(second.GetPhysicsWorld().GetRigidBodyTransform(second_handle, position, orientation));
+	EXPECT_FLOAT_EQ(position.y, 10.f);
+	first.Clear();
+	EXPECT_FALSE(first.GetPhysicsWorld().GetRigidBodyTransform(first_handle, position, orientation));
+	EXPECT_TRUE(second.GetPhysicsWorld().GetRigidBodyTransform(second_handle, position, orientation));
+}
+
+TEST_F(SceneBodyTest, component_removal_releases_its_body)
+{
+	Scene scene;
+	auto entity = scene.CreateEntity();
+	const auto handle = entity.AddComponent<RigidBodyComponent>(1.f, 0.5f, glm::vec3(0.f)).handle;
+	entity.RemoveComponent<RigidBodyComponent>();
+	glm::vec3 position;
+	glm::quat orientation;
+	EXPECT_FALSE(scene.GetPhysicsWorld().GetRigidBodyTransform(handle, position, orientation));
+}
+
+TEST_F(SceneBodyTest, detached_component_can_outlive_its_scene)
+{
+	std::unique_ptr<RigidBodyComponent> detached;
+	{
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		entity.AddComponent<RigidBodyComponent>(1.f, 0.5f, glm::vec3(0.f));
+		detached = entity.PopComponent<RigidBodyComponent>();
+		EXPECT_NE(detached->handle, 0u);
+	}
+	detached.reset();
+}
+
+TEST_F(SceneBodyTest, pushing_moved_component_binds_the_stored_instance)
+{
+	Scene scene;
+	auto entity = scene.CreateEntity();
+	RigidBodyComponent component(1.f, 0.5f, glm::vec3(1.f));
+	entity.PushComponent(std::move(component));
+	EXPECT_EQ(component.handle, 0u);
+	const auto handle = entity.GetComponent<RigidBodyComponent>().handle;
+	EXPECT_NE(handle, 0u);
+	glm::vec3 position;
+	glm::quat orientation;
+	EXPECT_TRUE(scene.GetPhysicsWorld().GetRigidBodyTransform(handle, position, orientation));
+}
+
+TEST_F(SceneBodyTest, pushing_detached_component_rebinds_to_destination_world)
+{
+	Scene first, second;
+	auto source = first.CreateEntity();
+	const auto old_handle = source.AddComponent<RigidBodyComponent>(1.f, 0.5f, glm::vec3(0.f)).handle;
+	auto component = source.PopComponent<RigidBodyComponent>();
+	auto destination = second.CreateEntity();
+	destination.PushComponent(std::move(component));
+	EXPECT_EQ(component, nullptr);
+	const auto new_handle = destination.GetComponent<RigidBodyComponent>().handle;
+	EXPECT_NE(new_handle, 0u);
+	glm::vec3 position;
+	glm::quat orientation;
+	EXPECT_FALSE(first.GetPhysicsWorld().GetRigidBodyTransform(old_handle, position, orientation));
+	EXPECT_TRUE(second.GetPhysicsWorld().GetRigidBodyTransform(new_handle, position, orientation));
 }
 
 class SceneFileTest : public ::testing::Test

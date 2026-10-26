@@ -28,6 +28,7 @@ set(ECS_TEST_FILES
     ECSTests/EntityTest.cpp
     ECSTests/NativeScriptTest.cpp
     ECSTests/SceneTest.cpp
+    ECSTests/SceneManagerTest.cpp
     ECSTests/SceneJsonTest.cpp
     ECSTests/SceneSerializerTest.cpp
     ECSTests/TransformComponentTest.cpp
@@ -47,6 +48,7 @@ set(PHYSICS_TEST_FILES
 
 set(RENDERER_TEST_FILES
     RendererTests/BufferLayoutTest.cpp
+    RendererTests/CacheEvictionTest.cpp
     RendererTests/CameraTest.cpp
     RendererTests/DirectionalLightSourceTest.cpp
     RendererTests/GeometryTest.cpp
@@ -61,6 +63,7 @@ set(THREADS_TEST_FILES
 
 set(UTILS_TEST_FILES
     UtilsTests/DeltaTimeTest.cpp
+    UtilsTests/FixedStepClockTest.cpp
     UtilsTests/FPSLockerTest.cpp
     UtilsTests/KeyCodesTest.cpp
     UtilsTests/RandomTest.cpp

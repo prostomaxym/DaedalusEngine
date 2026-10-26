@@ -4,15 +4,32 @@
 
 using namespace Daedalus;
 
-bool Input::m_keyboard_connected = true;
-bool Input::m_gamepad_connected = false;
-float Input::m_sticks_deadzone = 0.15f; //TODO: fix this workaround - something is causing drifting
+Input* Input::s_instance = nullptr;
+
+Input::Input()
+{
+	DL_ASSERT(!s_instance, Log::Categories::EngineCore, "Only one input system may be active");
+	if (s_instance) std::abort();
+	s_instance = this;
+}
+
+Input::~Input()
+{
+	s_instance = nullptr;
+}
+
+Input* Input::GetInstance()
+{
+	DL_ASSERT(s_instance, Log::Categories::EngineCore, "Input used outside Engine lifetime");
+	if (!s_instance) std::abort();
+	return s_instance;
+}
 
 std::pair<float, float> Input::GetStickPos(StickType type)
 {
-	auto pos = s_instance->GetStickPosImpl(type);
+	auto pos = GetInstance()->GetStickPosImpl(type);
 
-	if (std::abs(pos.first) < m_sticks_deadzone && std::abs(pos.second) < m_sticks_deadzone)
+	if (std::abs(pos.first) < GetInstance()->m_sticks_deadzone && std::abs(pos.second) < GetInstance()->m_sticks_deadzone)
 		return { 0.f, 0.f };
 	else
 		return pos;

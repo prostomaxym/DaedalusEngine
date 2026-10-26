@@ -40,6 +40,7 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Members: `m_` prefix (`m_window`); static members: `s_` prefix (`s_instance`).
 - Exported engine classes use the `DAEDALUS_API` macro (see `Core/Macros.h`). Platform macros: `DL_PLATFORM_WINDOWS`, `DL_PLATFORM_LINUX`.
 - Ownership: `std::unique_ptr` by default; raw pointers are non-owning only (comment who owns). Avoid `new`/`delete`; prefer `std::make_unique`.
+- Prefer forward declarations over unnecessary includes in all first-party C++ headers while preserving public APIs; retain full definitions required by templates, inline implementations, inheritance, or value members, and put concrete dependencies in implementation files.
 - Const-correctness, `override`, `nullptr`, `enum class`, `[[nodiscard]]` where it helps.
 - Special members: follow rule of 0/5; delete copy/move explicitly for singletons.
 - Logging: use the engine logger (spdlog wrapper in `Debug`), not `std::cout`/`printf`.

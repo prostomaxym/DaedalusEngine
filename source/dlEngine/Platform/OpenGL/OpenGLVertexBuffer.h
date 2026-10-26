@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/BufferLayout.h"
 
 namespace Daedalus {
 

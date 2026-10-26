@@ -11,6 +11,8 @@
 
 #include "Macros.h"
 #include "Core/Application.h"
+#include "Core/Window.h"
+#include "Events/Event.h"
 #include "Config/PathConfig.h"
 #include "ImGuiWindow.h"
 
@@ -74,6 +76,7 @@ void ImGuiLayer::OnAttach()
 
 void ImGuiLayer::OnDetach()
 {
+	SaveConfig();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImPlot::DestroyContext();
@@ -101,12 +104,18 @@ void ImGuiLayer::OnEvent(Event& evt)
 	}
 }
 
-void ImGuiLayer::OnUpdate(DeltaTime dt)
+void ImGuiLayer::BeginFrame()
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
+	const auto& window = Application::GetInstance()->GetWindow();
+	ImGui::GetIO().DisplaySize = ImVec2(static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight()));
+}
+
+void ImGuiLayer::OnImGuiRender(DeltaTime dt)
+{
 	
 	for (auto& window : m_windows)
 	{
@@ -114,10 +123,11 @@ void ImGuiLayer::OnUpdate(DeltaTime dt)
 			window->Update(dt);
 	}
 	
-	ImGuiIO& io = ImGui::GetIO();
-	const auto app = Application::GetInstance();
-	io.DisplaySize = ImVec2(static_cast<float>(app->GetWindow().GetWidth()), static_cast<float>(app->GetWindow().GetHeight()));
+}
 
+void ImGuiLayer::EndFrame()
+{
+	ImGuiIO& io = ImGui::GetIO();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

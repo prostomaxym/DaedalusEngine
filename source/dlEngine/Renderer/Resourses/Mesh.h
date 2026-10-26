@@ -1,18 +1,21 @@
 #pragma once
 
 #include "Renderer/Objects/Geometry.h"
-#include "Renderer/Primitives/IndexBuffer.h"
-#include "Renderer/Primitives/VertexArray.h"
-#include "Renderer/Primitives/VertexBuffer.h"
 
 #include <glm/glm.hpp>
 
 #include <string_view>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include <vector>
 
 namespace Daedalus {
 
 	class ResourceManager;
+	class VertexArray;
+	class VertexBuffer;
+	class IndexBuffer;
 
 	class Mesh
 	{

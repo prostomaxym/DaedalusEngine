@@ -1,61 +1,76 @@
 #include "dlpch.h"
 #include "RenderCommand.h"
+#include "RendererAPI.h"
 
 using namespace Daedalus;
 
-std::unique_ptr<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
+RendererAPI* RenderCommand::s_renderer_api = nullptr;
+std::thread::id RenderCommand::s_owner_thread;
+
+void RenderCommand::Bind(RendererAPI* api)
+{
+	s_renderer_api = api;
+	s_owner_thread = std::this_thread::get_id();
+}
+
+RendererAPI& RenderCommand::GetAPI()
+{
+	DL_ASSERT(s_renderer_api && s_owner_thread == std::this_thread::get_id(), Log::Categories::Renderer, "RenderCommand requires an active renderer on the graphics thread");
+	if (!s_renderer_api || s_owner_thread != std::this_thread::get_id()) std::abort();
+	return *s_renderer_api;
+}
 
 void RenderCommand::Init()
 {
-	s_RendererAPI->Init();
+	GetAPI().Init();
 }
 
 void RenderCommand::SetupGraphicSettings()
 {
-	s_RendererAPI->SetupGraphicSettings();
+	GetAPI().SetupGraphicSettings();
 }
 
 void RenderCommand::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-	s_RendererAPI->SetViewport(x, y, width, height);
+	GetAPI().SetViewport(x, y, width, height);
 }
 
 void RenderCommand::SetClearColor(const glm::vec4& color)
 {
-	s_RendererAPI->SetClearColor(color);
+	GetAPI().SetClearColor(color);
 }
 
 void RenderCommand::Clear(uint32_t clear_mode)
 {
-	s_RendererAPI->Clear(clear_mode);
+	GetAPI().Clear(clear_mode);
 }
 
 void RenderCommand::DrawIndexed(const VertexArray* vertex_array, uint32_t index_count)
 {
-	s_RendererAPI->DrawIndexed(vertex_array, index_count);
+	GetAPI().DrawIndexed(vertex_array, index_count);
 }
 
 void RenderCommand::DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count)
 {
-	s_RendererAPI->DrawUnindexed(vertex_array, vertex_count);
+	GetAPI().DrawUnindexed(vertex_array, vertex_count);
 }
 
 void RenderCommand::DrawLines(const VertexArray* vertexArray, uint32_t vertexCount)
 {
-	s_RendererAPI->DrawLines(vertexArray, vertexCount);
+	GetAPI().DrawLines(vertexArray, vertexCount);
 }
 
 void RenderCommand::UnbindTextureSlot(uint32_t slot_num)
 {
-	s_RendererAPI->UnbindTextureSlot(slot_num);
+	GetAPI().UnbindTextureSlot(slot_num);
 }
 
 int RenderCommand::GetMaxTextureSize()
 {
-	return s_RendererAPI->GetMaxTextureSize();
+	return GetAPI().GetMaxTextureSize();
 }
 
 void RenderCommand::SetLineWidth(float width)
 {
-	s_RendererAPI->SetLineWidth(width);
+	GetAPI().SetLineWidth(width);
 }

@@ -1,15 +1,18 @@
 #pragma once
 
-#include <vector>
-#include <imgui.h>
+#include <string>
 
 #include "Utils/RingVector.h"
 
 #include "ImGuiWindow.h"
-#include "Events/KeyEvent.h"
+#include "Macros.h"
+
+struct ImGuiInputTextCallbackData;
 
 namespace Daedalus
 {
+    class KeyReleasedEvent;
+
     class DAEDALUS_API ConsoleOverlay : public ImGuiWindow
     {
     public:

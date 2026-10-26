@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Serialization/SceneRecord.h"
-#include "Physics/Physics.h"
+#include "Physics/PhysicsWorld.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
@@ -18,33 +18,53 @@ namespace Daedalus
 		PhysicsBodyComponent& operator=(const PhysicsBodyComponent&) = delete;
 
 		PhysicsBodyComponent(PhysicsBodyComponent&& other) noexcept
-			: handle(std::exchange(other.handle, 0)), description(std::move(other.description)) {}
+			: handle(std::exchange(other.handle, 0)), description(std::move(other.description)),
+			m_collider(std::move(other.m_collider)), m_kinematic(other.m_kinematic), m_cleanup(std::move(other.m_cleanup))
+		{
+			other.m_cleanup = {};
+		}
 
 		PhysicsBodyComponent& operator=(PhysicsBodyComponent&& other) noexcept
 		{
 			if (this != &other)
 			{
-				if (handle) Physics::RemoveRigidBody(handle);
+				Release();
 				handle = std::exchange(other.handle, 0);
 				description = std::move(other.description);
+				m_collider = std::move(other.m_collider);
+				m_kinematic = other.m_kinematic;
+				m_cleanup = std::move(other.m_cleanup);
+				other.m_cleanup = {};
 			}
 			return *this;
 		}
 
 		~PhysicsBodyComponent()
 		{
-			if (handle) Physics::RemoveRigidBody(handle);
+			Release();
+		}
+
+		void Release()
+		{
+			if (m_cleanup) m_cleanup();
+			m_cleanup = {};
+			handle = 0;
+		}
+
+		void Attach(PhysicsWorld& world)
+		{
+			Release();
+			const glm::quat orientation(glm::radians(m_collider.rotation));
+			if (m_collider.shape == "box")
+				handle = world.CreateBoxRigidBody(m_collider.mass, m_collider.half_extents, m_collider.position, orientation, m_kinematic);
+			else if (m_collider.shape == "sphere")
+				handle = world.CreateSphereRigidBody(m_collider.mass, m_collider.radius, m_collider.position, orientation, m_kinematic);
+			if (handle) m_cleanup = world.MakeBodyCleanup(handle);
 		}
 
 	protected:
-		PhysicsBodyComponent(const BodyRecord& record, bool kinematic) : description(record)
-		{
-			const glm::quat orientation(glm::radians(record.rotation));
-			if (record.shape == "box")
-				handle = Physics::CreateBoxRigidBody(record.mass, record.half_extents, record.position, orientation, kinematic);
-			else if (record.shape == "sphere")
-				handle = Physics::CreateSphereRigidBody(record.mass, record.radius, record.position, orientation, kinematic);
-		}
+		PhysicsBodyComponent(const BodyRecord& record, bool kinematic)
+			: description(record), m_collider(record), m_kinematic(kinematic) {}
 
 		static BodyRecord Box(float mass, const glm::vec3& half_extents, const glm::vec3& position, const glm::quat& orientation)
 		{
@@ -63,5 +83,10 @@ namespace Daedalus
 			record.radius = radius;
 			return record;
 		}
+
+	private:
+		BodyRecord m_collider;
+		bool m_kinematic{ false };
+		std::function<void()> m_cleanup;
 	};
 }

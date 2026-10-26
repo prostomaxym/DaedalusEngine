@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "PhysicsSystem.h"
+#include "Physics/PhysicsWorld.h"
 
 #include "ECS/Components.h"
 #include "ECS/Entity.h"
@@ -8,8 +9,24 @@
 
 using namespace Daedalus;
 
+PhysicsSystem::PhysicsSystem(entt::registry& reg, Scene* scene)
+	: m_registry(reg), m_scene(scene), m_world(Physics::CreateWorld()) {}
+
+PhysicsSystem::~PhysicsSystem() = default;
+PhysicsSystem::PhysicsSystem(PhysicsSystem&& other) noexcept = default;
+
 void PhysicsSystem::OnStartRuntime() const
 {
+	for (auto e : m_registry.view<RigidBodyComponent>())
+	{
+		auto& body = m_registry.get<RigidBodyComponent>(e);
+		if (!body.handle) body.Attach(*m_world);
+	}
+	for (auto e : m_registry.view<KinematicBodyComponent>())
+	{
+		auto& body = m_registry.get<KinematicBodyComponent>(e);
+		if (!body.handle) body.Attach(*m_world);
+	}
 	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
 
 	for (const auto e : kinematic_body_view)
@@ -20,10 +37,15 @@ void PhysicsSystem::OnStartRuntime() const
 		if (kb.handle == 0)
 			continue;
 		// Set initial transform from TransformComponent to physics body
-		Physics::SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
+		m_world->SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
 	}
+}
 
-	// Initialize physics bodies in the scene
+void PhysicsSystem::OnStopRuntime() const
+{
+	m_world->RegisterCollisionCallback({});
+	for (auto e : m_registry.view<RigidBodyComponent>()) m_registry.get<RigidBodyComponent>(e).Release();
+	for (auto e : m_registry.view<KinematicBodyComponent>()) m_registry.get<KinematicBodyComponent>(e).Release();
 }
 
 void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
@@ -38,10 +60,10 @@ void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 		if (kb.handle == 0)
 			continue;
 
-		Physics::SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
+		m_world->SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
 	}
 
-	Physics::StepSimulation(dt.GetSeconds());
+	m_world->StepSimulation(dt.GetSeconds());
 
 	// Update transforms from physics for entities that have both a rigid body and a transform.
 	const auto view = m_registry.view<RigidBodyComponent>();
@@ -57,8 +79,8 @@ void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 
 		glm::vec3 phys_pos;
 		glm::quat phys_orient;
-		if (Physics::GetRigidBodyTransform(rb.handle, phys_pos, phys_orient)
-			&& !Physics::IsStaticBody(rb.handle))
+		if (m_world->GetRigidBodyTransform(rb.handle, phys_pos, phys_orient)
+			&& !m_world->IsStaticBody(rb.handle))
 		{
 			// Physics returns orientation as a quaternion. TransformComponent stores rotation as
 			// Euler angles in degrees (pitch, yaw, roll), so convert.

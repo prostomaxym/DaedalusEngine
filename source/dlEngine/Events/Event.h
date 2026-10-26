@@ -5,8 +5,11 @@
 #include "Utils/Timer.h"
 
 #include <chrono>
+#include <memory>
 #include <ostream>
 #include <string>
+#include <type_traits>
+#include <fmt/format.h>
 
 namespace Daedalus 
 {
@@ -15,13 +18,16 @@ namespace Daedalus
 
 #define EVENT_CLASS_TYPE(type)	static EventType GetStaticType() { return EventType::type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
-								virtual const char* GetNameC() const override { return #type; }
+								virtual const char* GetNameC() const override { return #type; }\
+								std::unique_ptr<Event> Clone() const override { return std::make_unique<std::decay_t<decltype(*this)>>(*this); }
 
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
 	class DAEDALUS_API Event
 	{
 	public:
+		virtual ~Event() = default;
+		virtual std::unique_ptr<Event> Clone() const = 0;
 		virtual EventType GetEventType() const = 0;
 		virtual std::string GetInfo() const { return {}; }
 		virtual const char* GetNameC() const = 0;
@@ -41,7 +47,7 @@ namespace Daedalus
 		bool m_handled{ false };
 
 		//Used for queue, not used for blocking events
-		DeltaTime m_time_to_live{};
+		DeltaTime m_time_to_live{ (std::chrono::nanoseconds::max)() };
 		Timer m_timer{};
 	};
 }

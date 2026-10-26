@@ -89,5 +89,4 @@ void WorkingDirectory::SaveConfigs()
 	PathConfig::Save(WorkingDirectory::GetRootDirectory() / path_config_file);
 	GraphicsConfig::Save(PathConfig::GetGraphicsConfigPath());
 	KeybindConfig::Save(PathConfig::GetKeybindConfigPath());
-	ImGuiLayer::SaveConfig();
 }

@@ -1,5 +1,9 @@
 #include "dlpch.h"
 #include "Mesh.h"
+#include "Renderer/Primitives/IndexBuffer.h"
+#include "Renderer/Primitives/VertexArray.h"
+#include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/BufferLayout.h"
 
 #include "Renderer/API/RenderConstants.h"
 

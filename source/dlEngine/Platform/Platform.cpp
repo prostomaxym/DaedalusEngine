@@ -66,8 +66,6 @@ void SegfaultHandler(int signal)
 
 using namespace Daedalus;
 
-Input* Input::s_instance = nullptr;
-
 std::unique_ptr<Window> Platform::createWindow(const WindowProps& props)
 {
 #ifdef DL_PLATFORM_WINDOWS
@@ -79,12 +77,12 @@ std::unique_ptr<Window> Platform::createWindow(const WindowProps& props)
 #endif
 }
 
-void Platform::InitInputSystem()
+std::unique_ptr<Input> Platform::CreateInputSystem()
 {
 #ifdef DL_PLATFORM_WINDOWS
-	Input::CreateInstance(new WindowsInput());
+	return std::make_unique<WindowsInput>();
 #elif defined DL_PLATFORM_LINUX
-	Input::CreateInstance(new LinuxInput());
+	return std::make_unique<LinuxInput>();
 #else
 	static_assert(false, "Unsupported Platfrom")
 #endif

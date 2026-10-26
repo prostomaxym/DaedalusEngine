@@ -2,6 +2,7 @@
 #include "GLFWInput.h"
 
 #include "Core/Application.h"
+#include "Core/Window.h"
 
 #include <GLFW/glfw3.h>
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Renderer/API/RendererAPI.h"
-#include "Renderer/Resourses/ShaderLibrary.h"
-
-#include <memory>
+#include <thread>
 
 namespace Daedalus {
+	class RendererAPI;
+	class VertexArray;
 
 	class DAEDALUS_API RenderCommand
 	{
@@ -27,7 +27,11 @@ namespace Daedalus {
 		static int GetMaxTextureSize();
 
 	private:
-		static std::unique_ptr<RendererAPI> s_RendererAPI;
+		friend class Renderer;
+		static void Bind(RendererAPI* api);
+		static RendererAPI& GetAPI();
+		static RendererAPI* s_renderer_api; // Non-owning; Renderer owns the backend.
+		static std::thread::id s_owner_thread;
 	};
 
 }

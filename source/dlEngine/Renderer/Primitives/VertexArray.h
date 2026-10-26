@@ -1,12 +1,11 @@
 #pragma once
 
-#include "IndexBuffer.h"
-#include "VertexBuffer.h"
-
 #include <memory>
 #include <vector>
 
 namespace Daedalus {
+	class IndexBuffer;
+	class VertexBuffer;
 
 	class VertexArray
 	{

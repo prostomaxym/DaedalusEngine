@@ -1,6 +1,7 @@
 #include "OpenGLContext.h"
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 Daedalus::OpenGLContext::OpenGLContext(GLFWwindow* window_handle) :
 	m_window_handle(window_handle)

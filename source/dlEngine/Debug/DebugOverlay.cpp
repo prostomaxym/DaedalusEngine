@@ -1,15 +1,21 @@
 #include "dlpch.h"
 
 #include "DebugOverlay.h"
+#include "Events/KeyEvent.h"
+#include "Core/Window.h"
+#include "Renderer/Resourses/Texture.h"
 
 #include "Log.h"
 #include "Core/Application.h"
-#include "Core/ResourceManager.h"
+#include "ECS/Scene.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/API/RendererDebugInfo.h"
+#include "Renderer/Objects/Camera.h"
 #include "Platform/Platform.h"
 #include "Platform/ResourcesMonitor.h"
 #include "Utils/WorkingDirectory.h"
@@ -316,6 +322,12 @@ void DebugOverlay::RenderWorldSection()
 	ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_Bullet);
 
 	const auto scene = Application::GetInstance()->GetMainScene();
+	if (!scene || !scene->GetCamera())
+	{
+		ImGui::TextUnformatted("No active scene camera");
+		ImGui::EndChild();
+		return;
+	}
 	const auto& scene_name = scene->GetSceneName();
 	ImGui::Text("Scene name: %s", scene_name.c_str());
 

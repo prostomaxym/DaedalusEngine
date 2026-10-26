@@ -1,6 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Macros.h"
+#include <glm/fwd.hpp>
+#include <cstdint>
+#include <filesystem>
 
 #include <string>
 #include <memory>

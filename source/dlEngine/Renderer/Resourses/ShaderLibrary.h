@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <set>
 #include <vector>
+#include <unordered_map>
 
 namespace Daedalus
 {

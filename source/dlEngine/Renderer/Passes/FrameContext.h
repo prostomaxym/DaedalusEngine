@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Renderer/Objects/Geometry.h"
-#include "Renderer/Resourses/Model.h"
 
 #include <glm/glm.hpp>
 
@@ -13,6 +12,7 @@
 
 namespace Daedalus
 {
+	class Model;
 	// Named GPU textures that passes publish for the following passes (and for debug views)
 	enum class PassTexture : uint8_t
 	{

@@ -2,6 +2,10 @@
 #include "Macros.h"
 
 #include <vector>
+#include <cstddef>
+#include <iterator>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Daedalus
 {

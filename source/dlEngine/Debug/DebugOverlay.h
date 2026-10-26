@@ -2,13 +2,21 @@
 
 #include "ImGuiWindow.h"
 
-#include "Events/KeyEvent.h"
+#include "Debug/Log.h"
 #include "Utils/RingVector.h"
 
-#include <imgui.h>
+#include <array>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
+
+struct ImVec2;
 
 namespace Daedalus
 {
+	class KeyReleasedEvent;
+
 	class DAEDALUS_API DebugOverlay : public ImGuiWindow
 	{
 	public:

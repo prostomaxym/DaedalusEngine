@@ -1,22 +1,25 @@
 #pragma once
 
-#include "RenderCommand.h"
-#include "Renderer/Resourses/Mesh.h"
-#include "Renderer/Resourses/Model.h"
-#include "Renderer/Resourses/Shader.h"
-#include "Renderer/Objects/Cubemap.h"
-#include "Renderer/Objects/Geometry.h"
-#include "Renderer/Objects/LightSource.h"
-#include "Renderer/Objects/Camera.h"
-#include "RendererDebugInfo.h"
+#include "RendererAPI.h"
 
 #include <glm/glm.hpp>
 
 #include <memory>
-#include <map>
 #include <optional>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace Daedalus {
+	class Camera;
+	class Cubemap;
+	class LightSource;
+	class Mesh;
+	class Model;
+	class Shader;
+	class VertexArray;
+	struct LightSSBO;
+	struct RendererDebugInfo;
 
 	class DAEDALUS_API Renderer
 	{
@@ -24,8 +27,12 @@ namespace Daedalus {
 		using DebugInfo = RendererDebugInfo;
 
 	public:
-		static void Init();
-		static void Shutdown();
+		Renderer();
+		~Renderer();
+		Renderer(const Renderer&) = delete;
+		Renderer& operator=(const Renderer&) = delete;
+		Renderer(Renderer&&) = delete;
+		Renderer& operator=(Renderer&&) = delete;
 
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
@@ -46,9 +53,11 @@ namespace Daedalus {
 		static void AddLight(LightSource* light);
 		static void RemoveLight(LightSource* light);
 
-		static DebugInfo* GetDebugInfo() { return s_debug.get(); }
+		static DebugInfo* GetDebugInfo() { return s_debug; }
 
 	private:
+		static void Init();
+		static void Shutdown();
 		static void UpdateLightShaderData();
 		static void UpdateLightSSBO(const std::vector<LightSSBO>& light_UBOs);
 		static void UpdateLightSpaceMatricesSSBO(const std::vector<glm::mat4>& light_proj_view);
@@ -62,8 +71,13 @@ namespace Daedalus {
 
 		// Defined in Renderer.cpp to keep pass/buffer headers out of this header
 		struct Data;
+		static Data* GetData();
 
-		static std::unique_ptr<DebugInfo> s_debug;
-		static std::unique_ptr<Data> s_data;
+		std::unique_ptr<RendererAPI> m_api;
+		std::unique_ptr<Data> m_data;
+		std::unique_ptr<DebugInfo> m_debug;
+		static Renderer* s_instance; // Non-owning; Engine owns the renderer.
+		static DebugInfo* s_debug;
+		static Data* s_data;
 	};
 }

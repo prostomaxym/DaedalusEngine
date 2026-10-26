@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 #include <filesystem>
+#include <cstdint>
+#include <vector>
 
 namespace Daedalus {
 

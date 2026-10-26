@@ -3,6 +3,7 @@
 // Deadalus API for client applications
 
 #include "Core/Application.h"
+#include "Core/Engine.h"
 #include "Core/Input.h"
 #include "Core/Layer.h"
 
@@ -15,6 +16,7 @@
 #include "Renderer/API/Renderer.h"
 
 #include "ECS/Scene.h"
+#include "ECS/SceneManager.h"
 #include "ECS/Entity.h"
 #include "ECS/NativeScriptComponent.h"
 #include "ECS/NativeScripts/CameraController.h"

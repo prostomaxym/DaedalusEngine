@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Core/Window.h"
-#include "Renderer/Primitives/GraphicsContext.h"
 
 #include <memory>
 #include <string>
 
-#include <GLFW/glfw3.h>
+struct GLFWwindow;
 
 namespace Daedalus {
+	class GraphicsContext;
 
 	class GLFWWindow : public Window
 	{

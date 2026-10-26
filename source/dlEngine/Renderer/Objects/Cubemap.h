@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Renderer/Resourses/Texture.h"
-#include "Renderer/Primitives/VertexArray.h"
-#include "Renderer/Primitives/VertexBuffer.h"
-
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace Daedalus
 {
+	class TextureCubemap;
+	class VertexArray;
+	class VertexBuffer;
 	class Cubemap
 	{
 	public:

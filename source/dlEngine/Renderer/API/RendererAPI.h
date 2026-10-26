@@ -1,14 +1,13 @@
 #pragma once
 
-#include "Renderer/Resourses/ShaderLibrary.h"
-#include "Renderer/Primitives/VertexArray.h"
-#include "Config/GraphicsConfig.h"
-
-#include <glm/vec4.hpp>
+#include "Macros.h"
+#include <glm/fwd.hpp>
+#include <cstdint>
 
 #include <memory>
 
 namespace Daedalus {
+	class VertexArray;
 
 	class DAEDALUS_API RendererAPI
 	{

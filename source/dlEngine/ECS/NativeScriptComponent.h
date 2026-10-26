@@ -2,6 +2,11 @@
 
 #include "Entity.h"
 #include "NativeScript.h"
+#include <memory>
+#include <string>
+#include <typeindex>
+#include <type_traits>
+#include <unordered_map>
 
 namespace Daedalus
 {

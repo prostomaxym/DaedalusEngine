@@ -2,7 +2,7 @@
 
 #include "Renderer/Primitives/GraphicsContext.h"
 
-#include <GLFW/glfw3.h>
+struct GLFWwindow;
 
 namespace Daedalus {
 

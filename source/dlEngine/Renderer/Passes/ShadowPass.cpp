@@ -1,7 +1,8 @@
 #include "dlpch.h"
+#include "Renderer/Resourses/Mesh.h"
 #include "ShadowPass.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/RenderCommand.h"
 #include "Renderer/API/Renderer.h"

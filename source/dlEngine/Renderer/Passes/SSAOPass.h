@@ -1,8 +1,6 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "Config/GraphicsConfig.h"
-#include "Renderer/Primitives/FrameBuffer.h"
 #include "Renderer/Buffers/SSAO.h"
 
 namespace Daedalus

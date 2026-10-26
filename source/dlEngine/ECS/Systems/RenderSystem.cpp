@@ -1,7 +1,7 @@
 #include "dlpch.h"
 #include "RenderSystem.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "ECS/Components.h"
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"

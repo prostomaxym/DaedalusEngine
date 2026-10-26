@@ -1,8 +1,7 @@
 #pragma once
 
-#include <ECS/Serialization/ScriptRegistry.h>
-
 namespace Daedalus
 {
+	class ScriptRegistry;
 	bool RegisterSceneScripts(ScriptRegistry& registry);
 }

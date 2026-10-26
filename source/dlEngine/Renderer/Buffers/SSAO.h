@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Config/GraphicsConfig.h"
-#include "Renderer/Primitives/FrameBuffer.h"
 #include "Renderer/Primitives/UniformBuffer.h"
-#include "Renderer/Resourses/Texture.h"
 
 #include <glm/glm.hpp>
 
-#include <random>
+#include <memory>
+#include <vector>
 
 namespace Daedalus
 {
+    class Framebuffer;
+    class Texture2D;
     class SSAO
     {
     public:

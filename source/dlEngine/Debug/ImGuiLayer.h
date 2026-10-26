@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Core/Layer.h"
-#include "Events/Event.h"
 #include "ImGuiWindow.h"
 
-#include <filesystem>
+#include <memory>
 #include <vector>
 
 namespace Daedalus
@@ -19,7 +18,9 @@ namespace Daedalus
 		virtual void OnDetach() override;
 		virtual void OnEvent(Event& e) override;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		void BeginFrame();
+		void EndFrame();
+		void OnImGuiRender(DeltaTime dt) override;
 
 		void BlockEvents(bool block) { m_block_events = block; }
 

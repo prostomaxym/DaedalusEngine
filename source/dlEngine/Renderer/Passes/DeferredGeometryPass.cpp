@@ -1,10 +1,14 @@
 #include "dlpch.h"
+#include "Renderer/Resourses/Material.h"
+#include "Renderer/Resourses/Mesh.h"
+#include "Renderer/Resourses/Texture.h"
 
 #include "DeferredGeometryPass.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/API/RenderCommand.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Config/GraphicsConfig.h"
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 
 using namespace Daedalus;
 

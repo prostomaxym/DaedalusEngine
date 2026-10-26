@@ -1,14 +1,17 @@
 #pragma once
 
-#include "SceneRecord.h"
 #include "ECS/NativeScriptComponent.h"
 
 #include <functional>
 #include <map>
 #include <typeindex>
+#include <string>
+#include <vector>
 
 namespace Daedalus
 {
+	struct ScriptRecord;
+	struct EntityRecord;
 	class DAEDALUS_API ScriptRegistry
 	{
 	public:

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Renderer/API/RenderCommand.h"
-#include <GLFW/glfw3.h>
+#include <memory>
+
+struct GLFWwindow;
 
 namespace Daedalus {
 

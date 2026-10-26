@@ -9,29 +9,43 @@ namespace Daedalus
 	class DAEDALUS_API PathConfig
 	{
 	public:
-		static void Load(const std::filesystem::path& path);
-		static void Save(const std::filesystem::path& path);
-		static void LoadDefault();
-		
-		static std::filesystem::path GetAssetsPath() { return s_assets_dir; }
-		static std::filesystem::path GetShadersPath() { return s_shaders_dir; }
-		static std::filesystem::path GetConfigPath() { return s_config_dir; }
-		static std::filesystem::path GetLogsPath() { return s_logs_dir; }
-		static std::filesystem::path GetScenePath() { return s_assets_dir / s_scene_file; }
+		PathConfig();
+		~PathConfig();
+		PathConfig(const PathConfig&) = delete;
+		PathConfig& operator=(const PathConfig&) = delete;
+		PathConfig(PathConfig&&) = delete;
+		PathConfig& operator=(PathConfig&&) = delete;
 
-		static std::filesystem::path GetGraphicsConfigPath() { return s_config_dir / s_graphics_config_name; }
-		static std::filesystem::path GetKeybindConfigPath() { return s_config_dir / s_keybind_config_name; }
+		static void Load(const std::filesystem::path& path) { GetInstance().LoadImpl(path); }
+		static void Save(const std::filesystem::path& path) { GetInstance().SaveImpl(path); }
+		static void LoadDefault() { GetInstance().LoadDefaultImpl(); }
+		
+		static std::filesystem::path GetAssetsPath() { return GetInstance().m_assets_dir; }
+		static std::filesystem::path GetShadersPath() { return GetInstance().m_shaders_dir; }
+		static std::filesystem::path GetConfigPath() { return GetInstance().m_config_dir; }
+		static std::filesystem::path GetLogsPath() { return s_instance ? s_instance->m_logs_dir : std::filesystem::path("logs"); }
+		static std::filesystem::path GetScenePath() { return GetInstance().m_assets_dir / GetInstance().m_scene_file; }
+
+		static std::filesystem::path GetGraphicsConfigPath() { return GetInstance().m_config_dir / GetInstance().m_graphics_config_name; }
+		static std::filesystem::path GetKeybindConfigPath() { return GetInstance().m_config_dir / GetInstance().m_keybind_config_name; }
 				
 	private:
-		static void LoadWorkDirectory(const std::filesystem::path& path);
+		void LoadWorkDirectory(const std::filesystem::path& path);
+		void LoadImpl(const std::filesystem::path& path);
+		void SaveImpl(const std::filesystem::path& path);
+		void LoadDefaultImpl();
 
-		static std::filesystem::path s_assets_dir;
-		static std::filesystem::path s_shaders_dir;
-		static std::filesystem::path s_logs_dir;
-		static std::filesystem::path s_scene_file;
+		static PathConfig& GetInstance();
 
-		static std::filesystem::path s_config_dir;
-		static std::filesystem::path s_graphics_config_name;
-		static std::filesystem::path s_keybind_config_name;
+		std::filesystem::path m_assets_dir;
+		std::filesystem::path m_shaders_dir;
+		std::filesystem::path m_logs_dir;
+		std::filesystem::path m_scene_file;
+
+		std::filesystem::path m_config_dir;
+		std::filesystem::path m_graphics_config_name;
+		std::filesystem::path m_keybind_config_name;
+
+		static PathConfig* s_instance;
 	};
 }

@@ -1,15 +1,20 @@
 #pragma once
 
-#include "Material.h"
-#include "Mesh.h"
+#include "Macros.h"
 #include "Renderer/Objects/Geometry.h"
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-
+#include <cstdint>
+#include <filesystem>
+#include <memory>
 #include <vector>
 
+struct aiScene;
+struct aiNode;
+struct aiMesh;
+
 namespace Daedalus {
+	class Material;
+	class Mesh;
 
 	enum class ModelParserFlags : uint32_t
 	{

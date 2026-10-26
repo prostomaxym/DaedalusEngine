@@ -1,13 +1,15 @@
 #pragma once
 
-#include "SceneRecord.h"
-#include "ScriptRegistry.h"
+#include "Macros.h"
 
 #include <filesystem>
+#include <string>
 
 namespace Daedalus
 {
 	class Scene;
+	struct SceneRecord;
+	class ScriptRegistry;
 
 	class DAEDALUS_API SceneSerializer
 	{

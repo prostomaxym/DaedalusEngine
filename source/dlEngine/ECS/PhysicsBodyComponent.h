@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Serialization/SceneRecord.h"
-#include "Physics/Physics.h"
+#include "Physics/PhysicsWorld.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <utility>

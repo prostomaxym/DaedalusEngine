@@ -1,4 +1,5 @@
 #include "ExampleLayer.h"
+#include <Daedalus.h>
 #include "SceneScripts.h"
 
 using namespace Daedalus;

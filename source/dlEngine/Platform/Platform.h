@@ -1,12 +1,16 @@
 #pragma once
 
 #include <Macros.h>
-#include <Core/Window.h>
-#include <Core/Input.h>
 
+#include <chrono>
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace Daedalus {
+	class Window;
+	class Input;
+	struct WindowProps;
 
 	class DAEDALUS_API Platform
 	{

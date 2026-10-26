@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Renderer/Primitives/VertexArray.h"
+#include <cstdint>
 
 namespace Daedalus {
 

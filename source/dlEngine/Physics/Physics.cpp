@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Physics.h"
+#include "PhysicsWorld.h"
 #include <cmath>
 
 using namespace Daedalus;

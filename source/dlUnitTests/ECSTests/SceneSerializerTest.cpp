@@ -1,5 +1,8 @@
 #include <ECS/Serialization/SceneSerializer.h>
 #include <ECS/Serialization/SceneJson.h>
+#include <ECS/Serialization/ScriptRegistry.h>
+#include <ECS/Entity.h>
+#include <ECS/NativeScript.h>
 
 #include <gtest/gtest.h>
 #include <fstream>

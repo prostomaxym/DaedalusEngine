@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BufferLayout.h"
-
-#include <stdint.h>
+#include <cstdint>
+#include <memory>
 
 namespace Daedalus {
+	class BufferLayout;
 
 	class VertexBuffer
 	{

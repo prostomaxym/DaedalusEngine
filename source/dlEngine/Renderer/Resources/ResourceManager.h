@@ -5,13 +5,15 @@
 
 #include "Macros.h"
 
-#include "Renderer/Resourses/ShaderLibrary.h"
 #include "Renderer/Resourses/Model.h"
 #include "ResourceStats.h"
+#include <string_view>
 
 
 namespace Daedalus
 {
+	class Texture2D;
+	class TextureCubemap;
 	class DAEDALUS_API ResourceManager
 	{
 	public:

@@ -11,6 +11,8 @@
 
 #include "Macros.h"
 #include "Core/Application.h"
+#include "Core/Window.h"
+#include "Events/Event.h"
 #include "Config/PathConfig.h"
 #include "ImGuiWindow.h"
 

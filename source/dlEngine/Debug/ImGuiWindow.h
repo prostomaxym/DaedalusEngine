@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Events/Event.h"
 #include "Utils/DeltaTime.h"
-
-#include <imgui.h>
 
 namespace Daedalus
 {
+	class Event;
+
 	class ImGuiWindow
 	{		
 	public:

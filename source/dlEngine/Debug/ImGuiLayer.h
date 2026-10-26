@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Core/Layer.h"
-#include "Events/Event.h"
 #include "ImGuiWindow.h"
 
-#include <filesystem>
+#include <memory>
 #include <vector>
 
 namespace Daedalus

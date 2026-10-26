@@ -1,4 +1,5 @@
 #include <Renderer/Objects/DirectionalLightSource.h>
+#include <Renderer/Objects/Geometry.h>
 
 #include <gtest/gtest.h>
 

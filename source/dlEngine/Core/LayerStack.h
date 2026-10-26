@@ -4,6 +4,7 @@
 #include "Layer.h"
 
 #include <vector>
+#include <memory>
 
 namespace Daedalus {
 

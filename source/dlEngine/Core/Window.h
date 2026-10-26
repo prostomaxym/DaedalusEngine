@@ -1,11 +1,11 @@
 #pragma once
 
-#include "dlpch.h"
-
 #include "Macros.h"
-#include "Events/Event.h"
+#include <functional>
+#include <string>
 
 namespace Daedalus {
+	class Event;
 
 	struct WindowProps
 	{	

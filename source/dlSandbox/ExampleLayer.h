@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Daedalus.h>
+#include <Core/Layer.h>
+#include <ECS/Serialization/ScriptRegistry.h>
 
 namespace Daedalus 
 {

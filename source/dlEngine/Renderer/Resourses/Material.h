@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Texture.h"
+#include <memory>
+#include <string>
 
 #include <glm/glm.hpp>
 
 namespace Daedalus
 {
 	class ResourceManager;
+	class Texture2D;
 
 	class Material
 	{

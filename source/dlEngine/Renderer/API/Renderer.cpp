@@ -1,4 +1,11 @@
 #include "dlpch.h"
+#include "Renderer/Resourses/Material.h"
+#include "Renderer/Resourses/Mesh.h"
+#include "Renderer/Resourses/Texture.h"
+#include "Renderer/Primitives/VertexArray.h"
+#include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/IndexBuffer.h"
+#include "Renderer/Primitives/BufferLayout.h"
 
 #include "Renderer.h"
 #include "RenderCommand.h"

@@ -1,6 +1,8 @@
 #include "dlpch.h"
 
 #include "SSAO.h"
+#include "Renderer/Primitives/FrameBuffer.h"
+#include "Renderer/Resourses/Texture.h"
 
 #include "Renderer/Resources/ResourceManager.h"
 #include "Config/GraphicsConfig.h"

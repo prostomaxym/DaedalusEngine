@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "GLFWWindow.h"
+#include <GLFW/glfw3.h>
 
 #include "Core/Input.h"
 #include "Events/ApplicationEvent.h"

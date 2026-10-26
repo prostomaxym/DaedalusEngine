@@ -1,5 +1,8 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
+#include "Renderer/Primitives/BufferLayout.h"
+#include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/IndexBuffer.h"
 
 #include <glad/glad.h>
 

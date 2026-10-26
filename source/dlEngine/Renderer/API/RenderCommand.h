@@ -4,6 +4,8 @@
 #include <thread>
 
 namespace Daedalus {
+	class RendererAPI;
+	class VertexArray;
 
 	class DAEDALUS_API RenderCommand
 	{

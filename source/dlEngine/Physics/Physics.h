@@ -1,9 +1,12 @@
 #pragma once
 
-#include "PhysicsWorld.h"
+#include "Macros.h"
+#include <glm/vec3.hpp>
+#include <memory>
 
 namespace Daedalus
 {
+    class PhysicsWorld;
     class DAEDALUS_API Physics
     {
     public:

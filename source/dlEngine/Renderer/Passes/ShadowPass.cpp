@@ -1,4 +1,5 @@
 #include "dlpch.h"
+#include "Renderer/Resourses/Mesh.h"
 #include "ShadowPass.h"
 
 #include "Renderer/Resources/ResourceManager.h"

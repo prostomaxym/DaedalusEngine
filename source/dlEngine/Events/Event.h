@@ -9,6 +9,7 @@
 #include <ostream>
 #include <string>
 #include <type_traits>
+#include <fmt/format.h>
 
 namespace Daedalus 
 {

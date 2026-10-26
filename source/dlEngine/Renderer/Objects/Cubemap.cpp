@@ -1,6 +1,9 @@
 #include "dlpch.h"
 
 #include "Cubemap.h"
+#include "Renderer/Primitives/VertexArray.h"
+#include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/BufferLayout.h"
 
 #include "Renderer/Resources/ResourceManager.h"
 

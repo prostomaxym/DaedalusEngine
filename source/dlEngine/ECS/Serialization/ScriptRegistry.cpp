@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "ScriptRegistry.h"
+#include "SceneRecord.h"
 
 #include <algorithm>
 #include <set>

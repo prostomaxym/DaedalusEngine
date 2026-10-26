@@ -1,6 +1,7 @@
 #include "dlpch.h"
 
 #include "SSAOPass.h"
+#include "Renderer/Primitives/FrameBuffer.h"
 
 #include "Renderer/Resources/ResourceManager.h"
 #include "Config/GraphicsConfig.h"

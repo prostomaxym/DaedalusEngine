@@ -2,13 +2,13 @@
 
 #include "Macros.h"
 #include "Renderer/Objects/LightSource.h"
-#include "Geometry.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace Daedalus
 {
+	struct BoundingSphere;
+	struct AABB;
 	class DAEDALUS_API DirectionalLightSource : public LightSource
 	{
 	public:

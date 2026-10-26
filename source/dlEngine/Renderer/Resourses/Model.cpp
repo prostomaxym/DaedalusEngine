@@ -2,6 +2,8 @@
 
 #include "Renderer/Resources/ResourceManager.h"
 #include "Model.h"
+#include "Material.h"
+#include "Mesh.h"
 #include "Texture.h"
 #include "Threads/DaedalusThreads.h"
 

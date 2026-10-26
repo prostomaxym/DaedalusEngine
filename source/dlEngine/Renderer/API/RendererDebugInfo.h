@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Renderer/Resourses/Texture.h"
-
 #include <cstdint>
 #include <memory>
 
 namespace Daedalus
 {
+	class Texture2D;
 	// Texture ids and views collected by Renderer for the debug overlay
 	struct RendererDebugInfo
 	{

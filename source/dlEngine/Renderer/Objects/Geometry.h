@@ -1,6 +1,9 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "Macros.h"
+#include <array>
+#include <vector>
 
 namespace Daedalus {
 

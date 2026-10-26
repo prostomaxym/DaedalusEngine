@@ -1,5 +1,6 @@
 #include <Macros.h>
 #include <Physics/Physics.h>
+#include <Physics/PhysicsWorld.h>
 
 #include <gtest/gtest.h>
 

@@ -2,18 +2,21 @@
 
 #include "Macros.h"
 #include "Utils/DeltaTime.h"
-#include "Physics/PhysicsWorld.h"
 
-#include <entt/entt.hpp>
+#include <entt/entity/fwd.hpp>
+#include <memory>
 
 namespace Daedalus
 {
     class Scene;
+    class PhysicsWorld;
 
     class DAEDALUS_API PhysicsSystem
     {
     public:
         PhysicsSystem(entt::registry& reg, Scene* scene);
+        ~PhysicsSystem();
+        PhysicsSystem(PhysicsSystem&& other) noexcept;
 
         void OnStartRuntime() const;
         void OnStopRuntime() const;

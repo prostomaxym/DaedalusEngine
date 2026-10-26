@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "RenderCommand.h"
+#include "RendererAPI.h"
 
 using namespace Daedalus;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "Config/GraphicsConfig.h"
 
 namespace Daedalus
 {

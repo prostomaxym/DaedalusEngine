@@ -1,6 +1,9 @@
 #include "dlpch.h"
 
 #include "DebugOverlay.h"
+#include "Events/KeyEvent.h"
+#include "Core/Window.h"
+#include "Renderer/Resourses/Texture.h"
 
 #include "Log.h"
 #include "Core/Application.h"

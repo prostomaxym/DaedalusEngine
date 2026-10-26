@@ -2,6 +2,13 @@
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/Primitives/VertexArray.h"
+#include "Renderer/Primitives/IndexBuffer.h"
+#include "Renderer/Primitives/VertexBuffer.h"
+#include "Renderer/Primitives/BufferLayout.h"
+#include "Renderer/Resourses/Shader.h"
+#include "Renderer/Resourses/Texture.h"
+#include <glm/vec4.hpp>
 
 #include "Renderer/Resources/ResourceManager.h"
 

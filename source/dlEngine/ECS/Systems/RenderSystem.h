@@ -1,14 +1,17 @@
 #pragma once
 
-#include "Renderer/Objects/Camera.h"
-#include "Renderer/Objects/LightSource.h"
+#include "Macros.h"
 #include "Utils/DeltaTime.h"
 
-#include <entt/entt.hpp>
+#include <entt/entity/fwd.hpp>
 
 namespace Daedalus
 {
     class Scene;
+    class Camera;
+    class LightSource;
+    struct BoundingSphere;
+    struct AABB;
 
     class DAEDALUS_API RenderSystem
     {

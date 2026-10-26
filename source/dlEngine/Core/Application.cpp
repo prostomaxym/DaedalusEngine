@@ -1,6 +1,12 @@
 #include "dlpch.h"
 #include "Application.h"
 #include "Engine.h"
+#include "Input.h"
+#include "Window.h"
+#include "Debug/ImGuiLayer.h"
+#include "Events/ApplicationEvent.h"
+#include "Events/EventsEngine.h"
+#include "Events/KeyEvent.h"
 #include "ECS/SceneManager.h"
 
 #include "Macros.h"

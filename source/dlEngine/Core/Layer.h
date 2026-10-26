@@ -2,11 +2,11 @@
 
 #include "Macros.h"
 #include "Utils/DeltaTime.h"
-#include "Events/Event.h"
 
 #include <string>
 
 namespace Daedalus {
+	class Event;
 
 	class DAEDALUS_API Layer
 	{

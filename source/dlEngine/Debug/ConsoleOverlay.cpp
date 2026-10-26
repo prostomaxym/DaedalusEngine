@@ -1,6 +1,9 @@
 #include "dlpch.h"
 
 #include "ConsoleOverlay.h"
+#include "Core/Window.h"
+#include <imgui.h>
+#include "Events/KeyEvent.h"
 
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
@@ -37,10 +40,16 @@ void ConsoleOverlay::Update(DeltaTime dt)
 {
     static bool open = false;
 
-    ImGui::Begin("Console", &open, ImGuiWindowFlags_NoSavedSettings);
-    ImGui::SetWindowSize(ImVec2(1000, 800), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(1000, 800), ImGuiCond_Once);
+    if (!ImGui::Begin("Console", &open, ImGuiWindowFlags_NoSavedSettings))
+    {
+        ImGui::End();
+        return;
+    }
 
-    ImGui::BeginChild("ScrollingRegion", ImVec2(980, 780), 0, ImGuiWindowFlags_HorizontalScrollbar | ImGuiChildFlags_Borders);
+    // Reserve the input row so only the output region needs to scroll.
+    const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+    ImGui::BeginChild("ScrollingRegion", ImVec2(0.0f, -footer_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
     for (const auto& item : m_items)
         ImGui::TextUnformatted(item.c_str());
 
@@ -49,6 +58,9 @@ void ConsoleOverlay::Update(DeltaTime dt)
 
     m_scroll_to_bottom = false;
     ImGui::EndChild();
+
+    if (ImGui::IsWindowAppearing())
+        ImGui::SetKeyboardFocusHere();
 
     bool reclaim_focus = false;
     if (ImGui::InputText("Input", m_input_buffer, sizeof(m_input_buffer),

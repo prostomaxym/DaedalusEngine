@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "PhysicsSystem.h"
+#include "Physics/PhysicsWorld.h"
 
 #include "ECS/Components.h"
 #include "ECS/Entity.h"
@@ -10,6 +11,9 @@ using namespace Daedalus;
 
 PhysicsSystem::PhysicsSystem(entt::registry& reg, Scene* scene)
 	: m_registry(reg), m_scene(scene), m_world(Physics::CreateWorld()) {}
+
+PhysicsSystem::~PhysicsSystem() = default;
+PhysicsSystem::PhysicsSystem(PhysicsSystem&& other) noexcept = default;
 
 void PhysicsSystem::OnStartRuntime() const
 {

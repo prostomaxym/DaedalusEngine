@@ -1,18 +1,18 @@
 #pragma once
 
 #include "Macros.h"
-#include "Window.h"
 #include "LayerStack.h"
-
-#include "Events/Event.h"
-#include "Events/EventsEngine.h"
-#include "Events/ApplicationEvent.h"
-#include "Events/KeyEvent.h"
-#include "Debug/ImGuiLayer.h"
+#include <memory>
 
 namespace Daedalus {
 	class Engine;
 	class Scene;
+	class Window;
+	class Event;
+	class EventEngine;
+	class WindowCloseEvent;
+	class WindowResizeEvent;
+	class ImGuiLayer;
 
 	class DAEDALUS_API Application
 	{

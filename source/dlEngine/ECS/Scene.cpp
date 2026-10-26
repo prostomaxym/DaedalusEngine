@@ -3,6 +3,7 @@
 #include "Scene.h"
 
 #include "Core/Application.h"
+#include "Core/Window.h"
 #include "Components.h"
 #include "Entity.h"
 #include "NativeScript.h"

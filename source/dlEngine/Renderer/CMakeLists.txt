@@ -84,6 +84,12 @@ set(RENDERER_PROJECT_FILES
     Resourses/ShaderLibrary.cpp
     Resourses/Texture.h
     Resourses/Texture.cpp
+    Resources/ResourceManager.h
+    Resources/ResourceManager.cpp
+    Resources/ResourceStats.h
+    Resources/ResourceState.h
+    Resources/ResourceStatistics.cpp
+    Resources/CacheEviction.h
 )
 
 add_library(${PROJECT_NAME} STATIC ${RENDERER_PROJECT_FILES})

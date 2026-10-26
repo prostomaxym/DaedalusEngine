@@ -1,45 +1,42 @@
 #pragma once
 
 #include "Event.h"
-#include "Threads/ThreadRunner.h"
 
 #include <deque>
 #include <memory>
-#include <atomic>
+#include <functional>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
 
 namespace Daedalus
 {
-	class DAEDALUS_API EventEngine : public ThreadRunner
+	class DAEDALUS_API EventEngine
 	{
 	public:
-		EventEngine() : ThreadRunner() {}
+		EventEngine();
 		~EventEngine() { Stop(); }
+		EventEngine(const EventEngine&) = delete;
+		EventEngine& operator=(const EventEngine&) = delete;
+		EventEngine(EventEngine&&) = delete;
+		EventEngine& operator=(EventEngine&&) = delete;
+		void Start();
+		void Stop();
+		void Pause();
+		void Resume();
+		void DispatchPending(const std::function<void(Event&)>& handler = {});
 		
 		void CleanQueue();
 
 	private:
-		void ProcessEvents();
-
-		virtual void OnStart() override;
-		virtual void OnStop() override;
-		virtual void OnResume() override;
-
-		std::deque<std::unique_ptr<Event>> m_event_queue; //replace shared ptr if event queue will be needed outside of this class\thread
+		std::deque<std::unique_ptr<Event>> m_event_queue;
+		std::deque<std::unique_ptr<Event>> m_dispatch_queue;
+		std::mutex m_mutex;
+		const std::thread::id m_owner_thread;
+		bool m_running{ false };
+		bool m_paused{ false };
+		bool m_dispatching{ false };
 
 	public:
-		template<typename EventT>
-		void AddEvent(std::unique_ptr<EventT> event)
-		{
-			event->StartTimer();
-
-			{
-				std::lock_guard<std::mutex> lock(m_runner_mutex);
-				m_event_queue.emplace_back(std::move(event));
-			}
-			m_pause_condition.notify_one();
-		}
+		bool AddEvent(std::unique_ptr<Event> event);
 	};
 }

@@ -1,8 +1,14 @@
 #include "dlpch.h"
 
 #include "Renderer.h"
+#include "RenderCommand.h"
+#include "RendererDebugInfo.h"
+#include "Renderer/Objects/Camera.h"
+#include "Renderer/Objects/Cubemap.h"
+#include "Renderer/Objects/Geometry.h"
+#include "Renderer/Objects/LightSource.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "RenderConstants.h"
 #include "Renderer/Passes/DeferredGeometryPass.h"
@@ -38,20 +44,48 @@ struct Renderer::Data
 
 	int window_width{ 0 };
 	int window_height{ 0 };
+	const std::thread::id owner_thread{ std::this_thread::get_id() };
 };
+
+Renderer::Data* Renderer::GetData()
+{
+	DL_ASSERT(s_data, Log::Categories::Renderer, "Renderer used outside Engine lifetime");
+	if (!s_data) std::abort();
+	DL_ASSERT(s_data->owner_thread == std::this_thread::get_id(), Log::Categories::Renderer, "Renderer must be called on the graphics thread");
+	if (s_data->owner_thread != std::this_thread::get_id()) std::abort();
+	return s_data;
+}
 
 std::pair<int, int> Renderer::GetResolution()
 {
-	return { s_data->window_width, s_data->window_height };
+	return { GetData()->window_width, GetData()->window_height };
 }
 
 float Renderer::GetAspectRatio()
 {
-	return static_cast<float>(s_data->window_width) / static_cast<float>(s_data->window_height);
+	return static_cast<float>(GetData()->window_width) / static_cast<float>(GetData()->window_height);
 }
 
-std::unique_ptr<Renderer::Data> Renderer::s_data = nullptr;
-std::unique_ptr<Renderer::DebugInfo> Renderer::s_debug = nullptr;
+Renderer* Renderer::s_instance = nullptr;
+Renderer::Data* Renderer::s_data = nullptr;
+Renderer::DebugInfo* Renderer::s_debug = nullptr;
+
+Renderer::Renderer()
+{
+	DL_ASSERT(!s_instance, Log::Categories::Renderer, "Only one renderer may own the graphics context");
+	if (s_instance) std::abort();
+	s_instance = this;
+	m_api = RendererAPI::Create();
+	RenderCommand::Bind(m_api.get());
+	Init();
+}
+
+Renderer::~Renderer()
+{
+	Shutdown();
+	RenderCommand::Bind(nullptr);
+	s_instance = nullptr;
+}
 
 namespace
 {
@@ -99,7 +133,8 @@ void Renderer::Init()
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading Graphic Settings");
 	RenderCommand::SetupGraphicSettings();
 
-	s_data = std::make_unique<Data>();
+	s_instance->m_data = std::make_unique<Data>();
+	s_data = s_instance->m_data.get();
 	s_data->window_width = GraphicsConfig::GetWindowWidth();
 	s_data->window_height = GraphicsConfig::GetWindowHeight();
 
@@ -139,7 +174,8 @@ void Renderer::Init()
 	for (auto& pass : s_data->passes)
 		pass->OnResize(s_data->window_width, s_data->window_height);
 
-	s_debug = std::make_unique<DebugInfo>();
+	s_instance->m_debug = std::make_unique<DebugInfo>();
+	s_debug = s_instance->m_debug.get();
 
 	if (IsDevBuild())
 	{
@@ -154,15 +190,17 @@ void Renderer::Init()
 
 void Renderer::Shutdown()
 {
-	s_data.reset();
-	s_debug.reset();
+	s_instance->m_debug.reset();
+	s_instance->m_data.reset();
+	s_data = nullptr;
+	s_debug = nullptr;
 }
 
 void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 {
 	RenderCommand::SetViewport(0, 0, width, height);
-	s_data->window_width = width;
-	s_data->window_height = height;
+	GetData()->window_width = width;
+	GetData()->window_height = height;
 
 	for (auto& pass : s_data->passes)
 		pass->OnResize(width, height);

@@ -1,6 +1,6 @@
 #include "dlpch.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Model.h"
 #include "Texture.h"
 #include "Threads/DaedalusThreads.h"

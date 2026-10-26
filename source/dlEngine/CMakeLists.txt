@@ -83,8 +83,10 @@ if(UNIX)
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE ${DL_ENGINE_MODULES})
     if(MSVC)
-        # Standalone ECS APIs have no internal callers to pull their objects into the DLL.
-        target_link_options(${PROJECT_NAME} PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:ECS>")
+        # Public module APIs must remain exported even without internal callers.
+        foreach(module IN LISTS DL_ENGINE_MODULES)
+            target_link_options(${PROJECT_NAME} PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:${module}>")
+        endforeach()
     endif()
 endif()
 

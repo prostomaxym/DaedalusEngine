@@ -11,7 +11,6 @@ namespace Daedalus
 
 		void OnAttach() override;
 		void OnDetach() override;
-		void OnUpdate(DeltaTime dt) override;
 
 	private:
 		ScriptRegistry m_scripts;

@@ -10,6 +10,8 @@ project(
 set(CORE_PROJECT_FILES
     Application.h
     Application.cpp
+    Engine.h
+    Engine.cpp
     EntryPoint.h
     Input.h
     Input.cpp
@@ -17,9 +19,6 @@ set(CORE_PROJECT_FILES
     Layer.cpp
     LayerStack.h
     LayerStack.cpp
-    ResourceManager.h
-    ResourceManager.cpp
-    ResourceStats.h
     Window.h  
 )
 
@@ -49,4 +48,7 @@ target_link_libraries(${PROJECT_NAME}
         Events
         Platform
         Utils
+        Config
+        ECS
+        Physics
     )

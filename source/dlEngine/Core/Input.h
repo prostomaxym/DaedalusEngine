@@ -8,30 +8,37 @@
 namespace Daedalus {
 
 	class Platform;
+	class Engine;
 
 	class DAEDALUS_API Input
 	{
 		friend Platform;
+		friend Engine;
 	public:
-		static void Shutdown() { delete s_instance; }
+		Input();
+		virtual ~Input();
+		Input(const Input&) = delete;
+		Input& operator=(const Input&) = delete;
+		Input(Input&&) = delete;
+		Input& operator=(Input&&) = delete;
 
-		static void Update() { return s_instance->UpdateImpl(); }
+		static void Update() { return GetInstance()->UpdateImpl(); }
 
 		//Input configuration
-		inline static void EnableKeyboardInput(bool enable) { m_keyboard_connected = enable; } //TODO: not implemented
-		inline static void EnableGamepadInput(bool enable) { m_gamepad_connected = enable; }
-		inline static void SetSticksDeadZone(float perc) { m_sticks_deadzone = perc; }
+		inline static void EnableKeyboardInput(bool enable) { GetInstance()->m_keyboard_connected = enable; } //TODO: not implemented
+		inline static void EnableGamepadInput(bool enable) { GetInstance()->m_gamepad_connected = enable; }
+		inline static void SetSticksDeadZone(float perc) { GetInstance()->m_sticks_deadzone = perc; }
 
-		inline static bool IsKeyboardInputEnabled() { return m_keyboard_connected; }
-		inline static bool IsGamepadInputEnabled() { return m_gamepad_connected; }
+		inline static bool IsKeyboardInputEnabled() { return GetInstance()->m_keyboard_connected; }
+		inline static bool IsGamepadInputEnabled() { return GetInstance()->m_gamepad_connected; }
 
 		// Keyboard + mouse input
-		inline static bool IsKeyPressed(int keycode) { return s_instance->IsKeyPressedImpl(keycode); }
-		inline static bool IsKeyHold(int keycode) { return s_instance->IsKeyHoldImpl(keycode); }
-		inline static bool IsKeyReleased(int keycode) { return s_instance->IsKeyReleasedImpl(keycode); }
+		inline static bool IsKeyPressed(int keycode) { return GetInstance()->IsKeyPressedImpl(keycode); }
+		inline static bool IsKeyHold(int keycode) { return GetInstance()->IsKeyHoldImpl(keycode); }
+		inline static bool IsKeyReleased(int keycode) { return GetInstance()->IsKeyReleasedImpl(keycode); }
 
-		inline static bool IsMouseButtonPressed(int button) { return s_instance->IsMouseButtonPressedImpl(button); }
-		inline static std::pair<float, float> GetMousePos() { return s_instance->GetMousePosImpl(); }
+		inline static bool IsMouseButtonPressed(int button) { return GetInstance()->IsMouseButtonPressedImpl(button); }
+		inline static std::pair<float, float> GetMousePos() { return GetInstance()->GetMousePosImpl(); }
 
 
 		//Gamepad input
@@ -47,12 +54,12 @@ namespace Daedalus {
 			Right
 		};
 
-		inline static bool IsGpadKeyPressed(int keycode) { return s_instance->IsGpadKeyPressedImpl(keycode); }
+		inline static bool IsGpadKeyPressed(int keycode) { return GetInstance()->IsGpadKeyPressedImpl(keycode); }
 		static std::pair<float, float> GetStickPos(StickType type);
-		inline static float GetBumperPos(BamperType type) { return s_instance->GetBumperPosImpl(type); }
+		inline static float GetBumperPos(BamperType type) { return GetInstance()->GetBumperPosImpl(type); }
 
 	protected:
-		static void CreateInstance(Input* inst) { s_instance = inst; }
+		static Input* GetInstance();
 		virtual void UpdateImpl() = 0;
 
 		// Keyboard + mouse input
@@ -69,8 +76,8 @@ namespace Daedalus {
 
 	private:
 		static Input* s_instance;
-		static bool m_keyboard_connected;
-		static bool m_gamepad_connected;
-		static float m_sticks_deadzone;
+		bool m_keyboard_connected{ true };
+		bool m_gamepad_connected{ false };
+		float m_sticks_deadzone{ 0.15f };
 	};
 }

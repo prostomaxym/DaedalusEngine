@@ -14,6 +14,8 @@ project(
 set(PHYSICS_PROJECT_FILES
     Physics.h
     Physics.cpp
+    PhysicsWorld.h
+    PhysicsWorld.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${PHYSICS_PROJECT_FILES})

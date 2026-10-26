@@ -1,8 +1,9 @@
 #include "dlpch.h"
 #include "Application.h"
+#include "Engine.h"
+#include "ECS/SceneManager.h"
 
 #include "Macros.h"
-#include "ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
 #include "Config/PathConfig.h"
@@ -10,8 +11,10 @@
 #include "Debug/ConsoleOverlay.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Physics/Physics.h"
 #include "Utils/FPSLocker.h"
+#include "Utils/FixedStepClock.h"
 #include "Utils/WorkingDirectory.h"
 
 #include "Platform/Platform.h"
@@ -29,25 +32,11 @@ Application* Application::GetInstance()
 Application::Application()
 {
 	Platform::SetupSegfaultHandler();
+	DL_ASSERT(!s_instance, Log::Categories::EngineCore, "Only one Application may be active");
+	if (s_instance) std::abort();
 	s_instance = this;
-	WorkingDirectory::LoadConfigs();
-	
-	WindowProps props;
-	props.title = GraphicsConfig::GetWindowTitle();
-	props.width = GraphicsConfig::GetWindowWidth();
-	props.height = GraphicsConfig::GetWindowHeight();
-	props.vsync = GraphicsConfig::IsVSyncEnabled();
-	props.screenmode = GraphicsConfig::IsWindowFullscreen() ? WindowProps::ScreenMode::windowed_fullscreen : WindowProps::ScreenMode::windowed;
-	m_window = Platform::createWindow(props);
-	
-	m_event_engine.Start();
-	Platform::InitInputSystem();
-	m_window->SetEventCallback(DL_BIND_EVENT_FN(Application::OnEvent));
-
-	Renderer::Init();
-	Physics::Init();
-	ResourceManager::Init();
-	ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
+	m_engine = std::make_unique<Engine>();
+	GetWindow().SetEventCallback([this](Event& event) { GetEventEngine().AddEvent(event.Clone()); });
 
 	auto debug_layer = std::make_unique<ImGuiLayer>();
 	m_debug_layer = debug_layer.get();
@@ -62,37 +51,62 @@ Application::Application()
 
 Application::~Application()
 {
-	WorkingDirectory::SaveConfigs();
+	m_engine->Stop();
 
 	// Reverse of construction order; layers own scene/GPU resources so they go first
 	m_layer_stack.Clear();
 	m_debug_layer = nullptr;
 	
-	ResourceManager::Shutdown();
-	Physics::Shutdown();
-	Renderer::Shutdown();
-	Input::Shutdown();
-	m_event_engine.Stop();
+	m_engine.reset();
+	s_instance = nullptr;
 }
+
+Window& Application::GetWindow() { return m_engine->GetWindow(); }
+EventEngine& Application::GetEventEngine() { return m_engine->GetEvents(); }
+Engine& Application::GetEngine() { return *m_engine; }
 
 void Application::Run()
 {
 	Timer update_timer;
 	Timer frame_timer;
+	FixedStepClock fixed_clock;
 
 	while (m_running)
 	{
 		const auto update_dt = update_timer.UpdateDeltaTime();
 
-		m_window->PollEvents();
+		GetWindow().PollEvents();
 		Input::Update();
+		GetEventEngine().DispatchPending(DL_BIND_EVENT_FN(Application::OnEvent));
+		if (!m_running) break;
+		auto& scenes = m_engine->GetScenes();
+		if (scenes.HasPending())
+		{
+			scenes.CommitPending();
+			ResourceManager::PurgeUnused();
+		}
+		const int steps = fixed_clock.Advance(update_dt);
+		for (int step = 0; step < steps; ++step)
+		{
+			scenes.OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+			for (auto& layer : m_layer_stack)
+				layer->OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+		}
 
 		for (auto& layer : m_layer_stack)
 		{
 			layer->OnUpdate(update_dt);
 		}
+		scenes.OnUpdate(update_dt);
+		scenes.OnRender(update_dt);
+		for (auto& layer : m_layer_stack)
+			layer->OnRender(update_dt);
+		m_debug_layer->BeginFrame();
+		for (auto& layer : m_layer_stack)
+			layer->OnImGuiRender(update_dt);
+		m_debug_layer->EndFrame();
 
-		m_window->SwapBuffers();
+		GetWindow().SwapBuffers();
 
 		const auto frame_dt = frame_timer.GetEllapsedTime();
 		FPSLocker::LockFpsThreadSleep(GraphicsConfig::GetFPSLock(), frame_dt);
@@ -128,9 +142,7 @@ void Application::PushOverlay(std::unique_ptr<Layer>&& overlay)
 
 Scene* Application::GetMainScene()
 {
-	auto layer = m_layer_stack.GetMainLayer();
-
-	return layer ? layer->GetScene() : nullptr;
+	return m_engine->GetScenes().GetActiveScene();
 }
 
 bool Application::OnWindowClosed(WindowCloseEvent& event)
@@ -141,7 +153,10 @@ bool Application::OnWindowClosed(WindowCloseEvent& event)
 
 bool Application::OnWindowResized(WindowResizeEvent& event)
 {
-	RenderCommand::SetViewport(0,0, event.GetWidth(), event.GetHeight());
-
-	return true;
+	if (event.GetWidth() && event.GetHeight())
+	{
+		Renderer::OnWindowResize(event.GetWidth(), event.GetHeight());
+		m_engine->GetScenes().OnViewportResize(event.GetWidth(), event.GetHeight());
+	}
+	return false;
 }

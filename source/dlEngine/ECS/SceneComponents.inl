@@ -1,53 +1,24 @@
-template<> inline void Scene::OnComponentAdded<IDComponent>(IDComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<IDComponent>(IDComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<TagComponent>(TagComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<TagComponent>(TagComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<TransformComponent>(TransformComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<TransformComponent>(TransformComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<RenderableObjectComponent>(RenderableObjectComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<RenderableObjectComponent>(RenderableObjectComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<SkyboxComponent>(SkyboxComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<SkyboxComponent>(SkyboxComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<CameraComponent>(CameraComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<CameraComponent>(CameraComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent& component) {}
-
-template<> inline void Scene::OnComponentAdded<DirectionalLightComponent>(DirectionalLightComponent& component)
-{
-	m_render_system.AddLight(&component.light);
-}
-template<> inline void Scene::OnComponentRemoved<DirectionalLightComponent>(DirectionalLightComponent& component)
-{
-	m_render_system.RemoveLight(&component.light);
-}
-
-template<> inline void Scene::OnComponentAdded<PointLightComponent>(PointLightComponent& component)
-{
-	m_render_system.AddLight(&component.light);
-}
-template<> inline void Scene::OnComponentRemoved<PointLightComponent>(PointLightComponent& component)
-{
-	m_render_system.RemoveLight(&component.light);
-}
-
-template<> inline void Scene::OnComponentAdded<SpotLightComponent>(SpotLightComponent& component)
-{
-	m_render_system.AddLight(&component.light);
-}
-template<> inline void Scene::OnComponentRemoved<SpotLightComponent>(SpotLightComponent& component)
-{
-	m_render_system.RemoveLight(&component.light);
-}
-
-template<> inline void Scene::OnComponentAdded<NativeScriptComponent>(NativeScriptComponent& component) {}
-template<> inline void Scene::OnComponentRemoved<NativeScriptComponent>(NativeScriptComponent& component) {}
+template<> DAEDALUS_API void Scene::OnComponentAdded<IDComponent>(IDComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<IDComponent>(IDComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<TagComponent>(TagComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<TagComponent>(TagComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<TransformComponent>(TransformComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<TransformComponent>(TransformComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<RenderableObjectComponent>(RenderableObjectComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<RenderableObjectComponent>(RenderableObjectComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<SkyboxComponent>(SkyboxComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<SkyboxComponent>(SkyboxComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<CameraComponent>(CameraComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<CameraComponent>(CameraComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<DirectionalLightComponent>(DirectionalLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<DirectionalLightComponent>(DirectionalLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<PointLightComponent>(PointLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<PointLightComponent>(PointLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<SpotLightComponent>(SpotLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<SpotLightComponent>(SpotLightComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<NativeScriptComponent>(NativeScriptComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<NativeScriptComponent>(NativeScriptComponent&);

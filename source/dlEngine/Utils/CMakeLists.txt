@@ -9,6 +9,7 @@ project(
 
 set(UTILS_PROJECT_FILES
    DeltaTime.h
+   FixedStepClock.h
    HighPerformanceRequest.h
    FPSLocker.h
    KeyCodes.h

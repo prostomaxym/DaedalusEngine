@@ -4,11 +4,11 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 
 ## Client workflow
 
-1. Create an empty `Scene` and an application-owned `ScriptRegistry`.
+1. Create an empty `std::unique_ptr<Scene>` and an application-owned `ScriptRegistry`.
 2. Register the application's native-script adapters. The sandbox's `RegisterSceneScripts` in `source/dlSandbox/SceneScripts.cpp` is a complete example.
-3. Call `SceneSerializer::Load(scene_file, scene, asset_root, scripts, error)`.
-4. If loading succeeds, call `scene.OnRuntimeStart()` and check its boolean result. The loaded name and primary-camera UUID are retained.
-5. Forward updates and viewport resizes as usual. `scene.Clear()` stops runtime and releases the scene's entities/resources.
+3. Call `SceneSerializer::Load(scene_file, *scene, asset_root, scripts, error)`.
+4. On success, transfer ownership with `Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene))`. At the next frame boundary the manager stops the old scene, activates the new one and starts runtime, logging any startup failure. The loaded name and primary-camera UUID are retained.
+5. The application forwards fixed updates, variable updates, rendering and viewport resizes through the scene manager. Request a null scene to unload it. Standalone tools may own scenes directly and use the corresponding runtime methods themselves.
 
 The sandbox loads its startup scene from `PathConfig::GetScenePath()`. Set `SceneFile` in the `[Path]` section of the runtime root's `path.ini` (`runtime/path.ini` during development). It is resolved relative to `AssetsFolder`, which defaults to `asset` relative to the runtime root. The generic default is `scenes/startup.scene.json`; no scene is bundled or copied automatically.
 
@@ -29,7 +29,7 @@ Installation still packages the contents of the runtime asset folder like other 
 
 All operations return `bool` and provide a diagnostic in `error`; log it through the engine logger. Parse/capture failures leave their output records unchanged. Loading requires an **empty, stopped** target. Invalid documents, script bindings, and missing assets are rejected before construction; construction failures remove newly created entities and restore the target's previous name and paused state. Failed resources are not cached as successful models or cubemaps. Successfully loaded resources may remain in the existing resource-manager caches after a failed scene load.
 
-Resource instantiation must run on the application/GL-context thread after rendering, physics, and resource services have been initialized. Record parsing/validation is independent of those services. Loading does not start runtime. Loading a camera-free record is permitted for tools/tests, but starting runtime requires a camera and an application/window.
+Resource instantiation must run on the application/GL-context thread after rendering, physics, and resource services have been constructed. Each Scene creates its own physics world through the physics factory; there is no shared global Bullet world. Record parsing/validation is independent of those services. Loading does not start runtime. Loading a camera-free record is permitted for tools/tests, but starting runtime requires a camera and an application/window.
 
 ## Version 1 file structure
 
@@ -81,7 +81,7 @@ Shapes are `box`, `sphere`, `model_box`, and `model_sphere`:
 
 Model-derived dimensions deliberately use **unscaled model bounds**, matching the previous sandbox. Body `position` and Euler `rotation` are independent of the entity transform; for example, the Nuke static floor has a distinct collision pose. Mass must be nonnegative; kinematic mass must be zero. Physics components own their handles exclusively and are movable, not copyable.
 
-The stored body description is its creation configuration, not Bullet's evolving state. The existing runtime kinematic system continues to synchronize kinematic bodies with entity transforms.
+The stored body description is its creation configuration, not Bullet's evolving state. Use `scene.GetPhysicsWorld()` for body queries, gravity, transforms and collision callbacks; handles from other scenes or removed bodies are rejected. Components are attached to that world by the Scene's component hooks. Runtime stop releases bodies; restart recreates them using the resolved collider configuration. The fixed-update kinematic system synchronizes kinematic bodies with entity transforms.
 
 ### Asset references
 
@@ -122,6 +122,6 @@ This is checked, cross-platform replacement, **not an atomic/power-loss-durable 
 
 ## Scope and validation
 
-Version 1 covers authored scene definitions used by the sandbox. It does not implement savegames, hierarchy, prefabs, hot reload, live scene replacement, embedded assets, custom material serialization, or arbitrary reflected components. Scene and ECS registry objects are not moved because systems retain references to them.
+Version 1 covers authored scene definitions used by the sandbox. It does not implement savegames, hierarchy, prefabs, hot reload, embedded assets, custom material serialization, or arbitrary reflected components. SceneManager supports whole-scene replacement at a frame boundary, not in-place hot reload. Scene and ECS registry objects are not moved because systems retain references to them.
 
 Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or select the configuration actually built). `SceneJsonTest`, `SceneSerializerTest`, `SceneBodyTest`, and `SceneFileTest` run without a window/GL context. Visual behavior and asset import still require a sandbox smoke test with the external assets available.

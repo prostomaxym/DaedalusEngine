@@ -19,7 +19,9 @@ namespace Daedalus
 		virtual void OnDetach() override;
 		virtual void OnEvent(Event& e) override;
 
-		virtual void OnUpdate(DeltaTime dt) override;
+		void BeginFrame();
+		void EndFrame();
+		void OnImGuiRender(DeltaTime dt) override;
 
 		void BlockEvents(bool block) { m_block_events = block; }
 

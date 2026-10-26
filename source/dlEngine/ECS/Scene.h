@@ -1,17 +1,33 @@
 #pragma once
 
 #include "UUID.h"
-#include "Systems/RenderSystem.h"
-#include "Systems/PhysicsSystem.h"
+#include "Macros.h"
 #include "Utils/DeltaTime.h"
-#include "Components.h"
-
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 
 namespace Daedalus
 {
 	class Entity;
 	class SceneSerializer;
+	class RenderSystem;
+	class PhysicsSystem;
+	class PhysicsWorld;
+	class Camera;
+	struct IDComponent;
+	struct TagComponent;
+	struct TransformComponent;
+	struct RenderableObjectComponent;
+	struct SkyboxComponent;
+	struct CameraComponent;
+	struct RigidBodyComponent;
+	struct KinematicBodyComponent;
+	struct DirectionalLightComponent;
+	struct PointLightComponent;
+	struct SpotLightComponent;
 	struct NativeScriptComponent;
 
 	class DAEDALUS_API Scene
@@ -27,6 +43,8 @@ namespace Daedalus
 		bool OnRuntimeStart(const std::string& scenename = "");
 		void OnRuntimeStop();
 		void OnUpdateRuntime(DeltaTime dt);
+		void OnFixedUpdateRuntime(DeltaTime dt);
+		void OnRenderRuntime(DeltaTime dt);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
@@ -48,6 +66,7 @@ namespace Daedalus
 		const std::string& GetSceneName() const { return m_scene_name; }
 		void SetSceneName(const std::string& name) { m_scene_name = name; }
 		Camera* GetCamera();
+		PhysicsWorld& GetPhysicsWorld();
 	private:
 		template<typename T>
 		void OnComponentAdded(T& component)
@@ -66,8 +85,8 @@ namespace Daedalus
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 		UUID m_primary_camera{ 0 };
 
-		RenderSystem m_render_system;
-		PhysicsSystem m_physics_system;
+		std::unique_ptr<RenderSystem> m_render_system;
+		std::unique_ptr<PhysicsSystem> m_physics_system;
 
 		bool m_is_running{ false };
 		bool m_is_paused{ false };
@@ -76,6 +95,6 @@ namespace Daedalus
 		friend class SceneSerializer;
 	};
 
-	// Explicit specializations must be at namespace scope for GCC/Clang; they are inline to avoid ODR violations.
+	// Declare specializations before client Entity templates instantiate the component hooks.
 	#include "SceneComponents.inl"
 }

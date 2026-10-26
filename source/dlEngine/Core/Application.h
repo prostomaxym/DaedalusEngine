@@ -11,6 +11,8 @@
 #include "Debug/ImGuiLayer.h"
 
 namespace Daedalus {
+	class Engine;
+	class Scene;
 
 	class DAEDALUS_API Application
 	{
@@ -23,8 +25,9 @@ namespace Daedalus {
 		Application& operator=(const Application&) = delete;
 		Application& operator=(Application&&) = delete;
 
-		inline Window& GetWindow() { return *m_window; }
-		EventEngine& GetEventEngine() { return m_event_engine; }
+		Window& GetWindow();
+		EventEngine& GetEventEngine();
+		Engine& GetEngine();
 
 		void Run();
 
@@ -44,10 +47,9 @@ namespace Daedalus {
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResized(WindowResizeEvent& event);
 
-		std::unique_ptr<Window> m_window;
+		std::unique_ptr<Engine> m_engine;
 		ImGuiLayer* m_debug_layer{ nullptr }; // LayerStack owns imgui_layer
 		LayerStack m_layer_stack;
-		EventEngine m_event_engine;
 
 		bool m_running = true;
 	};

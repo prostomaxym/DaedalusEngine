@@ -162,11 +162,6 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 	for (const auto& entity : record.entities)
 	{
 		if (!scripts.Validate(entity, error)) return false;
-		if ((entity.rigid_body || entity.kinematic_body) && !Physics::IsInitialized())
-		{
-			error = "Physics must be initialized before loading body components";
-			return false;
-		}
 		std::filesystem::path path;
 		if (entity.model && !Resolve(assets, entity.model->path, path, error)) return false;
 		if (entity.skybox)

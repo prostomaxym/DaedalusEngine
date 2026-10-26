@@ -2,9 +2,10 @@
 
 #include "DeferredLightPass.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/API/RenderCommand.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Config/GraphicsConfig.h"
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 
 using namespace Daedalus;
 

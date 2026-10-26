@@ -2,10 +2,11 @@
 
 #include "SSAOPass.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/RenderConstants.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/API/RenderCommand.h"
 
 using namespace Daedalus;
 

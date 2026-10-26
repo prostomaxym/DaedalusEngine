@@ -7,11 +7,8 @@
 
 #include "Renderer/Resourses/ShaderLibrary.h"
 #include "Renderer/Resourses/Model.h"
-#include "Core/ResourceStats.h"
+#include "ResourceStats.h"
 
-#include <mutex>
-#include <unordered_map>
-#include <set>
 
 namespace Daedalus
 {
@@ -26,8 +23,12 @@ namespace Daedalus
 		static std::vector<TextureStats> GetTextureStats();
 		static std::vector<CubemapStats> GetCubemapStats();
 
-		static void Init();
-		static void Shutdown();
+		ResourceManager();
+		~ResourceManager();
+		ResourceManager(const ResourceManager&) = delete;
+		ResourceManager& operator=(const ResourceManager&) = delete;
+		ResourceManager(ResourceManager&&) = delete;
+		ResourceManager& operator=(ResourceManager&&) = delete;
 
 		static void LoadShaders(const std::filesystem::path& path, bool recompile);
 		static std::shared_ptr<Shader> GetShader(std::string_view name);
@@ -44,28 +45,14 @@ namespace Daedalus
 		static std::shared_ptr<Texture2D> LoadTexture2D(unsigned char* data, int width, int height, int channels);
 		static std::shared_ptr<Texture2D> LoadTexture2D(float* data, int width, int height, int channels);
 		static std::shared_ptr<TextureCubemap> LoadCubemap(const std::vector<std::string>& faces);
+		// Call at scene transitions on the graphics thread, not on every frame.
+		static size_t PurgeUnused();
 
 	private:
-		static std::unique_ptr<ShaderLibrary> s_shader_library;
-		static std::unordered_map<std::string, std::shared_ptr<Model>> s_models;
-		static std::unordered_map<std::string, std::shared_ptr<Material>> s_material;
-		static std::unordered_map<std::string, std::shared_ptr<Texture2D>> s_named_textures;
-		static std::set<std::shared_ptr<Texture2D>> s_unnamed_textures;
-		static std::set<std::shared_ptr<TextureCubemap>> s_unnamed_cubemaps;
-		static std::set<std::shared_ptr<Mesh>> s_meshes;
-
-		static int s_vertex_count;
-
 		static double GetLoadTime(const void* resource);
-
-		static std::recursive_mutex s_mutex;
-		static std::unordered_map<const void*, double> s_load_times;
-		static CacheCounters s_model_cache;
-		static CacheCounters s_material_cache;
-		static CacheCounters s_texture_cache;
-		static uint64_t s_revision;
-		static uint64_t s_cached_revision;
-		static bool s_cached_stats_valid;
-		static ResourceStats s_cached_stats;
+		struct State;
+		static State& GetState();
+		std::unique_ptr<State> m_state;
+		static ResourceManager* s_instance; // Non-owning; Engine owns the manager.
 	};
 }

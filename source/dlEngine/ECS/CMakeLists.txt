@@ -19,7 +19,10 @@ set(ECS_PROJECT_FILES
     Entity.cpp
     Scene.h
     SceneComponents.inl
+    SceneComponents.cpp
     Scene.cpp
+    SceneManager.h
+    SceneManager.cpp
     Serialization/SceneRecord.h
     Serialization/SceneJson.h
     Serialization/SceneJson.cpp

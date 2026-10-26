@@ -2,7 +2,7 @@
 
 #include "Cubemap.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 
 using namespace Daedalus;
 

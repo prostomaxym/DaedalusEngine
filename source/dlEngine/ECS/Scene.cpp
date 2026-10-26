@@ -8,12 +8,14 @@
 #include "NativeScript.h"
 #include "NativeScriptComponent.h"
 #include "Physics/Physics.h"
+#include "Systems/RenderSystem.h"
+#include "Systems/PhysicsSystem.h"
 
 using namespace Daedalus;
 
 Scene::Scene() :
-	m_render_system(m_registry, this)
-	, m_physics_system(m_registry, this)
+	m_render_system(std::make_unique<RenderSystem>(m_registry, this))
+	, m_physics_system(std::make_unique<PhysicsSystem>(m_registry, this))
 {
 }
 
@@ -31,10 +33,10 @@ bool Scene::OnRuntimeStart(const std::string& scenename)
 
 	const auto& wnd = Application::GetInstance()->GetWindow();
 	OnViewportResize(wnd.GetWidth(), wnd.GetHeight());
-	m_render_system.SetViewportSize(wnd.GetWidth(), wnd.GetHeight());
-	m_render_system.SetCamera(camera);
-	m_render_system.OnStartRuntime();
-	m_physics_system.OnStartRuntime();
+	m_render_system->SetViewportSize(wnd.GetWidth(), wnd.GetHeight());
+	m_render_system->SetCamera(camera);
+	m_render_system->OnStartRuntime();
+	m_physics_system->OnStartRuntime();
 	m_is_running = true;
 	return true;
 }
@@ -44,14 +46,15 @@ void Scene::OnRuntimeStop()
 	if (m_is_running)
 	{
 		for (auto entity : m_registry.view<DirectionalLightComponent>())
-			m_render_system.RemoveLight(&m_registry.get<DirectionalLightComponent>(entity).light);
+			m_render_system->RemoveLight(&m_registry.get<DirectionalLightComponent>(entity).light);
 		for (auto entity : m_registry.view<PointLightComponent>())
-			m_render_system.RemoveLight(&m_registry.get<PointLightComponent>(entity).light);
+			m_render_system->RemoveLight(&m_registry.get<PointLightComponent>(entity).light);
 		for (auto entity : m_registry.view<SpotLightComponent>())
-			m_render_system.RemoveLight(&m_registry.get<SpotLightComponent>(entity).light);
+			m_render_system->RemoveLight(&m_registry.get<SpotLightComponent>(entity).light);
 	}
+	m_physics_system->OnStopRuntime();
 	m_is_running = false;
-	m_render_system.SetCamera(nullptr);
+	m_render_system->SetCamera(nullptr);
 }
 
 void Scene::OnUpdateRuntime(DeltaTime dt)
@@ -68,12 +71,17 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 				});
 		}
 
-		// Physics
-		m_physics_system.OnUpdateRuntime(dt);
 	}
+}
 
-	// Graphics
-    m_render_system.OnUpdateRuntime(dt);
+void Scene::OnFixedUpdateRuntime(DeltaTime dt)
+{
+	if (m_is_running && !m_is_paused) m_physics_system->OnUpdateRuntime(dt);
+}
+
+void Scene::OnRenderRuntime(DeltaTime dt)
+{
+	if (m_is_running && GetCamera()) m_render_system->OnUpdateRuntime(dt);
 }
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -86,7 +94,7 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height)
 			if (auto* perspective = dynamic_cast<PerspectiveCamera*>(component.camera.get()))
 				perspective->SetAspectRatio(static_cast<float>(width) / static_cast<float>(height));
 	}
-	if (m_is_running) m_render_system.SetViewportSize(width, height);
+	if (m_is_running) m_render_system->SetViewportSize(width, height);
 }
 
 Entity Scene::CreateEntity(const std::string& name)
@@ -115,7 +123,7 @@ void Scene::DestroyEntity(Entity entity)
 	if (entity.GetUUID() == m_primary_camera)
 	{
 		m_primary_camera = UUID(0);
-		m_render_system.SetCamera(nullptr);
+		m_render_system->SetCamera(nullptr);
 	}
 	m_entity_map.erase(entity.GetUUID());
 	m_registry.destroy(entity);
@@ -135,7 +143,7 @@ bool Scene::SetPrimaryCamera(UUID uuid)
 	auto entity = GetEntityByUUID(uuid);
 	if (!entity || !entity.HasComponent<CameraComponent>() || !entity.GetComponent<CameraComponent>().camera) return false;
 	m_primary_camera = uuid;
-	if (m_is_running) m_render_system.SetCamera(entity.GetComponent<CameraComponent>().camera.get());
+	if (m_is_running) m_render_system->SetCamera(entity.GetComponent<CameraComponent>().camera.get());
 	return true;
 }
 
@@ -171,3 +179,5 @@ Camera* Scene::GetCamera()
 
 	return camera;
 }
+
+PhysicsWorld& Scene::GetPhysicsWorld() { return m_physics_system->GetWorld(); }

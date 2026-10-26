@@ -34,7 +34,7 @@ namespace Daedalus
 		{
 			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
 			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(component));
-			m_scene->OnComponentAdded<T>(component);
+			m_scene->OnComponentAdded<T>(comp);
 		}
 
 		template<typename T, typename... Args>
@@ -78,9 +78,10 @@ namespace Daedalus
 		template<typename T>
 		void PushComponent(std::unique_ptr<T>&& component)
 		{
-			auto comp_inst = *component.release();
 			DL_ASSERT(!HasComponent<T>(), Log::Categories::ECS, "Entity already has component!");
-			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(comp_inst));
+			if (!component) return;
+			T& comp = m_scene->m_registry.emplace<T>(m_entity_handle, std::move(*component));
+			component.reset();
 			m_scene->OnComponentAdded<T>(comp);
 		}
 

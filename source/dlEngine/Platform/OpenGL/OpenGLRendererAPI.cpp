@@ -3,7 +3,7 @@
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/Renderer.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 
 #include <glad/glad.h>
 

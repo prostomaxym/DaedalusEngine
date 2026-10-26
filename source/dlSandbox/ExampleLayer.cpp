@@ -12,25 +12,16 @@ void ExampleLayer::OnAttach()
 		return;
 	}
 	const auto assets = PathConfig::GetAssetsPath();
-	if (!SceneSerializer::Load(PathConfig::GetScenePath(), m_scene, assets, m_scripts, error))
+	auto scene = std::make_unique<Scene>();
+	if (!SceneSerializer::Load(PathConfig::GetScenePath(), *scene, assets, m_scripts, error))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Scene load failed: {}", error);
 		return;
 	}
-	if (!m_scene.OnRuntimeStart())
-	{
-		Log::Write(Log::Levels::Error, Log::Categories::Application, "Loaded scene has no usable primary camera");
-		m_scene.Clear();
-	}
+	Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene));
 }
 
 void ExampleLayer::OnDetach()
 {
-	m_scene.Clear();
 	m_scripts = ScriptRegistry{};
-}
-
-void ExampleLayer::OnUpdate(DeltaTime dt)
-{
-	m_scene.OnUpdateRuntime(dt);
 }

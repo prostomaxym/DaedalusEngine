@@ -49,6 +49,9 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Prefer small focused classes/files. Don't add comments that restate code; comment the "why".
 - Keep the Renderer as a static facade.
 
+## Engine Architecture
+- Engine subsystems should be concrete instances owned by an Engine object (owned by Application), while still exposing global/static access facades (e.g. Renderer::) to avoid dependency injection chains.
+
 ## Working rules for AI changes
 - Make minimal, focused changes. Do not reformat unrelated code or rename things without being asked.
 - Read the surrounding module before adding code; reuse existing utilities (`Utils`, `Events`, `ECS`) instead of creating duplicates.

@@ -3,7 +3,7 @@
 #include "UUID.h"
 #include "PhysicsBodyComponent.h"
 
-#include "Core/ResourceManager.h"
+#include "Renderer/Resources/ResourceManager.h"
 #include "Renderer/Objects/Cubemap.h"
 #include "Renderer/Objects/DirectionalLightSource.h"
 #include "Renderer/Objects/PointLightSource.h"
@@ -169,7 +169,7 @@ namespace Daedalus
 
 		explicit KinematicBodyComponent(const BodyRecord& record) : PhysicsBodyComponent(record, true) {}
 
-		KinematicBodyComponent() = default;
+		KinematicBodyComponent() : PhysicsBodyComponent(BodyRecord{}, true) {}
 		KinematicBodyComponent(const KinematicBodyComponent&) = delete;
 		KinematicBodyComponent(KinematicBodyComponent&&) noexcept = default;
 		KinematicBodyComponent& operator=(const KinematicBodyComponent&) = delete;

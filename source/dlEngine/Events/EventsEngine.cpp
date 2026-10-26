@@ -1,52 +1,87 @@
 #include "EventsEngine.h"
 #include "GamepadEvent.h"
+#include "Debug/Log.h"
 
 using namespace Daedalus;
 
-void EventEngine::CleanQueue()
+EventEngine::EventEngine() : m_owner_thread(std::this_thread::get_id())
 {
-	std::lock_guard<std::mutex> lock(m_runner_mutex);
-	m_event_queue.clear();
 }
 
-void EventEngine::ProcessEvents()
+void EventEngine::Start()
 {
-	while (m_running)
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_running = true;
+	m_paused = false;
+}
+
+void EventEngine::Stop()
+{
+	std::deque<std::unique_ptr<Event>> discarded;
 	{
-		std::unique_ptr<Event> event;
-
-		{
-			std::unique_lock<std::mutex> lock(m_runner_mutex);
-			m_pause_condition.wait(lock, [this] { return !m_running || (!m_paused && !m_event_queue.empty()); });
-
-			if (!m_running)
-				break;
-
-			event = std::move(m_event_queue.front());
-			m_event_queue.pop_front();
-		}
-
-		// Dispatch outside the lock so handlers can queue new events
-		if (event->GetEllapsedTime() < event->GetTimeToLive())
-		{
-			event->Dispatch();
-		}
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_running = false;
+		discarded.swap(m_event_queue);
 	}
 }
 
-void Daedalus::EventEngine::OnStart()
+void EventEngine::CleanQueue()
 {
-	m_runner_thread = std::thread(&EventEngine::ProcessEvents, this);
+	std::deque<std::unique_ptr<Event>> discarded;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		discarded.swap(m_event_queue);
+	}
 }
 
-void Daedalus::EventEngine::OnStop()
+void EventEngine::Pause()
 {
-	CleanQueue();
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_paused = true;
 }
 
-void Daedalus::EventEngine::OnResume()
+void EventEngine::Resume()
 {
-	// Called by ThreadRunner::Resume() with m_runner_mutex held
+	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto& event : m_event_queue)
 		event->StartTimer();
+	m_paused = false;
+}
+
+bool EventEngine::AddEvent(std::unique_ptr<Event> event)
+{
+	if (!event) return false;
+	event->StartTimer();
+	std::lock_guard<std::mutex> lock(m_mutex);
+	if (!m_running) return false;
+	m_event_queue.push_back(std::move(event));
+	return true;
+}
+
+void EventEngine::DispatchPending(const std::function<void(Event&)>& handler)
+{
+	DL_ASSERT(std::this_thread::get_id() == m_owner_thread, Log::Categories::Events, "Events must be dispatched on the owning thread");
+	if (std::this_thread::get_id() != m_owner_thread || m_dispatching) return;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		if (!m_running || m_paused) return;
+		m_dispatch_queue.swap(m_event_queue);
+	}
+	m_dispatching = true;
+	while (!m_dispatch_queue.empty())
+	{
+		auto event = std::move(m_dispatch_queue.front());
+		m_dispatch_queue.pop_front();
+		bool dispatch;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			dispatch = m_running && !m_paused;
+		}
+		if (dispatch && event->GetEllapsedTime() < event->GetTimeToLive())
+		{
+			event->Dispatch();
+			if (handler) handler(*event);
+		}
+	}
+	m_dispatching = false;
 }

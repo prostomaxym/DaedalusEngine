@@ -100,7 +100,6 @@ void ConsoleOverlay::ExecuteCommand(const char* command)
 {
     AddLog(std::string("> ") + command);
 
-    // Missing line – this adds input to history
     if (m_history.empty() || m_history.back() != command)
         m_history.push_back(command);
 

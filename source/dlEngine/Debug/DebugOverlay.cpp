@@ -203,7 +203,7 @@ void DebugOverlay::RenderFPSSection(DeltaTime dt)
 		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
 		const auto ft_data = m_frame_times.linearize();
-		ImPlot::PlotLine("Frame Time", m_x_axe_values.data(), ft_data.data(), static_cast<int>(m_frame_times.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("Frame Time", m_x_axe_values.data(), ft_data.data(), static_cast<int>(m_frame_times.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
 
 		ImPlot::EndPlot();
 	}
@@ -255,8 +255,8 @@ void DebugOverlay::RenderCPUSection(DeltaTime dt)
 
 		const auto app_data = m_cpu_app_load.linearize();
 		const auto total_data = m_cpu_total_load.linearize();
-		ImPlot::PlotLine("Total CPU", m_x_axe_values.data(), total_data.data(), static_cast<int>(m_cpu_total_load.size()), ImPlotLineFlags_Shaded);
-		ImPlot::PlotLine("App CPU", m_x_axe_values.data(), app_data.data(), static_cast<int>(m_cpu_app_load.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("Total CPU", m_x_axe_values.data(), total_data.data(), static_cast<int>(m_cpu_total_load.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
+		ImPlot::PlotLine("App CPU", m_x_axe_values.data(), app_data.data(), static_cast<int>(m_cpu_app_load.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
 		
 		ImPlot::EndPlot();
 	}
@@ -307,8 +307,8 @@ void DebugOverlay::RenderRAMSection(DeltaTime dt)
 
 		const auto app_data = m_ram_app_load.linearize();
 		const auto total_data = m_ram_total_load.linearize();
-		ImPlot::PlotLine("Total RAM", m_x_axe_values.data(), total_data.data(), static_cast<int>(m_ram_total_load.size()), ImPlotLineFlags_Shaded);
-		ImPlot::PlotLine("App RAM", m_x_axe_values.data(), app_data.data(), static_cast<int>(m_ram_app_load.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("Total RAM", m_x_axe_values.data(), total_data.data(), static_cast<int>(m_ram_total_load.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
+		ImPlot::PlotLine("App RAM", m_x_axe_values.data(), app_data.data(), static_cast<int>(m_ram_app_load.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
 
 		ImPlot::EndPlot();
 	}
@@ -377,9 +377,7 @@ void DebugOverlay::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + x_axis.x };
 			float y[2] = { pos.y, pos.y + x_axis.y };
 			float z[2] = { pos.z, pos.z + x_axis.z };
-			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(1, 0, 0, 1));
-			ImPlot3D::PlotLine("X", x, y, z, 2);
-			ImPlot3D::PopStyleColor();
+			ImPlot3D::PlotLine("X", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(1, 0, 0, 1) });
 		}
 
 		// Y axis
@@ -387,9 +385,7 @@ void DebugOverlay::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + y_axis.x };
 			float y[2] = { pos.y, pos.y + y_axis.y };
 			float z[2] = { pos.z, pos.z + y_axis.z };
-			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(0, 1, 0, 1));
-			ImPlot3D::PlotLine("Y", x, y, z, 2);
-			ImPlot3D::PopStyleColor();
+			ImPlot3D::PlotLine("Y", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(0, 1, 0, 1) });
 		}
 
 		// Z axis
@@ -397,9 +393,7 @@ void DebugOverlay::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + z_axis.x };
 			float y[2] = { pos.y, pos.y + z_axis.y };
 			float z[2] = { pos.z, pos.z + z_axis.z };
-			ImPlot3D::PushStyleColor(ImPlot3DCol_Line, ImVec4(0, 0.5f, 1, 1));
-			ImPlot3D::PlotLine("Z", x, y, z, 2);
-			ImPlot3D::PopStyleColor();
+			ImPlot3D::PlotLine("Z", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(0, 0.5f, 1, 1) });
 		}
 
 		ImPlot3D::EndPlot();
@@ -474,8 +468,8 @@ void DebugOverlay::RenderGPUSection(DeltaTime dt)
 
 		const auto gpu = m_gpu_utillization.linearize();
 		const auto memory = m_gpu_memory_utillization.linearize();
-		ImPlot::PlotLine("GPU Load", m_x_axe_values.data(), gpu.data(), static_cast<int>(m_gpu_utillization.size()), ImPlotLineFlags_Shaded);
-		ImPlot::PlotLine("Memory Load", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_utillization.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("GPU Load", m_x_axe_values.data(), gpu.data(), static_cast<int>(m_gpu_utillization.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
+		ImPlot::PlotLine("Memory Load", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_utillization.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
 
 		ImPlot::EndPlot();
 	}
@@ -496,7 +490,7 @@ void DebugOverlay::RenderGPUSection(DeltaTime dt)
 		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, m_total_gpu_ram_GB, ImPlotCond_Once);
 
 		const auto memory = m_gpu_memory_used.linearize();
-		ImPlot::PlotLine("Memory", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_used.size()), ImPlotLineFlags_Shaded);
+		ImPlot::PlotLine("Memory", m_x_axe_values.data(), memory.data(), static_cast<int>(m_gpu_memory_used.size()), { ImPlotProp_Flags, ImPlotLineFlags_Shaded });
 
 		ImPlot::EndPlot();
 	}
@@ -537,13 +531,11 @@ void DebugOverlay::RenderRenderingPage()
 
 				static int current_item = 0;
 				int number_of_maps = info->number_of_shadow_maps;
-				auto getter = [](void* data, int idx, const char** out_text)
+				auto getter = [](void*, int idx) -> const char*
 					{
-						//God forgive me for this c style piece of shit
 						static char buf[16];
 						snprintf(buf, sizeof(buf), "%d", idx);
-						*out_text = buf;
-						return true;
+						return buf;
 					};
 
 				if (ImGui::Combo("Select Shadowmap", &current_item, getter, nullptr, number_of_maps, 4))

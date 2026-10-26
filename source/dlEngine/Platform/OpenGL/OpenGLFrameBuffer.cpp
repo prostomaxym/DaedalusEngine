@@ -391,7 +391,7 @@ void OpenGLFramebuffer::Bind()
 
 void OpenGLFramebuffer::BindDrawColorAttachment(int attachment_num)
 {
-	GLenum single_buffer[] = { GL_COLOR_ATTACHMENT0 + attachment_num };
+	GLenum single_buffer[] = { static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + attachment_num) };
 
 	glDrawBuffers(1, single_buffer);
 }

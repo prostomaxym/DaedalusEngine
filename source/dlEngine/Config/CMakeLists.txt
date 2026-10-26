@@ -32,6 +32,7 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../
 target_compile_definitions(${PROJECT_NAME} 
     PRIVATE 
         DL_BUILD_STATIC
+        NOMINMAX
     )
 
 target_include_directories(${PROJECT_NAME}

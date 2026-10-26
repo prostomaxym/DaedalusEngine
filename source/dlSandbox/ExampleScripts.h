@@ -43,7 +43,7 @@ namespace Daedalus
 			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 			const auto pos = camera->GetPosition();
 			const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
-			Log::Write(Log::Levels::Trace, Log::Categories::Application, message);
+			Log::Write(Log::Levels::Trace, Log::Categories::Application, "{}", message);
 		}
 	};
 

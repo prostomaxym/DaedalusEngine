@@ -1,3 +1,6 @@
-cd ../
+#!/bin/sh
+set -eu
 
-./ThirdParty/vcpkg/vcpkg install --triplet=x64-linux --overlay-triplets=ThirdParty/vcpkg_triplets/
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
+./ThirdParty/vcpkg/vcpkg install --triplet=x64-linux --overlay-triplets="$repo_root/ThirdParty/vcpkg_triplets"

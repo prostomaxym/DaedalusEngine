@@ -96,13 +96,13 @@ void GraphicsConfig::LoadImpl(const std::filesystem::path& path)
     SI_Error rc = ini.LoadFile(path.string().c_str());
     if (rc < 0)
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load graphic config from " + path.string() + "\nLoading default config");
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load graphic config from {}\nLoading default config", path.string());
         LoadDefault();
 		return;
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded graphics config from " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded graphics config from {}", path.string());
 	}
 
 	m_window_name = ini.GetValue(WindowSectionName, WindowName, "Daedalus Engine");
@@ -169,11 +169,11 @@ void GraphicsConfig::SaveImpl(const std::filesystem::path& path)
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 
 	{
-        Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save graphics config to " + path.string() + "\n");
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save graphics config to {}\n", path.string());
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved graphics config to " + path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved graphics config to {}", path.string());
 	}
 }
 

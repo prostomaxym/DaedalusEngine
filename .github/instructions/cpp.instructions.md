@@ -2,7 +2,7 @@
 applyTo: "**/*.{h,hpp,cpp,inl}"
 ---
 # C++ rules for Daedalus
-- C++17 only. Tabs for indentation. `#pragma once`. Namespace `Daedalus`.
+- C++20 only. Tabs for indentation. `#pragma once`. Namespace `Daedalus`.
 - Members `m_name`, statics `s_name`, locals `snake_case`, types/functions `PascalCase`.
 - Use `DAEDALUS_API` on exported engine classes.
 - Own with `std::unique_ptr`; raw pointers are non-owning.

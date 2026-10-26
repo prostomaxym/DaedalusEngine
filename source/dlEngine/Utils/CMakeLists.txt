@@ -17,6 +17,7 @@ set(UTILS_PROJECT_FILES
    Random.cpp
    RingVector.h
    Timer.h
+   Utf8.h
    WorkingDirectory.h
    WorkingDirectory.cpp
 )

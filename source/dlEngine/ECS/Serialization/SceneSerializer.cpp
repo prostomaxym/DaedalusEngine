@@ -5,6 +5,7 @@
 #include "Renderer/Resourses/Texture.h"
 #include "SceneJson.h"
 #include "ECS/Scene.h"
+#include "Utils/Utf8.h"
 
 #include <algorithm>
 #include <charconv>
@@ -35,7 +36,7 @@ namespace
 	{
 		std::error_code ec;
 		const auto root = std::filesystem::weakly_canonical(assets, ec);
-		if (!ec) path = std::filesystem::weakly_canonical(root / std::filesystem::u8path(reference), ec);
+		if (!ec) path = std::filesystem::weakly_canonical(root / Utf8ToPath(reference), ec);
 		std::filesystem::path relative;
 		if (ec || !Within(path, root, relative) || !std::filesystem::is_regular_file(path, ec) || ec)
 		{
@@ -53,10 +54,10 @@ namespace
 		std::filesystem::path relative;
 		if (ec || !Within(canonical, root, relative))
 		{
-			error = "Cannot save an asset outside the asset root: " + path.u8string();
+			error = "Cannot save an asset outside the asset root: " + Utf8ToString(path.u8string());
 			return false;
 		}
-		reference = relative.generic_u8string();
+		reference = Utf8ToString(relative.generic_u8string());
 		return true;
 	}
 
@@ -206,7 +207,7 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 			{
 				std::filesystem::path path;
 				if (!Resolve(assets, face, path, error)) return rollback();
-				faces.push_back(path.u8string());
+				faces.push_back(Utf8ToString(path.u8string()));
 			}
 			const auto& cubemap = entity.AddComponent<SkyboxComponent>(faces, r.skybox->rotation).cubemap.GetCubemapTexture();
 			if (!cubemap || !cubemap->IsLoaded()) { error = "Failed to load skybox for entity " + r.id; return rollback(); }
@@ -277,7 +278,7 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 			for (const auto& face : component.source_faces)
 			{
 				std::string reference;
-				if (!Reference(assets, std::filesystem::u8path(face), reference, error)) return false;
+				if (!Reference(assets, Utf8ToPath(face), reference, error)) return false;
 				r.skybox->faces.push_back(std::move(reference));
 			}
 		}

@@ -3,7 +3,7 @@
 Personal cross-platform (Windows + Linux) C++ game engine in early development. Long-term goal: a robust, production-quality, easy-to-use engine. Quality and maintainability matter more than speed of delivery.
 
 ## Tech stack
-- C++17 (`CMAKE_CXX_STANDARD 17`). Do not use C++20 features unless the standard is raised in the root `CMakeLists.txt`.
+- C++20 (`CMAKE_CXX_STANDARD 20`, required, compiler extensions disabled). Do not use features from newer standards unless the standard is raised in the root `CMakeLists.txt`.
 - Build system: CMake (min 3.16.3) + vcpkg manifest mode (`vcpkg.json`, vcpkg lives in `ThirdParty/vcpkg`).
 - Libraries: glfw3, glad (OpenGL), imgui (+docking), imguizmo, implot/implot3d, glm, stb, assimp, entt, spdlog, fmt, simpleini, bullet3, gtest/gmock.
 - Compilers: MSVC (primary, Visual Studio) and GCC/Clang on Linux (CI).

@@ -312,7 +312,7 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces
 		}
 		else
 		{
-			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture from path: " + faces[i]);
+			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture from path: {}", faces[i]);
 		}
 
 		stbi_image_free(data);

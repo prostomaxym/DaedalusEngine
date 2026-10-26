@@ -103,6 +103,7 @@ namespace Daedalus
 			using pointer = T*;
 			using reference = T&;
 
+			Iterator() = default;
 			Iterator(RingVector* buffer, size_t pos)
 				: buffer_(buffer), pos_(pos) {
 			}
@@ -135,8 +136,8 @@ namespace Daedalus
 			bool operator>=(const Iterator& other) const { return pos_ >= other.pos_; }
 
 		private:
-			RingVector* buffer_;
-			size_t pos_;
+			RingVector* buffer_ = nullptr;
+			size_t pos_ = 0;
 		};
 
 		class ConstIterator
@@ -148,6 +149,7 @@ namespace Daedalus
 			using pointer = const T*;
 			using reference = const T&;
 
+			ConstIterator() = default;
 			ConstIterator(const RingVector* buffer, size_t pos)
 				: buffer_(buffer), pos_(pos) {
 			}
@@ -180,8 +182,8 @@ namespace Daedalus
 			bool operator>=(const ConstIterator& other) const { return pos_ >= other.pos_; }
 
 		private:
-			const RingVector* buffer_;
-			size_t pos_;
+			const RingVector* buffer_ = nullptr;
+			size_t pos_ = 0;
 		};
 
 		Iterator begin() { return Iterator(this, 0); }

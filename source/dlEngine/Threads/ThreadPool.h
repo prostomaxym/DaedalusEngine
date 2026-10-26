@@ -6,7 +6,7 @@
 #include <thread>
 #include <future>
 #include <vector>
-#include <atomic>
+#include <mutex>
 #include <condition_variable>
 
 namespace Daedalus
@@ -86,13 +86,15 @@ namespace Daedalus
 
 	private:
 		void DoWork();
+		void RequestStop();
 
 		std::vector<std::thread> m_workers;
-		ThreadJoiner m_joiner;
-		std::atomic<bool> m_done;
+		bool m_done = false;
 		std::mutex m_mtx;
 		std::condition_variable m_cv;
 
 		std::queue<function_wrapper> m_q;
+		// Join workers before destroying any state they access, including on constructor failure.
+		ThreadJoiner m_joiner;
 	};
 }

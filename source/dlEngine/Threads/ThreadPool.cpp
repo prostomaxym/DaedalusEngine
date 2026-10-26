@@ -16,7 +16,7 @@ ThreadPool::ThreadPool(unsigned int n_threads) :
 		}
 		catch (...)
 		{
-			m_done = true; // all threads which were started before the exception should finish
+			RequestStop();
 			throw;
 		}
 	}
@@ -24,13 +24,22 @@ ThreadPool::ThreadPool(unsigned int n_threads) :
 
 ThreadPool::~ThreadPool()
 {
-	m_done = true;
+	RequestStop();
+}
+
+void ThreadPool::RequestStop()
+{
+	{
+		// Serialize the predicate change with workers entering the condition-variable wait.
+		std::lock_guard<std::mutex> lock(m_mtx);
+		m_done = true;
+	}
 	m_cv.notify_all();
 }
 
 void ThreadPool::DoWork()
 {
-	while (!m_done)
+	while (true)
 	{
 		std::unique_lock<std::mutex> ul(m_mtx);
 		m_cv.wait(ul, [this]() {return !m_q.empty() || m_done; });

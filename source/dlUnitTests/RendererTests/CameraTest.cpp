@@ -89,9 +89,50 @@ TEST(CameraTest, perspective_projection_matches_glm)
 {
 	PerspectiveCamera camera(CameraProjectionProps(60.f, 2.f, 0.5f, 50.f));
 
-	EXPECT_EQ(camera.GetProjectionMatrix(), glm::perspective(glm::radians(60.f), 2.f, 0.5f, 50.f));
+	const glm::mat4 actual = camera.GetProjectionMatrix();
+	const glm::mat4 expected = glm::perspective(glm::radians(60.f), 2.f, 0.5f, 50.f);
+	// Constant-folded and runtime trigonometry need not produce bit-identical floats.
+	for (glm::length_t column = 0; column < 4; ++column)
+	{
+		for (glm::length_t row = 0; row < 4; ++row)
+		{
+			EXPECT_FLOAT_EQ(actual[column][row], expected[column][row])
+				<< "column=" << column << ", row=" << row;
+		}
+	}
 	EXPECT_FLOAT_EQ(camera.GetNearPlane(), 0.5f);
 	EXPECT_FLOAT_EQ(camera.GetFarPlane(), 50.f);
+}
+
+TEST(CameraTest, perspective_projection_maps_frustum_boundaries_to_ndc)
+{
+	const PerspectiveCamera camera(CameraProjectionProps(90.f, 2.f, 0.5f, 50.f));
+	const glm::mat4 projection = camera.GetProjectionMatrix();
+	struct ProjectionCase
+	{
+		glm::vec4 view_position;
+		glm::vec3 expected_ndc;
+	};
+	// At a 90-degree vertical FOV, the near-plane half-height is 0.5 and half-width is 1.
+	const ProjectionCase cases[] =
+	{
+		{ glm::vec4(0.f, 0.f, -0.5f, 1.f), glm::vec3(0.f, 0.f, -1.f) },
+		{ glm::vec4(0.f, 0.f, -50.f, 1.f), glm::vec3(0.f, 0.f, 1.f) },
+		{ glm::vec4(1.f, 0.5f, -0.5f, 1.f), glm::vec3(1.f, 1.f, -1.f) },
+		{ glm::vec4(-1.f, -0.5f, -0.5f, 1.f), glm::vec3(-1.f, -1.f, -1.f) }
+	};
+
+	for (const auto& test_case : cases)
+	{
+		const glm::vec4 clip_position = projection * test_case.view_position;
+		ASSERT_GT(clip_position.w, 0.f);
+		const glm::vec3 ndc = glm::vec3(clip_position) / clip_position.w;
+		for (glm::length_t component = 0; component < 3; ++component)
+		{
+			EXPECT_NEAR(ndc[component], test_case.expected_ndc[component], k_eps)
+				<< "view_z=" << test_case.view_position.z << ", component=" << component;
+		}
+	}
 }
 
 TEST(CameraTest, view_projection_is_projection_times_view)

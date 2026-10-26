@@ -71,8 +71,7 @@ std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
 	}
 		
 	const auto current_path = std::filesystem::current_path();
-	const auto msg = "Root application directory set - " + current_path.string();
-	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, msg);
+	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "Root application directory set - {}", current_path.string());
 	return current_path;
 }
 

@@ -9,6 +9,8 @@
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderConstants.h"
 
+#include <limits>
+
 using namespace Daedalus;
 
 void RenderSystem::OnStartRuntime() const
@@ -46,7 +48,10 @@ void RenderSystem::OnStartRuntime() const
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 {
-	Renderer::BeginFrame(m_camera, m_registry.view<RenderableObjectComponent>().size());
+	const auto count = m_registry.view<RenderableObjectComponent>().size();
+	const auto reserve_count = count <= static_cast<size_t>((std::numeric_limits<int>::max)())
+		? std::optional<int>(static_cast<int>(count)) : std::nullopt;
+	Renderer::BeginFrame(m_camera, reserve_count);
 	SubmitModels();
 	Renderer::FlushPipeline();
 	RenderSkybox();

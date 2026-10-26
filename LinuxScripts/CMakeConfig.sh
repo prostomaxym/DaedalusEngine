@@ -1,5 +1,7 @@
 #!/bin/bash
+set -eu
 
-cd ..
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
 
 cmake --preset linux-release

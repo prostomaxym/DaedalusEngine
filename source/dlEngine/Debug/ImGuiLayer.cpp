@@ -182,7 +182,7 @@ void ImGuiLayer::SaveConfig()
 {
 	auto ini_path = PathConfig::GetConfigPath() / "imgui.ini";
 	ImGui::SaveIniSettingsToDisk(ini_path.string().c_str());
-	Log::Write(Log::Levels::Info, Log::Categories::Application, "Save ImGui config to " + ini_path.string());
+	Log::Write(Log::Levels::Info, Log::Categories::Application, "Save ImGui config to {}", ini_path.string());
 }
 
 void ImGuiLayer::DoLoadConfig()
@@ -190,7 +190,7 @@ void ImGuiLayer::DoLoadConfig()
 	auto ini_path = PathConfig::GetConfigPath() / "imgui.ini";
 	if (std::filesystem::exists(ini_path))
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded ImGui config from " + ini_path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded ImGui config from {}", ini_path.string());
 		ImGui::LoadIniSettingsFromDisk(ini_path.string().c_str());
 	}
 	else

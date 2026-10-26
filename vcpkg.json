@@ -19,5 +19,5 @@
         {"name": "fmt"},
         {"name": "bullet3", "features": ["multithreading"]}
     ],
-    "builtin-baseline":"c0f2272fa7934cf52d33b098f24a7757b14ff15e"
+    "builtin-baseline":"817892b0ecbc6af994dd6df999c73faf795adbf2"
 }

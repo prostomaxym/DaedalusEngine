@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "ResourceState.h"
 #include "CacheEviction.h"
+#include "Utils/Utf8.h"
 
 using namespace Daedalus;
 
@@ -58,7 +59,7 @@ std::shared_ptr<Model> ResourceManager::LoadModel(const std::filesystem::path& p
 	std::error_code ec;
 	const auto normalized = std::filesystem::weakly_canonical(path, ec);
 	if (ec || !std::filesystem::is_regular_file(normalized, ec) || ec) return nullptr;
-	const auto key = normalized.generic_u8string() + "|" + std::to_string(static_cast<uint32_t>(parser_flags));
+	const auto key = Utf8ToString(normalized.generic_u8string()) + "|" + std::to_string(static_cast<uint32_t>(parser_flags));
 	const auto found = state.m_models.find(key);
 	if (found != state.m_models.end())
 	{
@@ -109,7 +110,7 @@ std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(const std::filesystem:
 	std::error_code ec;
 	const auto normalized = std::filesystem::weakly_canonical(path, ec);
 	if (ec || !std::filesystem::is_regular_file(normalized, ec) || ec) return nullptr;
-	const auto key = normalized.generic_u8string();
+	const auto key = Utf8ToString(normalized.generic_u8string());
 	const auto found = state.m_named_textures.find(key);
 	if (found != state.m_named_textures.end())
 	{

@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "SceneJson.h"
+#include "Utils/Utf8.h"
 
 #include <nlohmann/json.hpp>
 
@@ -239,11 +240,11 @@ namespace
 	{
 		if (value.empty() || value.find('\\') != std::string::npos || value.find(':') != std::string::npos || value.find('\0') != std::string::npos)
 			return false;
-		const auto path = std::filesystem::u8path(value);
+		const auto path = Utf8ToPath(value);
 		if (path.is_absolute() || path.has_root_path()) return false;
 		for (const auto& part : path)
 			if (part == ".." || part == ".") return false;
-		return path.generic_u8string() == value;
+		return Utf8ToString(path.generic_u8string()) == value;
 	}
 
 	bool Positive(const glm::vec3& value)
@@ -369,10 +370,10 @@ bool SceneJson::Serialize(const SceneRecord& record, std::string& text, std::str
 bool SceneJson::Load(const std::filesystem::path& path, SceneRecord& record, std::string& error)
 {
 	std::ifstream stream(path, std::ios::binary);
-	if (!stream) { error = "Cannot open scene: " + path.u8string(); return false; }
+	if (!stream) { error = "Cannot open scene: " + Utf8ToString(path.u8string()); return false; }
 	const std::string text{ std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
-	if (stream.bad()) { error = "Cannot read scene: " + path.u8string(); return false; }
-	if (!Parse(text, record, error)) { error = path.u8string() + ": " + error; return false; }
+	if (stream.bad()) { error = "Cannot read scene: " + Utf8ToString(path.u8string()); return false; }
+	if (!Parse(text, record, error)) { error = Utf8ToString(path.u8string()) + ": " + error; return false; }
 	return true;
 }
 
@@ -386,12 +387,12 @@ bool SceneJson::Save(const std::filesystem::path& path, const SceneRecord& recor
 	const bool replacing = std::filesystem::exists(path, ec);
 	if (ec || (replacing && !std::filesystem::is_regular_file(path, ec)) || ec)
 	{
-		error = "Scene save target is not a regular file or cannot be inspected: " + path.u8string();
+		error = "Scene save target is not a regular file or cannot be inspected: " + Utf8ToString(path.u8string());
 		return false;
 	}
 	if (std::filesystem::exists(temporary, ec) || ec || std::filesystem::exists(backup, ec) || ec)
 	{
-		error = "Scene save recovery files already exist or cannot be inspected: " + path.u8string();
+		error = "Scene save recovery files already exist or cannot be inspected: " + Utf8ToString(path.u8string());
 		return false;
 	}
 	{
@@ -401,7 +402,7 @@ bool SceneJson::Save(const std::filesystem::path& path, const SceneRecord& recor
 		if (!stream)
 		{
 			std::filesystem::remove(temporary, ec);
-			error = "Cannot write scene: " + path.u8string();
+			error = "Cannot write scene: " + Utf8ToString(path.u8string());
 			return false;
 		}
 	}
@@ -409,17 +410,17 @@ bool SceneJson::Save(const std::filesystem::path& path, const SceneRecord& recor
 	if (!ec) std::filesystem::rename(temporary, path, ec);
 	if (ec)
 	{
-		error = "Cannot replace scene: " + path.u8string() + ": " + ec.message();
+		error = "Cannot replace scene: " + Utf8ToString(path.u8string()) + ": " + ec.message();
 		std::error_code recovery_error;
 		if (replacing && std::filesystem::exists(backup, recovery_error)) std::filesystem::rename(backup, path, recovery_error);
-		if (recovery_error) error += "; original preserved at " + backup.u8string();
+		if (recovery_error) error += "; original preserved at " + Utf8ToString(backup.u8string());
 		std::filesystem::remove(temporary, recovery_error);
 		return false;
 	}
 	if (replacing)
 	{
 		std::filesystem::remove(backup, ec);
-		if (ec) { error = "Scene saved, but backup cleanup failed: " + backup.u8string(); return false; }
+		if (ec) { error = "Scene saved, but backup cleanup failed: " + Utf8ToString(backup.u8string()); return false; }
 	}
 	return true;
 }

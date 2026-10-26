@@ -69,6 +69,7 @@ set(UTILS_TEST_FILES
     UtilsTests/RandomTest.cpp
     UtilsTests/RingVectorTest.cpp
     UtilsTests/TimerTest.cpp
+    UtilsTests/Utf8Test.cpp
     )
 
 set(PROJECT_FILES

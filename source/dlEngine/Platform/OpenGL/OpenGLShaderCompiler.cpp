@@ -30,13 +30,13 @@ GLuint OpenGLShaderCompiler::CompileFromCode(const std::string& code, ShaderType
             glGetShaderInfoLog(shader_id, max_length, &max_length, &info_log[0]);
             glDeleteShader(shader_id);
             std::string log_text(info_log.data());
-            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, type_str + " shader compilation error: " + log_text);
+            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "{} shader compilation error: {}", type_str, log_text);
             throw std::runtime_error(info_log.data());
         }
         else
         {
             glDeleteShader(shader_id);
-            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, type_str + " shader compilation with empty error message;");
+            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "{} shader compilation with empty error message;", type_str);
             throw std::runtime_error(type_str + " shader compilation with empty error message;");
         }
 
@@ -64,7 +64,7 @@ GLuint OpenGLShaderCompiler::BuildFromBinary(const std::filesystem::path& binary
             glGetProgramInfoLog(program_id, max_length, &max_length, &info_log[0]);
             glDeleteProgram(program_id);
             std::string log_text(info_log.data());
-            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Shader binary loading error message: " + log_text);
+            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Shader binary loading error message: {}", log_text);
             throw std::runtime_error(info_log.data());
         }
         else
@@ -116,7 +116,7 @@ GLuint OpenGLShaderCompiler::Link(const std::vector<GLuint>& shaders)
             std::vector<GLchar> info_log(max_length);
             glGetProgramInfoLog(program_id, max_length, &max_length, &info_log[0]);
             std::string log_text(info_log.data());
-            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Shader linking error: " + log_text);
+            Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Shader linking error: {}", log_text);
             throw std::runtime_error(info_log.data());
         }
         else
@@ -300,7 +300,7 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
     std::ifstream file(file_path);
     if (!file.is_open())
     {
-        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - " + file_path.string());
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - {}", file_path.string());
         throw std::runtime_error("Failed to open shader file");
     }
 
@@ -316,7 +316,7 @@ std::string OpenGLShaderCompiler::ReadHeaderFile(const std::filesystem::path& pa
     std::ifstream file(path);
     if (!file.is_open())
     {
-        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - " + path.string());
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - {}", path.string());
         throw std::runtime_error("Failed to open GLSL header file: " + path.string());
     }
         
@@ -335,7 +335,7 @@ void OpenGLShaderCompiler::Pack(const std::filesystem::path& file_name, const Sh
     }
     catch (std::ifstream::failure& e)
     {
-        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to pack shader: " + file_name.string());
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to pack shader: {}", file_name.string());
         throw std::runtime_error("Failed to pack shader data");
     }
 }
@@ -354,7 +354,7 @@ Shader::ShaderBinaryData OpenGLShaderCompiler::Unpack(const std::filesystem::pat
     }
     catch (std::ifstream::failure& e)
     {
-        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to unpack shader: " + file_name.string());
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to unpack shader: {}", file_name.string());
         throw std::runtime_error("Failed to unpack shader data");
     }
 

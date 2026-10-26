@@ -1,6 +1,9 @@
-sudo apt update
-sudo apt-get install libgl1-mesa-dev
-sudo apt-get install mesa-utils
-sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
+#!/bin/sh
+set -eu
 
-sh InstallVCPKG.sh
+sudo apt update
+sudo apt-get install -y libgl1-mesa-dev
+sudo apt-get install -y mesa-utils
+sudo apt install -y libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
+
+sh "$(dirname "$0")/InstallVCPKG.sh"

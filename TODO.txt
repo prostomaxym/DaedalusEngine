@@ -1,6 +1,7 @@
 Debug resource
 Profiler
 Multithread compilation
+pipeline caching
 
 - Systems
 Physics

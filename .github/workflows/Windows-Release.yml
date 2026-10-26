@@ -5,6 +5,7 @@ on:
 
 env:
   BUILD_TYPE: Release
+  VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}/.vcpkg-binary-cache,readwrite'
 
 jobs:
 
@@ -17,14 +18,27 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Install Dependencies
+    - name: Prepare vcpkg cache
+      id: vcpkg-cache
+      shell: bash
       run: |
-        cd ThirdParty/vcpkg/
-        .\bootstrap-vcpkg.bat
-        .\vcpkg.exe install --triplet=x64-windows --overlay-triplets=ThirdParty\vcpkg_triplets\
+        mkdir -p .vcpkg-binary-cache
+        echo "revision=$(git -C ThirdParty/vcpkg rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+    - name: Cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: .vcpkg-binary-cache
+        key: ${{ runner.os }}-${{ runner.arch }}-vcpkg-x64-windows-v1-${{ steps.vcpkg-cache.outputs.revision }}-${{ steps.vcpkg-cache.outputs.image }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'ThirdParty/vcpkg_triplets/**') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-vcpkg-x64-windows-v1-
+
+    - name: Bootstrap vcpkg
+      run: .\ThirdParty\vcpkg\bootstrap-vcpkg.bat
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DVCPKG_TARGET_TRIPLET=x64-windows
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE="${{github.workspace}}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel

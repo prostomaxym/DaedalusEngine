@@ -39,6 +39,8 @@ namespace Daedalus {
 
 		float GetZNear() const { return m_proj_props.z_near; }
 		float GetZFar() const { return m_proj_props.z_far; }
+		const CameraProjectionProps& GetProjectionProps() const { return m_proj_props; }
+		void SetAspectRatio(float aspect_ratio) { m_proj_props.aspect_ratio = aspect_ratio; }
 
 	protected:
 

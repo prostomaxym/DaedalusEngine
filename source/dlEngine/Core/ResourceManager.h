@@ -7,12 +7,25 @@
 
 #include "Renderer/Resourses/ShaderLibrary.h"
 #include "Renderer/Resourses/Model.h"
+#include "Core/ResourceStats.h"
+
+#include <mutex>
+#include <unordered_map>
+#include <set>
 
 namespace Daedalus
 {
 	class DAEDALUS_API ResourceManager
 	{
 	public:
+		static std::vector<ShaderStats> GetShaderStats();
+		static ResourceStats GetStats();
+		static std::vector<ModelStats> GetModelStats();
+		static std::vector<MeshStats> GetMeshStats();
+		static std::vector<MaterialStats> GetMaterialStats();
+		static std::vector<TextureStats> GetTextureStats();
+		static std::vector<CubemapStats> GetCubemapStats();
+
 		static void Init();
 		static void Shutdown();
 
@@ -42,5 +55,17 @@ namespace Daedalus
 		static std::set<std::shared_ptr<Mesh>> s_meshes;
 
 		static int s_vertex_count;
+
+		static double GetLoadTime(const void* resource);
+
+		static std::recursive_mutex s_mutex;
+		static std::unordered_map<const void*, double> s_load_times;
+		static CacheCounters s_model_cache;
+		static CacheCounters s_material_cache;
+		static CacheCounters s_texture_cache;
+		static uint64_t s_revision;
+		static uint64_t s_cached_revision;
+		static bool s_cached_stats_valid;
+		static ResourceStats s_cached_stats;
 	};
 }

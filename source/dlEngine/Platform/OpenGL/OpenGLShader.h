@@ -39,6 +39,8 @@ namespace Daedalus {
 		const std::string& GetName() const override { return m_name; }
 		void SetName(const std::string& name) override { m_name = name; }
 
+		ShaderInfo GetInfo() const override;
+
 		void DispatchCompute(uint32_t w, uint32_t h, int local_size) const override;
 
 	private:

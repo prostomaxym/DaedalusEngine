@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "name": "Nuke Scene",
+  "primary_camera": "1",
+  "entities": [
+    {
+      "id": "1",
+      "name": "Main Camera",
+      "transform": { "rotation": [0, 180, 0], "scale": [2, 2, 2] },
+      "camera": {
+        "fov": 80, "near_plane": 0.1, "far_plane": 200,
+        "yaw": -90, "movement_speed": 15, "sensitivity": 5, "zoom_speed": 1,
+        "distance": 7, "height": 4
+      },
+      "model": { "path": "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", "import_flags": 6291659 },
+      "spot_light": {
+        "position": [0, 0, 0], "ambient": [0, 0, 0], "diffuse": [1, 1, 1], "specular": [1, 1, 1],
+        "direction": [0, 0, 1], "power": 4, "max_distance": 100,
+        "inner_angle": 10, "outer_angle": 35, "cast_shadows": false, "cascades": 1
+      },
+      "kinematic_body": { "shape": "model_sphere", "position": [0, 0, 0], "rotation": [0, 180, 0] },
+      "scripts": [ { "type": "CameraController" }, { "type": "PlayerControllerScript" } ]
+    },
+    {
+      "id": "2", "name": "Main Light",
+      "directional_light": {
+        "position": [0.78, 1, 0.6], "ambient": [0.2, 0.2, 0.2], "diffuse": [1, 1, 1], "specular": [1, 1, 1],
+        "direction": [0.78, 1, 0.6], "power": 0.2, "max_distance": 100,
+        "inner_angle": 10, "outer_angle": 35, "cast_shadows": true, "cascades": 4
+      }
+    },
+    {
+      "id": "3", "name": "ASide Light",
+      "point_light": {
+        "position": [-26, 12, -74.5], "ambient": [0.1, 0.1, 0.1], "diffuse": [1, 0.8, 0.6], "specular": [1, 1, 0.6],
+        "direction": [0.79, -0.5, 0.35], "power": 30, "max_distance": 50,
+        "inner_angle": 10, "outer_angle": 35, "cast_shadows": true, "cascades": 1
+      }
+    },
+    {
+      "id": "4", "name": "Spot Light",
+      "transform": { "translation": [-37, 13.6, -29.7], "rotation": [90, 0, 0], "scale": [0.1, 0.1, 0.1] },
+      "model": { "path": "models/Light/Light.blend", "import_flags": 6291659 },
+      "spot_light": {
+        "position": [-37, 13.6, -29.7], "ambient": [0, 0, 0], "diffuse": [1, 0.8, 0.8], "specular": [1, 1, 0.8],
+        "direction": [0.79, -0.5, 0.35], "power": 30, "max_distance": 100,
+        "inner_angle": 5, "outer_angle": 7, "cast_shadows": true, "cascades": 1
+      },
+      "point_light": {
+        "position": [-37, 13.6, -29.7], "ambient": [0, 0, 0], "diffuse": [1, 0.8, 0.6], "specular": [1, 1, 0.6],
+        "direction": [0.79, -0.5, 0.35], "power": 80, "max_distance": 13,
+        "inner_angle": 5, "outer_angle": 7, "cast_shadows": false, "cascades": 1
+      }
+    },
+    {
+      "id": "5", "name": "Nuke",
+      "transform": { "translation": [-50, 18, -120], "rotation": [-90, 0, 0], "scale": [2, 2, 2] },
+      "model": { "path": "models/Nuke/Nuke.obj", "import_flags": 6291659 },
+      "rigid_body": {
+        "shape": "model_box", "mass": 0, "bounds_scale": [1, 1, 0], "bounds_offset": [0, 0, 0.1],
+        "position": [0, -4.8, 0], "rotation": [-90, 0, 0]
+      }
+    },
+    {
+      "id": "6", "name": "Kratos",
+      "transform": { "translation": [0, 2.8, -18], "scale": [2, 2, 2] },
+      "model": { "path": "models/Kratos/Kratos.obj", "import_flags": 6291659 },
+      "rigid_body": { "shape": "model_sphere", "mass": 100, "position": [0, 2.8, -18] }
+    },
+    {
+      "id": "7", "name": "Miranda",
+      "transform": { "translation": [-12, -2.8, -18], "scale": [2, 2, 2] },
+      "model": { "path": "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", "import_flags": 6291659 },
+      "scripts": [ { "type": "RotationModelScript", "properties": { "speed": 0.1 } } ]
+    },
+    {
+      "id": "8", "name": "Tank",
+      "transform": { "translation": [-25, -2.8, -23], "rotation": [0, 90, 0], "scale": [3, 3, 3] },
+      "model": { "path": "models/WoT_LTP/LTP.obj", "import_flags": 6291659 },
+      "scripts": [ { "type": "TankMovementScript", "properties": { "forward_direction": [1, 0, 0], "distance": 50 } } ]
+    },
+    {
+      "id": "9", "name": "Cubemap",
+      "skybox": {
+        "faces": [
+          "skyboxes/Night/right.jpg", "skyboxes/Night/left.jpg", "skyboxes/Night/top.jpg",
+          "skyboxes/Night/bottom.jpg", "skyboxes/Night/front.jpg", "skyboxes/Night/back.jpg"
+        ],
+        "rotation": 0
+      }
+    }
+  ]
+}

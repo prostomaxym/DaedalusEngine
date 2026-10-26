@@ -75,6 +75,8 @@ The rest of the engine uses `Window`, `Input` and `Platform.h`. OS-specific code
 
 `Scene` wraps an `entt::registry`; `Entity` is a thin handle. Components are in `Components.h` and `SceneComponents.inl`. `NativeScript` and `NativeScriptComponent` attach C++ behavior to entities. `Systems/RenderSystem` and `Systems/PhysicsSystem` bridge ECS data to the renderer and Bullet.
 
+Scenes can be loaded from versioned JSON files through `SceneSerializer`. Persistent records and the JSON codec are separate from runtime resources. See [Scene serialization](docs/SceneSerialization.md) for the file format, native-script registration, client workflow, and supported scope.
+
 ## Tests
 
 `source/dlUnitTests/<Module>Tests/` mirrors engine modules (Config, Core, Debug, ECS, Events, Physics, Renderer, Threads, Utils). Every test file is listed in `source/dlUnitTests/CMakeLists.txt` and built into a single `dlUnitTests` executable registered with `ctest`. Tests must not need a GL context.

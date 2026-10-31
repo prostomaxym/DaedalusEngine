@@ -6,9 +6,9 @@ Status legend: 🟢 solid · 🟡 functional, needs work · 🔴 missing / stub
 
 | Module | State | What exists | Gaps / issues found |
 |---|---|---|---|
-| Build / CI | 🟡 | CMake + vcpkg manifest (C++20), per-module static libs → engine DLL, Windows & Linux CI (dev/master/release) running `ctest` | No sanitizers/warnings-as-errors/clang-tidy/format check in CI. |
+| Build / CI | 🟡 | CMake + vcpkg manifest (C++20), per-module static libs → engine DLL, Windows & Linux CI (dev/master/release) running `ctest`; separate Windows Release/ReleaseDevTools install and packaging helpers with explicit configuration selection and configuration-matched DLLs | No sanitizers/warnings-as-errors/clang-tidy/format check in CI. |
 | Core | 🟡 | `Application` loop, `Layer` stack, `Input` (keyboard/gamepad enable toggles), fixed-step clock, entry point owns app via `unique_ptr` | No engine
-| Config | 🟡 | `GraphicsConfig`, `KeybindConfig`, `PathConfig` (ini, simpleini) | No runtime reload, no validation/defaults reporting, no CVar-style console binding. |
+| Config | 🟡 | `GraphicsConfig`, `KeybindConfig`, `PathConfig` (ini, simpleini); INI-relative folders and portable relative saves with legacy absolute-path migration | No runtime reload, no validation/defaults reporting, no CVar-style console binding. Paths on different Windows drives cannot be saved relatively. |
 No profiler/instrumentation.
 | Events | 🟢 | Application/Key/Mouse/Gamepad events, thread-safe queue with owner-thread dispatch, MT tests | No custom/game event types, no event priorities or subscriber handles. |
 | Threads | 🟡 | `ThreadPool` (task exceptions logged, worker survives), `ThreadRunner`, `ThreadJoiner` | No job system
@@ -30,12 +30,13 @@ Phases are ordered by dependency; each phase should leave the engine shippable a
 2. ✅ Merged `Renderer/Resourses` into `Renderer/Resources` (includes & CMake updated).
 3. ✅ Fixed: Sandbox app ownership (`CreateApplication` → `unique_ptr` in entry point), `/proc` file guards, stale Linux TODOs, ThreadPool task exception handling, `NativeScriptComponent` → `unique_ptr` (move-only exported type), `Input::EnableKeyboardInput` now gates key queries. ⬜ `SkyboxComponent` `DAEDALUS_API` export investigation.
 4. ✅ Test fixtures decoupled from `dlSandbox` (`dlUnitTests/fixtures/scenes`).
+5. ✅ `path.ini` saves relative folder paths anchored to its directory; regression coverage for legacy absolute migration, missing-file defaults and relocation.
 
 ### Phase 1 – Core infrastructure
 1. **Profiler**:
 2. **Job system**: task dependencies/counters on top of ThreadPool, main-thread affinity tasks, parallel-for; used by asset loading and ECS systems.
 3. **Virtual file system & asset pipeline**: mount points from `PathConfig`, asset IDs/UUIDs, async loading via jobs, hot-reload (shaders first), asset registry/metadata.
-4. **Debug draw API** + **CVar/console** system binding Config values at runtime.
+4. ✅ Console `version` command reports application/build versions from the existing `version.txt` major/minor/patch fields and compiled configuration/platform/architecture/compiler/developer-tools status, with graphics-independent regression coverage and shared packaging version metadata. ⬜ **Debug draw API** + **CVar/console** system binding Config values at runtime.
 5. **Input actions**: action/axis mapping on top of `KeybindConfig`, gamepad support, rebinding.
 
 ### Phase 2 – Scene & gameplay foundations
@@ -71,7 +72,7 @@ Order chosen so each step unlocks the next:
 1. Harden `Renderer/API` abstraction (command buffers, explicit resource states) after render graph.
 2. **Vulkan** backend, then **DX12** (Windows only); shader cross-compilation (glslang/SPIR-V Cross).
 3. Ray tracing (Vulkan RT / DXR) on top of new backends.
-4. Packaging: asset cooking, release builds, installers (extend `CMakeScripts`).
+4. Packaging: ✅ Windows NSIS uninstall cleanup for installation-local logs/shader caches, with default-No confirmation to delete configs and preservation of packaged settings when declined. ⬜ Asset cooking and further release build/installer improvements (extend `CMakeScripts`).
 
 ## 3. Cross-cutting rules for all phases
 - Every new logic module ships with gtest coverage where no GL context is needed.

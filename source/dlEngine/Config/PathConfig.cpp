@@ -18,6 +18,19 @@ namespace
 	constexpr auto ConfigDirName = "ConfigsFolder";
 	constexpr auto GraphicConfigName = "GraphicsConfigFile";
 	constexpr auto KeybindConfigName = "KeybindConfigFile";
+
+	std::filesystem::path MakeRelativePath(const std::filesystem::path& path, const std::filesystem::path& base)
+	{
+		const auto absolute_path = std::filesystem::absolute(path).lexically_normal();
+		const auto relative_path = absolute_path.lexically_relative(std::filesystem::absolute(base).lexically_normal());
+		if (relative_path.empty())
+		{
+			Log::Write(Log::Levels::Warn, Log::Categories::Application,
+				"Cannot save {} relative to {}; preserving absolute path", absolute_path.string(), base.string());
+			return absolute_path;
+		}
+		return relative_path;
+	}
 }
 
 PathConfig* PathConfig::s_instance = nullptr;
@@ -50,7 +63,9 @@ PathConfig& PathConfig::GetInstance()
 
 void PathConfig::LoadImpl(const std::filesystem::path& path)
 {
-	LoadWorkDirectory(path.parent_path());
+	const auto base = std::filesystem::absolute(path).lexically_normal().parent_path();
+	LoadDefault();
+	LoadWorkDirectory(base);
 
 	CSimpleIniA ini;
     ini.SetUnicode();
@@ -59,7 +74,6 @@ void PathConfig::LoadImpl(const std::filesystem::path& path)
     if (rc < 0)
 	{
 		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load path config from {}\nLoading default config", path.string());
-        LoadDefault();
 		return;
     }
 	else
@@ -67,10 +81,10 @@ void PathConfig::LoadImpl(const std::filesystem::path& path)
 		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded path config from {}", path.string());
 	}
 
-	m_assets_dir /= ini.GetValue(PathSectionName, AssetsDirName, "asset");
-	m_shaders_dir /= ini.GetValue(PathSectionName, ShadersDirName, "shader");
-	m_config_dir /= ini.GetValue(ConfigSectionName, ConfigDirName, "config");
-	m_logs_dir /= ini.GetValue(PathSectionName, LogsDirName, "logs");
+	m_assets_dir = (base / ini.GetValue(PathSectionName, AssetsDirName, "asset")).lexically_normal();
+	m_shaders_dir = (base / ini.GetValue(PathSectionName, ShadersDirName, "shader")).lexically_normal();
+	m_config_dir = (base / ini.GetValue(ConfigSectionName, ConfigDirName, "config")).lexically_normal();
+	m_logs_dir = (base / ini.GetValue(PathSectionName, LogsDirName, "logs")).lexically_normal();
 	m_scene_file = ini.GetValue(PathSectionName, SceneFileName, DefaultSceneFile);
 	m_graphics_config_name = ini.GetValue(ConfigSectionName, GraphicConfigName, "graphics.ini");
 	m_keybind_config_name = ini.GetValue(ConfigSectionName, KeybindConfigName, "keybinds.ini");
@@ -78,16 +92,17 @@ void PathConfig::LoadImpl(const std::filesystem::path& path)
 
 void PathConfig::SaveImpl(const std::filesystem::path& path)
 {
+	const auto base = std::filesystem::absolute(path).lexically_normal().parent_path();
 	CSimpleIniA ini;
     ini.SetUnicode();
 
-	ini.SetValue(PathSectionName, AssetsDirName, m_assets_dir.string().c_str());
-	ini.SetValue(PathSectionName, ShadersDirName, m_shaders_dir.string().c_str());
-	ini.SetValue(PathSectionName, LogsDirName, m_logs_dir.string().c_str());
-	ini.SetValue(PathSectionName, SceneFileName, m_scene_file.string().c_str());
-	ini.SetValue(ConfigSectionName, ConfigDirName, m_config_dir.string().c_str());
-	ini.SetValue(ConfigSectionName, GraphicConfigName, m_graphics_config_name.string().c_str());
-	ini.SetValue(ConfigSectionName, KeybindConfigName, m_keybind_config_name.string().c_str());
+	ini.SetValue(PathSectionName, AssetsDirName, MakeRelativePath(m_assets_dir, base).generic_string().c_str());
+	ini.SetValue(PathSectionName, ShadersDirName, MakeRelativePath(m_shaders_dir, base).generic_string().c_str());
+	ini.SetValue(PathSectionName, LogsDirName, MakeRelativePath(m_logs_dir, base).generic_string().c_str());
+	ini.SetValue(PathSectionName, SceneFileName, MakeRelativePath(m_assets_dir / m_scene_file, m_assets_dir).generic_string().c_str());
+	ini.SetValue(ConfigSectionName, ConfigDirName, MakeRelativePath(m_config_dir, base).generic_string().c_str());
+	ini.SetValue(ConfigSectionName, GraphicConfigName, MakeRelativePath(m_config_dir / m_graphics_config_name, m_config_dir).generic_string().c_str());
+	ini.SetValue(ConfigSectionName, KeybindConfigName, MakeRelativePath(m_config_dir / m_keybind_config_name, m_config_dir).generic_string().c_str());
 	
     SI_Error rc = ini.SaveFile(path.string().c_str());
     if (rc < 0) 
@@ -102,10 +117,7 @@ void PathConfig::SaveImpl(const std::filesystem::path& path)
 
 void PathConfig::LoadDefaultImpl()
 {
-	m_assets_dir = std::filesystem::current_path() / "asset";
-	m_shaders_dir = std::filesystem::current_path() / "shader";
-	m_config_dir = std::filesystem::current_path() / "config";
-	m_logs_dir = std::filesystem::current_path() / "logs";
+	LoadWorkDirectory(std::filesystem::current_path());
 	m_scene_file = DefaultSceneFile;
 	m_graphics_config_name = "graphics.ini";
 	m_keybind_config_name = "keybinds.ini";
@@ -113,8 +125,8 @@ void PathConfig::LoadDefaultImpl()
 
 void PathConfig::LoadWorkDirectory(const std::filesystem::path& path)
 {
-	m_assets_dir = path;
-	m_shaders_dir = path;
-	m_config_dir = path;
-	m_logs_dir = path;
+	m_assets_dir = path / "asset";
+	m_shaders_dir = path / "shader";
+	m_config_dir = path / "config";
+	m_logs_dir = path / "logs";
 }

@@ -1,7 +1,4 @@
 #--------------------- Install config -------------------------#
-if(NOT DEFINED INSTALL_CONFIG)
-        set(INSTALL_CONFIG "Release")
-endif()
 
 IF(WIN32)
 install(TARGETS 
@@ -11,15 +8,16 @@ install(TARGETS
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
 install(FILES
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/spdlog.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/fmt.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/glfw3.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/assimp-vc143-mt.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/pugixml.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/zlib1.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/poly2tri.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/minizip.dll
-        ${COMPILE_OUTPUT_FOLDER}/${INSTALL_CONFIG}/kubazip.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/spdlog.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/fmt.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/glfw3.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/assimp-vc145-mt.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/pugixml.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/zlib1.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/z.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/poly2tri.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/minizip.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/kubazip.dll
 
         DESTINATION bin
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
@@ -39,6 +37,9 @@ install(TARGETS dlSandbox
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/keybinds.ini
         DESTINATION ./config/)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/path.ini
+        DESTINATION .)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/version.txt
         DESTINATION .)

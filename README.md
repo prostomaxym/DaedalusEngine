@@ -80,10 +80,14 @@ ctest --test-dir build -C Release --output-on-failure
 or run `dlUnitTests` from `runtime/bin/<platform>-x64/`.
 
 ## Install and package
-- Windows: `WinScripts/CMakeInstall.bat` (installs to `runtime/install`), `WinScripts/CPackInstaller.bat` (creates the installer)
+- Windows: `WinScripts/CMakeInstallRelease.bat` or `WinScripts/CMakeInstallReleaseDevTools.bat` (installs the selected built configuration to `runtime/install`), `WinScripts/CPackInstallerRelease.bat` or `WinScripts/CPackInstallerReleaseDevTools.bat` (creates the corresponding installer)
 - Linux: `LinuxScripts/CMakeInstall.sh`, `LinuxScripts/CPackInstaller.sh`
 
-Install and package use the `Release` configuration.
+Windows installation and packaging support `Release` (without developer tools) and `ReleaseDevTools` (with developer tools). Build the selected configuration before installing or packaging. Both install helpers use the same destination; both packaging helpers write the configured installer filename to `runtime`, replacing the previous installer. Linux helpers are unchanged.
+
+The Windows NSIS uninstaller automatically removes installation-local `logs` and `shader/cache` folders. It asks **Remove settings and user data?**, defaulting to **No**. Choosing **Yes** recursively deletes only the installation-local `config` folder; choosing **No** preserves the entire folder, including packaged settings files. Silent uninstallation preserves configs as well. If settings cannot be safely preserved, uninstallation stops instead of deleting them.
+
+Cleanup does not follow custom paths from `path.ini` or recursively remove asset folders. Other package-owned files are removed normally; manually added assets and external folders are not additional cleanup targets. Linux packaging is unchanged.
 
 ## Assets
 For the demo level, runtime assets should be downloaded separately and put under `$PROJECT_ROOT/runtime/assets`.

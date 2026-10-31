@@ -17,6 +17,7 @@ Personal cross-platform (Windows + Linux) C++ game engine in early development. 
 - `CMakeScripts/` – install/pack scripts. `WinScripts/`, `LinuxScripts/` – helper scripts.
 - `runtime/`, `build/`, `install/`, `vcpkg_installed/` are generated; never edit or commit them.
 - `ThirdParty/` is for submodules (vcpkg); never edit.
+- Keep central architecture, roadmap, and instruction documents under `.github` rather than scattered across the repository. Preserve files required at the root (such as README, LICENSE, and Git files); do not relocate module READMEs or workflow-specific documentation.
 
 ## Build and test
 Everything is configured from the repo root via CMake. All source files must be listed in the owning `CMakeLists.txt` (explicit file lists, no globbing). When adding/removing/renaming a file, update that `CMakeLists.txt`.
@@ -31,6 +32,7 @@ Linux:
 - Build: `cmake --build build`
 
 Always make sure changes compile on both Windows and Linux. Linux CI runs on every push; avoid MSVC-only constructs, Windows headers outside `Platform/Windows`, and case-mismatched `#include` paths (Linux is case-sensitive).
+Do not build Linux or run tests automatically. If changed code may affect Linux - notify user and ask permission to check code in WSL.
 
 ## Code conventions (match existing code)
 - Indentation: tabs. Allman braces for classes/functions/namespaces as in existing files.
@@ -60,4 +62,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - If a task has several valid designs (architecture, public API shape), propose the options briefly before implementing.
 - Events may be queued from any thread and must be processed safely.
 - Keep CMake targets as is (each module a static library linked into one engine DLL).
+- Always update the repository's `ARCHITECTURE.md` in the same change whenever a major architecture change is made. Describe the actual implementation verified against code, keeping planned work in `ROADMAP.md`.
+- `ARCHITECTURE.md` (repo root) describes the current implemented architecture. Always update it in the same change whenever a major architecture change is made, including changes to module responsibilities, subsystem ownership/lifetimes, application lifecycle, public architectural contracts, rendering/event/threading pipelines, scene persistence, or runtime asset loading. Verify descriptions against the code and keep planned work in `ROADMAP.md`, not presented as implemented architecture.
 - `ROADMAP.md` (repo root) is the source of truth for the engine audit and planned work. When a roadmap item is implemented, or a new gap/defect is found, update `ROADMAP.md` in the same change (mark items done, adjust module status, add new findings).

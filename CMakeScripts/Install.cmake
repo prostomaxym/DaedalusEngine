@@ -7,6 +7,7 @@ install(TARGETS
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
+# zlib ships as zlib1.dll or z.dll depending on the vcpkg baseline, so missing DLLs are skipped
 install(FILES
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/spdlog.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/fmt.dll
@@ -20,6 +21,7 @@ install(FILES
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/kubazip.dll
 
         DESTINATION bin
+        OPTIONAL
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
 ELSEIF(UNIX)

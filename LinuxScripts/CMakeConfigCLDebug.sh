@@ -1,5 +1,7 @@
 #!/bin/bash
+set -eu
 
-cd ..
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
 
-cmake --preset linux-release -DCMAKE_BUILD_TYPE=Debug -G "CodeLite - Ninja"
+cmake --preset linux-debug -G "CodeLite - Ninja"

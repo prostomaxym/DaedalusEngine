@@ -19,25 +19,46 @@
       "inherits": "windows-base"
     },
     {
-      "name": "linux-release",
-      "displayName": "Linux Release (WSL)",
+      "name": "linux-base",
+      "hidden": true,
       "vendor": { "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}", "copySources": true } },
-      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
         "ENABLE_TESTS": "ON",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
       },
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release (WSL)",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug (WSL)",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "linux-release-devtools",
+      "displayName": "Linux ReleaseDevTools (WSL)",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/build-release-devtools",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "ReleaseDevTools" }
     }
   ],
   "buildPresets": [
     { "name": "windows-release", "configurePreset": "windows", "configuration": "Release", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
     { "name": "windows-debug", "configurePreset": "windows", "configuration": "Debug", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
     { "name": "windows-release-devtools", "configurePreset": "windows", "configuration": "ReleaseDevTools", "environment": { "CMAKE_BUILD_PARALLEL_LEVEL": "$env{NUMBER_OF_PROCESSORS}" } },
-   { "name": "linux-release", "configurePreset": "linux-release" }
-  ],
+     { "name": "linux-release", "configurePreset": "linux-release" },
+     { "name": "linux-debug", "configurePreset": "linux-debug" },
+     { "name": "linux-release-devtools", "configurePreset": "linux-release-devtools" }
+   ],
   "testPresets": [
     {
       "name": "windows-release",
@@ -48,6 +69,16 @@
     {
       "name": "linux-release",
       "configurePreset": "linux-release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux-release-devtools",
+      "configurePreset": "linux-release-devtools",
       "output": { "outputOnFailure": true }
     }
   ]

@@ -139,7 +139,10 @@ TEST_F(PathConfigTest, relative_ini_filename_resolves_all_folders_against_ini_di
 	WriteConfig("[Path]\nAssetsFolder=assets\nShadersFolder=shaders\nLogsFolder=log\n"
 		"[Config]\nConfigsFolder=settings\nGraphicsConfigFile=video.ini\nKeybindConfigFile=input.ini\n");
 
-	PathConfig::Load(m_config_path.lexically_relative(std::filesystem::current_path()));
+	const auto previous_working_directory = std::filesystem::current_path();
+	std::filesystem::current_path(m_directory.parent_path());
+	PathConfig::Load(m_directory.filename() / m_config_path.filename());
+	std::filesystem::current_path(previous_working_directory);
 
 	EXPECT_EQ(PathConfig::GetAssetsPath(), m_directory / "assets");
 	EXPECT_EQ(PathConfig::GetShadersPath(), m_directory / "shaders");

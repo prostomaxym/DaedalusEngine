@@ -1,12 +1,7 @@
 #!/bin/bash
+set -eu
 
-cd ..
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
 
-if [ ! -d "build" ]; then
-  mkdir build
-fi
-
-cd build
-
-cpack
-
+cpack --config build/CPackConfig.cmake -C Release

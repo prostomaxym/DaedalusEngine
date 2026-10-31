@@ -37,8 +37,10 @@ install(TARGETS dlSandbox
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
+# runtime/ is generated and not in git; keybinds.ini only exists after the app saved it, defaults are used otherwise
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/keybinds.ini
-        DESTINATION ./config/)
+        DESTINATION ./config/
+        OPTIONAL)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/path.ini
         DESTINATION .)
@@ -57,4 +59,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/runtime/shader DESTINATION .
 install(DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}/runtime/asset
         DESTINATION .
+        OPTIONAL
         )

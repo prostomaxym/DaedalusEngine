@@ -1,11 +1,7 @@
 #!/bin/bash
+set -eu
 
-cd ..
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root"
 
-if [ ! -d "build" ]; then
-  mkdir build
-fi
-
-cd build
-
-cmake --install . --prefix ../runtime/install --config Release
+cmake --install build --prefix runtime/install --config Release

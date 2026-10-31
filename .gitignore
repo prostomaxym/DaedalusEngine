@@ -1,6 +1,8 @@
 # Folders
 runtime/
 build/
+build-debug/
+build-release-devtools/
 install/
 vcpkg_installed/
 .vs/

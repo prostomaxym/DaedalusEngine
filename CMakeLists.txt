@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Version.cmake)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Build configurations: Debug, Release (clean production) and ReleaseDevTools (Release + dev tools)

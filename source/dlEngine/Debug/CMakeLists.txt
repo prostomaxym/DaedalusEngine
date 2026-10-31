@@ -16,6 +16,8 @@ project(
     )
 
 set(DEBUG_PROJECT_FILES
+    BuildInfo.h
+    BuildInfo.cpp
     DebugOverlay.h
     DebugOverlay.cpp
     ConsoleOverlay.h
@@ -46,6 +48,10 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE 
         DL_BUILD_STATIC
         NOMINMAX
+        DL_APPLICATION_VERSION="${DAEDALUS_VERSION}"
+        DL_BUILD_CONFIGURATION="$<CONFIG>"
+        DL_BUILD_PLATFORM="${CMAKE_SYSTEM_NAME}"
+        DL_BUILD_COMPILER="${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}"
     )
     
 target_link_libraries(${PROJECT_NAME} 

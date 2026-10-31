@@ -1,6 +1,7 @@
 #include "dlpch.h"
 
 #include "ConsoleOverlay.h"
+#include "BuildInfo.h"
 #include "Core/Window.h"
 #include <imgui.h>
 #include "Events/KeyEvent.h"
@@ -13,7 +14,7 @@ using namespace Daedalus;
 
 namespace
 {
-    std::vector<std::string> commands = { "clear", "quit" };
+    std::vector<std::string> commands = { "clear", "quit", "version" };
 }
 
 void ConsoleOverlay::OnEvent(Event& evt)
@@ -120,6 +121,10 @@ void ConsoleOverlay::ProcessCommand(const char* command)
     {
         WindowCloseEvent evt;
         EventDispatcher::Dispatch(evt);
+    }
+    else if (strcmp(command, commands[2].c_str()) == 0)
+    {
+        AddLog(GetBuildInfo());
     }
     else
     {

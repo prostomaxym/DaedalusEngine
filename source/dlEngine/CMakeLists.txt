@@ -30,7 +30,6 @@ set(PROJECT_FILES
     Daedalus.cpp
     dlpch.h
     dlpch.cpp
-    DummyTest.h
     Macros.h
 )
 

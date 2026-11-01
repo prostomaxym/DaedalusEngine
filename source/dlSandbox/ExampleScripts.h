@@ -138,7 +138,7 @@ namespace Daedalus
 
 		void UpdateSpotLight()
 		{
-			const auto key_pressed = Input::IsKeyReleased(KeybindConfig::GetKeyboardBind("Flashlight"));
+			const auto key_pressed = Input::IsActionReleased("Flashlight");
 
 			if (key_pressed && m_spotlight_enabled)
 			{
@@ -203,22 +203,34 @@ namespace Daedalus
 
 			glm::vec3 moveDirection(0.0f);
 
-			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
+			const bool has_vertical_axis = KeybindConfig::FindAxisBind("MoveVertical") != nullptr;
+			const bool has_horizontal_axis = KeybindConfig::FindAxisBind("MoveHorizontal") != nullptr;
+
+			if (!has_vertical_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
 			{
 				moveDirection += camera_forward;
 			}
-			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
+			if (!has_vertical_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
 			{
 				moveDirection -= camera_forward;
 			}
-			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
+			if (!has_horizontal_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
 			{
 				moveDirection -= camera_right;
 			}
-			if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
+			if (!has_horizontal_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
 			{
 				moveDirection += camera_right;
 			}
+
+			// Match camera movement: stick up is negative Y; buttons are not axes.
+			const auto [stick_x, stick_y] = Input::GetStickPos(Input::StickType::Left);
+			const float forward = has_vertical_axis ? Input::GetAxis("MoveVertical") : -stick_y;
+			const float right = has_horizontal_axis ? Input::GetAxis("MoveHorizontal") : stick_x;
+			moveDirection *= camera->GetMovementSpeed();
+			moveDirection += (camera_forward * forward + camera_right * right) * 10.f;
+			// Facing is yaw-only, even when the camera is looking up or down.
+			moveDirection.y = 0.f;
 
 			if (glm::length(moveDirection) > 0.0f)
 			{
@@ -267,7 +279,7 @@ namespace Daedalus
 
 		void UpdatePlayerView()
 		{
-			const auto key_pressed = Input::IsKeyReleased(KeybindConfig::GetKeyboardBind("ChangePOV"));
+			const auto key_pressed = Input::IsActionReleased("ChangePOV");
 			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 
 			if (key_pressed && m_thirdperson)

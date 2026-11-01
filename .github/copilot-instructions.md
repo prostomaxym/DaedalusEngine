@@ -31,8 +31,7 @@ Linux:
 - Configure: `LinuxScripts/CMakeConfig.sh` (uses vcpkg toolchain, x64-linux triplet)
 - Build: `cmake --build build`
 
-Always make sure changes compile on both Windows and Linux. Linux CI runs on every push; avoid MSVC-only constructs, Windows headers outside `Platform/Windows`, and case-mismatched `#include` paths (Linux is case-sensitive).
-Do not build Linux or run tests automatically. If changed code may affect Linux - notify user and ask permission to check code in WSL.
+Always make sure changes compile on both Windows and Linux. Linux CI runs on every push; avoid MSVC-only constructs, Windows headers outside `Platform/Windows`, and case-mismatched `#include` paths (Linux is case-sensitive). For Daedalus changes, validate on Windows only and defer WSL/Linux validation unless explicitly requested.
 
 ## Code conventions (match existing code)
 - Indentation: tabs. Allman braces for classes/functions/namespaces as in existing files.

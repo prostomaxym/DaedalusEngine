@@ -5,16 +5,15 @@
 #include "Core/Window.h"
 
 #include <GLFW/glfw3.h>
+#include <algorithm>
+#include <iterator>
 
 using namespace Daedalus;
 
 GLFWInput::GLFWInput()
 {
-	for (auto i = DL_KEY_SPACE; i <= DL_KEY_MENU; ++i)
-	{
-		m_prev_state[i] = GLFW_RELEASE;
-		m_current_state[i] = GLFW_RELEASE;
-	}
+	m_gamepad_axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] = -1.f;
+	m_gamepad_axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = -1.f;
 }
 
 void GLFWInput::UpdateImpl()
@@ -24,23 +23,36 @@ void GLFWInput::UpdateImpl()
 	for (int i = DL_KEY_SPACE; i <= DL_KEY_MENU; ++i)
 	{
 		m_prev_state[i] = m_current_state[i];
-		m_current_state[i] = glfwGetKey(window, i);
+		if (KeybindConfig::IsValidKeyboardCode(i)) m_current_state[i] = static_cast<unsigned char>(glfwGetKey(window, i));
+	}
+	GLFWgamepadstate state{};
+	if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state))
+	{
+		std::copy(std::begin(state.buttons), std::end(state.buttons), m_gamepad_buttons.begin());
+		std::copy(std::begin(state.axes), std::end(state.axes), m_gamepad_axes.begin());
+	}
+	else
+	{
+		m_gamepad_buttons.fill(GLFW_RELEASE);
+		m_gamepad_axes.fill(0.f);
+		m_gamepad_axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] = -1.f;
+		m_gamepad_axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = -1.f;
 	}
 }
 
 bool GLFWInput::IsKeyPressedImpl(int keycode)
 {
-	return m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_RELEASE;
+	return keycode >= 0 && keycode <= DL_KEY_MENU && m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_RELEASE;
 }
 
 bool GLFWInput::IsKeyHoldImpl(int keycode)
 {
-	return m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_PRESS;
+	return keycode >= 0 && keycode <= DL_KEY_MENU && m_current_state[keycode] == GLFW_PRESS && m_prev_state[keycode] == GLFW_PRESS;
 }
 
 bool GLFWInput::IsKeyReleasedImpl(int keycode)
 {
-	return m_current_state[keycode] == GLFW_RELEASE && m_prev_state[keycode] == GLFW_PRESS;
+	return keycode >= 0 && keycode <= DL_KEY_MENU && m_current_state[keycode] == GLFW_RELEASE && m_prev_state[keycode] == GLFW_PRESS;
 }
 
 bool GLFWInput::IsMouseButtonPressedImpl(int button)
@@ -62,25 +74,17 @@ std::pair<float, float> GLFWInput::GetMousePosImpl()
 
 bool Daedalus::GLFWInput::IsGpadKeyPressedImpl(int keycode)
 {
-	GLFWgamepadstate state;
-	if (!glfwGetGamepadState(0, &state))
-		return false;
-
-	return state.buttons[keycode];
+	return keycode >= 0 && keycode <= DL_GAMEPAD_BUTTON_LAST && m_gamepad_buttons[keycode] == GLFW_PRESS;
 }
 
 std::pair<float, float> Daedalus::GLFWInput::GetStickPosImpl(StickType type)
 {
-	GLFWgamepadstate state;
-	if (!glfwGetGamepadState(0, &state))
-		return { 0.f, 0.f };
-
 	switch (type)
 	{
 	case Input::StickType::Left:
-		return { state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
+		return { m_gamepad_axes[GLFW_GAMEPAD_AXIS_LEFT_X], m_gamepad_axes[GLFW_GAMEPAD_AXIS_LEFT_Y] };
 	case Input::StickType::Right:
-		return { state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] };
+		return { m_gamepad_axes[GLFW_GAMEPAD_AXIS_RIGHT_X], m_gamepad_axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] };
 	default:
 		break;
 	}
@@ -90,16 +94,12 @@ std::pair<float, float> Daedalus::GLFWInput::GetStickPosImpl(StickType type)
 
 float Daedalus::GLFWInput::GetBumperPosImpl(BamperType type)
 {
-	GLFWgamepadstate state;
-	if (!glfwGetGamepadState(0, &state))
-		return 0.f;
-
 	switch (type)
 	{
 	case Input::BamperType::Left:
-		return state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+		return m_gamepad_axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
 	case Input::BamperType::Right:
-		return state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+		return m_gamepad_axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	default:
 		break;
 	}

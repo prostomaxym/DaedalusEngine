@@ -36,6 +36,10 @@ set(DEBUG_PROJECT_FILES
     ConsoleOverlay.cpp
     ConsoleCompletion.h
     ConsoleCompletion.cpp
+    ConsoleCommands.h
+    ConsoleCommands.cpp
+    InputCommands.h
+    InputCommands.cpp
     Log.h
     Log.cpp
     Profiler.h

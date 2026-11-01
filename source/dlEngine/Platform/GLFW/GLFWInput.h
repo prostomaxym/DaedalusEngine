@@ -2,7 +2,7 @@
 
 #include "Core/Input.h"
 
-#include <map>
+#include <array>
 
 namespace Daedalus {
 
@@ -26,8 +26,10 @@ namespace Daedalus {
 		virtual std::pair<float, float> GetStickPosImpl(StickType type) override;
 		virtual float GetBumperPosImpl(BamperType type) override;
 
-		std::map<int, int> m_current_state;
-		std::map<int, int> m_prev_state;
+		std::array<unsigned char, DL_KEY_MENU + 1> m_current_state{};
+		std::array<unsigned char, DL_KEY_MENU + 1> m_prev_state{};
+		std::array<unsigned char, DL_GAMEPAD_BUTTON_LAST + 1> m_gamepad_buttons{};
+		std::array<float, DL_GAMEPAD_AXIS_LAST + 1> m_gamepad_axes{};
 	};
 
 }

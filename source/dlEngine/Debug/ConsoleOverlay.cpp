@@ -2,6 +2,8 @@
 
 #include "ConsoleOverlay.h"
 #include "ConsoleCompletion.h"
+#include "ConsoleCommands.h"
+#include "InputCommands.h"
 #include "BuildInfo.h"
 #include "Core/Window.h"
 #include "Core/Input.h"
@@ -154,8 +156,10 @@ void ConsoleOverlay::Clear()
 
 void ConsoleOverlay::UpdateInlineHint(const char* input, int cursor, bool has_selection)
 {
-    if (m_completion_input == input && m_completion_cursor == cursor && m_completion_has_selection == has_selection)
+    const auto revision = KeybindConfig::GetRevision();
+    if (m_completion_input == input && m_completion_cursor == cursor && m_completion_has_selection == has_selection && m_completion_revision == revision)
         return;
+    m_completion_revision = revision;
     m_completion_input = input;
     m_completion_cursor = cursor;
     m_completion_has_selection = has_selection;
@@ -184,7 +188,7 @@ void ConsoleOverlay::ExecuteCommand(const char* command)
 void ConsoleOverlay::ProcessCommand(const char* command)
 {
     std::vector<std::string> output;
-    if (m_cvars.Execute(command, output))
+    if (ConsoleCommands::ExecuteHelp(command, output) || InputCommands::Execute(command, output) || m_cvars.Execute(command, output))
     {
         for (const auto& line : output)
             AddLog(line);

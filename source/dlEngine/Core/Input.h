@@ -2,6 +2,7 @@
 
 #include "Macros.h"
 #include "Utils/KeyCodes.h"
+#include "Config/KeybindConfig.h"
 
 #include <tuple>
 
@@ -22,12 +23,17 @@ namespace Daedalus {
 		Input(Input&&) = delete;
 		Input& operator=(Input&&) = delete;
 
-		static void Update() { return GetInstance()->UpdateImpl(); }
+		static void Update();
+		[[nodiscard]] static bool IsActionDown(const std::string& name);
+		[[nodiscard]] static bool IsActionPressed(const std::string& name);
+		[[nodiscard]] static bool IsActionHold(const std::string& name);
+		[[nodiscard]] static bool IsActionReleased(const std::string& name);
+		[[nodiscard]] static float GetAxis(const std::string& name);
 
 		//Input configuration
-		inline static void EnableKeyboardInput(bool enable) { GetInstance()->m_keyboard_connected = enable; }
-		inline static void EnableGamepadInput(bool enable) { GetInstance()->m_gamepad_connected = enable; }
-		inline static void SetSticksDeadZone(float perc) { GetInstance()->m_sticks_deadzone = perc; }
+		static void EnableKeyboardInput(bool enable);
+		static void EnableGamepadInput(bool enable);
+		static void SetSticksDeadZone(float perc);
 
 		inline static bool IsKeyboardInputEnabled() { return GetInstance()->m_keyboard_connected; }
 		inline static bool IsGamepadInputEnabled() { return GetInstance()->m_gamepad_connected; }
@@ -54,9 +60,9 @@ namespace Daedalus {
 			Right
 		};
 
-		inline static bool IsGpadKeyPressed(int keycode) { return GetInstance()->IsGpadKeyPressedImpl(keycode); }
+		inline static bool IsGpadKeyPressed(int keycode) { return IsGamepadInputEnabled() && keycode >= 0 && keycode <= DL_GAMEPAD_BUTTON_LAST && GetInstance()->IsGpadKeyPressedImpl(keycode); }
 		static std::pair<float, float> GetStickPos(StickType type);
-		inline static float GetBumperPos(BamperType type) { return GetInstance()->GetBumperPosImpl(type); }
+		inline static float GetBumperPos(BamperType type) { return IsGamepadInputEnabled() ? GetInstance()->GetBumperPosImpl(type) : 0.f; }
 
 	protected:
 		static Input* GetInstance();
@@ -75,9 +81,21 @@ namespace Daedalus {
 		virtual float GetBumperPosImpl(BamperType type) = 0;
 
 	private:
-		static Input* s_instance;
+		struct ActionState
+		{
+			InputActionBinding binding;
+			bool keyboard{ false };
+			bool gamepad{ false };
+			bool previous{ false };
+			bool down{ false };
+		};
+		void RefreshActionGates();
+		float ReadGamepadAxis(GamepadAxis axis);
+		static Input* s_instance; // Non-owning; Engine owns the platform input system.
+		std::unordered_map<std::string, ActionState> m_action_states;
+		uint64_t m_binding_revision{ 0 };
 		bool m_keyboard_connected{ true };
-		bool m_gamepad_connected{ false };
+		bool m_gamepad_connected{ true };
 		float m_sticks_deadzone{ 0.15f };
 	};
 }

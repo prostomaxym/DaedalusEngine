@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
+#include "Renderer/Resources/DecodedImage.h"
 
 #ifdef DL_PLATFORM_LINUX
 	#define STBI_NO_SIMD //Have no idea why, but linux gcc fails to compile with simd
@@ -18,12 +19,50 @@ namespace
 		{
 		case GL_RGBA8:    return 4;
 		case GL_RGB8:     return 3;
+		case GL_R8:       return 1;
+		case GL_RG8:      return 2;
 		case GL_RGBA32F:  return 16;
 		case GL_RGB32F:   return 12;
 		default:          return 0;
 		}
 	}
+}
 
+OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::shared_ptr<DecodedImage>>& faces)
+{
+	if (faces.size() != 6 || !faces.front()) return;
+	const auto width = faces.front()->GetWidth();
+	for (const auto& face : faces)
+		if (!face || !face->GetPixels() || face->GetWidth() != width || face->GetHeight() != width || face->GetChannels() != 3) return;
+	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_rendererID);
+	if (!m_rendererID) return;
+	glTextureStorage2D(m_rendererID, 1, GL_RGB8, width, width);
+	GLint allocated_width = 0;
+	glGetTextureLevelParameteriv(m_rendererID, 0, GL_TEXTURE_WIDTH, &allocated_width);
+	if (allocated_width != width) return;
+	GLint alignment = 4;
+	glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	for (size_t face = 0; face < faces.size(); ++face)
+		glTextureSubImage3D(m_rendererID, 0, 0, 0, static_cast<GLint>(face), width, width, 1, GL_RGB, GL_UNSIGNED_BYTE, faces[face]->GetPixels());
+	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	for (const auto parameter : { GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R }) glTextureParameteri(m_rendererID, parameter, GL_CLAMP_TO_EDGE);
+	m_width = static_cast<uint32_t>(width); m_height = m_width; m_faces_loaded = 6;
+}
+
+bool OpenGLTextureCubemap::SwapStorage(TextureCubemap& replacement)
+{
+	auto* texture = dynamic_cast<OpenGLTextureCubemap*>(&replacement);
+	if (!texture || !texture->IsLoaded()) return false;
+	std::swap(m_rendererID, texture->m_rendererID); std::swap(m_width, texture->m_width);
+	std::swap(m_height, texture->m_height); std::swap(m_faces_loaded, texture->m_faces_loaded);
+	return true;
+}
+
+namespace
+{
 	std::vector<unsigned char> ConvertToRGB(unsigned char* grayscaleImage, int width, int height)
 	{
 		// Allocate memory for the new RGB image
@@ -139,54 +178,44 @@ OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
 
 OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int channels)
 {
-	auto img_data = data;
-	std::vector<unsigned char> converted_data;
-
-	if (img_data)
+	if (!data || width <= 0 || height <= 0 || channels < 1 || channels > 4) return;
+	const GLenum formats[]{ GL_RED, GL_RG, GL_RGB, GL_RGBA };
+	const GLenum storage[]{ GL_R8, GL_RG8, GL_RGB8, GL_RGBA8 };
+	m_internal_format = storage[channels - 1]; m_data_format = formats[channels - 1];
+	m_width = static_cast<uint32_t>(width); m_height = static_cast<uint32_t>(height);
+	glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
+	if (!m_rendererID) return;
+	glTextureStorage2D(m_rendererID, 1, m_internal_format, width, height);
+	GLint allocated_width = 0;
+	glGetTextureLevelParameteriv(m_rendererID, 0, GL_TEXTURE_WIDTH, &allocated_width);
+	if (allocated_width != width) return;
+	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	if (channels <= 2)
 	{
-		m_is_loaded = true;
-
-		m_width = width;
-		m_height = height;
-
-		GLenum internalFormat = 0, dataFormat = 0;
-		if (channels == 4)
-		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_RGBA;
-		}
-		else if (channels == 3)
-		{
-			internalFormat = GL_RGB8;
-			dataFormat = GL_RGB;
-		}
-		else if (channels == 1)
-		{
-			converted_data = ConvertToRGB(data, m_width, m_height);
-			img_data = converted_data.data();
-			internalFormat = GL_RGB8;
-			dataFormat = GL_RGB;
-		}
-
-		m_internal_format = internalFormat;
-		m_data_format = dataFormat;
-
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
-		glBindTexture(GL_TEXTURE_2D, m_rendererID);
-		glTextureStorage2D(m_rendererID, 1, internalFormat, m_width, m_height);
-
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, img_data);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_G, GL_RED);
+		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_B, GL_RED);
+		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_A, channels == 2 ? GL_GREEN : GL_ONE);
 	}
-	else
-	{
-		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Failed to load texture");
-	}	
+	GLint alignment = 4;
+	glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTextureSubImage2D(m_rendererID, 0, 0, 0, width, height, m_data_format, GL_UNSIGNED_BYTE, data);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+	m_is_loaded = true;
+}
+
+bool OpenGLTexture2D::SwapStorage(Texture2D& replacement)
+{
+	auto* texture = dynamic_cast<OpenGLTexture2D*>(&replacement);
+	if (!texture || !texture->m_is_loaded) return false;
+	std::swap(m_rendererID, texture->m_rendererID);
+	std::swap(m_width, texture->m_width); std::swap(m_height, texture->m_height);
+	std::swap(m_internal_format, texture->m_internal_format); std::swap(m_data_format, texture->m_data_format);
+	std::swap(m_is_loaded, texture->m_is_loaded);
+	return true;
 }
 
 OpenGLTexture2D::OpenGLTexture2D(float* data, int width, int height, int channels)
@@ -247,6 +276,8 @@ const char* OpenGLTexture2D::GetFormatName() const
 	{
 	case GL_RGBA8:    return "RGBA8";
 	case GL_RGB8:     return "RGB8";
+	case GL_R8:       return "R8";
+	case GL_RG8:      return "RG8";
 	case GL_RGBA32F:  return "RGBA32F";
 	case GL_RGB32F:   return "RGB32F";
 	default:          return "unknown";

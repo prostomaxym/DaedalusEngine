@@ -53,6 +53,8 @@ namespace Daedalus {
 		void Bind(uint32_t slot = 0) const override;
 
 		bool IsLoaded() const override { return m_is_loaded; }
+		bool SwapStorage(Texture2D& replacement) override;
+		void SetSourcePath(const std::filesystem::path& path) override { m_path = path; }
 
 		uint64_t GetMemorySizeBytes() const override;
 		const char* GetFormatName() const override;
@@ -78,6 +80,8 @@ namespace Daedalus {
 	{
 	public:
 		OpenGLTextureCubemap(const std::vector<std::string>& faces);
+		OpenGLTextureCubemap(const std::vector<std::shared_ptr<DecodedImage>>& faces);
+		bool SwapStorage(TextureCubemap& replacement) override;
 		~OpenGLTextureCubemap();
 		bool IsLoaded() const override { return m_faces_loaded == 6; }
 

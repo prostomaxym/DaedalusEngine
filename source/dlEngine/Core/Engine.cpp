@@ -63,12 +63,13 @@ struct Engine::State
 		if (!m_assets->Initialize())
 			for (const auto& error : m_assets->GetRegistry().GetErrors())
 				Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "Asset registry: {}", error);
-		m_resources = std::make_unique<ResourceManager>(&m_jobs);
+		m_resources = std::make_unique<ResourceManager>(&m_jobs, m_assets.get());
 		m_renderer = std::make_unique<Renderer>();
 		ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 		m_assets->SetChangeCallback([this](const std::vector<std::string>& changed)
 		{
 			if (!m_jobs.IsAcceptingJobs()) return;
+			ResourceManager::ReloadAssets(changed);
 			if (std::any_of(changed.begin(), changed.end(), [](const std::string& path) { return path.rfind("shaders:/", 0) == 0; }))
 				ResourceManager::ReloadShaders(*m_assets);
 		});

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 find_package(GTest CONFIG REQUIRED)
+find_package(libzip CONFIG REQUIRED)
 
 
 #----------------- Project config --------------------------#
@@ -17,6 +18,7 @@ set(CONFIG_TEST_FILES
     )
 
 set(CORE_TEST_FILES
+    CoreTests/AssetFollowupTest.cpp
     CoreTests/AssetPipelineTest.cpp
     CoreTests/LayerStackTest.cpp
     )
@@ -109,6 +111,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    
     dlEngine
+    libzip::zip
     GTest::gmock
     GTest::gmock_main
     GTest::gtest

@@ -6,11 +6,13 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 
 1. Create an empty `std::unique_ptr<Scene>` and an application-owned `ScriptRegistry`.
 2. Register the application's native-script adapters. The sandbox's `RegisterSceneScripts` in `source/dlSandbox/SceneScripts.cpp` is a complete example.
-3. Call `SceneSerializer::Load(scene_file, *scene, asset_root, scripts, error)`.
+3. Call `SceneSerializer::LoadAsset(engine.GetAssets(), virtual_path_or_uuid, *scene, scripts, error)`, or use the compatible physical-file `Load` API for tools.
 4. On success, transfer ownership with `Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene))`. At the next frame boundary the manager stops the old scene, activates the new one and starts runtime, logging any startup failure. The loaded name and primary-camera UUID are retained.
 5. The application forwards fixed updates, variable updates, rendering and viewport resizes through the scene manager. Request a null scene to unload it. Standalone tools may own scenes directly and use the corresponding runtime methods themselves.
 
-The sandbox loads its startup scene from `PathConfig::GetScenePath()`. Set `SceneFile` in the `[Path]` section of the runtime root's `path.ini` (`runtime/path.ini` during development). It is resolved relative to `AssetsFolder`, which defaults to `asset` relative to the runtime root. The generic default is `scenes/startup.scene.json`; no scene is bundled or copied automatically.
+The sandbox loads its startup scene through `PathConfig::GetSceneAssetPath()` (`assets:/` plus `SceneFile`). Set `SceneFile` in `[Path]` of `runtime/path.ini`. `AssetsFolder` defaults to the runtime `asset` directory and may instead identify a ZIP file, for example `asset/game.zip`; ZIP contents use the same asset-root-relative layout. The default scene is `scenes/startup.scene.json`; no scene/archive is bundled or copied automatically. The legacy `GetScenePath()` remains for directory-backed physical loading.
+
+To deploy an archive, first generate/preserve source UUID sidecars in a directory-backed asset tree, then ZIP the tree with each `<source>.meta` adjacent to its source. ZIP mounts are read-only: missing or invalid sidecars cannot be repaired inside them. Use ordinary ZIP tooling; encryption is unsupported. Asset/scene UUIDs use the nonzero decimal ID stored in the sidecar, distinct from entity UUIDs in scene JSON.
 
 Place your scene JSON and its referenced models, textures, and skybox images under the runtime asset folder manually. The files in `source/dlSandbox/scenes` are reference examples only: they are not part of the sandbox target and are not automatically deployed by builds or explicitly installed from source. To try one, manually copy `nuke.scene.json` or `anor_londo.scene.json` into `runtime/asset/scenes`, supply its referenced assets under `runtime/asset`, and set `[Path]` `SceneFile=scenes/nuke.scene.json` or `SceneFile=scenes/anor_londo.scene.json`. Alternatively, name your deployed scene `startup.scene.json` to use the default. Switching scenes requires changing configuration, not rebuilding the application.
 
@@ -22,10 +24,12 @@ Installation still packages the contents of the runtime asset folder like other 
 | --- | --- |
 | `SceneJson::Parse` / `Serialize` | Convert JSON text and persistent records; no graphics/physics initialization required. |
 | `SceneJson::Load` / `Save` | Read/write persistent records as JSON files. |
+| `SceneJson::Load(files, virtual_path, ...)` | Read records through directory/ZIP VFS without graphics. |
 | `SceneJson::Validate` | Validate the v1 record schema and renderer shadow-map budget. |
 | `SceneSerializer::Instantiate` | Build a runtime `Scene` from records. |
 | `SceneSerializer::Capture` | Capture a stopped scene into records. |
 | `SceneSerializer::Load` / `Save` | Combine the file and runtime operations. |
+| `SceneSerializer::LoadAsset` | Load by virtual path or asset UUID using an engine asset pipeline; scene activation remains explicit. |
 
 All operations return `bool` and provide a diagnostic in `error`; log it through the engine logger. Parse/capture failures leave their output records unchanged. Loading requires an **empty, stopped** target. Invalid documents, script bindings, and missing assets are rejected before construction; construction failures remove newly created entities and restore the target's previous name and paused state. Failed resources are not cached as successful models or cubemaps. Successfully loaded resources may remain in the existing resource-manager caches after a failed scene load.
 
@@ -51,7 +55,7 @@ Components are named fields on each entity, not C++ type names or memory snapsho
 | Field | Persistent contents |
 | --- | --- |
 | `transform` | `translation`, `rotation`, `scale`, each a three-number array. Rotation is pitch/yaw/roll in degrees. Defaults are zero translation/rotation and unit scale; zero scale is rejected. |
-| `model` | Asset-root-relative `path` and numeric `import_flags` (`ModelParserFlags`/Assimp bitmask). Model materials and textures continue to be imported with the model; custom runtime material overrides are not saved. |
+| `model` | Asset-root-relative or canonical virtual `path`, plus numeric `import_flags` (`ModelParserFlags`/Assimp bitmask). Material dependencies use VFS-relative resolution, including ZIP entries and embedded textures; runtime material overrides are not saved. |
 | `camera` | `projection` (`perspective` or `orthographic`), position/up/yaw/pitch, projection parameters, viewport policy, and control settings. |
 | `directional_light`, `point_light`, `spot_light` | Position, direction, ambient/diffuse/specular colors, power, range, angles, shadow settings. |
 | `skybox` | Six `faces` in right, left, top, bottom, front, back order, plus rotation in degrees. Images must decode to matching square faces. |
@@ -85,7 +89,7 @@ The stored body description is its creation configuration, not Bullet's evolving
 
 ### Asset references
 
-References use forward slashes relative to the `asset_root` supplied to the loader. Absolute paths, drive-qualified paths, backslashes, `.`/`..` path segments, and paths resolving outside the asset root (including symlinks) fail. Model cache identity includes the normalized path and import flags, so different import settings do not accidentally reuse a previous import.
+References use forward slashes relative to the physical `asset_root`, or canonical virtual paths such as `assets:/models/example.obj` with `LoadAsset`. Relative references in that workflow use the asset mount. Absolute/drive-qualified paths, backslashes, traversal and escaping symlinks fail. Assimp material dependencies may use parent-relative paths only when normalized within the same VFS mount. Cache identity includes normalized source and import flags. Scene capture retains virtual references, and ZIP scenes must be saved/exported to a physical JSON file rather than modifying an archive entry.
 
 Meshes, shaders, texture pixels, OpenGL IDs, and native pointers are not embedded in scene files. External model/material assets must still be deployed separately and use correct filename case for Linux.
 
@@ -122,6 +126,6 @@ This is checked, cross-platform replacement, **not an atomic/power-loss-durable 
 
 ## Scope and validation
 
-Version 1 covers authored scene definitions used by the sandbox. It does not implement savegames, hierarchy, prefabs, hot reload, embedded assets, custom material serialization, or arbitrary reflected components. SceneManager supports whole-scene replacement at a frame boundary, not in-place hot reload. Scene and ECS registry objects are not moved because systems retain references to them.
+Version 1 covers authored scene definitions, not savegames, hierarchy, prefabs, automatic scene restart, custom material serialization or arbitrary reflected components. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
 
-Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or select the configuration actually built). `SceneJsonTest`, `SceneSerializerTest`, `SceneBodyTest`, and `SceneFileTest` run without a window/GL context. Visual behavior and asset import still require a sandbox smoke test with the external assets available.
+Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or the configuration built). Scene tests and the asset follow-up tests cover record/VFS/ZIP loading and CPU model/texture imports without a GL context. GPU upload/replacement and visual behavior still require a separate sandbox smoke test.

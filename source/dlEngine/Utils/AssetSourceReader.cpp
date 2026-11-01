@@ -26,14 +26,15 @@ namespace Daedalus
 		bool ReadShader(const VirtualFileSystem& files, const std::string& path, std::set<std::string>& stack, std::string& data, std::string& error)
 		{
 			const auto source = files.Resolve(path);
-			const auto key = source ? Utf8ToString(source->generic_u8string()) : std::string();
-			if (!source || stack.size() >= 32 || !stack.insert(key).second)
+			const auto normalized = VirtualFileSystem::Normalize(path);
+			const auto key = source ? Utf8ToString(source->generic_u8string()) : normalized.value_or(std::string());
+			if (!normalized || stack.size() >= 32 || !stack.insert(key).second)
 			{
 				error = "Invalid shader include path, cycle or depth limit: " + path;
 				return false;
 			}
 			std::string text;
-			if (!AssetSourceReader::ReadBytes(*source, text, error)) return false;
+			if (!files.Read(path, text, error)) return false;
 			std::istringstream input(text);
 			std::string line;
 			while (std::getline(input, line))

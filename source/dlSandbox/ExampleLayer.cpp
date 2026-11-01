@@ -12,9 +12,8 @@ void ExampleLayer::OnAttach()
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Failed to register scene scripts");
 		return;
 	}
-	const auto assets = PathConfig::GetAssetsPath();
 	auto scene = std::make_unique<Scene>();
-	if (!SceneSerializer::Load(PathConfig::GetScenePath(), *scene, assets, m_scripts, error))
+	if (!SceneSerializer::LoadAsset(Application::GetInstance()->GetEngine().GetAssets(), PathConfig::GetSceneAssetPath(), *scene, m_scripts, error))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Scene load failed: {}", error);
 		return;

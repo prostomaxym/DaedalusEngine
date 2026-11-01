@@ -16,6 +16,7 @@ install(FILES
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/pugixml.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/zlib1.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/z.dll
+        ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/zip.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/poly2tri.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/minizip.dll
         ${COMPILE_OUTPUT_FOLDER}/$<CONFIG>/kubazip.dll
@@ -37,12 +38,15 @@ install(TARGETS dlSandbox
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
 
-# runtime/ is generated and not in git; keybinds.ini only exists after the app saved it, defaults are used otherwise
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/keybinds.ini
+# runtime/ is generated and not in git;
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/keybinds.ini
+        ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/graphics.ini
+
         DESTINATION ./config/
         OPTIONAL)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/path.ini
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/path.ini
         DESTINATION .
         OPTIONAL)
 

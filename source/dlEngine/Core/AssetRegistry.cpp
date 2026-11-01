@@ -1,23 +1,27 @@
 #include "dlpch.h"
 #include "AssetRegistry.h"
+#include "Utils/ContentFingerprint.h"
 #include <fstream>
 #include <limits>
 #include <random>
 #include <set>
+#include <sstream>
 
 namespace Daedalus
 {
 	namespace
 	{
-		bool ReadIdentity(const std::filesystem::path& source, AssetId& id)
+		bool ReadIdentity(const VirtualFileSystem& files, const std::string& path, AssetId& id)
 		{
-			auto metadata_path = source;
-			metadata_path += ".meta";
-			std::error_code ec;
-			const bool exists = std::filesystem::exists(metadata_path, ec);
-			if (ec) return false;
-			if (!exists)
+			std::string text, error;
+			const auto resolved = files.Resolve(path + ".meta");
+			if (!files.Read(path + ".meta", text, error, 4096))
 			{
+				if (!resolved) return false;
+				const auto metadata_path = *resolved;
+				std::error_code ec;
+				const bool exists = std::filesystem::exists(metadata_path, ec);
+				if (ec || exists) return false;
 				thread_local std::mt19937_64 generator(std::random_device{}());
 				do { id = generator(); } while (id == 0);
 				auto temporary_path = metadata_path;
@@ -31,8 +35,9 @@ namespace Daedalus
 					std::filesystem::remove(temporary_path, ec);
 					return false;
 				}
+				if (!files.Read(path + ".meta", text, error, 4096)) return false;
 			}
-			std::ifstream input(metadata_path, std::ios::binary);
+			std::istringstream input(text);
 			std::string signature, identity, extra;
 			if (!std::getline(input, signature) || !std::getline(input, identity)) return false;
 			if (!signature.empty() && signature.back() == '\r') signature.pop_back();
@@ -64,18 +69,19 @@ namespace Daedalus
 			for (const auto& path : paths)
 			{
 				const auto source = files.Resolve(path);
-				if (!source) continue;
 				AssetMetadata metadata;
 				metadata.virtual_path = path;
-				metadata.source_path = *source;
+				metadata.source_path = source.value_or(std::filesystem::path());
 				std::error_code ec;
-				metadata.write_time = std::filesystem::last_write_time(*source, ec);
-				if (!ec) metadata.size = std::filesystem::file_size(*source, ec);
-				if (ec || !files.Resolve(path + ".meta") || !ReadIdentity(*source, metadata.id))
+				metadata.write_time = std::filesystem::last_write_time(source.value_or(root), ec);
+				std::string data;
+				if (ec || !files.Read(path, data, error) || !ReadIdentity(files, path, metadata.id))
 				{
 					m_errors.push_back(path + ": cannot read/create valid asset metadata");
 					continue;
 				}
+				metadata.size = data.size();
+				metadata.content_hash = ContentFingerprint(data);
 				const auto existing = m_ids.find(metadata.id);
 				if (existing != m_ids.end() || duplicates.contains(metadata.id))
 				{

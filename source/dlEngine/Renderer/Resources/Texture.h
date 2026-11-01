@@ -48,10 +48,13 @@ namespace Daedalus {
 	};
 
 	class ResourceManager;
+	class DecodedImage;
 
 	class Texture2D : public Texture
 	{
 		friend class ResourceManager;
+		virtual bool SwapStorage(Texture2D& replacement) = 0;
+		virtual void SetSourcePath(const std::filesystem::path& path) = 0;
 
 		static std::shared_ptr<Texture2D> Create(uint32_t width, uint32_t height, int channels = 4);
 		static std::shared_ptr<Texture2D> Create(const std::filesystem::path& path);
@@ -66,6 +69,8 @@ namespace Daedalus {
 	class TextureCubemap : public Texture
 	{
 		friend class ResourceManager;
+		virtual bool SwapStorage(TextureCubemap& replacement) = 0;
+		static std::shared_ptr<TextureCubemap> Create(const std::vector<std::shared_ptr<DecodedImage>>& faces);
 		static std::shared_ptr<TextureCubemap> Create(const std::vector<std::string>& faces);
 	};
 }

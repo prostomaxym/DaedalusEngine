@@ -18,6 +18,7 @@ namespace Daedalus
 		std::filesystem::path source_path;
 		std::filesystem::file_time_type write_time{};
 		uintmax_t size = 0;
+		uint64_t content_hash = 0;
 	};
 
 	// Instances are owner-thread objects; background scans operate on independent copies.

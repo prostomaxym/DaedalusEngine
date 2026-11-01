@@ -12,6 +12,7 @@
         {"name": "implot3d"},
         {"name": "glm"},
         {"name": "stb"},
+        {"name": "libzip", "default-features": false},
         {"name": "assimp"},
         {"name": "entt"},
         {"name": "simpleini"},

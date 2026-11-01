@@ -25,18 +25,30 @@ namespace Daedalus
 	{
 		CheckOwner();
 		const auto* metadata = m_registry.Find(id);
+		return LoadPath(id, metadata ? metadata->virtual_path : std::string(), std::move(callback), mode);
+	}
+
+	JobHandle AssetPipeline::LoadAsync(std::string_view path, LoadCallback callback, AssetLoadMode mode)
+	{
+		CheckOwner();
+		const auto normalized = VirtualFileSystem::Normalize(path);
+		const auto* metadata = normalized ? m_registry.Find(*normalized) : nullptr;
+		return LoadPath(metadata ? metadata->id : 0, normalized.value_or(std::string()), std::move(callback), mode);
+	}
+
+	JobHandle AssetPipeline::LoadPath(AssetId id, std::string path, LoadCallback callback, AssetLoadMode mode)
+	{
 		auto result = std::make_shared<AssetLoadResult>();
 		result->id = id;
-		if (metadata) result->virtual_path = metadata->virtual_path;
+		result->virtual_path = std::move(path);
 		const auto read = m_jobs.Submit([files = m_files, result, mode]
 		{
-			const auto path = files.Resolve(result->virtual_path);
-			if (!path) { result->error = "Unknown asset UUID or invalid virtual path"; return; }
+			if (result->virtual_path.empty()) { result->error = "Unknown asset UUID"; return; }
 			if (mode == AssetLoadMode::ShaderSource)
 			{
 				(void)AssetSourceReader::ReadShaderSource(files, result->virtual_path, result->data, result->error);
 			}
-			else (void)AssetSourceReader::ReadBytes(*path, result->data, result->error);
+			else (void)files.Read(result->virtual_path, result->data, result->error);
 			if (!result->error.empty()) result->data.clear();
 		});
 		const std::array dependencies{ read };
@@ -59,7 +71,7 @@ namespace Daedalus
 			for (const auto& [path, metadata] : registry->GetAssets())
 			{
 				const auto* previous = m_registry.Find(path);
-				if (!previous || previous->id != metadata.id || previous->write_time != metadata.write_time || previous->size != metadata.size)
+				if (!previous || previous->id != metadata.id || previous->write_time != metadata.write_time || previous->size != metadata.size || previous->content_hash != metadata.content_hash)
 					changed.push_back(path);
 			}
 			for (const auto& [path, metadata] : m_registry.GetAssets())

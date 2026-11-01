@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "SceneJson.h"
 #include "Utils/Utf8.h"
+#include "Utils/VirtualFileSystem.h"
 
 #include <nlohmann/json.hpp>
 
@@ -238,6 +239,12 @@ namespace
 
 	bool AssetPath(const std::string& value)
 	{
+		const auto separator = value.find(":/");
+		if (separator != std::string::npos && separator > 1)
+		{
+			const auto normalized = VirtualFileSystem::Normalize(value);
+			return normalized && *normalized == value && value.size() > separator + 2;
+		}
 		if (value.empty() || value.find('\\') != std::string::npos || value.find(':') != std::string::npos || value.find('\0') != std::string::npos)
 			return false;
 		const auto path = Utf8ToPath(value);
@@ -365,6 +372,12 @@ bool SceneJson::Serialize(const SceneRecord& record, std::string& text, std::str
 	if (!Validate(record, error)) return false;
 	text = Encode(record).dump(2) + "\n";
 	return true;
+}
+
+bool SceneJson::Load(const VirtualFileSystem& files, std::string_view path, SceneRecord& record, std::string& error)
+{
+	std::string text;
+	return files.Read(path, text, error) && Parse(text, record, error);
 }
 
 bool SceneJson::Load(const std::filesystem::path& path, SceneRecord& record, std::string& error)

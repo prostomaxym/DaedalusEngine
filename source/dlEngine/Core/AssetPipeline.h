@@ -35,12 +35,14 @@ namespace Daedalus
 		[[nodiscard]] const VirtualFileSystem& GetFiles() const { return m_files; }
 		[[nodiscard]] const AssetRegistry& GetRegistry() const { return m_registry; }
 		[[nodiscard]] JobHandle LoadAsync(AssetId id, LoadCallback callback, AssetLoadMode mode = AssetLoadMode::Bytes);
+		[[nodiscard]] JobHandle LoadAsync(std::string_view path, LoadCallback callback, AssetLoadMode mode = AssetLoadMode::Bytes);
 		[[nodiscard]] JobHandle Refresh();
 		void SetChangeCallback(ChangeCallback callback);
 		void Update();
 
 	private:
 		void CheckOwner() const;
+		JobHandle LoadPath(AssetId id, std::string path, LoadCallback callback, AssetLoadMode mode);
 		JobSystem& m_jobs; // Non-owning; Engine owns and drains the scheduler before asset teardown.
 		VirtualFileSystem m_files;
 		AssetRegistry m_registry;

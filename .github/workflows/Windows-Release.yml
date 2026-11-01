@@ -66,7 +66,7 @@ jobs:
           throw "Invalid project version: $VersionNumber"
         }
         $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
-        $ProductPath = "${{github.workspace}}/install/" + $ProductName + ".exe"
+        $ProductPath = "${{github.workspace}}/runtime/" + $ProductName + ".exe"
         Write-Host "ProductName: $ProductName"
         Write-Host "ProductPath: $ProductPath"
         Write-Host "VersionNumber: $VersionNumber"

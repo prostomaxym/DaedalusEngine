@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16.3)
 
+list(PREPEND VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/CMakeScripts/vcpkg_triplets")
+
 #------------------ Project config ------------------------------#
 project(
   Daedalus

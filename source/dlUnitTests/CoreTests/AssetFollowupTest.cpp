@@ -200,6 +200,7 @@ TEST(ArchiveMountTest, configured_mount_errors_describe_missing_and_unsafe_archi
 	std::string error;
 	EXPECT_FALSE(files.Mount("assets", fixture.root / "missing.zip", error));
 	EXPECT_NE(error.find("Cannot open ZIP archive"), std::string::npos);
+	EXPECT_NE(error.find("(error " + std::to_string(ZIP_ER_NOENT) + ")"), std::string::npos);
 	ASSERT_TRUE(fixture.Zip({ { "..\\outside.txt", "unsafe" } }, false));
 	EXPECT_FALSE(files.Mount("assets", fixture.root / "assets.zip", error));
 	EXPECT_NE(error.find("Unsafe ZIP entry path"), std::string::npos);

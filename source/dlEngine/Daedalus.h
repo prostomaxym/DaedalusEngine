@@ -24,6 +24,7 @@
 #include "ECS/Serialization/SceneSerializer.h"
 
 #include "Threads/DaedalusThreads.h"
+#include "Threads/JobSystem.h"
 
 #include "Utils/DeltaTime.h"
 #include "Utils/FPSLocker.h"

@@ -34,6 +34,7 @@ set(ECS_TEST_FILES
     ECSTests/SceneJsonTest.cpp
     ECSTests/SceneSerializerTest.cpp
     ECSTests/TransformComponentTest.cpp
+    ECSTests/TransformPreparationTest.cpp
     ECSTests/UUIDTest.cpp
     )
 
@@ -53,11 +54,13 @@ set(RENDERER_TEST_FILES
     RendererTests/CacheEvictionTest.cpp
     RendererTests/CameraTest.cpp
     RendererTests/DirectionalLightSourceTest.cpp
+    RendererTests/DecodedImageTest.cpp
     RendererTests/GeometryTest.cpp
     RendererTests/LightSourceTest.cpp
     )
 
 set(THREADS_TEST_FILES
+    ThreadsTests/JobSystemTest.cpp
     ThreadsTests/ThreadPoolTest.cpp
     ThreadsTests/ThreadJoinerTest.cpp
     ThreadsTests/ThreadRunnerTest.cpp

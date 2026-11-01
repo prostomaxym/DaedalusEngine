@@ -9,6 +9,8 @@ project(
 
 set(THREADS_PROJECT_FILES
     DaedalusThreads.h
+    JobSystem.h
+    JobSystem.cpp
     ThreadJoiner.h
     ThreadJoiner.cpp
     ThreadRunner.h

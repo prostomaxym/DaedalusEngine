@@ -9,10 +9,14 @@
 #include "Debug/Profiler.h"
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderConstants.h"
+#include "TransformPreparation.h"
 
 #include <limits>
 
 using namespace Daedalus;
+
+RenderSystem::RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}
+RenderSystem::~RenderSystem() = default;
 
 void RenderSystem::OnStartRuntime() const
 {
@@ -102,6 +106,29 @@ void RenderSystem::RenderSkybox() const
 void RenderSystem::SubmitModels() const
 {
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
+	auto* jobs = ResourceManager::GetJobs();
+	if (jobs && models_view.size() >= 128)
+	{
+		m_transform_inputs.clear();
+		m_models.clear();
+		for (const auto e : models_view)
+		{
+			m_transform_inputs.push_back(m_registry.get<TransformComponent>(e));
+			m_models.push_back(m_registry.get<RenderableObjectComponent>(e).model);
+		}
+		m_transform_matrices.resize(m_transform_inputs.size());
+		if (!PrepareTransforms(*jobs, m_transform_inputs, m_transform_matrices))
+		{
+			Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Transform jobs failed; preparing snapshots on the main thread");
+			for (size_t index = 0; index < m_transform_inputs.size(); ++index)
+				m_transform_matrices[index] = m_transform_inputs[index].GetTransform();
+		}
+		for (size_t index = 0; index < m_models.size(); ++index)
+			Renderer::Submit(m_models[index].get(), m_transform_matrices[index]);
+		m_models.clear();
+		m_transform_inputs.clear();
+		return;
+	}
 	for (const auto e : models_view)
 	{
 		Entity entity = { e, m_scene };

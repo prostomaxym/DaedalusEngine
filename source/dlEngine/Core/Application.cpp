@@ -23,6 +23,7 @@
 #include "Utils/FPSLocker.h"
 #include "Utils/FixedStepClock.h"
 #include "Utils/WorkingDirectory.h"
+#include "Threads/JobSystem.h"
 
 #include "Platform/Platform.h"
 
@@ -91,6 +92,7 @@ void Application::Run()
 			GetEventEngine().DispatchPending(DL_BIND_EVENT_FN(Application::OnEvent));
 		}
 		if (!m_running) break;
+		m_engine->GetJobs().ProcessMainThread();
 		auto& scenes = m_engine->GetScenes();
 		if (scenes.HasPending())
 		{

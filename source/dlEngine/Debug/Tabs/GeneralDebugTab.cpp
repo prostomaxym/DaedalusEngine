@@ -309,7 +309,7 @@ void GeneralDebugTab::RenderWorldSection()
 			, ImPlot3DAxisFlags_NoDecorations | ImPlot3DAxisFlags_Invert
 			, ImPlot3DAxisFlags_NoDecorations);
 
-		ImPlot3D::SetupBoxRotation(0.f, 0.f, false, ImPlot3DCond_Once);
+		ImPlot3D::SetupBoxRotation(0.f, 0.f, false, ImPlot3DCond_Always);
 		ImPlot3D::SetupBoxScale(1.5f, 1.5f, 1.5f);
 
 		// X axis
@@ -317,7 +317,12 @@ void GeneralDebugTab::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + x_axis.x };
 			float y[2] = { pos.y, pos.y + x_axis.y };
 			float z[2] = { pos.z, pos.z + x_axis.z };
-			ImPlot3D::PlotLine("X", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(1, 0, 0, 1) });
+			ImPlot3D::PlotLine("X", x, y, z, 2,
+				{
+					ImPlot3DProp_LineColor, ImVec4(1, 0, 0, 1),
+					ImPlot3DProp_LineWeight, 3.f,
+					ImPlot3DProp_FillColor, ImVec4(1, 0, 0, 1)
+				});
 		}
 
 		// Y axis
@@ -325,7 +330,12 @@ void GeneralDebugTab::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + y_axis.x };
 			float y[2] = { pos.y, pos.y + y_axis.y };
 			float z[2] = { pos.z, pos.z + y_axis.z };
-			ImPlot3D::PlotLine("Y", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(0, 1, 0, 1) });
+			ImPlot3D::PlotLine("Y", x, y, z, 2,
+				{
+					ImPlot3DProp_LineColor, ImVec4(0, 1, 0, 1),
+					ImPlot3DProp_LineWeight, 3.f,
+					ImPlot3DProp_FillColor, ImVec4(0, 1, 0, 1)
+				});
 		}
 
 		// Z axis
@@ -333,7 +343,12 @@ void GeneralDebugTab::RenderWorldSection()
 			float x[2] = { pos.x, pos.x + z_axis.x };
 			float y[2] = { pos.y, pos.y + z_axis.y };
 			float z[2] = { pos.z, pos.z + z_axis.z };
-			ImPlot3D::PlotLine("Z", x, y, z, 2, { ImPlot3DProp_LineColor, ImVec4(0, 0.5f, 1, 1) });
+			ImPlot3D::PlotLine("Z", x, y, z, 2,
+				{
+					ImPlot3DProp_LineColor, ImVec4(0, 0.5f, 1, 1),
+					ImPlot3DProp_LineWeight, 3.f,
+					ImPlot3DProp_FillColor, ImVec4(0, 0.5f, 1, 1)
+				});
 		}
 
 		ImPlot3D::EndPlot();

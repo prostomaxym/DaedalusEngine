@@ -37,6 +37,8 @@ set(ECS_PROJECT_FILES
     NativeScripts/CameraController.cpp
     Systems/RenderSystem.h
     Systems/RenderSystem.cpp
+    Systems/TransformPreparation.h
+    Systems/TransformPreparation.cpp
     Systems/PhysicsSystem.h
     Systems/PhysicsSystem.cpp
 )
@@ -64,6 +66,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Core
         Renderer
+        Threads
         Utils
         EnTT::EnTT
         glm::glm

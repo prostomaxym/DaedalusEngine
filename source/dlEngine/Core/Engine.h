@@ -8,6 +8,7 @@ namespace Daedalus
 	class Window;
 	class EventEngine;
 	class SceneManager;
+	class JobSystem;
 
 	class DAEDALUS_API Engine
 	{
@@ -22,6 +23,7 @@ namespace Daedalus
 		Window& GetWindow();
 		EventEngine& GetEvents();
 		SceneManager& GetScenes();
+		JobSystem& GetJobs();
 		void Stop();
 
 	private:

@@ -20,6 +20,16 @@ set(DEBUG_PROJECT_FILES
     BuildInfo.cpp
     DebugOverlay.h
     DebugOverlay.cpp
+    Tabs/GeneralDebugTab.h
+    Tabs/GeneralDebugTab.cpp
+    Tabs/RenderingDebugTab.h
+    Tabs/RenderingDebugTab.cpp
+    Tabs/ResourcesDebugTab.h
+    Tabs/ResourcesDebugTab.cpp
+    Tabs/ProfilerDebugTab.h
+    Tabs/ProfilerDebugTab.cpp
+    Tabs/LoggingDebugTab.h
+    Tabs/LoggingDebugTab.cpp
     ConsoleOverlay.h
     ConsoleOverlay.cpp
     Log.h

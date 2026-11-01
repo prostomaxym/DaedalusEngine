@@ -14,7 +14,7 @@ namespace Daedalus {
 
 	class DAEDALUS_API Log
 	{
-		friend class DebugOverlay;
+		friend class LoggingDebugTab;
 	public:
 		enum Categories
 		{

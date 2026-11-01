@@ -1,28 +1,22 @@
 #pragma once
 
 #include "ImGuiWindow.h"
-
-#include "Debug/Log.h"
-#include "Debug/Profiler.h"
-#include "Utils/RingVector.h"
-
-#include <array>
-#include <cstdint>
-#include <string>
-#include <string_view>
-#include <vector>
-
-struct ImVec2;
+#include <memory>
 
 namespace Daedalus
 {
 	class KeyReleasedEvent;
+	class GeneralDebugTab;
+	class RenderingDebugTab;
+	class ResourcesDebugTab;
+	class ProfilerDebugTab;
+	class LoggingDebugTab;
 
 	class DAEDALUS_API DebugOverlay : public ImGuiWindow
 	{
 	public:
-		DebugOverlay() = default;
-		virtual ~DebugOverlay() = default;
+		DebugOverlay();
+		virtual ~DebugOverlay();
 
 		void Init() override;
 		void Update(DeltaTime dt) override;
@@ -31,79 +25,11 @@ namespace Daedalus
 		bool OnKeyReleased(KeyReleasedEvent& event);
 
 	private:
-		static const int GraphSize = 500;
-		static const int LastSecondIdx = GraphSize * 4 / 5;
-		static inline float NumberOfSecondsTracked = 10.f;
-
-		void RenderGeneralPage(DeltaTime dt);
-		void RenderFPSSection(DeltaTime dt);
-		void RenderCPUSection(DeltaTime dt);
-		void RenderRAMSection(DeltaTime dt);
-		void RenderWorldSection();
-		void RenderGPUSection(DeltaTime dt);
-
-		void RenderRenderingPage();
-		void RenderTexture(std::string_view name, uint32_t texture_id, ImVec2 size, bool use_aspect = true);
-
-		void RenderResourcesPage();
-
-		void RenderLogsPage();
-
-		void RenderProfilerPage();
-		void RenderProfilerStats(const char* id, const std::vector<ProfilerStatsEntry>& entries);
-		std::vector<const ProfileSample*> m_profiler_sorted_samples;
-		std::vector<const ProfilerStatsEntry*> m_profiler_sorted_stats;
-
-		float CalculateLowPercentile(float percentile) const;
-
-	private:
-		RingVector<float> m_frame_times{ GraphSize };
-
-		RingVector<float, GraphSize> m_cpu_app_load;
-		RingVector<float, GraphSize> m_cpu_total_load;
-		RingVector<float, GraphSize> m_ram_app_load;
-		RingVector<float, GraphSize> m_ram_total_load;
-
-		RingVector<float, GraphSize> m_gpu_utillization;
-		RingVector<float, GraphSize> m_gpu_memory_utillization;
-		RingVector<float, GraphSize> m_gpu_memory_used;
-
-		std::vector<float> m_x_axe_values{ GraphSize };
-		float m_total_ram_GB{ 0.f };
-		float m_total_gpu_ram_GB{ 0.f };
-		std::string m_processor_name;
-		std::string m_gpu_name;
-
-		ProfileFrame m_profile_frame;
-		ProfileFrame m_profile_live_frame;
-		float m_profiler_refresh_accum = 0.f;
-		static constexpr float ProfilerTextRefreshSec = 0.5f;
-		RingVector<float, GraphSize> m_profile_frame_times;
-		bool m_profiler_paused = false;
+		std::unique_ptr<GeneralDebugTab> m_general_tab;
+		std::unique_ptr<RenderingDebugTab> m_rendering_tab;
+		std::unique_ptr<ResourcesDebugTab> m_resources_tab;
+		std::unique_ptr<ProfilerDebugTab> m_profiler_tab;
+		std::unique_ptr<LoggingDebugTab> m_logging_tab;
 		bool m_logs_tab_active = false;
-		std::vector<ProfilerStatsEntry> m_profiler_cpu_stats;
-		std::vector<ProfilerStatsEntry> m_profiler_gpu_stats;
-		std::string_view m_profiler_selected_scope; // Points to static scope-name storage
-		std::array<float, ProfilerStatsEntry::HistorySize> m_profiler_history{};
-
-	private:
-		class LogFilterPanel
-		{
-		public:
-			LogFilterPanel();
-
-			void Draw();
-
-			bool IsLevelEnabled(Log::Levels level) const;
-			bool IsCategoryEnabled(Log::Categories category_bit) const;
-
-		private:
-			std::array<bool, 5> level_flags_;
-
-			void DrawCategoryCheckbox(Log::Categories cat);
-			void DrawLevelCheckbox(Log::Levels level);
-		};
-
-		LogFilterPanel m_log_selection_panel;
 	};
 }

@@ -48,13 +48,7 @@ namespace Daedalus
 				[name](const CVarRegistry::Value& value)
 				{
 					const int key = std::get<int>(value);
-					const bool valid = key == DL_KEY_SPACE || key == DL_KEY_APOSTROPHE || (key >= DL_KEY_COMMA && key <= DL_KEY_9) ||
-						key == DL_KEY_SEMICOLON || key == DL_KEY_EQUAL || (key >= DL_KEY_A && key <= DL_KEY_RIGHT_BRACKET) ||
-						key == DL_KEY_GRAVE_ACCENT || key == DL_KEY_WORLD_1 || key == DL_KEY_WORLD_2 ||
-						(key >= DL_KEY_ESCAPE && key <= DL_KEY_END) || (key >= DL_KEY_CAPS_LOCK && key <= DL_KEY_PAUSE) ||
-						(key >= DL_KEY_F1 && key <= DL_KEY_F25) || (key >= DL_KEY_KP_0 && key <= DL_KEY_KP_EQUAL) ||
-						(key >= DL_KEY_LEFT_SHIFT && key <= DL_KEY_MENU);
-					if (!valid) return false;
+					if (key == -1 || !KeybindConfig::IsValidKeyboardCode(key)) return false;
 					KeybindConfig::SetKeyboardBind(name, key);
 					return true;
 				});

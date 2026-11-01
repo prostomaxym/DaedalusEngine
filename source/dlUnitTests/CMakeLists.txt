@@ -14,6 +14,7 @@ project(
 
 set(CONFIG_TEST_FILES
     ConfigTests/CVarRegistryTest.cpp
+    ConfigTests/InputBindingsTest.cpp
     ConfigTests/KeybindConfigTest.cpp
     ConfigTests/PathConfigTest.cpp
     )
@@ -21,12 +22,15 @@ set(CONFIG_TEST_FILES
 set(CORE_TEST_FILES
     CoreTests/AssetFollowupTest.cpp
     CoreTests/AssetPipelineTest.cpp
+    CoreTests/InputActionsTest.cpp
     CoreTests/LayerStackTest.cpp
     )
 
 set(DEBUG_TEST_FILES
     DebugTests/BuildInfoTest.cpp
+    DebugTests/ConsoleCommandsTest.cpp
     DebugTests/ConsoleCompletionTest.cpp
+    DebugTests/InputCommandsTest.cpp
     DebugTests/LogTest.cpp
     DebugTests/ProfilerTest.cpp
     DebugTests/WorldAxisProjectionTest.cpp

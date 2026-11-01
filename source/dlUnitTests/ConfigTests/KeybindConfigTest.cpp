@@ -1,10 +1,12 @@
 #include <Macros.h>
 #include <Config/KeybindConfig.h>
+#include <Utils/KeyCodes.h>
 
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using Daedalus::KeybindConfig;
 
@@ -26,10 +28,10 @@ TEST(KeybindConfigTest, set_and_get_keyboard_bind)
 
 TEST(KeybindConfigTest, set_overwrites_existing_bind)
 {
-	KeybindConfig::SetKeyboardBind("test_overwrite", 1);
-	KeybindConfig::SetKeyboardBind("test_overwrite", 2);
+	KeybindConfig::SetKeyboardBind("test_overwrite", DL_KEY_A);
+	KeybindConfig::SetKeyboardBind("test_overwrite", DL_KEY_B);
 
-	EXPECT_EQ(KeybindConfig::GetKeyboardBind("test_overwrite"), 2);
+	EXPECT_EQ(KeybindConfig::GetKeyboardBind("test_overwrite"), DL_KEY_B);
 }
 
 TEST(KeybindConfigTest, save_then_load_restores_binds)
@@ -38,7 +40,7 @@ TEST(KeybindConfigTest, save_then_load_restores_binds)
 	KeybindConfig::SetKeyboardBind("test_roundtrip", 32);
 	KeybindConfig::Save(path);
 
-	KeybindConfig::SetKeyboardBind("test_roundtrip", 1);
+	KeybindConfig::SetKeyboardBind("test_roundtrip", DL_KEY_A);
 	KeybindConfig::Load(path);
 
 	EXPECT_EQ(KeybindConfig::GetKeyboardBind("test_roundtrip"), 32);
@@ -47,11 +49,11 @@ TEST(KeybindConfigTest, save_then_load_restores_binds)
 
 TEST(KeybindConfigTest, load_missing_file_keeps_existing_binds)
 {
-	KeybindConfig::SetKeyboardBind("test_missing_file", 7);
+	KeybindConfig::SetKeyboardBind("test_missing_file", DL_KEY_C);
 
 	KeybindConfig::Load(TempConfigPath("dl_keybind_does_not_exist.ini"));
 
-	EXPECT_EQ(KeybindConfig::GetKeyboardBind("test_missing_file"), 7);
+	EXPECT_EQ(KeybindConfig::GetKeyboardBind("test_missing_file"), DL_KEY_C);
 }
 
 TEST(KeybindConfigTest, load_reads_keyboard_section)

@@ -2,7 +2,6 @@
 #include "GLFWWindow.h"
 #include <GLFW/glfw3.h>
 
-#include "Core/Input.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/MouseEvent.h"
 #include "Events/KeyEvent.h"
@@ -95,9 +94,6 @@ void GLFWWindow::Init(const WindowProps& props)
 
 	glfwSetWindowUserPointer(m_window, &m_data);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	if (glfwJoystickPresent(0))
-		Input::EnableGamepadInput(true);
 
 	SetVSync(props.vsync);
 
@@ -210,11 +206,6 @@ void GLFWWindow::SetupCallbacks()
 				glfwSwapInterval(1);
 			else
 				glfwSwapInterval(0);
-		});
-
-	glfwSetJoystickCallback([](int joystick_id, int event)
-		{
-			Input::EnableGamepadInput(event == GLFW_CONNECTED);
 		});
 }
 

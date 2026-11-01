@@ -2,7 +2,6 @@
 #include "CameraController.h"
 
 #include "Core/Input.h"
-#include "Config/KeybindConfig.h"
 
 using namespace Daedalus;
 
@@ -12,22 +11,31 @@ void CameraController::OnUpdate(DeltaTime ts)
 
 	const auto dt = ts.GetSeconds();
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
-		camera->ProcessKeyboard(CameraMovement::FORWARD, dt);
+	const bool has_vertical_axis = KeybindConfig::FindAxisBind("MoveVertical") != nullptr;
+	const bool has_horizontal_axis = KeybindConfig::FindAxisBind("MoveHorizontal") != nullptr;
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
-		camera->ProcessKeyboard(CameraMovement::BACKWARD, dt);
+	if (!has_vertical_axis)
+	{
+		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
+			camera->ProcessKeyboard(CameraMovement::FORWARD, dt);
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
-		camera->ProcessKeyboard(CameraMovement::LEFT, dt);
+		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
+			camera->ProcessKeyboard(CameraMovement::BACKWARD, dt);
+	}
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
-		camera->ProcessKeyboard(CameraMovement::RIGHT, dt);
+	if (!has_horizontal_axis)
+	{
+		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
+			camera->ProcessKeyboard(CameraMovement::LEFT, dt);
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveUp")))
+		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
+			camera->ProcessKeyboard(CameraMovement::RIGHT, dt);
+	}
+
+	if (Input::IsActionHold("MoveUp"))
 		camera->ProcessKeyboard(CameraMovement::UP, dt);
 
-	if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveDown")))
+	if (Input::IsActionHold("MoveDown"))
 		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
@@ -47,16 +55,17 @@ void CameraController::OnUpdate(DeltaTime ts)
 	camera->ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
 	//TODO: add zoom
 
+	// Explicit named axes replace the corresponding raw stick and digital path.
+	const auto [stick_x, stick_y] = Input::GetStickPos(Input::StickType::Left);
+	const float forward = has_vertical_axis ? Input::GetAxis("MoveVertical") : -stick_y;
+	const float right = has_horizontal_axis ? Input::GetAxis("MoveHorizontal") : stick_x;
+	if (forward != 0.f)
+		camera->MoveCamera(CameraMovement::FORWARD, forward * dt * 10.f);
+	if (right != 0.f)
+		camera->MoveCamera(CameraMovement::RIGHT, right * dt * 10.f);
+
 	if (Input::IsGamepadInputEnabled())
 	{
-		const auto [xAxeLeft, yAxeLeft] = Input::GetStickPos(Input::StickType::Left);
-
-		if (yAxeLeft != 0.f)
-			camera->MoveCamera(CameraMovement::FORWARD, -yAxeLeft * dt * 10.f);
-
-		if (xAxeLeft != 0.f)
-			camera->MoveCamera(CameraMovement::RIGHT, xAxeLeft * dt * 10.f);
-
 		const auto [xAxeRight, yAxeRight] = Input::GetStickPos(Input::StickType::Right);
 
 		float xoffset = 0.f, yoffset = 0.f;

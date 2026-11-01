@@ -1,14 +1,14 @@
 #include "dlpch.h"
 #include "ConsoleCompletion.h"
+#include "ConsoleCommands.h"
 #include "Config/CVarRegistry.h"
-#include <array>
+#include "InputCommands.h"
 
 namespace Daedalus
 {
 	namespace
 	{
 		constexpr std::string_view Whitespace = " \t\r\n\v\f";
-		constexpr std::array<std::string_view, 6> Commands = { "clear", "cvars", "get", "quit", "set", "version" };
 
 		std::string_view Trim(std::string_view text)
 		{
@@ -30,9 +30,10 @@ namespace Daedalus
 		const auto prefix = Trim(input.substr(0, result.offset));
 		if (prefix == "get" || prefix == "set" || prefix == "cvars")
 			result.candidates = cvars.Complete(word);
+		else if (prefix == "actions" || prefix == "axes" || prefix == "bind_action" || prefix == "bind_axis")
+			result.candidates = InputCommands::Complete(prefix, word);
 		else if (prefix.empty())
-			for (const auto command : Commands)
-				if (command.substr(0, word.size()) == word) result.candidates.emplace_back(command);
+			result.candidates = ConsoleCommands::Complete(word);
 		return result;
 	}
 

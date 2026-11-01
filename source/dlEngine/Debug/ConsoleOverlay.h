@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 #include "Utils/RingVector.h"
 #include "Config/CVarRegistry.h"
@@ -43,6 +44,7 @@ namespace Daedalus
         std::string m_inline_hint;
         int m_completion_cursor = -1;
         bool m_completion_has_selection = false;
+        uint64_t m_completion_revision = 0;
         RingVector<std::string, 50> m_items;
         RingVector<std::string, 50> m_history;
         int m_history_pos = -1;

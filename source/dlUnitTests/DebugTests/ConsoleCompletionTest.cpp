@@ -31,6 +31,7 @@ TEST_F(ConsoleCompletionTest, CommandHintIsOnlyTheUntypedSuffix)
 	EXPECT_EQ(Hint("ver"), "sion");
 	EXPECT_EQ(Hint("qui"), "t");
 	EXPECT_EQ(Hint("ge"), "t");
+	EXPECT_EQ(Hint("he"), "lp");
 	EXPECT_TRUE(Hint("version").empty());
 	EXPECT_EQ(std::string("ver") + Hint("ver"), "version");
 }
@@ -62,7 +63,7 @@ TEST_F(ConsoleCompletionTest, BlankInputHasNoGhostHintButTabCanListCommands)
 	EXPECT_TRUE(Hint("").empty());
 	EXPECT_TRUE(Hint(" \t ").empty());
 	const auto matches = ConsoleCompletion::Find("", 0, m_cvars);
-	EXPECT_EQ(matches.candidates, (std::vector<std::string>{ "clear", "cvars", "get", "quit", "set", "version" }));
+	EXPECT_EQ(matches.candidates, (std::vector<std::string>{ "actions", "axes", "bind_action", "bind_axis", "clear", "cvars", "get", "help", "input_help", "quit", "set", "version" }));
 }
 
 TEST_F(ConsoleCompletionTest, ValuesUnknownCommandsAndUnknownPrefixesHaveNoHint)

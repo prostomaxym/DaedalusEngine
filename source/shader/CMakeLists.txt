@@ -15,6 +15,7 @@ set(PROJECT_FILES
     Cubemap.glsl
     DeferredGeometryPass.glsl
     DeferredLightPass.glsl
+    DebugDraw.glsl
     ForwardPass.glsl
     ShadowPass.glsl
     SSAO.glsl

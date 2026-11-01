@@ -84,6 +84,8 @@ void Application::Run()
 	{
 		const auto update_dt = update_timer.UpdateDeltaTime();
 		if constexpr (IsDevBuild())
+			Renderer::BeginDebugDrawFrame();
+		if constexpr (IsDevBuild())
 			Profiler::BeginFrame();
 
 		{
@@ -129,6 +131,8 @@ void Application::Run()
 			scenes.OnRender(update_dt);
 			for (auto& layer : m_layer_stack)
 				layer->OnRender(update_dt);
+			if constexpr (IsDevBuild())
+				Renderer::FlushDebugDraw();
 		}
 		{
 			DL_PROFILE_SCOPE("Application::ImGui");

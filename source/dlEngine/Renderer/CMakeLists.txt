@@ -21,6 +21,9 @@ set(RENDERER_PROJECT_FILES
     API/RendererAPI.cpp
     API/RendererDebugInfo.h
 
+    Debug/DebugDrawBatch.h
+    Debug/DebugDrawBatch.cpp
+
     Buffers/SSAO.h
     Buffers/SSAO.cpp
 

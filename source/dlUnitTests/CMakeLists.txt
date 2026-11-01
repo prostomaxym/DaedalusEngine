@@ -13,6 +13,7 @@ project(
     )
 
 set(CONFIG_TEST_FILES
+    ConfigTests/CVarRegistryTest.cpp
     ConfigTests/KeybindConfigTest.cpp
     ConfigTests/PathConfigTest.cpp
     )
@@ -58,6 +59,7 @@ set(RENDERER_TEST_FILES
     RendererTests/CameraTest.cpp
     RendererTests/DirectionalLightSourceTest.cpp
     RendererTests/DecodedImageTest.cpp
+    RendererTests/DebugDrawBatchTest.cpp
     RendererTests/GeometryTest.cpp
     RendererTests/LightSourceTest.cpp
     )

@@ -60,6 +60,12 @@ void RenderCommand::DrawLines(const VertexArray* vertexArray, uint32_t vertexCou
 	GetAPI().DrawLines(vertexArray, vertexCount);
 }
 
+void RenderCommand::DrawDebugLines(const VertexArray* vertex_array, VertexBuffer* vertex_buffer, const Shader* shader,
+	const void* vertices, uint32_t vertex_count, uint32_t vertex_size, bool depth_test)
+{
+	GetAPI().DrawDebugLines(vertex_array, vertex_buffer, shader, vertices, vertex_count, vertex_size, depth_test);
+}
+
 void RenderCommand::UnbindTextureSlot(uint32_t slot_num)
 {
 	GetAPI().UnbindTextureSlot(slot_num);

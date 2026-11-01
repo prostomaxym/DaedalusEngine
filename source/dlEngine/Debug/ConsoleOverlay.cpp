@@ -10,12 +10,13 @@
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
 #include "Config/KeybindConfig.h"
+#include <sstream>
 
 using namespace Daedalus;
 
 namespace
 {
-    std::vector<std::string> commands = { "clear", "quit", "version" };
+    const std::vector<std::string> commands = { "clear", "quit", "version", "cvars", "get", "set" };
 }
 
 void ConsoleOverlay::OnEvent(Event& evt)
@@ -110,6 +111,8 @@ void ConsoleOverlay::SetTyping(bool typing)
 void ConsoleOverlay::Init()
 {
     Clear();
+    m_cvars = CVarRegistry{};
+    RegisterConfigCVars(m_cvars);
 }
 
 void ConsoleOverlay::Clear()
@@ -141,16 +144,26 @@ void ConsoleOverlay::ExecuteCommand(const char* command)
 
 void ConsoleOverlay::ProcessCommand(const char* command)
 {
-    if (strcmp(command, commands[0].c_str()) == 0)
+    std::vector<std::string> output;
+    if (m_cvars.Execute(command, output))
+    {
+        for (const auto& line : output)
+            AddLog(line);
+        return;
+    }
+    std::istringstream input(command);
+    std::string verb, extra;
+    input >> verb >> extra;
+    if (verb == "clear" && extra.empty())
     {
         Clear();
     }   
-    else if (strcmp(command, commands[1].c_str()) == 0)
+    else if (verb == "quit" && extra.empty())
     {
         WindowCloseEvent evt;
         EventDispatcher::Dispatch(evt);
     }
-    else if (strcmp(command, commands[2].c_str()) == 0)
+    else if (verb == "version" && extra.empty())
     {
         AddLog(GetBuildInfo());
     }
@@ -199,18 +212,25 @@ int ConsoleOverlay::TextEditCallback(ImGuiInputTextCallbackData* data)
     {
         const char* word_end = data->Buf + data->CursorPos;
         const char* word_start = word_end;
-        while (word_start > data->Buf && !isspace(word_start[-1]))
+        while (word_start > data->Buf && !isspace(static_cast<unsigned char>(word_start[-1])))
             --word_start;
 
         std::string current_word(word_start, word_end);
 
         std::vector<std::string> candidates;
-        for (const auto& cmd : commands)
+        std::istringstream prefix(std::string(data->Buf, static_cast<size_t>(word_start - data->Buf)));
+        std::string verb, extra;
+        prefix >> verb >> extra;
+        if ((verb == "get" || verb == "set" || verb == "cvars") && extra.empty())
         {
-            if (cmd.compare(0, current_word.size(), current_word) == 0)
-                candidates.push_back(cmd);
+            candidates = m_cvars.Complete(current_word);
         }
-
+        else if (verb.empty())
+        {
+            for (const auto& cmd : commands)
+                if (cmd.compare(0, current_word.size(), current_word) == 0)
+                    candidates.push_back(cmd);
+        }
         if (candidates.empty())
         {
             AddLog("No match for completion");
@@ -218,15 +238,15 @@ int ConsoleOverlay::TextEditCallback(ImGuiInputTextCallbackData* data)
         else if (candidates.size() == 1)
         {
             const std::string& completion = candidates[0];
-            const size_t new_len = word_start - data->Buf + completion.length();
+            const size_t new_len = static_cast<size_t>(data->BufTextLen) - current_word.size() + completion.size();
 
             if (new_len < static_cast<size_t>(data->BufSize))
             {
-                std::memmove(const_cast<char*>(word_start), completion.c_str(), completion.size());
-                const_cast<char*>(word_start)[completion.size()] = '\0';
-                data->CursorPos = static_cast<int>(word_start - data->Buf + completion.size());
-                data->BufTextLen = static_cast<int>(std::strlen(data->Buf));
-                data->BufDirty = true;
+                const int offset = static_cast<int>(word_start - data->Buf);
+                data->DeleteChars(offset, static_cast<int>(current_word.size()));
+                data->InsertChars(offset, completion.c_str());
+                data->CursorPos = offset + static_cast<int>(completion.size());
+                data->SelectionStart = data->SelectionEnd = data->CursorPos;
             }
         }
         else

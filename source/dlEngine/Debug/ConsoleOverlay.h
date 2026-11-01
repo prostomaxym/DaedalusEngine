@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Utils/RingVector.h"
+#include "Config/CVarRegistry.h"
 
 #include "ImGuiWindow.h"
 #include "Macros.h"
@@ -36,6 +37,7 @@ namespace Daedalus
         int TextEditCallback(ImGuiInputTextCallbackData* data);
         void SetTyping(bool typing);
 
+        CVarRegistry m_cvars;
         RingVector<std::string, 50> m_items;
         RingVector<std::string, 50> m_history;
         int m_history_pos = -1;

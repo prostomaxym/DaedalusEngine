@@ -8,6 +8,8 @@
 
 namespace Daedalus {
 	class VertexArray;
+	class VertexBuffer;
+	class Shader;
 
 	class DAEDALUS_API RendererAPI
 	{
@@ -40,6 +42,8 @@ namespace Daedalus {
 		virtual void DrawIndexed(const VertexArray* vertex_array, uint32_t index_count) = 0;
 		virtual void DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count) = 0;
 		virtual void DrawLines(const VertexArray* vertex_array, uint32_t vertex_count) = 0;
+		virtual void DrawDebugLines(const VertexArray* vertex_array, VertexBuffer* vertex_buffer, const Shader* shader,
+			const void* vertices, uint32_t vertex_count, uint32_t vertex_size, bool depth_test) = 0;
 
 		virtual void SetLineWidth(float width) = 0;
 

@@ -46,6 +46,17 @@ jobs:
     - name: Install
       run: cmake --install ${{github.workspace}}/build --prefix ${{github.workspace}}/install
 
+    - name: Install NSIS
+      shell: pwsh
+      run: |
+        if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+          choco install nsis -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "NSIS installation failed" }
+        }
+        $NsisDir = "${env:ProgramFiles(x86)}\NSIS"
+        if (-not (Test-Path "$NsisDir\makensis.exe")) { $NsisDir = "$env:ProgramFiles\NSIS" }
+        "$NsisDir" >> $env:GITHUB_PATH
+
     - name: Pack Installer
       id: package
       shell: pwsh

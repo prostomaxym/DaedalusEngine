@@ -39,7 +39,12 @@ namespace
 		{
 			auto contents = entries;
 			AssetId id = 100;
-			if (metadata) for (const auto& [name, data] : entries) contents[name + ".meta"] = "DaedalusAsset 1\n" + std::to_string(id++) + "\n";
+			if (metadata) for (const auto& [name, data] : entries)
+			{
+				// Directory records are not asset sources and must not get UUID sidecars.
+				if (!name.empty() && (name.back() == '/' || name.back() == '\\')) continue;
+				contents[name + ".meta"] = "DaedalusAsset 1\n" + std::to_string(id++) + "\n";
+			}
 			int error = 0;
 			std::unique_ptr<zip_t, decltype(&zip_discard)> archive(zip_open((root / "assets.zip").string().c_str(), ZIP_CREATE | ZIP_TRUNCATE, &error), &zip_discard);
 			if (!archive) return false;
@@ -102,7 +107,8 @@ TEST(ArchiveMountTest, rejects_unsafe_paths_without_replacing_a_working_mount)
 {
 	FollowupFiles fixture;
 	auto files = fixture.Directory();
-	for (const auto* name : { "../outside.txt", "/absolute.txt", "C:/file.txt", "folder/./file.txt", "folder\\file.txt" })
+	for (const auto* name : { "../outside.txt", "/absolute.txt", "C:/file.txt", "folder/./file.txt",
+		"..\\outside.txt", "\\absolute.txt", "C:\\file.txt", "folder\\.\\file.txt", "folder\\..\\outside.txt", "folder\\\\file.txt" })
 	{
 		ASSERT_TRUE(fixture.Zip({ { name, "unsafe" } }, false));
 		std::string error;
@@ -137,6 +143,122 @@ TEST(ArchiveMountTest, mounting_a_configured_zip_path_selects_archive_reads)
 	VirtualFileSystem files;
 	EXPECT_TRUE(files.Mount("assets", fixture.root / "assets.zip"));
 	EXPECT_TRUE(files.IsArchive("assets"));
+}
+
+TEST(ArchiveMountTest, reads_and_lists_windows_zip_names_as_canonical_virtual_paths)
+{
+	FollowupFiles fixture;
+	const std::string bytes("font\0bytes", 10);
+	ASSERT_TRUE(fixture.Zip({ { "fonts\\calibrib.ttf", bytes }, { "models/mixed\\a.obj", triangle },
+		{ "empty\\", "" }, { "cache\\ignored.bin", "cache" } }, true, false, true));
+	const auto files = fixture.Archive();
+	std::string data, error;
+	EXPECT_TRUE(files.Read("assets:/fonts/calibrib.ttf", data, error)) << error;
+	EXPECT_EQ(data, bytes);
+	EXPECT_TRUE(files.Read("assets:/models/mixed/a.obj", data, error)) << error;
+	EXPECT_EQ(data, triangle);
+	EXPECT_TRUE(files.Read("assets:/fonts/calibrib.ttf.meta", data, error)) << error;
+	EXPECT_FALSE(files.Read("assets:/fonts\\calibrib.ttf", data, error));
+	EXPECT_EQ(files.List("assets", error), (std::vector<std::string>{ "assets:/fonts/calibrib.ttf", "assets:/models/mixed/a.obj" }));
+	EXPECT_TRUE(error.empty());
+}
+
+TEST(ArchiveMountTest, rejects_separator_aliases_without_replacing_a_working_mount)
+{
+	FollowupFiles fixture;
+	auto files = fixture.Directory();
+	for (const auto& entries : { std::map<std::string, std::string>{ { "fonts/a.ttf", "a" }, { "fonts\\a.ttf", "b" } },
+		std::map<std::string, std::string>{ { "fonts/", "" }, { "fonts\\", "" } } })
+	{
+		ASSERT_TRUE(fixture.Zip(entries, false));
+		std::string error;
+		EXPECT_FALSE(files.Mount("assets", fixture.root / "assets.zip", error));
+		EXPECT_NE(error.find("Duplicate canonical ZIP entry"), std::string::npos);
+		EXPECT_FALSE(files.IsArchive("assets"));
+	}
+}
+
+TEST(ArchiveMountTest, resolves_current_indices_and_revalidates_repacked_archives)
+{
+	FollowupFiles fixture;
+	ASSERT_TRUE(fixture.Zip({ { "folder\\a.txt", "original" } }, false));
+	const auto files = fixture.Archive();
+	ASSERT_TRUE(fixture.Zip({ { "before.txt", "before" }, { "folder/a.txt", "updated" } }, false));
+	std::string data, error;
+	EXPECT_TRUE(files.Read("assets:/folder/a.txt", data, error)) << error;
+	EXPECT_EQ(data, "updated");
+	ASSERT_TRUE(fixture.Zip({ { "folder/a.txt", "a" }, { "folder\\a.txt", "alias" } }, false));
+	EXPECT_FALSE(files.Read("assets:/folder/a.txt", data, error));
+	EXPECT_TRUE(data.empty());
+	EXPECT_NE(error.find("Duplicate canonical ZIP entry"), std::string::npos);
+}
+
+TEST(ArchiveMountTest, configured_mount_errors_describe_missing_and_unsafe_archives)
+{
+	FollowupFiles fixture;
+	auto files = fixture.Directory();
+	std::string error;
+	EXPECT_FALSE(files.Mount("assets", fixture.root / "missing.zip", error));
+	EXPECT_NE(error.find("Cannot open ZIP archive"), std::string::npos);
+	ASSERT_TRUE(fixture.Zip({ { "..\\outside.txt", "unsafe" } }, false));
+	EXPECT_FALSE(files.Mount("assets", fixture.root / "assets.zip", error));
+	EXPECT_NE(error.find("Unsafe ZIP entry path"), std::string::npos);
+	EXPECT_FALSE(files.IsArchive("assets"));
+}
+
+TEST(ArchiveRegistryTest, reads_bundled_identities_from_windows_zip_names)
+{
+	FollowupFiles fixture;
+	ASSERT_TRUE(fixture.Zip({ { "fonts\\calibrib.ttf", "font" } }));
+	AssetRegistry registry;
+	ASSERT_TRUE(registry.Scan(fixture.Archive()));
+	const auto* entry = registry.Find("assets:/fonts/calibrib.ttf");
+	ASSERT_NE(entry, nullptr);
+	EXPECT_EQ(entry->id, 100u);
+	EXPECT_EQ(entry->content_hash, ContentFingerprint("font"));
+}
+
+TEST(ArchiveMountTest, scan_reader_is_bounded_canonical_and_excludes_cache_and_metadata)
+{
+	FollowupFiles fixture;
+	ASSERT_TRUE(fixture.Zip({ { "fonts\\a.ttf", "font" }, { "cache\\ignored.bin", "cache" } }));
+	const auto files = fixture.Archive();
+	std::vector<std::string> paths;
+	std::string error;
+	EXPECT_TRUE(files.VisitSources("assets", [&](const std::string& path, const VirtualFileSystem::ReadCallback& reader)
+	{
+		paths.push_back(path);
+		std::string data, read_error;
+		EXPECT_TRUE(reader(path, data, read_error, 4)) << read_error;
+		EXPECT_EQ(data, "font");
+		EXPECT_TRUE(reader(path + ".meta", data, read_error, 4096)) << read_error;
+		EXPECT_FALSE(reader(path, data, read_error, 3));
+		EXPECT_TRUE(data.empty());
+		EXPECT_FALSE(reader("shaders:/fonts/a.ttf", data, read_error, 4));
+		EXPECT_FALSE(reader("assets:/../outside", data, read_error, 4));
+	}, error)) << error;
+	EXPECT_EQ(paths, (std::vector<std::string>{ "assets:/fonts/a.ttf" }));
+}
+
+TEST(ArchiveRegistryTest, new_scans_reopen_same_stamp_same_size_archive_repacks)
+{
+	FollowupFiles fixture;
+	ASSERT_TRUE(fixture.Zip({ { "folder\\a.txt", "old" } }));
+	const auto files = fixture.Archive();
+	const auto stamp = std::filesystem::last_write_time(fixture.root / "assets.zip");
+	const auto size = std::filesystem::file_size(fixture.root / "assets.zip");
+	AssetRegistry registry;
+	ASSERT_TRUE(registry.Scan(files));
+	ASSERT_NE(registry.Find("assets:/folder/a.txt"), nullptr);
+	ASSERT_TRUE(fixture.Zip({ { "folder/b.txt", "new" } }));
+	ASSERT_EQ(std::filesystem::file_size(fixture.root / "assets.zip"), size);
+	std::filesystem::last_write_time(fixture.root / "assets.zip", stamp);
+	ASSERT_TRUE(registry.Scan(files));
+	EXPECT_EQ(registry.Find("assets:/folder/a.txt"), nullptr);
+	const auto* entry = registry.Find("assets:/folder/b.txt");
+	ASSERT_NE(entry, nullptr);
+	EXPECT_EQ(entry->id, 100u);
+	EXPECT_EQ(entry->content_hash, ContentFingerprint("new"));
 }
 
 TEST(VirtualReferenceTest, joins_relative_dependencies_and_virtualizes_directory_sources)
@@ -292,6 +414,20 @@ TEST(TypedAssetImportTest, leaves_previous_cpu_model_untouched_on_import_failure
 	EXPECT_FALSE(error.empty()); EXPECT_EQ(model.dependencies, (std::vector<std::string>{ "sentinel" }));
 }
 
+TEST(TypedAssetImportTest, resolves_windows_zip_model_material_and_texture_names)
+{
+	FollowupFiles fixture;
+	ASSERT_TRUE(fixture.Zip({ { "models\\triangle.obj", "mtllib triangle.mtl\nusemtl Painted\n" + triangle },
+		{ "models\\triangle.mtl", "newmtl Painted\nmap_Kd ../textures/pixel.tga\n" }, { "textures\\pixel.tga", Pixel(1, 2, 3) } }));
+	ImportedModel model;
+	std::string error;
+	ASSERT_TRUE(AssetImporter::ImportModel(fixture.Archive(), "assets:/models/triangle.obj", model, error)) << error;
+	bool texture = false;
+	for (const auto& material : model.materials) for (const auto& binding : material.textures)
+		if (binding.virtual_path == "assets:/textures/pixel.tga") texture = binding.image != nullptr;
+	EXPECT_TRUE(texture);
+}
+
 TEST(TypedAssetImportTest, rejects_texture_dependencies_outside_the_mount)
 {
 	FollowupFiles fixture;
@@ -351,6 +487,25 @@ TEST(VirtualSceneAssetTest, accepts_canonical_virtual_resource_references_but_re
 	EXPECT_FALSE(SceneJson::Validate(record, error));
 	record.entities.front().model->path = "assets:/../outside.obj";
 	EXPECT_FALSE(SceneJson::Validate(record, error));
+}
+
+TEST(VirtualSceneAssetTest, loads_windows_zip_scene_by_path_and_bundled_uuid)
+{
+	FollowupFiles fixture;
+	SceneRecord record;
+	record.name = "Windows ZIP Scene";
+	std::string json, error;
+	ASSERT_TRUE(SceneJson::Serialize(record, json, error));
+	ASSERT_TRUE(fixture.Zip({ { "scenes\\startup.scene.json", json } }));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, fixture.Archive());
+	ASSERT_TRUE(pipeline.Initialize());
+	Scene scene;
+	ScriptRegistry scripts;
+	EXPECT_TRUE(SceneSerializer::LoadAsset(pipeline, "assets:/scenes/startup.scene.json", scene, scripts, error)) << error;
+	EXPECT_EQ(scene.GetSceneName(), record.name);
+	EXPECT_TRUE(SceneSerializer::LoadAsset(pipeline, AssetId(100), scene, scripts, error)) << error;
+	EXPECT_EQ(scene.GetSceneName(), record.name);
 }
 
 TEST(VirtualSceneAssetTest, reports_unknown_uuid_without_changing_scene_state)

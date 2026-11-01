@@ -11,11 +11,11 @@ namespace Daedalus
 {
 	namespace
 	{
-		bool ReadIdentity(const VirtualFileSystem& files, const std::string& path, AssetId& id)
+		bool ReadIdentity(const VirtualFileSystem& files, const VirtualFileSystem::ReadCallback& reader, const std::string& path, AssetId& id)
 		{
 			std::string text, error;
 			const auto resolved = files.Resolve(path + ".meta");
-			if (!files.Read(path + ".meta", text, error, 4096))
+			if (!reader(path + ".meta", text, error, 4096))
 			{
 				if (!resolved) return false;
 				const auto metadata_path = *resolved;
@@ -35,7 +35,7 @@ namespace Daedalus
 					std::filesystem::remove(temporary_path, ec);
 					return false;
 				}
-				if (!files.Read(path + ".meta", text, error, 4096)) return false;
+				if (!reader(path + ".meta", text, error, 4096)) return false;
 			}
 			std::istringstream input(text);
 			std::string signature, identity, extra;
@@ -64,9 +64,7 @@ namespace Daedalus
 		{
 			if (mount != "assets" && mount != "shaders") continue;
 			std::string error;
-			const auto paths = files.List(mount, error);
-			if (!error.empty()) m_errors.push_back(mount + ": " + error);
-			for (const auto& path : paths)
+			const bool visited = files.VisitSources(mount, [&](const std::string& path, const VirtualFileSystem::ReadCallback& reader)
 			{
 				const auto source = files.Resolve(path);
 				AssetMetadata metadata;
@@ -74,11 +72,11 @@ namespace Daedalus
 				metadata.source_path = source.value_or(std::filesystem::path());
 				std::error_code ec;
 				metadata.write_time = std::filesystem::last_write_time(source.value_or(root), ec);
-				std::string data;
-				if (ec || !files.Read(path, data, error) || !ReadIdentity(files, path, metadata.id))
+				std::string data, read_error;
+				if (ec || !reader(path, data, read_error, VirtualFileSystem::MaxAssetBytes) || !ReadIdentity(files, reader, path, metadata.id))
 				{
 					m_errors.push_back(path + ": cannot read/create valid asset metadata");
-					continue;
+					return;
 				}
 				metadata.size = data.size();
 				metadata.content_hash = ContentFingerprint(data);
@@ -93,11 +91,12 @@ namespace Daedalus
 					}
 					duplicates.insert(metadata.id);
 					m_errors.push_back(path + ": duplicate asset UUID");
-					continue;
+					return;
 				}
 				m_ids.emplace(metadata.id, path);
 				m_assets.emplace(path, std::move(metadata));
-			}
+			}, error);
+			if (!visited) m_errors.push_back(mount + ": " + error);
 		}
 		return m_errors.empty();
 	}

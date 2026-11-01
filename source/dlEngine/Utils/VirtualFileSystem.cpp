@@ -14,11 +14,17 @@ namespace Daedalus
 		{
 			int code = 0;
 			Archive archive(zip_open(Utf8ToString(path.u8string()).c_str(), ZIP_RDONLY | ZIP_CHECKCONS, &code), &zip_discard);
-			if (!archive) error = "Cannot open valid ZIP archive (error " + std::to_string(code) + ")";
+			if (!archive)
+			{
+				zip_error_t detail;
+				zip_error_init_with_code(&detail, code);
+				error = "Cannot open ZIP archive: " + std::string(zip_error_strerror(&detail)) + " (error " + std::to_string(code) + ")";
+				zip_error_fini(&detail);
+			}
 			return archive;
 		}
 
-		bool ArchiveEntries(zip_t* archive, std::vector<std::string>& entries, std::string& error)
+		bool ArchiveEntries(zip_t* archive, std::map<std::string, zip_uint64_t>& entries, std::string& error)
 		{
 			const auto count = zip_get_num_entries(archive, 0);
 			if (count < 0 || count > 100000) { error = "ZIP entry count exceeds limit"; return false; }
@@ -32,6 +38,8 @@ namespace Daedalus
 					(stat.valid & (ZIP_STAT_SIZE | ZIP_STAT_ENCRYPTION_METHOD)) != (ZIP_STAT_SIZE | ZIP_STAT_ENCRYPTION_METHOD))
 				{ error = "Invalid ZIP entry metadata"; return false; }
 				std::string name(stat.name);
+				// Compress-Archive on Windows can store backslashes; virtual references remain canonical.
+				std::replace(name.begin(), name.end(), '\\', '/');
 				const bool directory = !name.empty() && name.back() == '/';
 				if (directory) name.pop_back();
 				const auto normalized = VirtualFileSystem::Normalize("zip:/" + name);
@@ -39,12 +47,50 @@ namespace Daedalus
 				zip_uint32_t attributes = 0;
 				const bool symlink = zip_file_get_external_attributes(archive, static_cast<zip_uint64_t>(index), 0, &system, &attributes) == 0 &&
 					system == ZIP_OPSYS_UNIX && ((attributes >> 16) & 0170000) == 0120000;
-				if (!normalized || *normalized != "zip:/" + name || name.empty() || !names.insert(name).second || symlink ||
-					stat.encryption_method != ZIP_EM_NONE || stat.size > VirtualFileSystem::MaxAssetBytes || stat.size > 1024ull * 1024 * 1024 - total)
-				{ error = "Unsafe, duplicate, encrypted or oversized ZIP entry: " + name; return false; }
+				if (!normalized || *normalized != "zip:/" + name || name.empty())
+				{ error = "Unsafe ZIP entry path: " + std::string(stat.name); return false; }
+				if (!names.insert(name).second)
+				{ error = "Duplicate canonical ZIP entry: " + name; return false; }
+				if (symlink || stat.encryption_method != ZIP_EM_NONE)
+				{ error = "Symlink or encrypted ZIP entry: " + name; return false; }
+				if (stat.size > VirtualFileSystem::MaxAssetBytes || stat.size > 1024ull * 1024 * 1024 - total)
+				{ error = "ZIP size limit exceeded at entry: " + name; return false; }
 				total += stat.size;
-				if (!directory) entries.push_back(name);
+				if (!directory) entries.emplace(std::move(name), static_cast<zip_uint64_t>(index));
 			}
+			return true;
+		}
+
+		bool IsSourceEntry(const std::string& name)
+		{
+			const auto relative = std::filesystem::u8path(name);
+			for (const auto& part : relative) if (part == "cache") return false;
+			return relative.extension() != ".meta";
+		}
+
+		bool ReadArchiveEntry(zip_t* archive, const std::map<std::string, zip_uint64_t>& entries,
+			const std::string& entry, std::string& data, std::string& error, size_t limit)
+		{
+			data.clear(); error.clear();
+			limit = (std::min)(limit, VirtualFileSystem::MaxAssetBytes);
+			const auto found = entries.find(entry);
+			if (found == entries.end()) { error = "Missing ZIP asset: " + entry; return false; }
+			zip_stat_t stat;
+			zip_stat_init(&stat);
+			if (zip_stat_index(archive, found->second, 0, &stat) != 0 || stat.size > limit || stat.encryption_method != ZIP_EM_NONE)
+			{ error = "Missing, encrypted or oversized ZIP asset: " + entry; return false; }
+			std::unique_ptr<zip_file_t, decltype(&zip_fclose)> input(zip_fopen_index(archive, found->second, 0), &zip_fclose);
+			if (!input) { error = "Cannot open ZIP entry"; return false; }
+			data.resize(static_cast<size_t>(stat.size));
+			size_t read = 0;
+			while (read < data.size())
+			{
+				const auto count = zip_fread(input.get(), data.data() + read, data.size() - read);
+				if (count <= 0) { error = "Cannot read complete ZIP asset"; data.clear(); return false; }
+				read += static_cast<size_t>(count);
+			}
+			char extra;
+			if (zip_fread(input.get(), &extra, 1) != 0) { error = "ZIP asset integrity check failed"; data.clear(); return false; }
 			return true;
 		}
 	}
@@ -67,18 +113,22 @@ namespace Daedalus
 
 	bool VirtualFileSystem::Mount(std::string name, const std::filesystem::path& directory)
 	{
+		std::string error;
+		return Mount(std::move(name), directory, error);
+	}
+
+	bool VirtualFileSystem::Mount(std::string name, const std::filesystem::path& directory, std::string& error)
+	{
+		error.clear();
 		if (name.empty() || name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-") != std::string::npos || directory.empty())
-			return false;
+		{ error = "Invalid mount name or empty source path"; return false; }
 		std::error_code ec;
 		const auto absolute = std::filesystem::absolute(directory, ec);
-		if (ec) return false;
+		if (ec) { error = ec.message(); return false; }
 		const auto root = std::filesystem::weakly_canonical(absolute, ec);
-		if (ec) return false;
-		if (std::filesystem::is_regular_file(root, ec) && root.extension() == ".zip")
-		{
-			std::string error;
+		if (ec) { error = ec.message(); return false; }
+		if (root.extension() == ".zip")
 			return MountArchive(std::move(name), root, error);
-		}
 		m_archives.erase(name);
 		m_mounts[std::move(name)] = root;
 		return true;
@@ -93,7 +143,7 @@ namespace Daedalus
 		const auto absolute = std::filesystem::absolute(path, ec);
 		if (ec) { error = ec.message(); return false; }
 		auto archive = OpenArchive(absolute, error);
-		std::vector<std::string> entries;
+		std::map<std::string, zip_uint64_t> entries;
 		if (!archive || !ArchiveEntries(archive.get(), entries, error)) return false;
 		m_mounts[name] = absolute;
 		m_archives.insert(std::move(name));
@@ -140,24 +190,11 @@ namespace Daedalus
 		{
 			auto archive = OpenArchive(mount->second, error);
 			if (!archive) return false;
-			zip_stat_t stat;
-			zip_stat_init(&stat);
+			// Resolve against this handle, not indices cached before an archive repack.
+			std::map<std::string, zip_uint64_t> entries;
+			if (!ArchiveEntries(archive.get(), entries, error)) return false;
 			const auto entry = normalized->substr(separator + 2);
-			if (zip_stat(archive.get(), entry.c_str(), 0, &stat) != 0 || stat.size > limit || stat.encryption_method != ZIP_EM_NONE)
-			{ error = "Missing, encrypted or oversized ZIP asset: " + entry; return false; }
-			std::unique_ptr<zip_file_t, decltype(&zip_fclose)> input(zip_fopen(archive.get(), entry.c_str(), 0), &zip_fclose);
-			if (!input) { error = "Cannot open ZIP entry"; return false; }
-			data.resize(static_cast<size_t>(stat.size));
-			size_t read = 0;
-			while (read < data.size())
-			{
-				const auto count = zip_fread(input.get(), data.data() + read, data.size() - read);
-				if (count <= 0) { error = "Cannot read complete ZIP asset"; data.clear(); return false; }
-				read += static_cast<size_t>(count);
-			}
-			char extra;
-			if (zip_fread(input.get(), &extra, 1) != 0) { error = "ZIP asset integrity check failed"; data.clear(); return false; }
-			return true;
+			return ReadArchiveEntry(archive.get(), entries, entry, data, error, limit);
 		}
 		const auto resolved = Resolve(*normalized);
 		std::error_code ec;
@@ -203,14 +240,11 @@ namespace Daedalus
 		if (IsArchive(mount->first))
 		{
 			auto archive = OpenArchive(mount->second, error);
-			std::vector<std::string> entries;
+			std::map<std::string, zip_uint64_t> entries;
 			if (!archive || !ArchiveEntries(archive.get(), entries, error)) return files;
-			for (const auto& entry : entries)
+			for (const auto& [entry, index] : entries)
 			{
-				const auto relative = std::filesystem::u8path(entry);
-				bool cached = false;
-				for (const auto& part : relative) if (part == "cache") cached = true;
-				if (!cached && relative.extension() != ".meta") files.push_back(mount->first + ":/" + entry);
+				if (IsSourceEntry(entry)) files.push_back(mount->first + ":/" + entry);
 			}
 			std::sort(files.begin(), files.end());
 			return files;
@@ -237,5 +271,38 @@ namespace Daedalus
 		if (ec) error = ec.message();
 		std::sort(files.begin(), files.end());
 		return files;
+	}
+
+	bool VirtualFileSystem::VisitSources(std::string_view mount_name, const SourceVisitor& visitor, std::string& error) const
+	{
+		error.clear();
+		const auto mount = m_mounts.find(std::string(mount_name));
+		if (mount == m_mounts.end()) { error = "Unknown mount"; return false; }
+		if (!visitor) { error = "Missing source visitor"; return false; }
+		if (!IsArchive(mount->first))
+		{
+			const auto paths = List(mount_name, error);
+			if (!error.empty()) return false;
+			const ReadCallback reader = [this](std::string_view path, std::string& data, std::string& read_error, size_t limit)
+			{
+				return Read(path, data, read_error, limit);
+			};
+			for (const auto& path : paths) visitor(path, reader);
+			return true;
+		}
+		auto archive = OpenArchive(mount->second, error);
+		std::map<std::string, zip_uint64_t> entries;
+		if (!archive || !ArchiveEntries(archive.get(), entries, error)) return false;
+		const auto prefix = mount->first + ":/";
+		const ReadCallback reader = [&](std::string_view path, std::string& data, std::string& read_error, size_t limit)
+		{
+			const auto normalized = Normalize(path);
+			if (!normalized || normalized->rfind(prefix, 0) != 0)
+			{ data.clear(); read_error = "Invalid path or mount for ZIP scan"; return false; }
+			return ReadArchiveEntry(archive.get(), entries, normalized->substr(prefix.size()), data, read_error, limit);
+		};
+		for (const auto& [entry, index] : entries)
+			if (IsSourceEntry(entry)) visitor(prefix + entry, reader);
+		return true;
 	}
 }

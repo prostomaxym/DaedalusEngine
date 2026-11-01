@@ -54,11 +54,17 @@ struct Engine::State
 		props.screenmode = GraphicsConfig::IsWindowFullscreen() ? WindowProps::ScreenMode::windowed_fullscreen : WindowProps::ScreenMode::windowed;
 		m_window = Platform::createWindow(props);
 		VirtualFileSystem files;
-		if (!files.Mount("assets", PathConfig::GetAssetsPath()) ||
-			!files.Mount("shaders", PathConfig::GetShadersPath()) ||
-			!files.Mount("config", PathConfig::GetConfigPath()) ||
-			!files.Mount("logs", PathConfig::GetLogsPath()))
-			Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "Failed to initialize configured virtual mounts");
+		const auto mount = [&files](const char* name, const std::filesystem::path& path)
+		{
+			std::string error;
+			if (!files.Mount(name, path, error))
+				Log::Write(Log::Levels::Error, Log::Categories::EngineCore,
+					"Failed to initialize virtual mount '{}' from '{}': {}", name, path.string(), error);
+		};
+		mount("assets", PathConfig::GetAssetsPath());
+		mount("shaders", PathConfig::GetShadersPath());
+		mount("config", PathConfig::GetConfigPath());
+		mount("logs", PathConfig::GetLogsPath());
 		m_assets = std::make_unique<AssetPipeline>(m_jobs, std::move(files));
 		if (!m_assets->Initialize())
 			for (const auto& error : m_assets->GetRegistry().GetErrors())

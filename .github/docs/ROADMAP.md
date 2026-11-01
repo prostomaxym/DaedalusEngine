@@ -9,7 +9,7 @@ Status legend: 🟢 solid · 🟡 functional, needs work · 🔴 missing / stub
 | Build / CI | 🟡 | CMake + vcpkg manifest (C++20), per-module static libs → engine DLL, Windows & Linux CI (dev/master/release) running `ctest`; separate Windows Release/ReleaseDevTools install and packaging helpers with explicit configuration selection and configuration-matched DLLs | No sanitizers/warnings-as-errors/clang-tidy/format check in CI. |
 | Core | 🟡 | `Application` loop, `Layer` stack, `Input` (keyboard/gamepad enable toggles), fixed-step clock, entry point owns app via `unique_ptr` | No engine
 | Config | 🟡 | `GraphicsConfig`, `KeybindConfig`, `PathConfig` (ini, simpleini); INI-relative folders and portable relative saves with legacy absolute-path migration | No runtime reload, no validation/defaults reporting, no CVar-style console binding. Paths on different Windows drives cannot be saved relatively. |
-No profiler/instrumentation.
+CPU + per-pass GPU profiler implemented (Phase 1.1).
 | Events | 🟢 | Application/Key/Mouse/Gamepad events, thread-safe queue with owner-thread dispatch, MT tests | No custom/game event types, no event priorities or subscriber handles. |
 | Threads | 🟡 | `ThreadPool` (task exceptions logged, worker survives), `ThreadRunner`, `ThreadJoiner` | No job system
 | Utils | 🟡 | Timer, DeltaTime, FPSLocker, RingVector, Random, Utf8, WorkingDirectory | `WorkingDirectory` hardcodes `bin`, `path.ini`, 5-level upward search. No virtual file system. |
@@ -33,7 +33,7 @@ Phases are ordered by dependency; each phase should leave the engine shippable a
 5. ✅ `path.ini` saves relative folder paths anchored to its directory; regression coverage for legacy absolute migration, missing-file defaults and relocation.
 
 ### Phase 1 – Core infrastructure
-1. **Profiler**:
+1. **Profiler**: ✅ CPU scopes (`DL_PROFILE_SCOPE`), Chrome trace capture, Profiler tab, per-scope rolling stats, non-blocking OpenGL GPU timestamp queries (`GPUTimer`) covering the whole render+ImGui frame, each pass, skybox, depth copy and debug compute; p95/p99 per scope; stats are aggregated in `Profiler::EndFrame` regardless of UI; GPU timestamps calibrated to the profiler clock; dropped GPU frames counted; sortable tables, Ctrl-to-pause. ⬜ Worker-thread (ThreadPool) task scopes, in-overlay timeline view, capture hotkey / auto-capture on frame spikes, memory allocation tracking.
 2. **Job system**: task dependencies/counters on top of ThreadPool, main-thread affinity tasks, parallel-for; used by asset loading and ECS systems.
 3. **Virtual file system & asset pipeline**: mount points from `PathConfig`, asset IDs/UUIDs, async loading via jobs, hot-reload (shaders first), asset registry/metadata.
 4. ✅ Console `version` command reports application/build versions from the existing `version.txt` major/minor/patch fields and compiled configuration/platform/architecture/compiler/developer-tools status, with graphics-independent regression coverage and shared packaging version metadata. ⬜ **Debug draw API** + **CVar/console** system binding Config values at runtime.

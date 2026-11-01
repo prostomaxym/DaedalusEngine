@@ -15,22 +15,22 @@ Material::Material(const std::string& material_name, glm::vec3 kambient, glm::ve
 {
 }
 
-void Material::SetDiffuseMap(unsigned char* data, int width, int height, int channels)
+void Material::SetDiffuseMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels)
 {
-	m_map_diffuse = ResourceManager::LoadTexture2D(data, width, height, channels);
+	m_map_diffuse = ResourceManager::LoadTexture2D(source, data, width, height, channels);
 }
 
-void Material::SetSpecularMap(unsigned char* data, int width, int height, int channels)
+void Material::SetSpecularMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels)
 {
-	m_map_specular = ResourceManager::LoadTexture2D(data, width, height, channels);
+	m_map_specular = ResourceManager::LoadTexture2D(source, data, width, height, channels);
 }
 
-void Material::SetNormalMap(unsigned char* data, int width, int height, int channels)
+void Material::SetNormalMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels)
 {
-	m_map_normal = ResourceManager::LoadTexture2D(data, width, height, channels);
+	m_map_normal = ResourceManager::LoadTexture2D(source, data, width, height, channels);
 }
 
-void Material::SetHeightMap(unsigned char* data, int width, int height, int channels)
+void Material::SetHeightMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels)
 {
-	m_map_height = ResourceManager::LoadTexture2D(data, width, height, channels);
+	m_map_height = ResourceManager::LoadTexture2D(source, data, width, height, channels);
 }

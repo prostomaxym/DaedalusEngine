@@ -27,6 +27,8 @@ set(PLATFORM_PROJECT_FILES
     OpenGL/OpenGLContext.cpp
     OpenGL/OpenGLFrameBuffer.h
     OpenGL/OpenGLFrameBuffer.cpp
+    OpenGL/OpenGLGPUTimer.h
+    OpenGL/OpenGLGPUTimer.cpp
     OpenGL/OpenGLIndexBuffer.h
     OpenGL/OpenGLIndexBuffer.cpp
     OpenGL/OpenGLRendererAPI.h

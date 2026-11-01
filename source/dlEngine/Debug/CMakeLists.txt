@@ -24,6 +24,10 @@ set(DEBUG_PROJECT_FILES
     ConsoleOverlay.cpp
     Log.h
     Log.cpp
+    Profiler.h
+    Profiler.cpp
+    ProfilerStats.h
+    ProfilerStats.cpp
     ImGuiLayer.h
     ImGuiLayer.cpp
     ImGuiWindow.h

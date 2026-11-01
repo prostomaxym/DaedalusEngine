@@ -3,6 +3,7 @@
 #include "ConsoleOverlay.h"
 #include "BuildInfo.h"
 #include "Core/Window.h"
+#include "Core/Input.h"
 #include <imgui.h>
 #include "Events/KeyEvent.h"
 
@@ -28,6 +29,8 @@ bool ConsoleOverlay::OnKeyReleased(KeyReleasedEvent& event)
     if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Console"))
     {
         Toggle();
+        if (!IsShown())
+            SetTyping(false);
         auto& wnd = Application::GetInstance()->GetWindow();
         wnd.FreeCursor(IsShown());
 
@@ -39,12 +42,19 @@ bool ConsoleOverlay::OnKeyReleased(KeyReleasedEvent& event)
 
 void ConsoleOverlay::Update(DeltaTime dt)
 {
-    static bool open = false;
+    bool open = true;
 
     ImGui::SetNextWindowSize(ImVec2(1000, 800), ImGuiCond_Once);
-    if (!ImGui::Begin("Console", &open, ImGuiWindowFlags_NoSavedSettings))
+    const bool visible = ImGui::Begin("Console", &open, ImGuiWindowFlags_NoSavedSettings);
+    if (!visible || !open)
     {
         ImGui::End();
+        SetTyping(false);
+        if (!open)
+        {
+            Show(false);
+            Application::GetInstance()->GetWindow().FreeCursor(false);
+        }
         return;
     }
 
@@ -72,11 +82,29 @@ void ConsoleOverlay::Update(DeltaTime dt)
         strcpy(m_input_buffer, "");
         reclaim_focus = true;
     }
+    SetTyping(ImGui::IsItemActive() || reclaim_focus);
 
     if (reclaim_focus)
         ImGui::SetKeyboardFocusHere(-1);
 
     ImGui::End();
+}
+
+void ConsoleOverlay::SetTyping(bool typing)
+{
+    if (typing == m_typing)
+        return;
+
+    m_typing = typing;
+    if (typing)
+    {
+        m_keyboard_was_enabled = Input::IsKeyboardInputEnabled();
+        Input::EnableKeyboardInput(false);
+    }
+    else
+    {
+        Input::EnableKeyboardInput(m_keyboard_was_enabled);
+    }
 }
 
 void ConsoleOverlay::Init()

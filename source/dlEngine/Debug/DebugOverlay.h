@@ -3,6 +3,7 @@
 #include "ImGuiWindow.h"
 
 #include "Debug/Log.h"
+#include "Debug/Profiler.h"
 #include "Utils/RingVector.h"
 
 #include <array>
@@ -48,6 +49,11 @@ namespace Daedalus
 
 		void RenderLogsPage();
 
+		void RenderProfilerPage();
+		void RenderProfilerStats(const char* id, const std::vector<ProfilerStatsEntry>& entries);
+		std::vector<const ProfileSample*> m_profiler_sorted_samples;
+		std::vector<const ProfilerStatsEntry*> m_profiler_sorted_stats;
+
 		float CalculateLowPercentile(float percentile) const;
 
 	private:
@@ -67,6 +73,18 @@ namespace Daedalus
 		float m_total_gpu_ram_GB{ 0.f };
 		std::string m_processor_name;
 		std::string m_gpu_name;
+
+		ProfileFrame m_profile_frame;
+		ProfileFrame m_profile_live_frame;
+		float m_profiler_refresh_accum = 0.f;
+		static constexpr float ProfilerTextRefreshSec = 0.5f;
+		RingVector<float, GraphSize> m_profile_frame_times;
+		bool m_profiler_paused = false;
+		bool m_logs_tab_active = false;
+		std::vector<ProfilerStatsEntry> m_profiler_cpu_stats;
+		std::vector<ProfilerStatsEntry> m_profiler_gpu_stats;
+		std::string_view m_profiler_selected_scope; // Points to static scope-name storage
+		std::array<float, ProfilerStatsEntry::HistorySize> m_profiler_history{};
 
 	private:
 		class LogFilterPanel

@@ -150,6 +150,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 {
 	// We cannot create for OpenGL textures in parallel. So at least we can read files threaded
 	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
+	std::vector<std::filesystem::path> future_paths;
 
 	material_data.resize(scene->mNumMaterials);
 
@@ -184,6 +185,7 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 					if (material->GetTexture(tex_type, k, &texturePath) == AI_SUCCESS)
 					{
 						std::string fullPath = file_name.parent_path().string() + "/" + texturePath.C_Str();
+						future_paths.emplace_back(fullPath);
 
 						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath, mat_num = i, tex_type]()->std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>
 							{
@@ -203,8 +205,10 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 		}
 	}
 
-	for (auto& fut : futures)
+	for (size_t f = 0; f < futures.size(); ++f)
 	{
+		auto& fut = futures[f];
+		const auto& source = future_paths[f];
 		fut.wait();
 		const auto& future = fut.get();
 
@@ -214,19 +218,19 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 		switch (tex_type)
 		{
 		case aiTextureType_DIFFUSE:
-			material_data[material_index]->SetDiffuseMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetDiffuseMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_SPECULAR:
-			material_data[material_index]->SetSpecularMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetSpecularMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_NORMALS:
-			material_data[material_index]->SetNormalMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetNormalMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		case aiTextureType_HEIGHT:
-			material_data[material_index]->SetHeightMap(std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
+			material_data[material_index]->SetHeightMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
 			break;
 
 		default:

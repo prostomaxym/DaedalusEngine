@@ -61,6 +61,8 @@ set(RENDERER_PROJECT_FILES
     Primitives/GraphicsContext.cpp
     Primitives/FrameBuffer.h
     Primitives/FrameBuffer.cpp
+    Primitives/GPUTimer.h
+    Primitives/GPUTimer.cpp
     Primitives/IndexBuffer.h
     Primitives/IndexBuffer.cpp
     Primitives/ShaderStorageBuffer.h

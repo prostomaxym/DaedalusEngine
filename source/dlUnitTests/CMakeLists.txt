@@ -23,6 +23,7 @@ set(CORE_TEST_FILES
 set(DEBUG_TEST_FILES
     DebugTests/BuildInfoTest.cpp
     DebugTests/LogTest.cpp
+    DebugTests/ProfilerTest.cpp
     )
 
 set(ECS_TEST_FILES

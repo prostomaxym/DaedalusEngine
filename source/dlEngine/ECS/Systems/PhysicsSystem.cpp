@@ -6,6 +6,7 @@
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
 #include "Physics/Physics.h"
+#include "Debug/Profiler.h"
 
 using namespace Daedalus;
 
@@ -50,8 +51,8 @@ void PhysicsSystem::OnStopRuntime() const
 
 void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 {
+	DL_PROFILE_SCOPE("PhysicsSystem::Step");
 	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
-
 	for (const auto e : kinematic_body_view)
 	{
 		Entity entity = { e, m_scene };
@@ -65,6 +66,7 @@ void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 
 	m_world->StepSimulation(dt.GetSeconds());
 
+	DL_PROFILE_SCOPE("PhysicsSystem::SyncTransforms");
 	// Update transforms from physics for entities that have both a rigid body and a transform.
 	const auto view = m_registry.view<RigidBodyComponent>();
 

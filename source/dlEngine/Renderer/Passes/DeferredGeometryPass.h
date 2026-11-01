@@ -12,6 +12,7 @@ namespace Daedalus
 	public:
 		DeferredGeometryPass() = default;
 		void Render(FrameContext& context) override;
+		[[nodiscard]] const char* GetName() const override { return "DeferredGeometryPass"; }
 		void OnResize(int width, int height) override { CreateGBuffer(width, height); }
 
 		void CreateGBuffer(int width, int height);

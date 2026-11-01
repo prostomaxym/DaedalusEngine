@@ -151,6 +151,32 @@ std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(unsigned char* data, i
 	return texture;
 }
 
+std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels)
+{
+	if (source.empty())
+		return LoadTexture2D(data, width, height, channels);
+
+	auto& state = GetState();
+	std::error_code ec;
+	auto normalized = std::filesystem::weakly_canonical(source, ec);
+	if (ec) normalized = source.lexically_normal();
+	const auto key = Utf8ToString(normalized.generic_u8string());
+	const auto found = state.m_named_textures.find(key);
+	if (found != state.m_named_textures.end())
+	{
+		++state.m_texture_cache.hits;
+		return found->second;
+	}
+	const auto start = Clock::now();
+	auto texture = Texture2D::Create(data, width, height, channels);
+	if (!texture) return nullptr;
+	state.m_named_textures.emplace(key, texture);
+	state.m_load_times[texture.get()] = ElapsedMs(start);
+	++state.m_texture_cache.misses;
+	++state.m_revision;
+	return texture;
+}
+
 std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(float* data, int width, int height, int channels)
 {
 	auto& state = GetState();

@@ -11,6 +11,7 @@ namespace Daedalus
 	public:
 		explicit ShadowPass() {}
 		void Render(FrameContext& context) override;
+		[[nodiscard]] const char* GetName() const override { return "ShadowPass"; }
 
 		void SetNumberOfShadowMaps(int number);
 		int GetNumberOfShadowMaps() const { return m_number_of_shadowmaps; }

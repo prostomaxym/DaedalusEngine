@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RendererAPI.h"
+#include "Debug/Profiler.h"
 
 #include <glm/glm.hpp>
 
@@ -55,6 +56,13 @@ namespace Daedalus {
 
 		static DebugInfo* GetDebugInfo() { return s_debug; }
 
+		// GPU profiling (dev builds; no-ops otherwise). Graphics thread only.
+		// One GPU frame spans BeginGpuProfileFrame..EndGpuProfileFrame; scopes nest inside it.
+		static void BeginGpuProfileFrame();
+		static void EndGpuProfileFrame();
+		static void BeginGpuScope(const char* name); // name must have static storage
+		static void EndGpuScope();
+
 	private:
 		static void Init();
 		static void Shutdown();
@@ -80,4 +88,22 @@ namespace Daedalus {
 		static DebugInfo* s_debug;
 		static Data* s_data;
 	};
+
+	class GpuProfileScope
+	{
+	public:
+		explicit GpuProfileScope(const char* name) { Renderer::BeginGpuScope(name); }
+		~GpuProfileScope() { Renderer::EndGpuScope(); }
+
+		GpuProfileScope(const GpuProfileScope&) = delete;
+		GpuProfileScope& operator=(const GpuProfileScope&) = delete;
+		GpuProfileScope(GpuProfileScope&&) = delete;
+		GpuProfileScope& operator=(GpuProfileScope&&) = delete;
+	};
 }
+
+#ifdef DL_DEV_TOOLS
+	#define DL_PROFILE_GPU_SCOPE(name) ::Daedalus::GpuProfileScope DL_PROFILE_CONCAT(dl_gpu_scope_, __LINE__)(name)
+#else
+	#define DL_PROFILE_GPU_SCOPE(name)
+#endif

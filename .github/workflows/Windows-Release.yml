@@ -80,7 +80,7 @@ jobs:
     - uses: djnicholson/release-action@v2.11
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        release-name: "Daedalus Development Sandbox"
+        release-name: '${{ steps.package.outputs.asset-name }}'
         tag-name: 'v${{ steps.package.outputs.version }}'
         asset-name: '${{ steps.package.outputs.asset-name }}'
         file: '${{ steps.package.outputs.file }}'

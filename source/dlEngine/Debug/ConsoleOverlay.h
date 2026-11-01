@@ -34,11 +34,14 @@ namespace Daedalus
         void ExecuteCommand(const char* command);
         void ProcessCommand(const char* command);
         int TextEditCallback(ImGuiInputTextCallbackData* data);
+        void SetTyping(bool typing);
 
         RingVector<std::string, 50> m_items;
         RingVector<std::string, 50> m_history;
         int m_history_pos = -1;
         char m_input_buffer[256] = {};
         bool m_scroll_to_bottom = false;
+        bool m_typing = false;
+        bool m_keyboard_was_enabled = true;
     };
 }

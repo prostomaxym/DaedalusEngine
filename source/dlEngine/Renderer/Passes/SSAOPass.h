@@ -11,6 +11,7 @@ namespace Daedalus
 	public:
 		explicit SSAOPass() {}
 		void Render(FrameContext& context) override;
+		[[nodiscard]] const char* GetName() const override { return "SSAOPass"; }
 		void OnResize(int width, int height) override { CreateSSAOBuffers(width, height); }
 
 		void CreateSSAOBuffers(int width, int height);

@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "PhysicsWorld.h"
+#include "Debug/Profiler.h"
 #include <btBulletDynamicsCommon.h>
 #include <atomic>
 #include <cmath>
@@ -177,6 +178,7 @@ std::function<void()> PhysicsWorld::MakeBodyCleanup(RigidBodyHandle handle) cons
 
 void PhysicsWorld::StepSimulation(float fixed_delta)
 {
+	DL_PROFILE_SCOPE("PhysicsWorld::StepSimulation");
 	m_impl->CheckThread();
 	if (!std::isfinite(fixed_delta) || fixed_delta <= 0.f || m_impl->m_stepping) return;
 	m_impl->m_stepping = true;

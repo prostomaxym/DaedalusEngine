@@ -45,6 +45,8 @@ namespace Daedalus
 		static std::shared_ptr<Texture2D> LoadTexture2D(const std::filesystem::path& path);
 		static std::shared_ptr<Texture2D> LoadTexture2D(uint32_t width, uint32_t height, int channels = 4);	
 		static std::shared_ptr<Texture2D> LoadTexture2D(unsigned char* data, int width, int height, int channels);
+		// Registers pixels already decoded from source under the source file name; returns the cached texture if present
+		static std::shared_ptr<Texture2D> LoadTexture2D(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels);
 		static std::shared_ptr<Texture2D> LoadTexture2D(float* data, int width, int height, int channels);
 		static std::shared_ptr<TextureCubemap> LoadCubemap(const std::vector<std::string>& faces);
 		// Call at scene transitions on the graphics thread, not on every frame.

@@ -25,6 +25,8 @@
 #include "Renderer/Primitives/FrameBuffer.h"
 #include "Renderer/Primitives/ShaderStorageBuffer.h"
 #include "Renderer/Primitives/UniformBuffer.h"
+#include "Renderer/Primitives/GPUTimer.h"
+#include "Debug/Profiler.h"
 
 #include <filesystem>
 
@@ -48,6 +50,7 @@ struct Renderer::Data
 	DeferredGeometryPass* geometry_pass{ nullptr }; // Non-owning, owned by passes
 
 	std::shared_ptr<VertexArray> unit_quad{ nullptr };
+	std::unique_ptr<GPUTimer> gpu_timer{ nullptr }; // Dev builds only
 
 	int window_width{ 0 };
 	int window_height{ 0 };
@@ -186,6 +189,7 @@ void Renderer::Init()
 
 	if (IsDevBuild())
 	{
+		s_data->gpu_timer = GPUTimer::Create();
 		const auto width = GraphicsConfig::GetShadowBufferWidth();
 		const auto height = GraphicsConfig::GetShadowBufferHeight();
 		s_debug->greyscale_shadow = ResourceManager::LoadTexture2D(width, height);
@@ -252,7 +256,11 @@ void Renderer::FlushPipeline()
 	context.viewport_height = s_data->window_height;
 
 	for (auto& pass : s_data->passes)
+	{
+		DL_PROFILE_SCOPE(pass->GetName());
+		DL_PROFILE_GPU_SCOPE(pass->GetName());
 		pass->Render(context);
+	}
 
 	if (IsDevBuild())
 	{
@@ -269,12 +277,44 @@ void Renderer::FlushPipeline()
 		s_debug->depth_id = context.GetTexture(PassTexture::Depth);
 	}
 
-	const auto gbuffer = s_data->geometry_pass->GetBuffer();
-	const auto& spec = gbuffer->GetSpecification();
-	Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
+	{
+		DL_PROFILE_SCOPE("Renderer::CopyDepth");
+		DL_PROFILE_GPU_SCOPE("Renderer::CopyDepth");
+		const auto gbuffer = s_data->geometry_pass->GetBuffer();
+		const auto& spec = gbuffer->GetSpecification();
+		Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
+	}
 
 	if (IsDevBuild())
+	{
+		DL_PROFILE_SCOPE("Renderer::ComputeDebugInfo");
+		DL_PROFILE_GPU_SCOPE("Renderer::ComputeDebugInfo");
 		ComputeDebugInfo();
+	}
+}
+
+void Renderer::BeginGpuProfileFrame()
+{
+	if (auto* timer = GetData()->gpu_timer.get())
+		timer->BeginFrame();
+}
+
+void Renderer::EndGpuProfileFrame()
+{
+	if (auto* timer = GetData()->gpu_timer.get())
+		timer->EndFrame();
+}
+
+void Renderer::BeginGpuScope(const char* name)
+{
+	if (auto* timer = GetData()->gpu_timer.get())
+		timer->BeginScope(name);
+}
+
+void Renderer::EndGpuScope()
+{
+	if (auto* timer = GetData()->gpu_timer.get())
+		timer->EndScope();
 }
 
 void Renderer::Draw(const Shader* shader, const VertexArray* vertex_array, const glm::mat4& transform)

@@ -6,6 +6,7 @@
 #include "ECS/Entity.h"
 #include "ECS/Scene.h"
 #include "Config/GraphicsConfig.h"
+#include "Debug/Profiler.h"
 #include "Renderer/API/Renderer.h"
 #include "Renderer/API/RenderConstants.h"
 
@@ -48,13 +49,21 @@ void RenderSystem::OnStartRuntime() const
 
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 {
+	DL_PROFILE_SCOPE("RenderSystem::OnUpdateRuntime");
 	const auto count = m_registry.view<RenderableObjectComponent>().size();
 	const auto reserve_count = count <= static_cast<size_t>((std::numeric_limits<int>::max)())
 		? std::optional<int>(static_cast<int>(count)) : std::nullopt;
 	Renderer::BeginFrame(m_camera, reserve_count);
-	SubmitModels();
+	{
+		DL_PROFILE_SCOPE("RenderSystem::SubmitModels");
+		SubmitModels();
+	}
 	Renderer::FlushPipeline();
-	RenderSkybox();
+	{
+		DL_PROFILE_SCOPE("RenderSystem::RenderSkybox");
+		DL_PROFILE_GPU_SCOPE("RenderSystem::RenderSkybox");
+		RenderSkybox();
+	}
 }
 
 void RenderSystem::SetViewportSize(int width, int height)

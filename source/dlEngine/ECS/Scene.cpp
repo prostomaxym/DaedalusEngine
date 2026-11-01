@@ -4,6 +4,7 @@
 
 #include "Core/Application.h"
 #include "Core/Window.h"
+#include "Debug/Profiler.h"
 #include "Components.h"
 #include "Entity.h"
 #include "NativeScript.h"
@@ -60,11 +61,13 @@ void Scene::OnRuntimeStop()
 
 void Scene::OnUpdateRuntime(DeltaTime dt)
 {
+	DL_PROFILE_SCOPE("Scene::Update");
 	if (!m_is_running) return;
 	if (!m_is_paused)
 	{
 		// Update scripts
 		{
+			DL_PROFILE_SCOPE("Scene::NativeScripts");
 			m_registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
 					for(auto& script : nsc.native_scripts)
@@ -77,11 +80,13 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 
 void Scene::OnFixedUpdateRuntime(DeltaTime dt)
 {
+	DL_PROFILE_SCOPE("Scene::FixedUpdate");
 	if (m_is_running && !m_is_paused) m_physics_system->OnUpdateRuntime(dt);
 }
 
 void Scene::OnRenderRuntime(DeltaTime dt)
 {
+	DL_PROFILE_SCOPE("Scene::Render");
 	if (m_is_running && GetCamera()) m_render_system->OnUpdateRuntime(dt);
 }
 

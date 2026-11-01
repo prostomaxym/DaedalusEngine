@@ -15,6 +15,7 @@
 #include "Config/PathConfig.h"
 #include "Debug/DebugOverlay.h"
 #include "Debug/ConsoleOverlay.h"
+#include "Debug/Profiler.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
 #include "Renderer/Resources/ResourceManager.h"
@@ -80,43 +81,77 @@ void Application::Run()
 	while (m_running)
 	{
 		const auto update_dt = update_timer.UpdateDeltaTime();
+		if constexpr (IsDevBuild())
+			Profiler::BeginFrame();
 
-		GetWindow().PollEvents();
-		Input::Update();
-		GetEventEngine().DispatchPending(DL_BIND_EVENT_FN(Application::OnEvent));
+		{
+			DL_PROFILE_SCOPE("Application::PollEvents");
+			GetWindow().PollEvents();
+			Input::Update();
+			GetEventEngine().DispatchPending(DL_BIND_EVENT_FN(Application::OnEvent));
+		}
 		if (!m_running) break;
 		auto& scenes = m_engine->GetScenes();
 		if (scenes.HasPending())
 		{
+			DL_PROFILE_SCOPE("Application::CommitPendingScene");
 			scenes.CommitPending();
 			ResourceManager::PurgeUnused();
 		}
-		const int steps = fixed_clock.Advance(update_dt);
-		for (int step = 0; step < steps; ++step)
 		{
-			scenes.OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+			DL_PROFILE_SCOPE("Application::FixedUpdate");
+			const int steps = fixed_clock.Advance(update_dt);
+			for (int step = 0; step < steps; ++step)
+			{
+				scenes.OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+				for (auto& layer : m_layer_stack)
+					layer->OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+			}
+		}
+
+		{
+			DL_PROFILE_SCOPE("Application::Update");
 			for (auto& layer : m_layer_stack)
-				layer->OnFixedUpdate(DeltaTime(FixedStepClock::Step));
+			{
+				layer->OnUpdate(update_dt);
+			}
+			scenes.OnUpdate(update_dt);
 		}
-
-		for (auto& layer : m_layer_stack)
 		{
-			layer->OnUpdate(update_dt);
+			DL_PROFILE_SCOPE("Application::Render");
+			if constexpr (IsDevBuild())
+				Renderer::BeginGpuProfileFrame();
+			DL_PROFILE_GPU_SCOPE("Application::Render");
+			scenes.OnRender(update_dt);
+			for (auto& layer : m_layer_stack)
+				layer->OnRender(update_dt);
 		}
-		scenes.OnUpdate(update_dt);
-		scenes.OnRender(update_dt);
-		for (auto& layer : m_layer_stack)
-			layer->OnRender(update_dt);
-		m_debug_layer->BeginFrame();
-		for (auto& layer : m_layer_stack)
-			layer->OnImGuiRender(update_dt);
-		m_debug_layer->EndFrame();
+		{
+			DL_PROFILE_SCOPE("Application::ImGui");
+			{
+				DL_PROFILE_GPU_SCOPE("Application::ImGui");
+				m_debug_layer->BeginFrame();
+				for (auto& layer : m_layer_stack)
+					layer->OnImGuiRender(update_dt);
+				m_debug_layer->EndFrame();
+			}
+			if constexpr (IsDevBuild())
+				Renderer::EndGpuProfileFrame();
+		}
 
-		GetWindow().SwapBuffers();
+		{
+			DL_PROFILE_SCOPE("Application::SwapBuffers");
+			GetWindow().SwapBuffers();
+		}
 
 		const auto frame_dt = frame_timer.GetEllapsedTime();
-		FPSLocker::LockFpsThreadSleep(GraphicsConfig::GetFPSLock(), frame_dt);
+		{
+			DL_PROFILE_SCOPE("Application::FPSLock");
+			FPSLocker::LockFpsThreadSleep(GraphicsConfig::GetFPSLock(), frame_dt);
+		}
 		frame_timer.StartTimer();
+		if constexpr (IsDevBuild())
+			Profiler::EndFrame();
 	}
 }
 

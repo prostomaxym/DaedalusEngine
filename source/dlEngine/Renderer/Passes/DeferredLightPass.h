@@ -10,5 +10,6 @@ namespace Daedalus
 	public:
 		explicit DeferredLightPass() {}
 		void Render(FrameContext& context) override;
+		[[nodiscard]] const char* GetName() const override { return "DeferredLightPass"; }
 	};
 }

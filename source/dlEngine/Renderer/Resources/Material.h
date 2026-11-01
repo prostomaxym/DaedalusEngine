@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -17,10 +18,10 @@ namespace Daedalus
 			glm::vec3 kspecular = { 1.f, 1.f, 1.f }, float shininess = { 16.f });
 	public:
 
-		void SetDiffuseMap(unsigned char* data, int width, int height, int channels);
-		void SetSpecularMap(unsigned char* data, int width, int height, int channels);
-		void SetNormalMap(unsigned char* data, int width, int height, int channels);
-		void SetHeightMap(unsigned char* data, int width, int height, int channels);
+		void SetDiffuseMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels);
+		void SetSpecularMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels);
+		void SetNormalMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels);
+		void SetHeightMap(const std::filesystem::path& source, unsigned char* data, int width, int height, int channels);
 
 		std::shared_ptr<Texture2D> GetDiffuseMap() const { return m_map_diffuse; }
 		std::shared_ptr<Texture2D> GetSpecularMap() const { return m_map_specular; }

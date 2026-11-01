@@ -29,6 +29,7 @@ namespace Daedalus {
 		static GLuint BuildFromFile(const std::filesystem::path& source_path);
 		static GLuint BuildFromBinary(const std::filesystem::path& binary_path);
 		static GLuint BuildFromCode(const std::string& code);
+		[[nodiscard]] static GLuint TryBuildFromCode(const std::string& code);
 
 		static void SaveBinary(const std::filesystem::path& file_name, GLuint shader_id);
 

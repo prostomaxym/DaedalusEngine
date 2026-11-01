@@ -16,10 +16,27 @@ namespace Daedalus
 		const std::thread::id m_owner{ std::this_thread::get_id() };
 		std::unique_ptr<ShaderLibrary> m_shader_library;
 		std::unordered_map<std::string, std::shared_ptr<Model>> m_models;
+		struct ModelSource
+		{
+			std::string source;
+			ModelParserFlags flags = ModelParserFlags::TRIANGULATE;
+			std::vector<std::string> dependencies;
+			uint64_t generation = 0;
+		};
+		std::unordered_map<std::string, ModelSource> m_model_sources;
+		std::unordered_map<std::string, std::string> m_texture_sources;
+		std::unordered_map<std::string, uint64_t> m_texture_generations;
 		std::unordered_map<std::string, std::shared_ptr<Material>> m_material;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> m_named_textures;
 		std::set<std::shared_ptr<Texture2D>> m_unnamed_textures;
 		std::set<std::shared_ptr<TextureCubemap>> m_unnamed_cubemaps;
+		struct CubemapSource
+		{
+			std::vector<std::string> faces;
+			std::weak_ptr<TextureCubemap> target;
+			uint64_t generation = 0;
+		};
+		std::unordered_map<std::string, CubemapSource> m_cubemap_sources;
 		std::set<std::shared_ptr<Mesh>> m_meshes;
 		int m_vertex_count{ 0 };
 		std::unordered_map<const void*, double> m_load_times;

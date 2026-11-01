@@ -27,6 +27,13 @@ std::shared_ptr<Shader> Shader::CreateFromCode(const std::string& code)
 	return nullptr;
 }
 
+std::shared_ptr<Shader> Shader::TryCreateFromCode(const std::string& code)
+{
+	if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL) return nullptr;
+	auto shader = std::make_shared<OpenGLShader>();
+	return shader->ReloadFromCode(code) ? shader : nullptr;
+}
+
 std::shared_ptr<Shader> Shader::CreateFromFile(const std::filesystem::path& file_path)
 {
 	switch (RendererAPI::GetAPI())

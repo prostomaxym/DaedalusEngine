@@ -4,6 +4,7 @@
 #include "ImGuiWindow.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Daedalus
@@ -33,6 +34,8 @@ namespace Daedalus
 		void AddWindow(std::unique_ptr<ImGuiWindow>&& window);
 
 	private:
+		// ImGui borrows these bytes until its font atlas/context is destroyed.
+		std::string m_font_data;
 		std::vector<std::unique_ptr<ImGuiWindow>> m_windows;
 		bool m_block_events = true;	
 	};

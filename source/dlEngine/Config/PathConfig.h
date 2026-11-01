@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "Macros.h"
+#include "Utils/Utf8.h"
 
 namespace Daedalus
 {
@@ -25,6 +26,7 @@ namespace Daedalus
 		static std::filesystem::path GetConfigPath() { return GetInstance().m_config_dir; }
 		static std::filesystem::path GetLogsPath() { return s_instance ? s_instance->m_logs_dir : std::filesystem::path("logs"); }
 		static std::filesystem::path GetScenePath() { return GetInstance().m_assets_dir / GetInstance().m_scene_file; }
+		static std::string GetSceneAssetPath() { return "assets:/" + Utf8ToString(GetInstance().m_scene_file.generic_u8string()); }
 
 		static std::filesystem::path GetGraphicsConfigPath() { return GetInstance().m_config_dir / GetInstance().m_graphics_config_name; }
 		static std::filesystem::path GetKeybindConfigPath() { return GetInstance().m_config_dir / GetInstance().m_keybind_config_name; }

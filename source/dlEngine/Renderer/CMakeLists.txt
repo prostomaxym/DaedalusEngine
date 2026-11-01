@@ -76,6 +76,8 @@ set(RENDERER_PROJECT_FILES
 
     Resources/Material.h
     Resources/Material.cpp
+    Resources/AssetImporter.h
+    Resources/AssetImporter.cpp
     Resources/DecodedImage.h
     Resources/DecodedImage.cpp
     Resources/Mesh.h
@@ -90,6 +92,8 @@ set(RENDERER_PROJECT_FILES
     Resources/Texture.cpp
     Resources/ResourceManager.h
     Resources/ResourceManager.cpp
+    Resources/ResourceAssetLoading.cpp
+    Resources/ResourceCubemapLoading.cpp
     Resources/ResourceStats.h
     Resources/ResourceState.h
     Resources/ResourceStatistics.cpp
@@ -121,4 +125,5 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE     
         assimp::assimp  
         Threads
+        Utils
     )

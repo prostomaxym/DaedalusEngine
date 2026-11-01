@@ -40,6 +40,7 @@ namespace Daedalus {
 		void SetName(const std::string& name) override { m_name = name; }
 
 		ShaderInfo GetInfo() const override;
+		[[nodiscard]] bool ReloadFromCode(const std::string& code) override;
 
 		void DispatchCompute(uint32_t w, uint32_t h, int local_size) const override;
 

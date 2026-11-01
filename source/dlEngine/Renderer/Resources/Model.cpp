@@ -293,14 +293,16 @@ void AssimpParser::ProcessMesh(void* transform, aiMesh* mesh, const aiScene* sce
 Model::Model(const Model& other)
 	: m_meshes(other.m_meshes),
 	m_material_data(other.m_material_data),
-	m_bounding_sphere(other.m_bounding_sphere)
+	m_bounding_sphere(other.m_bounding_sphere),
+	m_bounding_aabb(other.m_bounding_aabb)
 {
 }
 
 Model::Model(Model&& other) noexcept
 	: m_meshes(std::move(other.m_meshes)),
 	m_material_data(std::move(other.m_material_data)),
-	m_bounding_sphere(std::move(other.m_bounding_sphere))
+	m_bounding_sphere(std::move(other.m_bounding_sphere)),
+	m_bounding_aabb(std::move(other.m_bounding_aabb))
 {
 }
 
@@ -311,6 +313,7 @@ Model& Model::operator=(const Model& other)
 		m_meshes = other.m_meshes;
 		m_material_data = other.m_material_data;
 		m_bounding_sphere = other.m_bounding_sphere;
+		m_bounding_aabb = other.m_bounding_aabb;
 	}
 
 	return *this;
@@ -323,6 +326,7 @@ Model& Model::operator=(Model&& other) noexcept
 		m_meshes = std::move(other.m_meshes);
 		m_material_data = std::move(other.m_material_data);
 		m_bounding_sphere = std::move(other.m_bounding_sphere);
+		m_bounding_aabb = std::move(other.m_bounding_aabb);
 	}
 
 	return *this;

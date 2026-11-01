@@ -3,6 +3,7 @@
 #include "CacheEviction.h"
 #include "Utils/Utf8.h"
 #include "Threads/JobSystem.h"
+#include "Core/AssetPipeline.h"
 
 using namespace Daedalus;
 
@@ -17,7 +18,7 @@ namespace
 
 ResourceManager* ResourceManager::s_instance = nullptr;
 
-ResourceManager::ResourceManager(JobSystem* jobs) : m_state(std::make_unique<State>()), m_jobs(jobs)
+ResourceManager::ResourceManager(JobSystem* jobs, AssetPipeline* assets) : m_state(std::make_unique<State>()), m_jobs(jobs), m_assets(assets)
 {
 	DL_ASSERT(!s_instance, Log::Categories::Renderer, "Only one resource manager may be active");
 	if (s_instance) std::abort();
@@ -34,6 +35,7 @@ JobSystem* ResourceManager::GetJobs()
 ResourceManager::~ResourceManager()
 {
 	GetState();
+	if (m_jobs) m_jobs->WaitIdle();
 	m_state.reset();
 	s_instance = nullptr;
 }
@@ -55,6 +57,13 @@ void ResourceManager::LoadShaders(const std::filesystem::path& path, bool recomp
 	++state.m_revision;
 }
 
+void ResourceManager::ReloadShaders(AssetPipeline& assets)
+{
+	auto& state = GetState();
+	if (state.m_shader_library)
+		state.m_shader_library->ReloadAssets(assets, [] { ++GetState().m_revision; });
+}
+
 std::shared_ptr<Shader> ResourceManager::GetShader(std::string_view name)
 {
 	auto& state = GetState();
@@ -64,6 +73,10 @@ std::shared_ptr<Shader> ResourceManager::GetShader(std::string_view name)
 std::shared_ptr<Model> ResourceManager::LoadModel(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
 	auto& state = GetState();
+	const auto reference = Utf8ToString(path.generic_u8string());
+	if (reference.find(":/") > 1 && reference.find(":/") != std::string::npos) return LoadModelAsset(reference, parser_flags);
+	if (s_instance->m_assets)
+		if (const auto virtual_path = s_instance->m_assets->GetFiles().Virtualize(path)) return LoadModelAsset(*virtual_path, parser_flags);
 	std::error_code ec;
 	const auto normalized = std::filesystem::weakly_canonical(path, ec);
 	if (ec || !std::filesystem::is_regular_file(normalized, ec) || ec) return nullptr;
@@ -115,6 +128,10 @@ std::shared_ptr<Mesh> ResourceManager::LoadMesh(std::string_view name, const std
 std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(const std::filesystem::path& path)
 {
 	auto& state = GetState();
+	const auto reference = Utf8ToString(path.generic_u8string());
+	if (reference.find(":/") > 1 && reference.find(":/") != std::string::npos) return LoadTextureAsset(reference);
+	if (s_instance->m_assets)
+		if (const auto virtual_path = s_instance->m_assets->GetFiles().Virtualize(path)) return LoadTextureAsset(*virtual_path);
 	std::error_code ec;
 	const auto normalized = std::filesystem::weakly_canonical(path, ec);
 	if (ec || !std::filesystem::is_regular_file(normalized, ec) || ec) return nullptr;
@@ -199,6 +216,20 @@ std::shared_ptr<Texture2D> ResourceManager::LoadTexture2D(float* data, int width
 
 std::shared_ptr<TextureCubemap> ResourceManager::LoadCubemap(const std::vector<std::string>& faces)
 {
+	GetState();
+	std::vector<std::string> virtual_faces;
+	for (const auto& face : faces)
+	{
+		if (face.find(":/") > 1 && face.find(":/") != std::string::npos) virtual_faces.push_back(face);
+		else if (s_instance->m_assets)
+		{
+			const auto reference = s_instance->m_assets->GetFiles().Virtualize(Utf8ToPath(face));
+			if (!reference) break;
+			virtual_faces.push_back(*reference);
+		}
+		else break;
+	}
+	if (virtual_faces.size() == faces.size() && !faces.empty()) return LoadCubemapAsset(virtual_faces);
 	auto& state = GetState();
 	const auto start = Clock::now();
 	auto cubemap = TextureCubemap::Create(faces);

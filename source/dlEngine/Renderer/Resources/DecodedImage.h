@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <memory>
 #include <span>
+#include <cstdint>
 
 namespace Daedalus
 {
@@ -19,7 +20,8 @@ namespace Daedalus
 		DecodedImage& operator=(DecodedImage&&) noexcept = default;
 
 		[[nodiscard]] bool Load(const std::filesystem::path& path, bool flip_vertically = true);
-		[[nodiscard]] bool LoadMemory(std::span<const unsigned char> bytes, bool flip_vertically = true);
+		[[nodiscard]] bool LoadMemory(std::span<const unsigned char> bytes, bool flip_vertically = true, int requested_channels = 0);
+		[[nodiscard]] bool LoadRGBA(std::span<const unsigned char> pixels, uint32_t width, uint32_t height);
 		unsigned char* GetPixels() const { return m_pixels.get(); }
 		int GetWidth() const { return m_width; }
 		int GetHeight() const { return m_height; }

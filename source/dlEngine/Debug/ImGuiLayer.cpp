@@ -11,6 +11,8 @@
 
 #include "Macros.h"
 #include "Core/Application.h"
+#include "Core/Engine.h"
+#include "Core/AssetPipeline.h"
 #include "Core/Window.h"
 #include "Events/Event.h"
 #include "Config/PathConfig.h"
@@ -46,12 +48,22 @@ void ImGuiLayer::OnAttach()
 	if (WantToLoadConfig)
 		DoLoadConfig();
 
-	float fontSize = 18.0f;// *2.0f;
-
-	const auto font_filename = (PathConfig::GetAssetsPath() / "fonts/calibrib.ttf").string();
-
-	io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
-	io.FontDefault = io.Fonts->AddFontFromFileTTF(font_filename.c_str(), fontSize);
+	constexpr float font_size = 18.0f;
+	constexpr auto font_path = "assets:/fonts/calibrib.ttf";
+	std::string font_error;
+	const auto& files = Application::GetInstance()->GetEngine().GetAssets().GetFiles();
+	if (files.Read(font_path, m_font_data, font_error, 16 * 1024 * 1024) && !m_font_data.empty())
+	{
+		ImFontConfig font_config;
+		font_config.FontDataOwnedByAtlas = false;
+		io.FontDefault = io.Fonts->AddFontFromMemoryTTF(m_font_data.data(), static_cast<int>(m_font_data.size()), font_size, &font_config);
+	}
+	if (!io.FontDefault)
+	{
+		Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "Failed to load ImGui font '{}': {}",
+			font_path, font_error.empty() ? "Empty or invalid font data" : font_error);
+		io.FontDefault = io.Fonts->AddFontDefault();
+	}
 
 	ImGui::StyleColorsDark();
 
@@ -82,6 +94,7 @@ void ImGuiLayer::OnDetach()
 	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
 	ImPlot3D::DestroyContext();
+	m_font_data.clear();
 
 	Log::Write(Log::Levels::Warn, Log::Categories::EngineCore, "ImGui Layer is detached;");
 }

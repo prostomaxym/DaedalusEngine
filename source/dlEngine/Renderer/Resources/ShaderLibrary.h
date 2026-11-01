@@ -6,9 +6,11 @@
 #include <set>
 #include <vector>
 #include <unordered_map>
+#include <functional>
 
 namespace Daedalus
 {
+	class AssetPipeline;
 	class DAEDALUS_API ShaderLibrary final
 	{
 	public:
@@ -23,8 +25,11 @@ namespace Daedalus
 		size_t Count() const { return m_shaders.size(); }
 		const std::unordered_map<std::string, std::shared_ptr<Shader>>& GetShaders() const { return m_shaders; }
 		const ShaderLoadInfo* GetLoadInfo(const std::string& name) const;
+		void ReloadAssets(AssetPipeline& assets, std::function<void()> on_reload);
 
 	private:
+		std::string ReadSource(const std::string& name) const;
+		void SaveCache(const Shader& shader, const std::string& name, const std::string& source) const;
 		void RecordLoadInfo(const std::string& name, const char* origin, std::chrono::steady_clock::time_point start, const std::filesystem::path& path);
 		void RecompileAllShaders(const std::set<std::string>& shader_names, const std::filesystem::path& path);
 		void LoadCachedShaders(const std::vector<std::string>& cached_shader_names, const std::filesystem::path& path);
@@ -35,5 +40,9 @@ namespace Daedalus
 
 		std::unordered_map<std::string, std::shared_ptr<Shader>> m_shaders;
 		std::unordered_map<std::string, ShaderLoadInfo> m_load_info;
+		std::filesystem::path m_path;
+		bool m_archive = false;
+		uint64_t m_reload_generation = 0;
+		std::filesystem::file_time_type m_latest_source_time{};
 	};
 }

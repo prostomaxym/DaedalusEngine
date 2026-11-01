@@ -28,6 +28,12 @@ std::shared_ptr<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, in
 	return nullptr;
 }
 
+std::shared_ptr<TextureCubemap> TextureCubemap::Create(const std::vector<std::shared_ptr<DecodedImage>>& faces)
+{
+	if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL) return std::make_shared<OpenGLTextureCubemap>(faces);
+	return nullptr;
+}
+
 std::shared_ptr<Texture2D> Texture2D::Create(const std::filesystem::path& path)
 {
 	switch (RendererAPI::GetAPI())

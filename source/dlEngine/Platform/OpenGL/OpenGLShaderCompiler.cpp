@@ -5,6 +5,9 @@
 #include <fstream>
 
 #include "Config/PathConfig.h"
+#include "Utils/AssetSourceReader.h"
+#include "Utils/VirtualFileSystem.h"
+#include "Utils/Utf8.h"
 
 using namespace Daedalus;
 
@@ -145,6 +148,81 @@ GLuint OpenGLShaderCompiler::BuildFromCode(const std::string& code)
     const auto shaders_source = OpenGLShaderCompiler::SplitCodeIntoShaders(code);
     const auto shader_ids = OpenGLShaderCompiler::CompileMultipleShaders(shaders_source);
     return Link(shader_ids);
+}
+
+GLuint OpenGLShaderCompiler::TryBuildFromCode(const std::string& code)
+{
+    std::map<ShaderType, std::string> sources;
+    ShaderType current_type = ShaderType::Unknown;
+    std::istringstream input(code);
+    std::string line;
+    while (std::getline(input, line))
+    {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        ShaderType type = ShaderType::Unknown;
+        if (line == "#vertex") type = ShaderType::Vertex;
+        else if (line == "#fragment") type = ShaderType::Fragment;
+        else if (line == "#geometry") type = ShaderType::Geometry;
+        else if (line == "#tesscontrol") type = ShaderType::TessellationControl;
+        else if (line == "#tesseval") type = ShaderType::TessellationEvaluation;
+        else if (line == "#compute") type = ShaderType::Compute;
+        if (type != ShaderType::Unknown)
+        {
+            if (sources.contains(type))
+            {
+                Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload rejected duplicate stage");
+                return 0;
+            }
+            current_type = type;
+            sources.emplace(type, std::string());
+        }
+        else if (current_type != ShaderType::Unknown) sources[current_type] += line + '\n';
+    }
+    if (sources.empty() || (sources.contains(ShaderType::Compute) && sources.size() != 1))
+    {
+        Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload rejected invalid stage set");
+        return 0;
+    }
+    const auto program = glCreateProgram();
+    if (!program) return 0;
+    for (const auto& [type, source] : sources)
+    {
+        const auto shader = glCreateShader(GetShaderGLType(type));
+        if (!shader) { glDeleteProgram(program); return 0; }
+        const auto text = source.c_str();
+        glShaderSource(shader, 1, &text, nullptr);
+        glCompileShader(shader);
+        GLint compiled = GL_FALSE;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        if (compiled == GL_FALSE)
+        {
+            GLint length = 0;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+            std::string error(static_cast<size_t>((std::max)(length, 1)), '\0');
+            glGetShaderInfoLog(shader, static_cast<GLsizei>(error.size()), nullptr, error.data());
+            Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload compilation failed: {}", error);
+            glDeleteShader(shader);
+            glDeleteProgram(program);
+            return 0;
+        }
+        glAttachShader(program, shader);
+        // Deletion is deferred until the program releases the attachment, including failure paths.
+        glDeleteShader(shader);
+    }
+    glLinkProgram(program);
+    GLint linked = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (linked == GL_FALSE)
+    {
+        GLint length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+        std::string error(static_cast<size_t>((std::max)(length, 1)), '\0');
+        glGetProgramInfoLog(program, static_cast<GLsizei>(error.size()), nullptr, error.data());
+        Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload linking failed: {}", error);
+        glDeleteProgram(program);
+        return 0;
+    }
+    return program;
 }
 
 GLenum OpenGLShaderCompiler::GetShaderGLType(ShaderType type)
@@ -297,16 +375,15 @@ std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::Sp
 std::map<OpenGLShaderCompiler::ShaderType, std::string> OpenGLShaderCompiler::SplitFileIntoShaders(
     const std::filesystem::path& file_path)
 {
-    std::ifstream file(file_path);
-    if (!file.is_open())
+    VirtualFileSystem files;
+    std::string content, error;
+    if (!files.Mount("source", file_path.has_parent_path() ? file_path.parent_path() : std::filesystem::current_path()) ||
+        !files.Mount("shaders", PathConfig::GetShadersPath()) ||
+        !AssetSourceReader::ReadShaderSource(files, "source:/" + Utf8ToString(file_path.filename().generic_u8string()), content, error))
     {
-        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to open shader file - {}", file_path.string());
+        Log::Write(Log::Levels::Critical, Log::Categories::Renderer, "Failed to read shader file - {}: {}", file_path.string(), error);
         throw std::runtime_error("Failed to open shader file");
     }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string content = buffer.str();
 
     return SplitCodeIntoShaders(content);
 }

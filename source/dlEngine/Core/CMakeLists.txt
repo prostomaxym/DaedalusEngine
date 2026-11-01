@@ -8,6 +8,10 @@ project(
     )
 
 set(CORE_PROJECT_FILES
+    AssetPipeline.h
+    AssetPipeline.cpp
+    AssetRegistry.h
+    AssetRegistry.cpp
     Application.h
     Application.cpp
     Engine.h
@@ -51,4 +55,5 @@ target_link_libraries(${PROJECT_NAME}
         Config
         ECS
         Physics
+        Threads
     )

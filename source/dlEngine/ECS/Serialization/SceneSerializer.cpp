@@ -6,6 +6,7 @@
 #include "SceneJson.h"
 #include "ECS/Scene.h"
 #include "Utils/Utf8.h"
+#include "Core/AssetPipeline.h"
 
 #include <algorithm>
 #include <charconv>
@@ -32,8 +33,16 @@ namespace
 		return true;
 	}
 
-	bool Resolve(const std::filesystem::path& assets, const std::string& reference, std::filesystem::path& path, std::string& error)
+	bool Resolve(const std::filesystem::path& assets, const std::string& reference, std::filesystem::path& path, std::string& error, const AssetPipeline* pipeline)
 	{
+		if (pipeline)
+		{
+			const auto normalized = VirtualFileSystem::Normalize(reference.find(":/") == std::string::npos ? "assets:/" + reference : reference);
+			std::string bytes;
+			if (!normalized || !pipeline->GetFiles().Read(*normalized, bytes, error)) return false;
+			path = Utf8ToPath(*normalized);
+			return true;
+		}
 		std::error_code ec;
 		const auto root = std::filesystem::weakly_canonical(assets, ec);
 		if (!ec) path = std::filesystem::weakly_canonical(root / Utf8ToPath(reference), ec);
@@ -48,6 +57,14 @@ namespace
 
 	bool Reference(const std::filesystem::path& assets, const std::filesystem::path& path, std::string& reference, std::string& error)
 	{
+		const auto text = Utf8ToString(path.generic_u8string());
+		if (text.find(":/") != std::string::npos && text.find(":/") > 1)
+		{
+			const auto normalized = VirtualFileSystem::Normalize(text);
+			if (!normalized) { error = "Invalid virtual resource reference"; return false; }
+			reference = *normalized;
+			return true;
+		}
 		std::error_code ec;
 		const auto root = std::filesystem::weakly_canonical(assets, ec);
 		const auto canonical = ec ? std::filesystem::path() : std::filesystem::weakly_canonical(path, ec);
@@ -158,7 +175,7 @@ namespace
 }
 
 bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
-	const ScriptRegistry& scripts, std::string& error)
+	const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline)
 {
 	error.clear();
 	if (scene.IsRunning() || !scene.IsEmpty()) { error = "Scene loading requires an empty, stopped scene"; return false; }
@@ -167,10 +184,10 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 	{
 		if (!scripts.Validate(entity, error)) return false;
 		std::filesystem::path path;
-		if (entity.model && !Resolve(assets, entity.model->path, path, error)) return false;
+		if (entity.model && !Resolve(assets, entity.model->path, path, error, pipeline)) return false;
 		if (entity.skybox)
 			for (const auto& face : entity.skybox->faces)
-				if (!Resolve(assets, face, path, error)) return false;
+				if (!Resolve(assets, face, path, error, pipeline)) return false;
 	}
 	const auto previous_name = scene.GetSceneName();
 	const auto previous_paused = scene.IsPaused();
@@ -189,7 +206,7 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 		if (r.model)
 		{
 			std::filesystem::path path;
-			if (!Resolve(assets, r.model->path, path, error)) return rollback();
+			if (!Resolve(assets, r.model->path, path, error, pipeline)) return rollback();
 			if (!entity.AddComponent<RenderableObjectComponent>(path, static_cast<ModelParserFlags>(r.model->import_flags)).model)
 			{
 				error = "Failed to load model for entity " + r.id + ": " + r.model->path;
@@ -206,7 +223,7 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 			for (const auto& face : r.skybox->faces)
 			{
 				std::filesystem::path path;
-				if (!Resolve(assets, face, path, error)) return rollback();
+				if (!Resolve(assets, face, path, error, pipeline)) return rollback();
 				faces.push_back(Utf8ToString(path.u8string()));
 			}
 			const auto& cubemap = entity.AddComponent<SkyboxComponent>(faces, r.skybox->rotation).cubemap.GetCubemapTexture();
@@ -292,6 +309,19 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 	if (!SceneJson::Validate(result, error)) return false;
 	record = std::move(result);
 	return true;
+}
+
+bool SceneSerializer::LoadAsset(const AssetPipeline& pipeline, std::string_view path, Scene& scene, const ScriptRegistry& scripts, std::string& error)
+{
+	SceneRecord record;
+	return SceneJson::Load(pipeline.GetFiles(), path, record, error) && Instantiate(record, scene, {}, scripts, error, &pipeline);
+}
+
+bool SceneSerializer::LoadAsset(const AssetPipeline& pipeline, AssetId id, Scene& scene, const ScriptRegistry& scripts, std::string& error)
+{
+	const auto* metadata = pipeline.GetRegistry().Find(id);
+	if (!metadata) { error = "Unknown scene asset UUID"; return false; }
+	return LoadAsset(pipeline, metadata->virtual_path, scene, scripts, error);
 }
 
 bool SceneSerializer::Load(const std::filesystem::path& path, Scene& scene, const std::filesystem::path& assets,

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
+find_package(libzip CONFIG REQUIRED)
 
 #------------------ Project config ------------------------------#
 project(
@@ -8,6 +9,9 @@ project(
     )
 
 set(UTILS_PROJECT_FILES
+   AssetSourceReader.h
+   AssetSourceReader.cpp
+   ContentFingerprint.h
    DeltaTime.h
    FixedStepClock.h
    HighPerformanceRequest.h
@@ -18,6 +22,8 @@ set(UTILS_PROJECT_FILES
    RingVector.h
    Timer.h
    Utf8.h
+   VirtualFileSystem.h
+   VirtualFileSystem.cpp
    WorkingDirectory.h
    WorkingDirectory.cpp
 )
@@ -44,4 +50,5 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Debug
+        libzip::zip
     )

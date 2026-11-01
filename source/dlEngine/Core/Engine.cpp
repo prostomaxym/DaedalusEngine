@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "Engine.h"
+#include "AssetPipeline.h"
 #include "Renderer/Resources/ResourceManager.h"
 #include "Input.h"
 #include "Window.h"
@@ -35,6 +36,7 @@ struct Engine::State
 	std::unique_ptr<Input> m_input;
 	std::unique_ptr<Window> m_window;
 	JobSystem m_jobs;
+	std::unique_ptr<AssetPipeline> m_assets;
 	std::unique_ptr<ResourceManager> m_resources;
 	std::unique_ptr<Renderer> m_renderer;
 	Physics m_physics;
@@ -51,9 +53,32 @@ struct Engine::State
 		props.vsync = GraphicsConfig::IsVSyncEnabled();
 		props.screenmode = GraphicsConfig::IsWindowFullscreen() ? WindowProps::ScreenMode::windowed_fullscreen : WindowProps::ScreenMode::windowed;
 		m_window = Platform::createWindow(props);
-		m_resources = std::make_unique<ResourceManager>(&m_jobs);
+		VirtualFileSystem files;
+		const auto mount = [&files](const char* name, const std::filesystem::path& path)
+		{
+			std::string error;
+			if (!files.Mount(name, path, error))
+				Log::Write(Log::Levels::Error, Log::Categories::EngineCore,
+					"Failed to initialize virtual mount '{}' from '{}': {}", name, path.string(), error);
+		};
+		mount("assets", PathConfig::GetAssetsPath());
+		mount("shaders", PathConfig::GetShadersPath());
+		mount("config", PathConfig::GetConfigPath());
+		mount("logs", PathConfig::GetLogsPath());
+		m_assets = std::make_unique<AssetPipeline>(m_jobs, std::move(files));
+		if (!m_assets->Initialize())
+			for (const auto& error : m_assets->GetRegistry().GetErrors())
+				Log::Write(Log::Levels::Error, Log::Categories::EngineCore, "Asset registry: {}", error);
+		m_resources = std::make_unique<ResourceManager>(&m_jobs, m_assets.get());
 		m_renderer = std::make_unique<Renderer>();
 		ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
+		m_assets->SetChangeCallback([this](const std::vector<std::string>& changed)
+		{
+			if (!m_jobs.IsAcceptingJobs()) return;
+			ResourceManager::ReloadAssets(changed);
+			if (std::any_of(changed.begin(), changed.end(), [](const std::string& path) { return path.rfind("shaders:/", 0) == 0; }))
+				ResourceManager::ReloadShaders(*m_assets);
+		});
 		m_events.Start();
 	}
 
@@ -71,6 +96,7 @@ Window& Engine::GetWindow() { return *m_state->m_window; }
 EventEngine& Engine::GetEvents() { return m_state->m_events; }
 SceneManager& Engine::GetScenes() { return m_state->m_scenes; }
 JobSystem& Engine::GetJobs() { return m_state->m_jobs; }
+AssetPipeline& Engine::GetAssets() { return *m_state->m_assets; }
 void Engine::Stop()
 {
 	m_state->m_jobs.Stop();

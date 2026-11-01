@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
 find_package(GTest CONFIG REQUIRED)
+find_package(libzip CONFIG REQUIRED)
 
 
 #----------------- Project config --------------------------#
@@ -17,6 +18,8 @@ set(CONFIG_TEST_FILES
     )
 
 set(CORE_TEST_FILES
+    CoreTests/AssetFollowupTest.cpp
+    CoreTests/AssetPipelineTest.cpp
     CoreTests/LayerStackTest.cpp
     )
 
@@ -96,6 +99,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
+    DL_ASSET_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/asset_test_data"
     DL_SCENE_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/scenes"
     DL_SCENE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/scene_test_data"
     DL_TEST_APPLICATION_VERSION="${DAEDALUS_VERSION}"
@@ -107,6 +111,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
 PRIVATE    
     dlEngine
+    libzip::zip
     GTest::gmock
     GTest::gmock_main
     GTest::gtest

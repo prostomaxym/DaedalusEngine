@@ -2,6 +2,7 @@
 #include "ResourceState.h"
 #include "CacheEviction.h"
 #include "Utils/Utf8.h"
+#include "Threads/JobSystem.h"
 
 using namespace Daedalus;
 
@@ -16,11 +17,18 @@ namespace
 
 ResourceManager* ResourceManager::s_instance = nullptr;
 
-ResourceManager::ResourceManager() : m_state(std::make_unique<State>())
+ResourceManager::ResourceManager(JobSystem* jobs) : m_state(std::make_unique<State>()), m_jobs(jobs)
 {
 	DL_ASSERT(!s_instance, Log::Categories::Renderer, "Only one resource manager may be active");
 	if (s_instance) std::abort();
 	s_instance = this;
+}
+
+JobSystem* ResourceManager::GetJobs()
+{
+	GetState();
+	auto* jobs = s_instance->m_jobs;
+	return jobs && jobs->IsAcceptingJobs() ? jobs : nullptr;
 }
 
 ResourceManager::~ResourceManager()

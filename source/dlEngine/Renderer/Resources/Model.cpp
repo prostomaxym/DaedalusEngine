@@ -5,13 +5,13 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "Texture.h"
-#include "Threads/DaedalusThreads.h"
+#include "DecodedImage.h"
+#include "Threads/JobSystem.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/matrix4x4.h>
 #include <assimp/postprocess.h>
-#include <stb_image.h>
 
 using namespace Daedalus;
 
@@ -148,9 +148,8 @@ bool AssimpParser::LoadModel(const std::filesystem::path& file_name, std::vector
 
 void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::shared_ptr<Material>>& material_data, const std::filesystem::path& file_name)
 {
-	// We cannot create for OpenGL textures in parallel. So at least we can read files threaded
-	std::vector<std::future<std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>>> futures;
-	std::vector<std::filesystem::path> future_paths;
+	auto* jobs = ResourceManager::GetJobs();
+	std::vector<JobHandle> uploads;
 
 	material_data.resize(scene->mNumMaterials);
 
@@ -184,17 +183,42 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 					aiString texturePath;
 					if (material->GetTexture(tex_type, k, &texturePath) == AI_SUCCESS)
 					{
-						std::string fullPath = file_name.parent_path().string() + "/" + texturePath.C_Str();
-						future_paths.emplace_back(fullPath);
-
-						futures.push_back(DaedalusThreads::Inst().SubmitAndReturnFuture([fullPath, mat_num = i, tex_type]()->std::tuple<unsigned char*, int, int, int, uint32_t, uint32_t>
+						const auto source = file_name.parent_path() / texturePath.C_Str();
+						auto image = std::make_shared<DecodedImage>();
+						auto decode = [image, source]
+						{
+							if (!image->Load(source))
+								Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Texture failed to decode: {}", source.string());
+						};
+						auto upload = [image, source, target = material_data[i], tex_type]
+						{
+							if (!image->GetPixels()) return;
+							switch (tex_type)
 							{
-								int width, height, channels;
-								stbi_set_flip_vertically_on_load(1);
-								stbi_uc* data = stbi_load(fullPath.c_str(), &width, &height, &channels, 0);
-
-								return { data, width, height, channels, mat_num, tex_type };
-							}));
+							case aiTextureType_DIFFUSE:
+								target->SetDiffuseMap(source, image->GetPixels(), image->GetWidth(), image->GetHeight(), image->GetChannels());
+								break;
+							case aiTextureType_SPECULAR:
+								target->SetSpecularMap(source, image->GetPixels(), image->GetWidth(), image->GetHeight(), image->GetChannels());
+								break;
+							case aiTextureType_NORMALS:
+								target->SetNormalMap(source, image->GetPixels(), image->GetWidth(), image->GetHeight(), image->GetChannels());
+								break;
+							default:
+								break;
+							}
+						};
+						if (jobs)
+						{
+							// Preserve material texture ordering even when decoding finishes out of order.
+							const std::array dependencies{ jobs->Submit(std::move(decode)), uploads.empty() ? JobHandle{} : uploads.back() };
+							uploads.push_back(jobs->Submit(std::move(upload), dependencies, JobAffinity::MainThread));
+						}
+						else
+						{
+							decode();
+							upload();
+						}
 					}
 				}
 			}
@@ -205,40 +229,8 @@ void AssimpParser::ProcessMaterials(const aiScene* scene, std::vector<std::share
 		}
 	}
 
-	for (size_t f = 0; f < futures.size(); ++f)
-	{
-		auto& fut = futures[f];
-		const auto& source = future_paths[f];
-		fut.wait();
-		const auto& future = fut.get();
-
-		const aiTextureType tex_type = static_cast<aiTextureType>(std::get<5>(future));
-		const auto material_index = std::get<4>(future);
-
-		switch (tex_type)
-		{
-		case aiTextureType_DIFFUSE:
-			material_data[material_index]->SetDiffuseMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
-			break;
-
-		case aiTextureType_SPECULAR:
-			material_data[material_index]->SetSpecularMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
-			break;
-
-		case aiTextureType_NORMALS:
-			material_data[material_index]->SetNormalMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
-			break;
-
-		case aiTextureType_HEIGHT:
-			material_data[material_index]->SetHeightMap(source, std::get<0>(future), std::get<1>(future), std::get<2>(future), std::get<3>(future));
-			break;
-
-		default:
-			break;
-		}
-
-		stbi_image_free(std::get<0>(future));
-	}
+	if (jobs && !jobs->Wait(jobs->WhenAll(uploads)))
+		Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Model texture jobs failed: {}", file_name.string());
 }
 
 void AssimpParser::ProcessNode(void* transform, aiNode* node, const aiScene* scene, std::vector<std::shared_ptr<Mesh>>& meshes)

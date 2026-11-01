@@ -4,6 +4,9 @@
 #include "Utils/DeltaTime.h"
 
 #include <entt/entity/fwd.hpp>
+#include <glm/mat4x4.hpp>
+#include <memory>
+#include <vector>
 
 namespace Daedalus
 {
@@ -12,11 +15,14 @@ namespace Daedalus
     class LightSource;
     struct BoundingSphere;
     struct AABB;
+    struct TransformComponent;
+    class Model;
 
     class DAEDALUS_API RenderSystem
     {
     public:
-        RenderSystem(entt::registry& reg, Scene* scene) : m_registry(reg), m_scene(scene) {}
+        RenderSystem(entt::registry& reg, Scene* scene);
+        ~RenderSystem();
 
         void OnStartRuntime() const;
         void OnUpdateRuntime(DeltaTime dt) const;
@@ -40,5 +46,8 @@ namespace Daedalus
 
         int m_viewport_width{ 0 };
 		int m_viewport_height{ 0 };
+        mutable std::vector<TransformComponent> m_transform_inputs;
+        mutable std::vector<glm::mat4> m_transform_matrices;
+        mutable std::vector<std::shared_ptr<Model>> m_models;
     };
 }

@@ -76,6 +76,8 @@ set(RENDERER_PROJECT_FILES
 
     Resources/Material.h
     Resources/Material.cpp
+    Resources/DecodedImage.h
+    Resources/DecodedImage.cpp
     Resources/Mesh.h
     Resources/Mesh.cpp
     Resources/Model.h
@@ -118,4 +120,5 @@ target_link_libraries(${PROJECT_NAME}
         glm::glm
     PRIVATE     
         assimp::assimp  
+        Threads
     )

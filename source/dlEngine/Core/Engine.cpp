@@ -12,6 +12,7 @@
 #include "Platform/Platform.h"
 #include "Renderer/API/Renderer.h"
 #include "Utils/WorkingDirectory.h"
+#include "Threads/JobSystem.h"
 
 using namespace Daedalus;
 
@@ -33,6 +34,7 @@ struct Engine::State
 	ConfigurationSession m_configuration;
 	std::unique_ptr<Input> m_input;
 	std::unique_ptr<Window> m_window;
+	JobSystem m_jobs;
 	std::unique_ptr<ResourceManager> m_resources;
 	std::unique_ptr<Renderer> m_renderer;
 	Physics m_physics;
@@ -49,7 +51,7 @@ struct Engine::State
 		props.vsync = GraphicsConfig::IsVSyncEnabled();
 		props.screenmode = GraphicsConfig::IsWindowFullscreen() ? WindowProps::ScreenMode::windowed_fullscreen : WindowProps::ScreenMode::windowed;
 		m_window = Platform::createWindow(props);
-		m_resources = std::make_unique<ResourceManager>();
+		m_resources = std::make_unique<ResourceManager>(&m_jobs);
 		m_renderer = std::make_unique<Renderer>();
 		ResourceManager::LoadShaders(PathConfig::GetShadersPath(), GraphicsConfig::RecompilingShadersEnabled());
 		m_events.Start();
@@ -57,6 +59,7 @@ struct Engine::State
 
 	~State()
 	{
+		m_jobs.Stop();
 		m_events.Stop();
 		m_scenes.Clear();
 	}
@@ -67,8 +70,10 @@ Engine::~Engine() = default;
 Window& Engine::GetWindow() { return *m_state->m_window; }
 EventEngine& Engine::GetEvents() { return m_state->m_events; }
 SceneManager& Engine::GetScenes() { return m_state->m_scenes; }
+JobSystem& Engine::GetJobs() { return m_state->m_jobs; }
 void Engine::Stop()
 {
+	m_state->m_jobs.Stop();
 	m_state->m_events.Stop();
 	m_state->m_scenes.Clear();
 }

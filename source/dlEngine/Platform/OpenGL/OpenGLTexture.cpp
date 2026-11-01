@@ -85,7 +85,7 @@ OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
 	: m_path(path)
 {
 	int width, height, channels;
-	stbi_set_flip_vertically_on_load(1);
+	stbi_set_flip_vertically_on_load_thread(1);
 	stbi_uc* data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
 	auto img_data = data;
 	std::vector<unsigned char> converted_data;
@@ -299,7 +299,7 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::string>& faces
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(0);
+	stbi_set_flip_vertically_on_load_thread(0);
 	for (unsigned int i = 0; i < faces.size(); i++)
 	{
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, STBI_rgb);

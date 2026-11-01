@@ -14,6 +14,7 @@ namespace Daedalus
 {
 	class Texture2D;
 	class TextureCubemap;
+	class JobSystem;
 	class DAEDALUS_API ResourceManager
 	{
 	public:
@@ -25,7 +26,8 @@ namespace Daedalus
 		static std::vector<TextureStats> GetTextureStats();
 		static std::vector<CubemapStats> GetCubemapStats();
 
-		ResourceManager();
+		explicit ResourceManager(JobSystem* jobs = nullptr);
+		static JobSystem* GetJobs();
 		~ResourceManager();
 		ResourceManager(const ResourceManager&) = delete;
 		ResourceManager& operator=(const ResourceManager&) = delete;
@@ -57,6 +59,7 @@ namespace Daedalus
 		struct State;
 		static State& GetState();
 		std::unique_ptr<State> m_state;
+		JobSystem* m_jobs = nullptr; // Non-owning; Engine owns the scheduler and drains it before this manager.
 		static ResourceManager* s_instance; // Non-owning; Engine owns the manager.
 	};
 }

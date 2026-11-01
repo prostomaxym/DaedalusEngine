@@ -23,7 +23,7 @@ The root CMake project requires C++20 and supports Windows and Linux. Each engin
 | `Config` | INI-backed settings (SimpleIni) | `GraphicsConfig`, `KeybindConfig`, `PathConfig` |
 | `Debug` | Logging with category/level filtering, CPU/GPU profiler, ImGui debug UI and build-information reporting | `Log`, `Profiler`, `ProfileScope`, `ProfilerStats`, `ImGuiLayer`, `DebugOverlay`, `ConsoleOverlay`, `BuildInfo` |
 | `Events` | Thread-safe enqueue, owner-thread dispatch, event types | `Event`, `EventDispatcher`, `EventsEngine`, `EventTable` |
-| `Threads` | Worker pool, task futures and thread-lifetime helpers | `ThreadRunner`, `ThreadPool`, `ThreadJoiner`, `DaedalusThreads` |
+| `Threads` | Engine-owned dependency scheduler, worker pool, main-thread jobs and thread-lifetime helpers | `JobSystem`, `JobHandle`, `ThreadRunner`, `ThreadPool`, `ThreadJoiner`, `DaedalusThreads` |
 | `Platform` | OS and windowing backends behind abstractions | `Platform.h`, `GLFW/`, `Windows/`, `Linux/`, `OpenGL/` |
 | `Renderer` | Deferred renderer, passes, GPU resources, caches and statistics | `API/`, `Objects/`, `Passes/`, `Primitives/`, `Resources/` |
 | `ECS` | Scene management, EnTT entities, native scripts, systems and scene persistence | `SceneManager`, `Scene`, `Entity`, `Components.h`, `NativeScriptComponent`, `NativeScripts/`, `Systems/`, `Serialization/` |
@@ -44,24 +44,24 @@ The initial profiler implementation is complete as a CPU/GPU timing profiler. It
 
 ## Application lifecycle
 
-`Application` owns one `Engine`. Engine owns concrete configuration, input, renderer, resource-manager, physics-factory, event-queue and scene-manager instances. Static facades such as `Renderer::` and `Input::` refer to these instances without owning them; calls outside their lifetime fail fast. Only one active application/service set is supported. Logging remains a bootstrap service available before Engine construction and after Engine shutdown.
+`Application` owns one `Engine`. Engine owns concrete configuration, input, job-scheduler, renderer, resource-manager, physics-factory, event-queue and scene-manager instances. Static facades such as `Renderer::` and `Input::` refer to these instances without owning them; calls outside their lifetime fail fast. Only one active application/service set is supported. Logging remains a bootstrap service available before Engine construction and after Engine shutdown.
 
 Construction order:
 1. Install platform failure handling and create Engine's configuration instances; load configs.
 2. Create input and the window/context from `GraphicsConfig` via `Platform`.
-3. Construct the resource manager before the renderer (renderer initialization can load resources), then load shaders.
+3. Construct the job scheduler and inject a non-owning reference into the resource manager before creating the renderer (renderer initialization can load resources), then load shaders.
 4. Start the event queue and register a window callback that clones payloads into it.
 5. Attach the ImGui overlay; dev builds also attach debug and console windows. Client layers may request a loaded scene for activation on the next frame boundary.
 
 Main loop (`Application::Run`):
 1. Poll window events, update input, and dispatch the queued event snapshot on the application thread.
-2. Commit a pending scene switch; purge resources no longer externally referenced.
+2. Pump bounded ready main-thread jobs, then commit a pending scene switch; purge resources no longer externally referenced.
 3. Run fixed scene/physics and layer updates at approximately 60 Hz (`FixedStepClock`). Catch-up is limited to eight ticks per frame; excess elapsed time after a stall is deliberately dropped.
 4. Run variable layer updates and scene scripts, then scene/layer rendering.
 5. Begin one ImGui frame, invoke layer UI hooks, and render ImGui once.
 6. Swap buffers and apply frame limiting via `FPSLocker`.
 
-Shutdown rejects queued events and destroys managed scenes while client layers still exist. Layers detach next; ImGui saves its config before destroying its context. Engine then destroys systems in reverse ownership order, preserving the graphics context until renderer and cache destruction finish. Its configuration session saves ordinary settings last. `Application::GetInstance()` is cleared after Engine destruction.
+Shutdown rejects new job submissions and drains accepted jobs, including main-thread continuations, before rejecting queued events and destroying managed scenes while client layers still exist. Layers detach next; ImGui saves its config before destroying its context. Engine then destroys systems in reverse ownership order, preserving the graphics context until renderer and cache destruction finish. Its configuration session saves ordinary settings last. `Application::GetInstance()` is cleared after Engine destruction. Job producers must finish before Engine destruction; job captures must not outlive the resources they access.
 
 ## Layers
 
@@ -77,7 +77,13 @@ A `Layer` receives fixed-update, update, render, ImGui and event hooks; it does 
 - Window callbacks clone payloads because their original stack objects expire before dispatch. Custom event types use `EVENT_CLASS_TYPE` (or implement `Clone()` themselves); event payloads must support copying or supply an appropriate clone implementation.
 - `Application::OnEvent` handles close/resize, then forwards unhandled events to layers. Main-thread scene, layer and graphics access must not be performed by producer threads.
 
-`ThreadPool` runs queued tasks on a fixed set of workers and can return futures; `ThreadJoiner` joins workers before shared state is destroyed. Pool shutdown stops workers rather than draining all queued tasks. `ThreadRunner` is a separate reusable start/stop helper, not the application loop or event dispatcher. Model import uses the shared `DaedalusThreads` pool to read/decode texture files, waits for those futures, then creates GPU textures on the calling graphics thread. There is no general asynchronous scene-loading or multithreaded ECS/render scheduler.
+`ThreadPool` runs queued tasks on a fixed set of workers and can return futures; `ThreadJoiner` joins workers before shared state is destroyed. Pool shutdown stops workers rather than draining all queued tasks. `ThreadRunner` is a separate reusable start/stop helper, not the application loop or event dispatcher. The legacy `DaedalusThreads` singleton remains available for compatibility but is not used by engine asset loading.
+
+`Engine::GetJobs()` exposes its `JobSystem`, built on a dedicated `ThreadPool` with at least one worker. `Submit` accepts a callable, dependency handles and worker/main-thread affinity; only jobs whose dependency counter reaches zero enter an execution queue. Workers never block waiting for dependencies. `WhenAll` creates a group completion counter. Handles retain completion/failure state after scheduler destruction, and foreign-scheduler dependencies or waits are rejected. An empty/default handle is already successfully complete. Task exceptions are logged, mark the job failed and skip dependent callables; unrelated jobs continue. Empty callables, zero parallel-for grain size and submissions after `Stop` return completed failed handles.
+
+Submission is thread-safe. `Wait`, `WaitIdle`, `ProcessMainThread`, `Stop` and destruction require the constructing owner thread. Owner waits pump main-thread jobs, allowing worker → main → worker dependency chains to finish even with one worker. Callbacks must not wait on themselves or their descendants, and must not destroy the scheduler or active caller-owned scenes/resources reentrantly. Workers express dependencies instead of calling scheduler waits. `ProcessMainThread` bounds direct executions by the queue size at entry; callbacks without explicit owner waits defer newly queued main-thread jobs to a later pump. Explicit waits may pump additional work. `Stop` is idempotent, rejects new work and drains all accepted jobs before pool teardown.
+
+`ParallelFor` partitions indices into at most the worker count of non-overlapping chunks and returns a group handle; callbacks must support concurrent invocation and keep their captured data valid until completion. Chunk jobs and their group use bounded heap allocations, so this is not an allocation-free job arena. ECS transform preparation uses a serial path below 128 inputs and retained snapshot/output buffer capacity for larger batches. There is still no general asynchronous scene-loading API or automatic scheduler for arbitrary ECS systems.
 
 ## Platform abstraction
 
@@ -94,6 +100,8 @@ The rest of the engine uses `Window`, `Input` and `Platform.h`. OS-specific code
 
 `Renderer/Resources/ResourceManager` is an Engine-owned instance behind a static facade. Loading/upload and cache statistics are separate translation units sharing private state. All access and GPU-resource release must occur on the graphics thread; synchronous loading is not a worker-thread API. `PurgeUnused()` releases cache-only references, parents before their dependencies, at scene transitions rather than every frame. External `shared_ptr` references keep resources alive. Shaders remain in their library until shutdown/reload.
 
+Model material loading submits CPU-only `DecodedImage` jobs followed by main-thread material texture uploads. Uploads depend on their decode and the preceding upload, preserving source ordering while decodes run concurrently. Decoded pixels use RAII; all stb decode sites, including OpenGL textures/cubemaps, use thread-local vertical-flip settings. Decode failure is logged and does not attempt GPU upload. The synchronous model API waits for the upload group while pumping owner-thread jobs. Assimp scene parsing, mesh creation and other resource APIs remain owner-thread operations. A standalone ResourceManager without an injected scheduler decodes/uploads synchronously, supporting graphics-independent fixture setup; the engine always injects its scheduler. `IsAcceptingJobs()` reports scheduler state; ResourceManager returns no scheduler once it stops, preserving synchronous resource operations during layer teardown.
+
 Exported facades hide subsystem state behind private pointers and use forward declarations. `Scene` retains a visible EnTT registry for the templated `Entity` API; public STL/shared-pointer types still require matching compiler/CRT settings. This is not a stable plugin ABI.
 
 ## ECS
@@ -103,6 +111,8 @@ Exported facades hide subsystem state behind private pointers and use forward de
 `SceneManager` owns one active scene and one pending request on its owning application thread. A newer request replaces the pending request. At the frame boundary, it stops the old scene, transfers ownership and optionally starts the new scene; a null request unloads the scene. Failed runtime startup is logged and leaves the new scene active but stopped. Runtime startup requires a camera and an application/window. Pause suspends scripts and physics but still permits rendering.
 
 `NativeScriptComponent` owns C++ script instances keyed by type. Scripts receive variable-step `OnUpdate`; the engine includes `NativeScripts/CameraController`, while clients supply their own scripts. `Systems/RenderSystem` collects lights, submits models and draws skyboxes. `Systems/PhysicsSystem` advances the scene's Bullet world during fixed updates.
+
+For 128 or more renderable objects, RenderSystem snapshots transform components and retains model references on the owner thread into reusable buffers. `Systems/PrepareTransforms` computes independent matrices through parallel-for and waits before renderer submission. Workers access neither live EnTT storage nor GPU resources. A job failure is logged and recovered by computing the retained snapshots serially, rather than dropping renderables. Smaller batches, or a stopped scheduler, retain direct serial submission. Native scripts, registry mutation, lighting, skyboxes and Bullet simulation remain owner-thread work.
 
 Each PhysicsSystem owns an independent PhysicsWorld. `Physics::CreateWorld()` uses the Engine-owned factory's default gravity; `scene.GetPhysicsWorld()` exposes scene-local operations. Body IDs are validated by their owning world and are never pointer casts. Components retain exclusive cleanup responsibility using weak world references, so moving/detaching a component or destroying the scene cannot leave a cleanup callback dereferencing a dead world. Runtime stop releases component bodies; restart recreates them from resolved creation descriptions. Bullet alone resolves contacts; collision notifications are delivered after manifold traversal and can remove bodies safely.
 

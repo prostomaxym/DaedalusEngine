@@ -20,6 +20,8 @@ set(DEBUG_PROJECT_FILES
     BuildInfo.cpp
     DebugOverlay.h
     DebugOverlay.cpp
+    WorldAxisProjection.h
+    WorldAxisProjection.cpp
     Tabs/GeneralDebugTab.h
     Tabs/GeneralDebugTab.cpp
     Tabs/RenderingDebugTab.h
@@ -32,6 +34,8 @@ set(DEBUG_PROJECT_FILES
     Tabs/LoggingDebugTab.cpp
     ConsoleOverlay.h
     ConsoleOverlay.cpp
+    ConsoleCompletion.h
+    ConsoleCompletion.cpp
     Log.h
     Log.cpp
     Profiler.h

@@ -36,8 +36,13 @@ namespace Daedalus
         void ProcessCommand(const char* command);
         int TextEditCallback(ImGuiInputTextCallbackData* data);
         void SetTyping(bool typing);
+        void UpdateInlineHint(const char* input, int cursor, bool has_selection);
 
         CVarRegistry m_cvars;
+        std::string m_completion_input;
+        std::string m_inline_hint;
+        int m_completion_cursor = -1;
+        bool m_completion_has_selection = false;
         RingVector<std::string, 50> m_items;
         RingVector<std::string, 50> m_history;
         int m_history_pos = -1;

@@ -26,8 +26,10 @@ set(CORE_TEST_FILES
 
 set(DEBUG_TEST_FILES
     DebugTests/BuildInfoTest.cpp
+    DebugTests/ConsoleCompletionTest.cpp
     DebugTests/LogTest.cpp
     DebugTests/ProfilerTest.cpp
+    DebugTests/WorldAxisProjectionTest.cpp
     )
 
 set(ECS_TEST_FILES

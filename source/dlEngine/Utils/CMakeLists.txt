@@ -8,6 +8,8 @@ project(
     )
 
 set(UTILS_PROJECT_FILES
+   AssetSourceReader.h
+   AssetSourceReader.cpp
    DeltaTime.h
    FixedStepClock.h
    HighPerformanceRequest.h
@@ -18,6 +20,8 @@ set(UTILS_PROJECT_FILES
    RingVector.h
    Timer.h
    Utf8.h
+   VirtualFileSystem.h
+   VirtualFileSystem.cpp
    WorkingDirectory.h
    WorkingDirectory.cpp
 )

@@ -9,6 +9,7 @@ namespace Daedalus
 	class EventEngine;
 	class SceneManager;
 	class JobSystem;
+	class AssetPipeline;
 
 	class DAEDALUS_API Engine
 	{
@@ -24,6 +25,7 @@ namespace Daedalus
 		EventEngine& GetEvents();
 		SceneManager& GetScenes();
 		JobSystem& GetJobs();
+		AssetPipeline& GetAssets();
 		void Stop();
 
 	private:

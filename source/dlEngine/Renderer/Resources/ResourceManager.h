@@ -15,6 +15,7 @@ namespace Daedalus
 	class Texture2D;
 	class TextureCubemap;
 	class JobSystem;
+	class AssetPipeline;
 	class DAEDALUS_API ResourceManager
 	{
 	public:
@@ -35,6 +36,7 @@ namespace Daedalus
 		ResourceManager& operator=(ResourceManager&&) = delete;
 
 		static void LoadShaders(const std::filesystem::path& path, bool recompile);
+		static void ReloadShaders(AssetPipeline& assets);
 		static std::shared_ptr<Shader> GetShader(std::string_view name);
 
 		static std::shared_ptr<Model> LoadModel(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);

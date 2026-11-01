@@ -19,7 +19,7 @@ The root CMake project requires C++20 and supports Windows and Linux. Each engin
 
 | Module | Responsibility | Key files |
 |---|---|---|
-| `Core` | Application, Engine ownership, layers, window and input interfaces | `Application`, `Engine`, `Layer`, `LayerStack`, `Window`, `Input`, `EntryPoint.h` |
+| `Core` | Application, Engine ownership, asset registry/pipeline, layers, window and input interfaces | `Application`, `Engine`, `AssetRegistry`, `AssetPipeline`, `Layer`, `LayerStack`, `Window`, `Input`, `EntryPoint.h` |
 | `Config` | INI-backed settings (SimpleIni) | `GraphicsConfig`, `KeybindConfig`, `PathConfig` |
 | `Debug` | Logging with category/level filtering, CPU/GPU profiler, ImGui debug UI and build-information reporting | `Log`, `Profiler`, `ProfileScope`, `ProfilerStats`, `ImGuiLayer`, `DebugOverlay`, `ConsoleOverlay`, `BuildInfo` |
 | `Events` | Thread-safe enqueue, owner-thread dispatch, event types | `Event`, `EventDispatcher`, `EventsEngine`, `EventTable` |
@@ -28,7 +28,7 @@ The root CMake project requires C++20 and supports Windows and Linux. Each engin
 | `Renderer` | Deferred renderer, passes, GPU resources, caches and statistics | `API/`, `Objects/`, `Passes/`, `Primitives/`, `Resources/` |
 | `ECS` | Scene management, EnTT entities, native scripts, systems and scene persistence | `SceneManager`, `Scene`, `Entity`, `Components.h`, `NativeScriptComponent`, `NativeScripts/`, `Systems/`, `Serialization/` |
 | `Physics` | Engine-owned world factory and independent Bullet worlds | `Physics`, `PhysicsWorld` |
-| `Utils` | Small shared utilities | `Timer`, `DeltaTime`, `FixedStepClock`, `FPSLocker`, `RingVector`, `UUID`, `KeyCodes`, `WorkingDirectory` |
+| `Utils` | Small shared utilities and named virtual filesystem mounts | `Timer`, `DeltaTime`, `FixedStepClock`, `FPSLocker`, `RingVector`, `VirtualFileSystem`, `KeyCodes`, `WorkingDirectory` |
 
 The developer console supports `clear`, `quit` and `version`, including tab completion. `version` prints application version, build version, build configuration, target platform/architecture, compiler/version and developer-tools status through `Debug/GetBuildInfo()`. Application and build versions both use the existing `major.minor.patch` value from `version.txt`, without a separate build counter. The helper needs no window or graphics context and formats its report only when requested. `version.txt` is parsed once by `CMakeScripts/Version.cmake` for both packaging and embedded application metadata; changing it triggers CMake regeneration. Build metadata describes the compiled binary, not the host running it, and excludes timestamps and Git revisions.
 
@@ -44,18 +44,18 @@ The initial profiler implementation is complete as a CPU/GPU timing profiler. It
 
 ## Application lifecycle
 
-`Application` owns one `Engine`. Engine owns concrete configuration, input, job-scheduler, renderer, resource-manager, physics-factory, event-queue and scene-manager instances. Static facades such as `Renderer::` and `Input::` refer to these instances without owning them; calls outside their lifetime fail fast. Only one active application/service set is supported. Logging remains a bootstrap service available before Engine construction and after Engine shutdown.
+`Application` owns one `Engine`. Engine owns concrete configuration, input, job-scheduler, asset-pipeline, renderer, resource-manager, physics-factory, event-queue and scene-manager instances. Static facades such as `Renderer::` and `Input::` refer to these instances without owning them; calls outside their lifetime fail fast. Only one active application/service set is supported. Logging remains a bootstrap service available before Engine construction and after Engine shutdown.
 
 Construction order:
 1. Install platform failure handling and create Engine's configuration instances; load configs.
 2. Create input and the window/context from `GraphicsConfig` via `Platform`.
-3. Construct the job scheduler and inject a non-owning reference into the resource manager before creating the renderer (renderer initialization can load resources), then load shaders.
+3. Construct the job scheduler, mount configured folders and initialize the asset registry. Inject the scheduler into the resource manager before creating the renderer (renderer initialization can load resources), then load shaders and connect shader-change notifications.
 4. Start the event queue and register a window callback that clones payloads into it.
 5. Attach the ImGui overlay; dev builds also attach debug and console windows. Client layers may request a loaded scene for activation on the next frame boundary.
 
 Main loop (`Application::Run`):
 1. Poll window events, update input, and dispatch the queued event snapshot on the application thread.
-2. Pump bounded ready main-thread jobs, then commit a pending scene switch; purge resources no longer externally referenced.
+2. Pump bounded ready main-thread jobs, schedule the asset poll when due, then commit a pending scene switch; purge resources no longer externally referenced.
 3. Run fixed scene/physics and layer updates at approximately 60 Hz (`FixedStepClock`). Catch-up is limited to eight ticks per frame; excess elapsed time after a stall is deliberately dropped.
 4. Run variable layer updates and scene scripts, then scene/layer rendering.
 5. Begin one ImGui frame, invoke layer UI hooks, and render ImGui once.
@@ -89,6 +89,16 @@ Submission is thread-safe. `Wait`, `WaitIdle`, `ProcessMainThread`, `Stop` and d
 
 The rest of the engine uses `Window`, `Input` and `Platform.h`. OS-specific code lives in `Platform/Windows` and `Platform/Linux`; GLFW is shared in `Platform/GLFW`; the OpenGL implementation of the renderer API is in `Platform/OpenGL`. Windows headers must not appear outside `Platform/Windows`.
 
+## Virtual filesystem and assets
+
+`Utils/VirtualFileSystem` maps UTF-8 virtual paths such as `assets:/models/example.obj` to physical paths. Engine mounts `assets`, `shaders`, `config` and `logs` from the already-loaded `PathConfig` folders. Resolution rejects unknown mounts, absolute paths, `..` components, backslashes, embedded NULs and symlinks escaping the canonical mount root. Mounts may refer to missing directories, which enumerate as empty. Recursive source enumeration is deterministic, does not follow directory symlinks, and excludes reserved `cache` directories and `.meta` files. This is a directory-backed VFS, not an archive reader or a race-proof security sandbox; existing physical-path renderer and scene APIs remain compatible.
+
+`Core/AssetRegistry` indexes the `assets` and `shaders` mounts only. Each source has an adjacent `<source>.meta` sidecar containing `DaedalusAsset 1` and a nonzero decimal 64-bit UUID on separate lines (LF and CRLF accepted). IDs share the existing ECS UUID's 64-bit representation but use a thread-local generator, not the ECS default constructor's unsynchronized shared random engine. New sidecars are written to a temporary sibling and renamed after closing successfully. Invalid/unwritable metadata and duplicate UUIDs are reported, not silently replaced; all sources sharing a duplicate ID are excluded. Sidecar paths receive the same containment check as source paths. Moving or renaming a source together with its sidecar preserves identity; removing its sidecar generates a new identity on the next successful scan. Records expose UUID, virtual/physical source paths, modification time and size. Registry errors are accessible to callers and logged by the engine. Creating identities requires write access; existing valid sidecars permit read-only assets.
+
+`Engine::GetAssets()` exposes the engine-owned `Core/AssetPipeline`. Pipeline APIs and registry views are owner-thread-only, and pointers into registry records must not be retained across scans. `LoadAsync(id, callback, mode)` returns a job handle covering worker I/O and an ordered main-thread completion. `AssetLoadMode::Bytes` returns binary-safe string data; `ShaderSource` recursively expands quoted includes relative to the shader mount, supports CRLF, spaces and trailing line comments, and rejects missing files, traversal, cycles and include depths above 32. I/O/lookup failures arrive as an explicit failed `AssetLoadResult`; scheduler rejection/task failure is reported by the handle and does not run a dependent callback. Callers own any captured callback resources until completion.
+
+Startup initializes the registry synchronously. `Update()` schedules at most one worker scan per second; explicit `Refresh()` uses the same serialized scan path and can be waited on for deterministic tooling/tests. Scans discover additions, deletions, UUID changes and source modification-time/size changes on worker-owned registry copies. A main-thread continuation publishes the new registry and invokes change notifications before simulation/rendering; unchanged scans do not invoke them. This polling scheme does not detect content edits preserving both timestamp and size, and a scan covers whole mounted asset/shader directories, not an OS filesystem watcher. Accepted reads/scans drain before GPU teardown; a standalone pipeline's destructor also waits for scheduler idle. The scheduler must outlive the pipeline. Callbacks must not destroy the pipeline or wait on their own completion reentrantly. Typed model/texture imports, async scene activation, non-shader automatic reload and archive packaging are not supplied by this API.
+
 ## Renderer
 
 - `Renderer` (static facade, `Renderer/API/Renderer.h`) exposes `BeginFrame(camera)`, `Submit(model, transform)`, `Draw(...)`, `FlushPipeline()`.
@@ -99,6 +109,8 @@ The rest of the engine uses `Window`, `Input` and `Platform.h`. OS-specific code
 - Primitives wrap GPU objects (`Framebuffer`, vertex/index buffers, vertex arrays, `UniformBuffer`, `ShaderStorageBuffer`); resources include `Mesh`, `Model`, `Material`, `Texture`, `Shader` and `ShaderLibrary`.
 
 `Renderer/Resources/ResourceManager` is an Engine-owned instance behind a static facade. Loading/upload and cache statistics are separate translation units sharing private state. All access and GPU-resource release must occur on the graphics thread; synchronous loading is not a worker-thread API. `PurgeUnused()` releases cache-only references, parents before their dependencies, at scene transitions rather than every frame. External `shared_ptr` references keep resources alive. Shaders remain in their library until shutdown/reload.
+
+Changes anywhere in the shader mount conservatively schedule worker source/include reads for all root-level `.glsl` programs (including newly discovered programs). `ShaderLibrary` applies only the latest reload generation on the graphics thread. `Shader::ReloadFromCode` keeps the existing shared Shader instance; the OpenGL backend builds a separate program with nonthrowing compile/link failure handling and stage cleanup. Failure retains the last working program and cache. Success transfers compatible float/int/uint/bool uniforms, supported samplers/images, array elements and named uniform/storage buffer bindings, preserves the current program binding, then deletes the old program and updates the binary cache and load statistics. Removed/unregistered sources retain their existing loaded programs but are not recompiled. Startup binary loading also invalidates caches older than the latest shader-tree source/header timestamp. Initial loading remains synchronous and retains its existing compiler failure behavior, but both startup and worker reloads use `Utils/AssetSourceReader` for identical recursive include expansion and containment checks. Real graphics-context reload behavior requires separate smoke validation; graphics-independent tests cover reads, include handling and change delivery, not GPU compilation or state transfer.
 
 Model material loading submits CPU-only `DecodedImage` jobs followed by main-thread material texture uploads. Uploads depend on their decode and the preceding upload, preserving source ordering while decodes run concurrently. Decoded pixels use RAII; all stb decode sites, including OpenGL textures/cubemaps, use thread-local vertical-flip settings. Decode failure is logged and does not attempt GPU upload. The synchronous model API waits for the upload group while pumping owner-thread jobs. Assimp scene parsing, mesh creation and other resource APIs remain owner-thread operations. A standalone ResourceManager without an injected scheduler decodes/uploads synchronously, supporting graphics-independent fixture setup; the engine always injects its scheduler. `IsAcceptingJobs()` reports scheduler state; ResourceManager returns no scheduler once it stops, preserving synchronous resource operations during layer teardown.
 

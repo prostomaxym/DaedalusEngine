@@ -2,6 +2,7 @@
 #include "ShaderLibrary.h"
 
 #include "Shader.h"
+#include "Core/AssetPipeline.h"
 
 #include <algorithm>
 
@@ -12,9 +13,23 @@ namespace
 	constexpr auto cache_dir = "cache";
 }
 
-ShaderLibrary::ShaderLibrary(const std::filesystem::path& path, bool recompile)
+ShaderLibrary::ShaderLibrary(const std::filesystem::path& path, bool recompile) : m_path(path)
 {
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Loading shader library;");
+	std::error_code ec;
+	bool has_source_time = false;
+	std::filesystem::recursive_directory_iterator it(path, ec), end;
+	while (!ec && it != end)
+	{
+		if (it->is_directory(ec) && it->path().filename() == cache_dir) it.disable_recursion_pending();
+		if (!ec && it->is_regular_file(ec) && it->path().extension() != ".meta")
+		{
+			const auto time = it->last_write_time(ec);
+			if (!ec && (!has_source_time || time > m_latest_source_time)) { m_latest_source_time = time; has_source_time = true; }
+		}
+		if (!ec) it.increment(ec);
+	}
+	if (ec) recompile = true;
 	if (!std::filesystem::exists(path / cache_dir))
 	{
 		if (!std::filesystem::create_directory(path / cache_dir))
@@ -59,6 +74,18 @@ void ShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cached_sha
 		const auto start = std::chrono::steady_clock::now();
 		const char* origin = "binary cache";
 		std::shared_ptr<Shader> shader;
+		std::error_code ec;
+		const auto binary_path = path / cache_dir / (shader_name + Shader::GetBinaryFileExtention());
+		const auto binary_time = std::filesystem::last_write_time(binary_path, ec);
+		if (ec || binary_time < m_latest_source_time)
+		{
+			shader = Shader::CreateFromFile(path / (shader_name + Shader::GetSourceFileExtention()));
+			shader->SaveBinary(binary_path);
+			shader->SetName(shader_name);
+			m_shaders.emplace(shader_name, shader);
+			RecordLoadInfo(shader_name, "compiled from source (stale binary cache)", start, path);
+			continue;
+		}
 		try
 		{
 			shader = Shader::CreateFromBinary(path.string() + "/" + cache_dir + "/" + shader_name + Shader::GetBinaryFileExtention());
@@ -121,6 +148,46 @@ const ShaderLoadInfo* ShaderLibrary::GetLoadInfo(const std::string& name) const
 {
 	const auto it = m_load_info.find(name);
 	return it != m_load_info.end() ? &it->second : nullptr;
+}
+
+void ShaderLibrary::ReloadAssets(AssetPipeline& assets, std::function<void()> on_reload)
+{
+	const auto generation = ++m_reload_generation;
+	for (const auto& [path, metadata] : assets.GetRegistry().GetAssets())
+	{
+		if (path.rfind("shaders:/", 0) != 0 || metadata.source_path.extension() != Shader::GetSourceFileExtention() ||
+			path.find('/', 9) != std::string::npos) continue;
+		const auto name = metadata.source_path.stem().string();
+		const auto start = std::chrono::steady_clock::now();
+		const auto job = assets.LoadAsync(metadata.id, [this, generation, name, start, on_reload](AssetLoadResult result)
+		{
+			if (generation != m_reload_generation) return;
+			if (!result.Succeeded())
+			{
+				Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload {}: {}", name, result.error);
+				return;
+			}
+			const auto existing = m_shaders.find(name);
+			std::shared_ptr<Shader> shader;
+			if (existing != m_shaders.end())
+			{
+				shader = existing->second;
+				if (!shader->ReloadFromCode(result.data)) return;
+			}
+			else
+			{
+				shader = Shader::TryCreateFromCode(result.data);
+				if (!shader) return;
+				shader->SetName(name);
+				m_shaders.emplace(name, shader);
+			}
+			shader->SaveBinary(m_path / cache_dir / (name + Shader::GetBinaryFileExtention()));
+			RecordLoadInfo(name, "hot reloaded from source", start, m_path);
+			if (on_reload) on_reload();
+			Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Hot reloaded shader {}", name);
+		}, AssetLoadMode::ShaderSource);
+		if (job.HasFailed()) Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Shader reload submission rejected: {}", name);
+	}
 }
 
 

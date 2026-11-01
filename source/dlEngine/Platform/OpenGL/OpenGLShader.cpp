@@ -41,6 +41,124 @@ void OpenGLShader::CreateFromBinary(const std::filesystem::path& binary_path)
 	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "Shaders built from binary file {}", binary_path.string());
 }
 
+namespace
+{
+	void CopyUniform(GLuint source, GLuint target, GLint source_location, GLint target_location, GLenum type)
+	{
+		GLfloat floats[16]{};
+		GLint integers[4]{};
+		GLuint unsigned_integers[4]{};
+		switch (type)
+		{
+		case GL_FLOAT: case GL_FLOAT_VEC2: case GL_FLOAT_VEC3: case GL_FLOAT_VEC4:
+		case GL_FLOAT_MAT2: case GL_FLOAT_MAT3: case GL_FLOAT_MAT4:
+		case GL_FLOAT_MAT2x3: case GL_FLOAT_MAT2x4: case GL_FLOAT_MAT3x2:
+		case GL_FLOAT_MAT3x4: case GL_FLOAT_MAT4x2: case GL_FLOAT_MAT4x3:
+			glGetUniformfv(source, source_location, floats);
+			break;
+		case GL_UNSIGNED_INT: case GL_UNSIGNED_INT_VEC2: case GL_UNSIGNED_INT_VEC3: case GL_UNSIGNED_INT_VEC4:
+			glGetUniformuiv(source, source_location, unsigned_integers);
+			break;
+		case GL_INT: case GL_INT_VEC2: case GL_INT_VEC3: case GL_INT_VEC4:
+		case GL_BOOL: case GL_BOOL_VEC2: case GL_BOOL_VEC3: case GL_BOOL_VEC4:
+		case GL_SAMPLER_1D: case GL_SAMPLER_2D: case GL_SAMPLER_3D: case GL_SAMPLER_CUBE:
+		case GL_SAMPLER_1D_SHADOW: case GL_SAMPLER_2D_SHADOW: case GL_SAMPLER_CUBE_SHADOW:
+		case GL_SAMPLER_1D_ARRAY: case GL_SAMPLER_2D_ARRAY: case GL_SAMPLER_2D_ARRAY_SHADOW:
+		case GL_INT_SAMPLER_2D: case GL_UNSIGNED_INT_SAMPLER_2D:
+		case GL_IMAGE_2D: case GL_INT_IMAGE_2D: case GL_UNSIGNED_INT_IMAGE_2D:
+			glGetUniformiv(source, source_location, integers);
+			break;
+		default: return;
+		}
+		switch (type)
+		{
+		case GL_FLOAT: glProgramUniform1fv(target, target_location, 1, floats); break;
+		case GL_FLOAT_VEC2: glProgramUniform2fv(target, target_location, 1, floats); break;
+		case GL_FLOAT_VEC3: glProgramUniform3fv(target, target_location, 1, floats); break;
+		case GL_FLOAT_VEC4: glProgramUniform4fv(target, target_location, 1, floats); break;
+		case GL_FLOAT_MAT2: glProgramUniformMatrix2fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT3: glProgramUniformMatrix3fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT4: glProgramUniformMatrix4fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT2x3: glProgramUniformMatrix2x3fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT2x4: glProgramUniformMatrix2x4fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT3x2: glProgramUniformMatrix3x2fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT3x4: glProgramUniformMatrix3x4fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT4x2: glProgramUniformMatrix4x2fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_FLOAT_MAT4x3: glProgramUniformMatrix4x3fv(target, target_location, 1, GL_FALSE, floats); break;
+		case GL_UNSIGNED_INT: glProgramUniform1uiv(target, target_location, 1, unsigned_integers); break;
+		case GL_UNSIGNED_INT_VEC2: glProgramUniform2uiv(target, target_location, 1, unsigned_integers); break;
+		case GL_UNSIGNED_INT_VEC3: glProgramUniform3uiv(target, target_location, 1, unsigned_integers); break;
+		case GL_UNSIGNED_INT_VEC4: glProgramUniform4uiv(target, target_location, 1, unsigned_integers); break;
+		case GL_INT_VEC2: case GL_BOOL_VEC2: glProgramUniform2iv(target, target_location, 1, integers); break;
+		case GL_INT_VEC3: case GL_BOOL_VEC3: glProgramUniform3iv(target, target_location, 1, integers); break;
+		case GL_INT_VEC4: case GL_BOOL_VEC4: glProgramUniform4iv(target, target_location, 1, integers); break;
+		default: glProgramUniform1iv(target, target_location, 1, integers); break;
+		}
+	}
+
+	void CopyProgramState(GLuint source, GLuint target)
+	{
+		if (!source) return;
+		GLint count = 0, max_length = 0;
+		glGetProgramiv(source, GL_ACTIVE_UNIFORMS, &count);
+		glGetProgramiv(source, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_length);
+		std::string buffer(static_cast<size_t>((std::max)(max_length, 1)), '\0');
+		for (GLint index = 0; index < count; ++index)
+		{
+			GLsizei length = 0;
+			GLint size = 0;
+			GLenum type = 0;
+			glGetActiveUniform(source, static_cast<GLuint>(index), static_cast<GLsizei>(buffer.size()), &length, &size, &type, buffer.data());
+			const std::string name(buffer.data(), static_cast<size_t>(length));
+			const auto resource = glGetProgramResourceIndex(target, GL_UNIFORM, name.c_str());
+			if (resource == GL_INVALID_INDEX) continue;
+			const GLenum properties[]{ GL_TYPE, GL_ARRAY_SIZE };
+			GLint values[2]{};
+			glGetProgramResourceiv(target, GL_UNIFORM, resource, 2, properties, 2, nullptr, values);
+			if (static_cast<GLenum>(values[0]) != type) continue;
+			for (GLint element = 0; element < (std::min)(size, values[1]); ++element)
+			{
+				auto element_name = name;
+				const auto array = element_name.find("[0]");
+				if (array != std::string::npos) element_name.replace(array, 3, "[" + std::to_string(element) + "]");
+				const auto old_location = glGetUniformLocation(source, element_name.c_str());
+				const auto new_location = glGetUniformLocation(target, element_name.c_str());
+				if (old_location >= 0 && new_location >= 0) CopyUniform(source, target, old_location, new_location, type);
+			}
+		}
+		for (const GLenum interface_type : { GL_UNIFORM_BLOCK, GL_SHADER_STORAGE_BLOCK })
+		{
+			glGetProgramInterfaceiv(source, interface_type, GL_ACTIVE_RESOURCES, &count);
+			glGetProgramInterfaceiv(source, interface_type, GL_MAX_NAME_LENGTH, &max_length);
+			buffer.resize(static_cast<size_t>((std::max)(max_length, 1)));
+			for (GLint index = 0; index < count; ++index)
+			{
+				glGetProgramResourceName(source, interface_type, static_cast<GLuint>(index), static_cast<GLsizei>(buffer.size()), nullptr, buffer.data());
+				const auto resource = glGetProgramResourceIndex(target, interface_type, buffer.c_str());
+				if (resource == GL_INVALID_INDEX) continue;
+				const GLenum property = GL_BUFFER_BINDING;
+				GLint binding = 0;
+				glGetProgramResourceiv(source, interface_type, static_cast<GLuint>(index), 1, &property, 1, nullptr, &binding);
+				if (interface_type == GL_UNIFORM_BLOCK) glUniformBlockBinding(target, resource, static_cast<GLuint>(binding));
+				else glShaderStorageBlockBinding(target, resource, static_cast<GLuint>(binding));
+			}
+		}
+	}
+}
+
+bool OpenGLShader::ReloadFromCode(const std::string& code)
+{
+	const auto replacement = OpenGLShaderCompiler::TryBuildFromCode(code);
+	if (!replacement) return false;
+	CopyProgramState(m_rendererID, replacement);
+	GLint bound = 0;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &bound);
+	if (m_rendererID != 0 && static_cast<GLuint>(bound) == m_rendererID) glUseProgram(replacement);
+	if (m_rendererID != 0) glDeleteProgram(m_rendererID);
+	m_rendererID = replacement;
+	return true;
+}
+
 OpenGLShader::~OpenGLShader()
 {
 	if (m_rendererID > 0)

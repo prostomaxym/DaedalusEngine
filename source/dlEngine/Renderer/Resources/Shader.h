@@ -68,6 +68,7 @@ namespace Daedalus {
 		virtual void SetName(const std::string& name) = 0;
 
 		virtual ShaderInfo GetInfo() const = 0;
+		[[nodiscard]] virtual bool ReloadFromCode(const std::string& code) = 0;
 
 		virtual void SetInt(const std::string& name, int value) const = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) const = 0;
@@ -82,6 +83,7 @@ namespace Daedalus {
 
 	private:
 		static std::shared_ptr<Shader> CreateFromCode(const std::string& code);
+		static std::shared_ptr<Shader> TryCreateFromCode(const std::string& code);
 		static std::shared_ptr<Shader> CreateFromFile(const std::filesystem::path& file_path);
 		static std::shared_ptr<Shader> CreateFromBinary(const std::filesystem::path& binary_path);
 	};

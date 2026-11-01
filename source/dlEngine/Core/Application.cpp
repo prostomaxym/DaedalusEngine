@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "Application.h"
 #include "Engine.h"
+#include "AssetPipeline.h"
 #include "Input.h"
 #include "Window.h"
 #include "Debug/ImGuiLayer.h"
@@ -93,6 +94,7 @@ void Application::Run()
 		}
 		if (!m_running) break;
 		m_engine->GetJobs().ProcessMainThread();
+		m_engine->GetAssets().Update();
 		auto& scenes = m_engine->GetScenes();
 		if (scenes.HasPending())
 		{

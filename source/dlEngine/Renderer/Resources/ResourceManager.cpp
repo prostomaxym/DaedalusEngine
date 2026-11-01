@@ -55,6 +55,13 @@ void ResourceManager::LoadShaders(const std::filesystem::path& path, bool recomp
 	++state.m_revision;
 }
 
+void ResourceManager::ReloadShaders(AssetPipeline& assets)
+{
+	auto& state = GetState();
+	if (state.m_shader_library)
+		state.m_shader_library->ReloadAssets(assets, [] { ++GetState().m_revision; });
+}
+
 std::shared_ptr<Shader> ResourceManager::GetShader(std::string_view name)
 {
 	auto& state = GetState();

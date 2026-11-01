@@ -3,6 +3,7 @@
 // Deadalus API for client applications
 
 #include "Core/Application.h"
+#include "Core/AssetPipeline.h"
 #include "Core/Engine.h"
 #include "Core/Input.h"
 #include "Core/Layer.h"
@@ -29,4 +30,5 @@
 #include "Utils/DeltaTime.h"
 #include "Utils/FPSLocker.h"
 #include "Utils/KeyCodes.h"
+#include "Utils/VirtualFileSystem.h"
 #include "Utils/WorkingDirectory.h"

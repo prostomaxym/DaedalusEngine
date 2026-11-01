@@ -70,6 +70,13 @@ std::shared_ptr<Shader> ResourceManager::GetShader(std::string_view name)
 	return state.m_shader_library ? state.m_shader_library->Get(std::string(name)) : nullptr;
 }
 
+std::shared_ptr<Shader> ResourceManager::TryGetShader(std::string_view name)
+{
+	auto& state = GetState();
+	const std::string key(name);
+	return state.m_shader_library && state.m_shader_library->Exists(key) ? state.m_shader_library->Get(key) : nullptr;
+}
+
 std::shared_ptr<Model> ResourceManager::LoadModel(const std::filesystem::path& path, ModelParserFlags parser_flags)
 {
 	auto& state = GetState();

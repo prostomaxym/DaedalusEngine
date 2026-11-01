@@ -19,6 +19,8 @@ namespace Daedalus {
 		void DrawIndexed(const VertexArray* vertex_array, uint32_t index_count) override;
 		void DrawUnindexed(const VertexArray* vertex_array, uint32_t vertex_count) override;
 		void DrawLines(const VertexArray* vertex_array, uint32_t vertex_count) override;
+		void DrawDebugLines(const VertexArray* vertex_array, VertexBuffer* vertex_buffer, const Shader* shader,
+			const void* vertices, uint32_t vertex_count, uint32_t vertex_size, bool depth_test) override;
 
 		void SetLineWidth(float width) override;
 

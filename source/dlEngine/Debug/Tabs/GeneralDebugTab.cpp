@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "GeneralDebugTab.h"
+#include "Debug/WorldAxisProjection.h"
 #include "Core/Application.h"
 #include "ECS/Scene.h"
 #include "Renderer/Objects/Camera.h"
@@ -7,7 +8,6 @@
 #include <algorithm>
 #include <numeric>
 #include <implot.h>
-#include <implot3d.h>
 
 using namespace Daedalus;
 
@@ -34,15 +34,6 @@ namespace
 			return sum / v.size();
 		else
 			return 0.f;
-	}
-
-	glm::vec3 RotateAxisFromGLtoPlot(const glm::vec3& vec)
-	{
-		auto copy = vec;
-		copy.y = -vec.z;
-		copy.z = vec.y;
-
-		return copy;
 	}
 
 }
@@ -262,7 +253,7 @@ void GeneralDebugTab::RenderWorldSection()
 	ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_Bullet);
 
 	const auto scene = Application::GetInstance()->GetMainScene();
-	if (!scene || !scene->GetCamera())
+	if (!scene || !scene->IsRunning() || !scene->GetCamera())
 	{
 		ImGui::TextUnformatted("No active scene camera");
 		ImGui::EndChild();
@@ -278,81 +269,29 @@ void GeneralDebugTab::RenderWorldSection()
 	ImGui::Text("Camera pos (x,y,z):  { %.2f; %.2f; %.2f; }", pos.x, pos.y, pos.z);
 	ImGui::Text("Camera dir (x,y,z):  { %.2f; %.2f; %.2f; }", dir.x, dir.y, dir.z);
 
-	ImPlot3DFlags flags = ImPlot3DFlags_CanvasOnly |
-		ImPlot3DFlags_NoTitle |
-		ImPlot3DFlags_NoClip;
-
-	if (ImPlot3D::BeginPlot("##WorldAxes", ImVec2(300, 300), flags))
+	std::array<glm::vec2, 3> axis_offsets;
+	if (WorldAxisProjection::Calculate(*camera, axis_offsets))
 	{
-		glm::vec3 cam_dir = glm::normalize(dir);
-		glm::vec3 cam_up = glm::normalize(camera->GetUp());
-		glm::vec3 cam_right = glm::normalize(glm::cross(cam_dir, cam_up));
-
-		glm::mat3 cam_rotation = glm::mat3(
-			cam_right,
-			cam_up,
-			cam_dir
-		);
-
-		glm::vec3 x_axis = cam_rotation * glm::vec3(1.f, 0, 0);
-		glm::vec3 y_axis = cam_rotation * glm::vec3(0, 1.f, 0);
-		glm::vec3 z_axis = cam_rotation * glm::vec3(0, 0, 1.f);
-
-		pos = RotateAxisFromGLtoPlot(pos);
-		x_axis = RotateAxisFromGLtoPlot(x_axis);
-		y_axis = RotateAxisFromGLtoPlot(y_axis);
-		z_axis = RotateAxisFromGLtoPlot(z_axis);
-
-		ImPlot3D::SetupAxesLimits(pos.x - 1.f, pos.x + 1.f, pos.y - 1.f, pos.y + 1.f, pos.z - 1.f, pos.z + 1.f, ImPlot3DCond_Always);
-		ImPlot3D::SetupAxes("X", "Y", "Z"
-			, ImPlot3DAxisFlags_NoDecorations
-			, ImPlot3DAxisFlags_NoDecorations | ImPlot3DAxisFlags_Invert
-			, ImPlot3DAxisFlags_NoDecorations);
-
-		ImPlot3D::SetupBoxRotation(0.f, 0.f, false, ImPlot3DCond_Always);
-		ImPlot3D::SetupBoxScale(1.5f, 1.5f, 1.5f);
-
-		// X axis
+		const auto top_left = ImGui::GetCursorScreenPos();
+		ImGui::Dummy(ImVec2(300.f, 300.f));
+		const ImVec2 origin(top_left.x + 150.f, top_left.y + 150.f);
+		const ImU32 colors[] = { IM_COL32(255, 0, 0, 255), IM_COL32(0, 255, 0, 255), IM_COL32(0, 0, 255, 255) };
+		const char* labels[] = { "X", "Y", "Z" };
+		auto* draw_list = ImGui::GetWindowDrawList();
+		for (size_t axis = 0; axis < axis_offsets.size(); ++axis)
 		{
-			float x[2] = { pos.x, pos.x + x_axis.x };
-			float y[2] = { pos.y, pos.y + x_axis.y };
-			float z[2] = { pos.z, pos.z + x_axis.z };
-			ImPlot3D::PlotLine("X", x, y, z, 2,
-				{
-					ImPlot3DProp_LineColor, ImVec4(1, 0, 0, 1),
-					ImPlot3DProp_LineWeight, 3.f,
-					ImPlot3DProp_FillColor, ImVec4(1, 0, 0, 1)
-				});
+			const auto& offset = axis_offsets[axis];
+			const ImVec2 endpoint(origin.x + offset.x * 110.f, origin.y + offset.y * 110.f);
+			draw_list->AddLine(origin, endpoint, colors[axis], 3.f);
+			draw_list->AddCircleFilled(endpoint, 3.f, colors[axis]);
+			// End-on axes share the origin; keep their labels readable in the legend.
+			if (glm::length(offset) > 0.05f)
+				draw_list->AddText(ImVec2(endpoint.x + 5.f, endpoint.y + 5.f), colors[axis], labels[axis]);
+			draw_list->AddText(ImVec2(top_left.x + 20.f + static_cast<float>(axis) * 40.f, top_left.y + 280.f), colors[axis], labels[axis]);
 		}
-
-		// Y axis
-		{
-			float x[2] = { pos.x, pos.x + y_axis.x };
-			float y[2] = { pos.y, pos.y + y_axis.y };
-			float z[2] = { pos.z, pos.z + y_axis.z };
-			ImPlot3D::PlotLine("Y", x, y, z, 2,
-				{
-					ImPlot3DProp_LineColor, ImVec4(0, 1, 0, 1),
-					ImPlot3DProp_LineWeight, 3.f,
-					ImPlot3DProp_FillColor, ImVec4(0, 1, 0, 1)
-				});
-		}
-
-		// Z axis
-		{
-			float x[2] = { pos.x, pos.x + z_axis.x };
-			float y[2] = { pos.y, pos.y + z_axis.y };
-			float z[2] = { pos.z, pos.z + z_axis.z };
-			ImPlot3D::PlotLine("Z", x, y, z, 2,
-				{
-					ImPlot3DProp_LineColor, ImVec4(0, 0.5f, 1, 1),
-					ImPlot3DProp_LineWeight, 3.f,
-					ImPlot3DProp_FillColor, ImVec4(0, 0.5f, 1, 1)
-				});
-		}
-
-		ImPlot3D::EndPlot();
 	}
+	else
+		ImGui::TextUnformatted("World axes outside camera clip range");
 
 	ImGui::EndChild();
 }

@@ -24,6 +24,7 @@ namespace Daedalus
 		static bool IsEmpty() { return GetInstance().m_keyboard_binds.empty(); }
 		static int GetKeyboardBind(const std::string& bind_name);
 		static void SetKeyboardBind(const std::string& bind_name, int button_code);
+		static std::unordered_map<std::string, int> GetKeyboardBinds() { return GetInstance().m_keyboard_binds; }
 		
 	private:
 		static KeybindConfig& GetInstance();

@@ -27,6 +27,7 @@
 #include "Renderer/Primitives/UniformBuffer.h"
 #include "Renderer/Primitives/GPUTimer.h"
 #include "Debug/Profiler.h"
+#include "Renderer/Debug/DebugDrawBatch.h"
 
 #include <filesystem>
 
@@ -51,6 +52,12 @@ struct Renderer::Data
 
 	std::shared_ptr<VertexArray> unit_quad{ nullptr };
 	std::unique_ptr<GPUTimer> gpu_timer{ nullptr }; // Dev builds only
+	std::unique_ptr<DebugDrawBatch> debug_draw;
+	std::shared_ptr<VertexArray> debug_vertex_array;
+	std::shared_ptr<VertexBuffer> debug_vertex_buffer;
+	bool debug_camera_ready{ false };
+	bool debug_shader_missing{ false };
+	size_t rejected_debug_primitives{ 0 };
 
 	int window_width{ 0 };
 	int window_height{ 0 };
@@ -190,6 +197,16 @@ void Renderer::Init()
 	if (IsDevBuild())
 	{
 		s_data->gpu_timer = GPUTimer::Create();
+		s_data->debug_draw = std::make_unique<DebugDrawBatch>();
+		s_data->debug_vertex_array = VertexArray::Create();
+		s_data->debug_vertex_buffer = VertexBuffer::Create(static_cast<uint32_t>(DebugDrawBatch::MaxLines * 2 * sizeof(DebugDrawVertex)));
+		static_assert(sizeof(DebugDrawVertex) == sizeof(float) * 6);
+		s_data->debug_vertex_buffer->SetLayout(BufferLayout
+			{
+				BufferElement{ ShaderDataType::Float3, "vin_vertices", false },
+				BufferElement{ ShaderDataType::Float3, "vin_color", false },
+			});
+		s_data->debug_vertex_array->AddVertexBuffer(s_data->debug_vertex_buffer);
 		const auto width = GraphicsConfig::GetShadowBufferWidth();
 		const auto height = GraphicsConfig::GetShadowBufferHeight();
 		s_debug->greyscale_shadow = ResourceManager::LoadTexture2D(width, height);
@@ -219,6 +236,7 @@ void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 
 void Renderer::BeginFrame(const Camera* camera, std::optional<int> number_of_objects)
 {
+	s_data->debug_camera_ready = false;
 	const auto PV = camera->GetProjectionViewMatrix();
 	const auto V = camera->GetViewMatrix();
 	const auto pos = camera->GetPosition();
@@ -284,6 +302,7 @@ void Renderer::FlushPipeline()
 		const auto& spec = gbuffer->GetSpecification();
 		Framebuffer::CopyDepthFramebuffer(gbuffer->GetID(), 0, spec.width, spec.height);
 	}
+	s_data->debug_camera_ready = true;
 
 	if (IsDevBuild())
 	{
@@ -297,6 +316,73 @@ void Renderer::BeginGpuProfileFrame()
 {
 	if (auto* timer = GetData()->gpu_timer.get())
 		timer->BeginFrame();
+}
+
+bool Renderer::DebugLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color, bool depth_test)
+{
+	if constexpr (IsDevBuild()) return GetData()->debug_draw->Line(start, end, color, depth_test);
+	return false;
+}
+
+bool Renderer::DebugBox(const glm::vec3& minimum, const glm::vec3& maximum, const glm::vec3& color, bool depth_test)
+{
+	if constexpr (IsDevBuild()) return GetData()->debug_draw->Box(minimum, maximum, color, depth_test);
+	return false;
+}
+
+bool Renderer::DebugSphere(const glm::vec3& center, float radius, const glm::vec3& color, bool depth_test, size_t segments)
+{
+	if constexpr (IsDevBuild()) return GetData()->debug_draw->Sphere(center, radius, color, depth_test, segments);
+	return false;
+}
+
+void Renderer::BeginDebugDrawFrame()
+{
+	if constexpr (IsDevBuild())
+	{
+		auto* data = GetData();
+		data->debug_draw->Clear();
+		data->debug_camera_ready = false;
+	}
+}
+
+void Renderer::FlushDebugDraw()
+{
+	if constexpr (IsDevBuild())
+	{
+		auto* data = GetData();
+		auto& batch = *data->debug_draw;
+		data->rejected_debug_primitives = batch.GetRejectedPrimitives();
+		if (batch.GetLineCount() && data->debug_camera_ready)
+		{
+			const auto shader = ResourceManager::TryGetShader("DebugDraw");
+			if (shader)
+			{
+				DL_PROFILE_SCOPE("Renderer::DebugDraw");
+				DL_PROFILE_GPU_SCOPE("Renderer::DebugDraw");
+				data->debug_shader_missing = false;
+				for (const bool depth_test : { true, false })
+				{
+					const auto& vertices = batch.GetVertices(depth_test);
+					if (!vertices.empty())
+						RenderCommand::DrawDebugLines(data->debug_vertex_array.get(), data->debug_vertex_buffer.get(), shader.get(),
+							vertices.data(), static_cast<uint32_t>(vertices.size()), sizeof(DebugDrawVertex), depth_test);
+				}
+			}
+			else if (!data->debug_shader_missing)
+			{
+				Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "Debug draw requires shaders:/DebugDraw.glsl; discarding this frame's primitives");
+				data->debug_shader_missing = true;
+			}
+		}
+		batch.Clear();
+	}
+}
+
+size_t Renderer::GetRejectedDebugPrimitives()
+{
+	if constexpr (IsDevBuild()) return GetData()->rejected_debug_primitives;
+	return 0;
 }
 
 void Renderer::EndGpuProfileFrame()

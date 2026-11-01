@@ -21,6 +21,8 @@ namespace Daedalus {
 		static void DrawIndexed(const VertexArray* vertexArray, uint32_t indexCount = 0);
 		static void DrawUnindexed(const VertexArray* vertexArray, uint32_t vertex_count);
 		static void DrawLines(const VertexArray* vertexArray, uint32_t vertexCount);
+		static void DrawDebugLines(const VertexArray* vertex_array, VertexBuffer* vertex_buffer, const Shader* shader,
+			const void* vertices, uint32_t vertex_count, uint32_t vertex_size, bool depth_test);
 
 		static void UnbindTextureSlot(uint32_t slot_num);
 

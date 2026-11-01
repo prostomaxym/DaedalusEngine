@@ -49,6 +49,7 @@ namespace Daedalus
 		static void LoadShaders(const std::filesystem::path& path, bool recompile);
 		static void ReloadShaders(AssetPipeline& assets);
 		static std::shared_ptr<Shader> GetShader(std::string_view name);
+		static std::shared_ptr<Shader> TryGetShader(std::string_view name);
 
 		static std::shared_ptr<Model> LoadModel(const std::filesystem::path& path, ModelParserFlags parser_flags = ModelParserFlags::NONE);
 		static std::shared_ptr<Model> LoadModelAsset(std::string_view path, ModelParserFlags flags = ModelParserFlags::TRIANGULATE);

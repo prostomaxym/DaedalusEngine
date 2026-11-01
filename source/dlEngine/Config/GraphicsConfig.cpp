@@ -81,6 +81,13 @@ GraphicsConfig::~GraphicsConfig()
 	s_instance = nullptr;
 }
 
+bool GraphicsConfig::SetFPSLock(int fps_lock)
+{
+	if (fps_lock < 0) return false;
+	GetInstance().m_FPSLock = fps_lock;
+	return true;
+}
+
 GraphicsConfig& GraphicsConfig::GetInstance()
 {
 	DL_ASSERT(s_instance, Log::Categories::Application, "GraphicsConfig used outside its lifetime");

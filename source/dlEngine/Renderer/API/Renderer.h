@@ -56,6 +56,14 @@ namespace Daedalus {
 
 		static DebugInfo* GetDebugInfo() { return s_debug; }
 
+		// Graphics thread, one frame only; return false without DL_DEV_TOOLS. Colors are opaque RGB in [0, 1].
+		[[nodiscard]] static bool DebugLine(const glm::vec3& start, const glm::vec3& end, const glm::vec3& color, bool depth_test = true);
+		[[nodiscard]] static bool DebugBox(const glm::vec3& minimum, const glm::vec3& maximum, const glm::vec3& color, bool depth_test = true);
+		[[nodiscard]] static bool DebugSphere(const glm::vec3& center, float radius, const glm::vec3& color, bool depth_test = true, size_t segments = 32);
+		static void BeginDebugDrawFrame();
+		static void FlushDebugDraw();
+		[[nodiscard]] static size_t GetRejectedDebugPrimitives();
+
 		// GPU profiling (dev builds; no-ops otherwise). Graphics thread only.
 		// One GPU frame spans BeginGpuProfileFrame..EndGpuProfileFrame; scopes nest inside it.
 		static void BeginGpuProfileFrame();

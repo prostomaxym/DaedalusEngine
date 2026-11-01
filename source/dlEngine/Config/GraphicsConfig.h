@@ -19,6 +19,7 @@ namespace Daedalus
 		static int GetWindowWidth() { return GetInstance().m_window_width; }
 		static int GetWindowHeight() { return GetInstance().m_window_height; }
 		static int GetFPSLock() { return GetInstance().m_FPSLock; }
+		[[nodiscard]] static bool SetFPSLock(int fps_lock);
 		static bool IsWindowFullscreen() { return GetInstance().m_window_fullscreen; }
 		static bool IsVSyncEnabled() { return GetInstance().m_VSync; }
 		

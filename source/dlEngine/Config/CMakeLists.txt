@@ -11,6 +11,9 @@ project(
     )
 
 set(CONFIG_PROJECT_FILES
+    CVarRegistry.h
+    CVarRegistry.cpp
+    ConfigCVars.cpp
     GraphicsConfig.h
     GraphicsConfig.cpp
     KeybindConfig.h

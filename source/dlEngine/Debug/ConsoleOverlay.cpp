@@ -1,22 +1,20 @@
 #include "dlpch.h"
 
 #include "ConsoleOverlay.h"
+#include "ConsoleCompletion.h"
 #include "BuildInfo.h"
 #include "Core/Window.h"
 #include "Core/Input.h"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include "Events/KeyEvent.h"
 
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
 #include "Config/KeybindConfig.h"
+#include <sstream>
 
 using namespace Daedalus;
-
-namespace
-{
-    std::vector<std::string> commands = { "clear", "quit", "version" };
-}
 
 void ConsoleOverlay::OnEvent(Event& evt)
 {
@@ -74,6 +72,8 @@ void ConsoleOverlay::Update(DeltaTime dt)
         ImGui::SetKeyboardFocusHere();
 
     bool reclaim_focus = false;
+    const float input_width = ImGui::CalcItemWidth();
+    const auto input_id = ImGui::GetID("Input");
     if (ImGui::InputText("Input", m_input_buffer, sizeof(m_input_buffer),
         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackCompletion,
         &TextEditCallbackStub, this))
@@ -82,7 +82,34 @@ void ConsoleOverlay::Update(DeltaTime dt)
         strcpy(m_input_buffer, "");
         reclaim_focus = true;
     }
-    SetTyping(ImGui::IsItemActive() || reclaim_focus);
+    const bool input_active = ImGui::IsItemActive();
+    SetTyping(input_active || reclaim_focus);
+
+    if (input_active && !reclaim_focus)
+    {
+        if (const auto* state = ImGui::GetInputTextState(input_id))
+        {
+            UpdateInlineHint(m_input_buffer, state->GetCursorPos(), state->HasSelection());
+            if (!m_inline_hint.empty())
+            {
+                const auto minimum = ImGui::GetItemRectMin();
+                const auto maximum = ImGui::GetItemRectMax();
+                const auto padding = ImGui::GetStyle().FramePadding;
+                const float text_width = ImGui::CalcTextSize(m_input_buffer).x;
+                auto* draw_list = ImGui::GetWindowDrawList();
+                draw_list->PushClipRect(ImVec2(minimum.x + padding.x, minimum.y),
+                    ImVec2(minimum.x + input_width - padding.x, maximum.y), true);
+                draw_list->AddText(ImVec2(minimum.x + padding.x + text_width - state->Scroll.x, minimum.y + padding.y),
+                    ImGui::GetColorU32(ImGuiCol_TextDisabled), m_inline_hint.c_str());
+                draw_list->PopClipRect();
+            }
+        }
+    }
+    else
+    {
+        m_inline_hint.clear();
+        m_completion_cursor = -1;
+    }
 
     if (reclaim_focus)
         ImGui::SetKeyboardFocusHere(-1);
@@ -110,6 +137,8 @@ void ConsoleOverlay::SetTyping(bool typing)
 void ConsoleOverlay::Init()
 {
     Clear();
+    m_cvars = CVarRegistry{};
+    RegisterConfigCVars(m_cvars);
 }
 
 void ConsoleOverlay::Clear()
@@ -118,6 +147,19 @@ void ConsoleOverlay::Clear()
     m_history.clear();
     m_input_buffer[0] = 0;
     m_history_pos = -1;
+    m_completion_input.clear();
+    m_inline_hint.clear();
+    m_completion_cursor = -1;
+}
+
+void ConsoleOverlay::UpdateInlineHint(const char* input, int cursor, bool has_selection)
+{
+    if (m_completion_input == input && m_completion_cursor == cursor && m_completion_has_selection == has_selection)
+        return;
+    m_completion_input = input;
+    m_completion_cursor = cursor;
+    m_completion_has_selection = has_selection;
+    m_inline_hint = ConsoleCompletion::Hint(m_completion_input, static_cast<size_t>(cursor), has_selection, sizeof(m_input_buffer), m_cvars);
 }
 
 void ConsoleOverlay::AddLog(const std::string& msg)
@@ -141,16 +183,26 @@ void ConsoleOverlay::ExecuteCommand(const char* command)
 
 void ConsoleOverlay::ProcessCommand(const char* command)
 {
-    if (strcmp(command, commands[0].c_str()) == 0)
+    std::vector<std::string> output;
+    if (m_cvars.Execute(command, output))
+    {
+        for (const auto& line : output)
+            AddLog(line);
+        return;
+    }
+    std::istringstream input(command);
+    std::string verb, extra;
+    input >> verb >> extra;
+    if (verb == "clear" && extra.empty())
     {
         Clear();
     }   
-    else if (strcmp(command, commands[1].c_str()) == 0)
+    else if (verb == "quit" && extra.empty())
     {
         WindowCloseEvent evt;
         EventDispatcher::Dispatch(evt);
     }
-    else if (strcmp(command, commands[2].c_str()) == 0)
+    else if (verb == "version" && extra.empty())
     {
         AddLog(GetBuildInfo());
     }
@@ -197,20 +249,16 @@ int ConsoleOverlay::TextEditCallback(ImGuiInputTextCallbackData* data)
 
     case ImGuiInputTextFlags_CallbackCompletion:
     {
-        const char* word_end = data->Buf + data->CursorPos;
-        const char* word_start = word_end;
-        while (word_start > data->Buf && !isspace(word_start[-1]))
-            --word_start;
-
-        std::string current_word(word_start, word_end);
-
-        std::vector<std::string> candidates;
-        for (const auto& cmd : commands)
+        UpdateInlineHint(data->Buf, data->CursorPos, data->SelectionStart != data->SelectionEnd);
+        if (!m_inline_hint.empty())
         {
-            if (cmd.compare(0, current_word.size(), current_word) == 0)
-                candidates.push_back(cmd);
+            data->InsertChars(data->CursorPos, m_inline_hint.c_str());
+            data->SelectionStart = data->SelectionEnd = data->CursorPos;
+            break;
         }
-
+        const auto matches = ConsoleCompletion::Find(std::string_view(data->Buf, static_cast<size_t>(data->BufTextLen)),
+            static_cast<size_t>(data->CursorPos), m_cvars);
+        const auto& candidates = matches.candidates;
         if (candidates.empty())
         {
             AddLog("No match for completion");
@@ -218,15 +266,15 @@ int ConsoleOverlay::TextEditCallback(ImGuiInputTextCallbackData* data)
         else if (candidates.size() == 1)
         {
             const std::string& completion = candidates[0];
-            const size_t new_len = word_start - data->Buf + completion.length();
+            const size_t new_len = static_cast<size_t>(data->BufTextLen) - matches.length + completion.size();
 
             if (new_len < static_cast<size_t>(data->BufSize))
             {
-                std::memmove(const_cast<char*>(word_start), completion.c_str(), completion.size());
-                const_cast<char*>(word_start)[completion.size()] = '\0';
-                data->CursorPos = static_cast<int>(word_start - data->Buf + completion.size());
-                data->BufTextLen = static_cast<int>(std::strlen(data->Buf));
-                data->BufDirty = true;
+                const int offset = static_cast<int>(matches.offset);
+                data->DeleteChars(offset, static_cast<int>(matches.length));
+                data->InsertChars(offset, completion.c_str());
+                data->CursorPos = offset + static_cast<int>(completion.size());
+                data->SelectionStart = data->SelectionEnd = data->CursorPos;
             }
         }
         else

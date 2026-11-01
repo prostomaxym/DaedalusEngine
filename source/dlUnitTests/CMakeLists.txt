@@ -13,6 +13,7 @@ project(
     )
 
 set(CONFIG_TEST_FILES
+    ConfigTests/CVarRegistryTest.cpp
     ConfigTests/KeybindConfigTest.cpp
     ConfigTests/PathConfigTest.cpp
     )
@@ -25,8 +26,10 @@ set(CORE_TEST_FILES
 
 set(DEBUG_TEST_FILES
     DebugTests/BuildInfoTest.cpp
+    DebugTests/ConsoleCompletionTest.cpp
     DebugTests/LogTest.cpp
     DebugTests/ProfilerTest.cpp
+    DebugTests/WorldAxisProjectionTest.cpp
     )
 
 set(ECS_TEST_FILES
@@ -58,6 +61,7 @@ set(RENDERER_TEST_FILES
     RendererTests/CameraTest.cpp
     RendererTests/DirectionalLightSourceTest.cpp
     RendererTests/DecodedImageTest.cpp
+    RendererTests/DebugDrawBatchTest.cpp
     RendererTests/GeometryTest.cpp
     RendererTests/LightSourceTest.cpp
     )

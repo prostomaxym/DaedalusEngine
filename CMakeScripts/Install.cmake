@@ -43,7 +43,8 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/config/keybinds.ini
         OPTIONAL)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/source/dlSandbox/path.ini
-        DESTINATION .)
+        DESTINATION .
+        OPTIONAL)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/version.txt
         DESTINATION .)

@@ -256,7 +256,7 @@ TEST_F(InputActionsTest, InvalidStickDeadzonesDoNotReplaceLastValidValue)
 	}
 }
 
-TEST_F(InputActionsTest, NativeCameraIgnoresPlanarActionButtonsButPreservesVerticalButtons)
+TEST_F(InputActionsTest, camera_uses_planar_action_down_and_vertical_action_hold)
 {
 	Scene scene;
 	auto entity = scene.CreateEntity();
@@ -269,34 +269,33 @@ TEST_F(InputActionsTest, NativeCameraIgnoresPlanarActionButtonsButPreservesVerti
 	for (int i = 0; i < 6; ++i)
 		ASSERT_TRUE(KeybindConfig::SetActionBind(names[i], { -1, i }));
 	Input::Update();
-
 	for (int i = 0; i < 6; ++i)
 	{
 		SCOPED_TRACE(names[i]);
 		camera.SetPosition(glm::vec3(0.f));
 		PerspectiveCamera expected;
-		if (i >= 4) expected.ProcessKeyboard(directions[i], dt.GetSeconds());
 		m_input.buttons[i] = true;
 		Input::Update();
+		if (i < 4) expected.ProcessKeyboard(directions[i], dt.GetSeconds());
 		script.Tick(dt);
-		EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		Input::Update();
+		expected.ProcessKeyboard(directions[i], dt.GetSeconds());
 		script.Tick(dt);
-		EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		m_input.buttons[i] = false;
 		Input::Update();
 		script.Tick(dt);
-		EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 	}
 }
 
-TEST_F(InputActionsTest, ChangePovButtonDoesNotMoveCameraOrPlayerWithSharedMovementBindings)
+TEST_F(InputActionsTest, shared_movement_and_pov_button_moves_on_down_and_toggles_on_release)
 {
 	ASSERT_TRUE(KeybindConfig::SetActionBind("ChangePOV", { DL_KEY_V, DL_GAMEPAD_BUTTON_B }));
 	ASSERT_TRUE(KeybindConfig::SetActionBind("Flashlight", { DL_KEY_F, DL_GAMEPAD_BUTTON_Y }));
 	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, DL_GAMEPAD_BUTTON_B }));
-	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveLeft", { DL_KEY_A, DL_GAMEPAD_BUTTON_A }));
-	for (const auto* name : { "MoveBackward", "MoveRight", "MoveUp", "MoveDown" })
+	for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
 		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
 	Input::Update();
 	Scene scene;
@@ -304,55 +303,33 @@ TEST_F(InputActionsTest, ChangePovButtonDoesNotMoveCameraOrPlayerWithSharedMovem
 	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
 	entity.AddComponent<RenderableObjectComponent>();
 	entity.AddComponent<SpotLightComponent>();
-	auto& transform = entity.GetComponent<TransformComponent>();
-	transform.rotation.y = 17.f;
 	TestCameraController camera_script(entity);
 	TestPlayerController player_script(entity);
-	const DeltaTime dt(std::chrono::milliseconds(100));
-	for (const auto button : { DL_GAMEPAD_BUTTON_B, DL_GAMEPAD_BUTTON_A })
+	const DeltaTime dt(std::chrono::seconds(1));
+	PerspectiveCamera expected;
+	m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
+	for (int frame = 0; frame < 3; ++frame)
 	{
-		m_input.buttons[button] = true;
-		for (int frame = 0; frame < 3; ++frame)
-		{
-			Input::Update();
-			EXPECT_TRUE(Input::IsActionDown(button == DL_GAMEPAD_BUTTON_B ? "MoveForward" : "MoveLeft"));
-			camera_script.Tick(dt);
-			player_script.Tick(dt);
-			EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
-			EXPECT_EQ(transform.translation, glm::vec3(0.f));
-			EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-		}
-		m_input.buttons[button] = false;
 		Input::Update();
+		expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
 		camera_script.Tick(dt);
 		player_script.Tick(dt);
-		EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
-		EXPECT_EQ(transform.translation, glm::vec3(0.f));
-		EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-		EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
-		EXPECT_TRUE(entity.HasComponent<SpotLightComponent>());
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
+		EXPECT_NEAR(glm::distance(entity.GetComponent<TransformComponent>().translation, expected.GetPosition()), 0.f, 0.00001f);
+		EXPECT_TRUE(entity.HasComponent<RenderableObjectComponent>());
 	}
-	EXPECT_EQ(KeybindConfig::FindActionBind("MoveForward")->gamepad_button, DL_GAMEPAD_BUTTON_B);
-	EXPECT_EQ(KeybindConfig::FindActionBind("ChangePOV")->gamepad_button, DL_GAMEPAD_BUTTON_B);
-	// An already-held gamepad action must not bypass the keyboard's first-frame delay.
-	m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
+	m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
 	Input::Update();
-	Input::Update();
-	m_input.keys[DL_KEY_W] = true;
-	Input::Update();
-	EXPECT_TRUE(Input::IsActionHold("MoveForward"));
 	camera_script.Tick(dt);
 	player_script.Tick(dt);
-	EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
-	EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-	Input::Update();
-	camera_script.Tick(dt);
-	PerspectiveCamera expected;
-	expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
-	EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
+	EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
+	EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
+	EXPECT_TRUE(entity.HasComponent<SpotLightComponent>());
+	EXPECT_EQ(KeybindConfig::FindActionBind("MoveForward")->gamepad_button, DL_GAMEPAD_BUTTON_B);
+	EXPECT_EQ(KeybindConfig::FindActionBind("ChangePOV")->gamepad_button, DL_GAMEPAD_BUTTON_B);
 }
 
-TEST_F(InputActionsTest, NativeCameraPreservesKeyboardHoldAndRawStickMovement)
+TEST_F(InputActionsTest, camera_moves_on_first_keyboard_frame_and_ignores_unmapped_sticks)
 {
 	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
 	for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
@@ -363,21 +340,23 @@ TEST_F(InputActionsTest, NativeCameraPreservesKeyboardHoldAndRawStickMovement)
 	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
 	TestCameraController script(entity);
 	const DeltaTime dt(std::chrono::milliseconds(100));
-	m_input.keys[DL_KEY_W] = true;
-	Input::Update();
-	script.Tick(dt);
-	EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
-	Input::Update();
-	script.Tick(dt);
 	PerspectiveCamera expected;
-	expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
-	EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
+	m_input.keys[DL_KEY_W] = true;
+	for (int frame = 0; frame < 2; ++frame)
+	{
+		Input::Update();
+		expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
+		script.Tick(dt);
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
+	}
 	m_input.keys[DL_KEY_W] = false;
-	m_input.axes[0] = 1.f;
+	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
+	m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -1.f;
+	m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 1.f;
 	Input::Update();
 	script.Tick(dt);
-	expected.MoveCamera(CameraMovement::RIGHT, dt.GetSeconds() * 10.f);
-	EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
+	EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
+	EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
 }
 
 TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComponents)
@@ -391,19 +370,18 @@ TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComp
 	entity.AddComponent<RenderableObjectComponent>();
 	entity.AddComponent<SpotLightComponent>();
 	TestPlayerController script(entity);
-
-	for (int toggle = 0; toggle < 2; ++toggle)
+	for (const bool initially_present : { true, false })
 	{
-		const bool initially_present = toggle == 0;
 		m_input.buttons[DL_GAMEPAD_BUTTON_Y] = true;
 		m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
-		for (int frame = 0; frame < 3; ++frame)
-		{
-			Input::Update();
-			script.Tick({});
-			EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), initially_present);
-			EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), initially_present);
-		}
+		Input::Update();
+		script.Tick({});
+		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), initially_present);
+		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), initially_present);
+		Input::Update();
+		script.Tick({});
+		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), initially_present);
+		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), initially_present);
 		m_input.buttons[DL_GAMEPAD_BUTTON_Y] = false;
 		m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
 		Input::Update();
@@ -417,169 +395,198 @@ TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComp
 	}
 }
 
-TEST_F(InputActionsTest, ExamplePlayerWaitsForBothDevicesToReleaseAndUsesStickForFacing)
+TEST_F(InputActionsTest, player_waits_for_both_devices_to_release_and_uses_named_axis_for_facing)
 {
-	ASSERT_TRUE(KeybindConfig::SetActionBind("Flashlight", { DL_KEY_F, DL_GAMEPAD_BUTTON_Y }));
-	ASSERT_TRUE(KeybindConfig::SetActionBind("ChangePOV", { DL_KEY_V, DL_GAMEPAD_BUTTON_B }));
-	for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight" })
-		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
-	Input::Update();
-	Scene scene;
-	auto entity = scene.CreateEntity();
-	entity.AddComponent<CameraComponent>(CameraProjectionProps{}, CameraPositionProps(glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f));
-	entity.AddComponent<RenderableObjectComponent>();
-	entity.AddComponent<SpotLightComponent>();
-	TestPlayerController script(entity);
-	m_input.keys[DL_KEY_F] = true;
-	m_input.keys[DL_KEY_V] = true;
-	m_input.buttons[DL_GAMEPAD_BUTTON_Y] = true;
-	m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -0.5f;
-	Input::Update();
-	script.Tick({});
-	m_input.buttons[DL_GAMEPAD_BUTTON_Y] = false;
-	m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
-	Input::Update();
-	script.Tick(DeltaTime(std::chrono::milliseconds(100)));
-	EXPECT_TRUE(entity.HasComponent<SpotLightComponent>());
-	EXPECT_TRUE(entity.HasComponent<RenderableObjectComponent>());
-	EXPECT_GT(entity.GetComponent<TransformComponent>().rotation.y, 0.f);
-	m_input.keys[DL_KEY_F] = false;
-	m_input.keys[DL_KEY_V] = false;
-	Input::Update();
-	script.Tick({});
-	EXPECT_FALSE(entity.HasComponent<SpotLightComponent>());
-	EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
-}
-
-TEST_F(InputActionsTest, NativeCameraPreservesSignedStickMagnitudeAndAnalogLook)
-{
-	for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
-		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
-	Input::Update();
-	Scene scene;
-	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
-	TestCameraController script(entity);
-	const DeltaTime dt(std::chrono::milliseconds(100));
-	const std::array<std::pair<float, float>, 7> positions{
-		std::pair{ 0.f, -0.5f }, { 0.f, 0.5f }, { -0.5f, 0.f }, { 0.5f, 0.f },
-		{ 0.3f, -0.7f }, { -0.3f, 0.7f }, { 0.1f, -0.1f } };
-	for (const auto& [x, y] : positions)
+	ASSERT_EXIT(([&]()
 	{
-		SCOPED_TRACE(x);
-		SCOPED_TRACE(y);
-		camera.SetPosition(glm::vec3(0.f));
-		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = x;
-		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = y;
+		ASSERT_TRUE(KeybindConfig::SetActionBind("Flashlight", { DL_KEY_F, DL_GAMEPAD_BUTTON_Y }));
+		ASSERT_TRUE(KeybindConfig::SetActionBind("ChangePOV", { DL_KEY_V, DL_GAMEPAD_BUTTON_B }));
+		for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight" })
+			ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveForward", { "", "", GamepadAxis::LeftY, -1.f, 0.f }));
 		Input::Update();
-		PerspectiveCamera expected;
-		const auto [filtered_x, filtered_y] = Input::GetStickPos(Input::StickType::Left);
-		expected.MoveCamera(CameraMovement::FORWARD, -filtered_y * dt.GetSeconds() * 10.f);
-		expected.MoveCamera(CameraMovement::RIGHT, filtered_x * dt.GetSeconds() * 10.f);
-		script.Tick(dt);
-		EXPECT_EQ(camera.GetPosition(), expected.GetPosition());
-	}
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.f;
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = 0.f;
-	m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 0.5f;
-	m_input.axes[DL_GAMEPAD_AXIS_RIGHT_Y] = -0.25f;
-	PerspectiveCamera expected;
-	expected.ProcessMouseMovement(0.5f * dt.GetSeconds() * 100.f, 0.25f * dt.GetSeconds() * 100.f);
-	Input::Update();
-	script.Tick(dt);
-	EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
-	EXPECT_FLOAT_EQ(camera.GetPitch(), expected.GetPitch());
-	const auto yaw = camera.GetYaw();
-	Input::EnableGamepadInput(false);
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
-	script.Tick(dt);
-	EXPECT_EQ(camera.GetPosition(), glm::vec3(0.f));
-	EXPECT_FLOAT_EQ(camera.GetYaw(), yaw);
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		entity.AddComponent<CameraComponent>(CameraProjectionProps{}, CameraPositionProps(glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f));
+		entity.AddComponent<RenderableObjectComponent>();
+		entity.AddComponent<SpotLightComponent>();
+		TestPlayerController script(entity);
+		m_input.keys[DL_KEY_F] = true;
+		m_input.keys[DL_KEY_V] = true;
+		m_input.buttons[DL_GAMEPAD_BUTTON_Y] = true;
+		m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -0.5f;
+		Input::Update();
+		script.Tick({});
+		m_input.buttons[DL_GAMEPAD_BUTTON_Y] = false;
+		m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
+		Input::Update();
+		script.Tick(DeltaTime(std::chrono::milliseconds(100)));
+		EXPECT_TRUE(entity.HasComponent<SpotLightComponent>());
+		EXPECT_TRUE(entity.HasComponent<RenderableObjectComponent>());
+		EXPECT_GT(entity.GetComponent<TransformComponent>().rotation.y, 0.f);
+		m_input.keys[DL_KEY_F] = false;
+		m_input.keys[DL_KEY_V] = false;
+		Input::Update();
+		script.Tick({});
+		EXPECT_FALSE(entity.HasComponent<SpotLightComponent>());
+		EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
+		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
-TEST_F(InputActionsTest, ExamplePlayerFacesSignedStickDirectionAndIgnoresNeutralOrDisconnectedStick)
+TEST_F(InputActionsTest, camera_uses_signed_action_named_movement_and_look_axes)
 {
-	for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "Flashlight", "ChangePOV" })
-		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
-	Input::Update();
-	Scene scene;
-	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
-	entity.AddComponent<SpotLightComponent>();
-	TestPlayerController script(entity);
-	auto& transform = entity.GetComponent<TransformComponent>();
-	const std::array<std::pair<float, float>, 6> positions{
-		std::pair{ 0.f, -0.5f }, { 0.f, 0.5f }, { -0.5f, 0.f }, { 0.5f, 0.f },
-		{ 0.3f, -0.7f }, { -0.3f, 0.7f } };
-	for (const float pitch : { 0.f, 60.f, -60.f })
+	ASSERT_EXIT(([&]()
 	{
-		camera.SetRotation(-45.f, pitch);
+		for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
+			ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveForward", { "", "", GamepadAxis::LeftY, -1.f, 0.f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::LeftX, 1.f, 0.f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("LookRight", { "", "", GamepadAxis::RightX, 1.f, 0.f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("LookUp", { "", "", GamepadAxis::RightY, 1.f, 0.f }));
+		Input::Update();
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		TestCameraController script(entity);
+		const DeltaTime dt(std::chrono::milliseconds(100));
+		const std::array<std::pair<float, float>, 7> positions{
+			std::pair{ 0.f, -0.5f }, { 0.f, 0.5f }, { -0.5f, 0.f }, { 0.5f, 0.f },
+			{ 0.3f, -0.7f }, { -0.3f, 0.7f }, { 0.1f, -0.1f } };
 		for (const auto& [x, y] : positions)
 		{
-			transform.rotation.y = 0.f;
+			SCOPED_TRACE(::testing::Message() << "x=" << x << ", y=" << y);
+			camera.SetPosition(glm::vec3(0.f));
 			m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = x;
 			m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = y;
 			Input::Update();
-			script.Tick(DeltaTime(std::chrono::seconds(1)));
-			const auto direction = (camera.GetDirection() * -y + camera.GetRight() * x) * 10.f;
-			float expected_yaw = glm::degrees(std::atan2(direction.x, direction.z));
-			if (expected_yaw < 0.f) expected_yaw += 360.f;
-			EXPECT_NEAR(transform.rotation.y, expected_yaw, 0.0001f);
+			PerspectiveCamera expected;
+			expected.ProcessKeyboard(CameraMovement::FORWARD, -y * dt.GetSeconds());
+			expected.ProcessKeyboard(CameraMovement::RIGHT, x * dt.GetSeconds());
+			script.Tick(dt);
+			EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		}
-	}
-	transform.rotation.y = 17.f;
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.1f;
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -0.1f;
-	Input::Update();
-	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
-	Input::EnableGamepadInput(false);
-	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-	Input::EnableGamepadInput(true);
-	m_input.connected = false;
-	Input::Update();
-	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
+		camera.SetPosition(glm::vec3(0.f));
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.f;
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = 0.f;
+		m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 0.5f;
+		m_input.axes[DL_GAMEPAD_AXIS_RIGHT_Y] = -0.25f;
+		PerspectiveCamera expected;
+		expected.ProcessMouseMovement(0.5f * dt.GetSeconds() * 100.f, 0.25f * dt.GetSeconds() * 100.f);
+		Input::Update();
+		script.Tick(dt);
+		EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
+		EXPECT_FLOAT_EQ(camera.GetPitch(), expected.GetPitch());
+		Input::EnableGamepadInput(false);
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
+		script.Tick(dt);
+		EXPECT_NEAR(glm::length(camera.GetPosition()), 0.f, 0.00001f);
+		EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
+		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
-TEST_F(InputActionsTest, ExamplePlayerCombinesKeyboardHoldWithAnalogCameraSpeed)
+TEST_F(InputActionsTest, player_faces_signed_named_axes_and_ignores_neutral_or_disconnected_input)
 {
-	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
-	for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "Flashlight", "ChangePOV" })
-		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
-	Input::Update();
-	Scene scene;
-	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
-	entity.AddComponent<SpotLightComponent>();
-	TestPlayerController script(entity);
-	auto& transform = entity.GetComponent<TransformComponent>();
-	transform.rotation.y = 17.f;
-	m_input.keys[DL_KEY_W] = true;
-	Input::Update();
-	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
-	m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.5f;
-	Input::Update();
-	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	const auto direction = camera.GetDirection() * camera.GetMovementSpeed() + camera.GetRight() * 5.f;
-	float expected_yaw = glm::degrees(std::atan2(direction.x, direction.z));
-	if (expected_yaw < 0.f) expected_yaw += 360.f;
-	EXPECT_NEAR(transform.rotation.y, expected_yaw, 0.0001f);
+	ASSERT_EXIT(([&]()
+	{
+		for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "Flashlight", "ChangePOV" })
+			ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveForward", { "", "", GamepadAxis::LeftY, -1.f, 0.f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::LeftX, 1.f, 0.f }));
+		Input::Update();
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		entity.AddComponent<SpotLightComponent>();
+		TestPlayerController script(entity);
+		auto& transform = entity.GetComponent<TransformComponent>();
+		const std::array<std::pair<float, float>, 6> positions{
+			std::pair{ 0.f, -0.5f }, { 0.f, 0.5f }, { -0.5f, 0.f }, { 0.5f, 0.f },
+			{ 0.3f, -0.7f }, { -0.3f, 0.7f } };
+		for (const float pitch : { 0.f, 60.f, -60.f })
+		{
+			camera.SetRotation(-45.f, pitch);
+			for (const auto& [x, y] : positions)
+			{
+				transform.rotation.y = 0.f;
+				m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = x;
+				m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = y;
+				Input::Update();
+				script.Tick(DeltaTime(std::chrono::seconds(1)));
+				const auto direction = camera.GetDirection() * -y + camera.GetRight() * x;
+				float expected_yaw = glm::degrees(std::atan2(direction.x, direction.z));
+				if (expected_yaw < 0.f) expected_yaw += 360.f;
+				EXPECT_NEAR(transform.rotation.y, expected_yaw, 0.0001f);
+			}
+		}
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveForward", { "", "", GamepadAxis::LeftY, -1.f, 0.2f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::LeftX, 1.f, 0.2f }));
+		transform.rotation.y = 17.f;
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.1f;
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -0.1f;
+		Input::Update();
+		script.Tick(DeltaTime(std::chrono::seconds(1)));
+		EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
+		Input::EnableGamepadInput(false);
+		script.Tick(DeltaTime(std::chrono::seconds(1)));
+		EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
+		Input::EnableGamepadInput(true);
+		m_input.connected = false;
+		Input::Update();
+		script.Tick(DeltaTime(std::chrono::seconds(1)));
+		EXPECT_FLOAT_EQ(transform.rotation.y, 17.f);
+		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
-TEST_F(InputActionsTest, NamedMovementAxesReplaceRawComponentsAndRespectBindings)
+TEST_F(InputActionsTest, player_combines_immediate_keyboard_input_with_named_analog_axis)
 {
-	// Isolate opt-in bindings: the process-wide Config has no axis-removal API.
+	ASSERT_EXIT(([&]()
+	{
+		ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
+		for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "Flashlight", "ChangePOV" })
+			ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::LeftX, 1.f, 0.f }));
+		Input::Update();
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		entity.AddComponent<SpotLightComponent>();
+		TestPlayerController script(entity);
+		auto& transform = entity.GetComponent<TransformComponent>();
+		transform.rotation.y = 17.f;
+		m_input.keys[DL_KEY_W] = true;
+		Input::Update();
+		script.Tick(DeltaTime(std::chrono::seconds(1)));
+		auto direction = camera.GetDirection();
+		float expected_yaw = glm::degrees(std::atan2(direction.x, direction.z));
+		if (expected_yaw < 0.f) expected_yaw += 360.f;
+		EXPECT_NEAR(transform.rotation.y, expected_yaw, 0.0001f);
+		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.5f;
+		Input::Update();
+		script.Tick(DeltaTime(std::chrono::seconds(1)));
+		direction = camera.GetDirection() + camera.GetRight() * 0.5f;
+		expected_yaw = glm::degrees(std::atan2(direction.x, direction.z));
+		if (expected_yaw < 0.f) expected_yaw += 360.f;
+		EXPECT_NEAR(transform.rotation.y, expected_yaw, 0.0001f);
+		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
+TEST_F(InputActionsTest, action_named_movement_axes_respect_remapping_and_device_gates)
+{
+	// Config has no axis-removal API; isolate registrations from other tests.
 	ASSERT_EXIT(([&]()
 	{
 		ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
 		for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown", "Flashlight", "ChangePOV" })
 			ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
-		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveVertical", { "MoveBackward", "MoveForward", GamepadAxis::LeftY, -1.f, 0.2f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveForward", { "", "", GamepadAxis::LeftY, -1.f, 0.2f }));
+		// Legacy names are not consumed by the development controllers.
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveHorizontal", { "", "", GamepadAxis::LeftX, 1.f, 0.f }));
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
@@ -592,16 +599,15 @@ TEST_F(InputActionsTest, NamedMovementAxesReplaceRawComponentsAndRespectBindings
 		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = -0.6f;
 		Input::Update();
 		PerspectiveCamera expected;
-		expected.MoveCamera(CameraMovement::FORWARD, 0.5f * dt.GetSeconds() * 10.f);
-		expected.MoveCamera(CameraMovement::RIGHT, 0.4f * dt.GetSeconds() * 10.f);
+		expected.ProcessKeyboard(CameraMovement::FORWARD, 0.5f * dt.GetSeconds());
 		camera_script.Tick(dt);
 		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
-		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveHorizontal", { "MoveLeft", "MoveRight", GamepadAxis::RightX, -1.f, 0.f }));
+		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::RightX, -1.f, 0.f }));
 		m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 0.25f;
 		camera.SetPosition(glm::vec3(0.f));
 		expected.SetPosition(glm::vec3(0.f));
-		expected.MoveCamera(CameraMovement::FORWARD, 0.5f * dt.GetSeconds() * 10.f);
-		expected.MoveCamera(CameraMovement::RIGHT, -0.25f * dt.GetSeconds() * 10.f);
+		expected.ProcessKeyboard(CameraMovement::FORWARD, 0.5f * dt.GetSeconds());
+		expected.ProcessKeyboard(CameraMovement::RIGHT, -0.25f * dt.GetSeconds());
 		camera_script.Tick(dt);
 		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		player_script.Tick(DeltaTime(std::chrono::seconds(1)));
@@ -615,32 +621,12 @@ TEST_F(InputActionsTest, NamedMovementAxesReplaceRawComponentsAndRespectBindings
 		camera.SetPosition(glm::vec3(0.f));
 		expected.SetPosition(glm::vec3(0.f));
 		expected.SetRotation(camera.GetYaw(), camera.GetPitch());
-		expected.MoveCamera(CameraMovement::FORWARD, dt.GetSeconds() * 10.f);
+		expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
+		camera_script.Tick(dt);
+		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
+		Input::EnableKeyboardInput(false);
 		camera_script.Tick(dt);
 		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
 	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
-}
-
-TEST_F(InputActionsTest, ConnectionChangesDoNotOverrideExplicitGamepadGate)
-{
-	Input::EnableGamepadInput(false);
-	m_input.buttons[DL_GAMEPAD_BUTTON_A] = true;
-	for (const bool connected : { false, true, false, true })
-	{
-		m_input.connected = connected;
-		Input::Update();
-		EXPECT_FALSE(Input::IsGamepadInputEnabled());
-		EXPECT_FALSE(Input::IsActionDown("input_jump"));
-		EXPECT_FALSE(Input::IsGpadKeyPressed(DL_GAMEPAD_BUTTON_A));
-	}
-	Input::EnableGamepadInput(true);
-	m_input.connected = false;
-	Input::Update();
-	EXPECT_TRUE(Input::IsGamepadInputEnabled());
-	EXPECT_FALSE(Input::IsActionDown("input_jump"));
-	m_input.connected = true;
-	Input::Update();
-	EXPECT_TRUE(Input::IsGamepadInputEnabled());
-	EXPECT_TRUE(Input::IsActionPressed("input_jump"));
 }

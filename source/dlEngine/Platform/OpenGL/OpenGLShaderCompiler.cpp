@@ -8,12 +8,35 @@
 #include "Utils/AssetSourceReader.h"
 #include "Utils/VirtualFileSystem.h"
 #include "Utils/Utf8.h"
+#include "Renderer/Resources/ShaderDialect.h"
 
 using namespace Daedalus;
 
+std::string OpenGLShaderCompiler::CacheIdentity()
+{
+#ifdef DL_PLATFORM_ANDROID
+    std::string identity(GlesShaderPreamble);
+#else
+    std::string identity("desktop-gl-v1\n");
+#endif
+    for (const auto token : { GL_VENDOR, GL_RENDERER, GL_VERSION })
+    {
+        if (const auto* value = glGetString(token)) identity += reinterpret_cast<const char*>(value);
+        identity += '\n';
+    }
+    return identity;
+}
+
 GLuint OpenGLShaderCompiler::CompileFromCode(const std::string& code, ShaderType type)
 {
-    const auto code_str = code.c_str();
+    const auto adapted = AdaptShaderDialect(code,
+#ifdef DL_PLATFORM_ANDROID
+        true
+#else
+        false
+#endif
+    );
+    const auto code_str = adapted.c_str();
     GLuint shader_id = glCreateShader(GetShaderGLType(type));
 
     glShaderSource(shader_id, 1, &code_str, 0);
@@ -189,7 +212,14 @@ GLuint OpenGLShaderCompiler::TryBuildFromCode(const std::string& code)
     {
         const auto shader = glCreateShader(GetShaderGLType(type));
         if (!shader) { glDeleteProgram(program); return 0; }
-        const auto text = source.c_str();
+        const auto adapted = AdaptShaderDialect(source,
+#ifdef DL_PLATFORM_ANDROID
+            true
+#else
+            false
+#endif
+        );
+        const auto text = adapted.c_str();
         glShaderSource(shader, 1, &text, nullptr);
         glCompileShader(shader);
         GLint compiled = GL_FALSE;

@@ -2,7 +2,7 @@
 
 #include "Renderer/Resources/Texture.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 namespace Daedalus {
 
@@ -65,6 +65,7 @@ namespace Daedalus {
 		}
 
 		static void BindTextureImpl(uint32_t ID, uint32_t slot);
+		static void BindTextureArrayImpl(uint32_t ID, uint32_t slot);
 		static void BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorFormat format, bool read, bool write);
 
 	private:

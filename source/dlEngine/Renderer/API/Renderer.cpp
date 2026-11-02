@@ -536,7 +536,10 @@ void Renderer::ComputeTexture(std::string_view shader, uint32_t id_in, uint32_t 
 	compute_shader->SetInt(ShaderConstants::ComputeInput, 0);
 
 	Texture2D::BindTextureImage(id_out, 1, Texture::ColorFormat::RGBA8, false, true);
+#ifndef DL_PLATFORM_ANDROID
+	// GLES image bindings come from layout(binding); glUniform cannot change them.
 	compute_shader->SetInt(ShaderConstants::ComputeOutput, 1);
+#endif
 
 	compute_shader->DispatchCompute(w, h, 16);
 	compute_shader->Unbind();
@@ -547,11 +550,13 @@ void Renderer::ComputeTextureArray(std::string_view shader, uint32_t id_in, uint
 	const auto compute_shader = ResourceManager::GetShader(shader.data());
 	compute_shader->Bind();
 
-	Texture2D::BindTexture(id_in, 0);
+	Texture2D::BindTextureArray(id_in, 0);
 	compute_shader->SetInt(ShaderConstants::ComputeArray, 0);
 
 	Texture2D::BindTextureImage(id_out, 1, Texture::ColorFormat::RGBA8, false, true);
+#ifndef DL_PLATFORM_ANDROID
 	compute_shader->SetInt(ShaderConstants::ComputeOutput, 1);
+#endif
 	compute_shader->SetInt(ShaderConstants::LayerIndex, layer);
 
 	compute_shader->DispatchCompute(w, h, 16);
@@ -569,7 +574,9 @@ void Renderer::ComputeDepthTexture(std::string_view shader, uint32_t id_in, uint
 	compute_shader->SetInt(ShaderConstants::ComputeInput, 0);
 
 	Texture2D::BindTextureImage(id_out, 1, Texture::ColorFormat::RGBA8, false, true);
+#ifndef DL_PLATFORM_ANDROID
 	compute_shader->SetInt(ShaderConstants::ComputeOutput, 1);
+#endif
 
 	compute_shader->DispatchCompute(w, h, 16);
 	compute_shader->Unbind();

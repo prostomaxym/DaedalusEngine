@@ -3,14 +3,15 @@
 #include "Renderer/API/RenderCommand.h"
 #include <memory>
 
-struct GLFWwindow;
 
 namespace Daedalus {
 
 	class GraphicsContext
 	{
 	public:
-		static std::unique_ptr<GraphicsContext> Create(GLFWwindow* window_handle);
+		static std::unique_ptr<GraphicsContext> Create(void* window_handle);
+
+		virtual ~GraphicsContext() = default;
 
 		virtual void Init() = 0;
 		virtual void SwapBuffers() = 0;

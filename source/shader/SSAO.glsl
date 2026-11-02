@@ -68,6 +68,6 @@ void main()
         occlusion += (sample_depth >= sample_pos.z + ubo_ssao.ssao_bias ? 1.0 : 0.0) * range_check;
     }
 
-    occlusion = 1.0 - (occlusion / ubo_ssao.ssao_kernel_size);
+    occlusion = 1.0 - (occlusion / float(ubo_ssao.ssao_kernel_size));
     fout_color = occlusion;
 }

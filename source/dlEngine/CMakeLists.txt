@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
-#PATHS "${CMAKE_SOURCE_DIR}/vcpkg_installed"
 
 find_package(fmt CONFIG REQUIRED)
 
@@ -89,6 +88,7 @@ else()
     endif()
 endif()
 
+if(NOT ANDROID)
 add_custom_command(
     TARGET dlEngine
     POST_BUILD
@@ -96,3 +96,4 @@ add_custom_command(
             ${CMAKE_CURRENT_SOURCE_DIR}/../shader
             ${CMAKE_SOURCE_DIR}/runtime/shader
 )
+endif()

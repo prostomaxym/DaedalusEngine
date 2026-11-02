@@ -11,4 +11,4 @@ if [ -d build ] || [ -d build-debug ] || [ -d build-release-devtools ]; then
 	exit 1
 fi
 
-bash "$repo_root/LinuxScripts/CMakeConfigAndPackages.sh"
+bash "$repo_root/LinuxScripts/LinuxConfig.sh"

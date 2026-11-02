@@ -1,0 +1,10 @@
+plugins {
+	id 'com.android.application' version '7.2.0' apply false
+}
+
+if (!providers.gradleProperty('daedalusOutput').isPresent()) {
+	throw new GradleException('Build with WinScripts/Android/Build.ps1 or set -PdaedalusOutput to an external output directory.')
+}
+allprojects {
+	buildDir = new File(rootProject.property('daedalusOutput'), project.name)
+}

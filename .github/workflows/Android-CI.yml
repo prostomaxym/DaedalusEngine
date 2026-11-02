@@ -1,0 +1,82 @@
+name: Android-CI
+
+on:
+  push:
+    branches: [ "development", "master" ]
+  pull_request:
+    branches: [ "development", "master" ]
+
+permissions:
+  contents: read
+
+env:
+  VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}/.vcpkg-binary-cache,readwrite'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Prepare vcpkg cache
+      id: vcpkg-cache
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force .vcpkg-binary-cache | Out-Null
+        "revision=$(git -C ThirdParty/vcpkg rev-parse HEAD)" >> $env:GITHUB_OUTPUT
+        "image=$env:ImageVersion" >> $env:GITHUB_OUTPUT
+
+    - name: Cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: .vcpkg-binary-cache
+        key: ${{ runner.os }}-${{ runner.arch }}-vcpkg-android-ndk27-v1-${{ steps.vcpkg-cache.outputs.revision }}-${{ steps.vcpkg-cache.outputs.image }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'ThirdParty/vcpkg_triplets/**') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-vcpkg-android-ndk27-v1-
+
+    - uses: android-actions/setup-android@v3
+
+    - name: Install pinned Android toolchain
+      shell: pwsh
+      run: sdkmanager "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '11'
+
+    - uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: '7.3.3'
+
+    - name: Bootstrap vcpkg
+      shell: pwsh
+      run: ./ThirdParty/vcpkg/bootstrap-vcpkg.bat
+
+    - name: Build Android dependencies
+      shell: pwsh
+      run: ./WinScripts/Android/Dependencies.ps1
+
+    - name: Build Android Release APK
+      shell: pwsh
+      run: ./WinScripts/Android/Build.ps1 -Configuration Release
+
+    - name: Build Android developer APK
+      shell: pwsh
+      run: ./WinScripts/Android/Build.ps1 -Configuration ReleaseDevTools
+
+    # The full engine suite is host-only; no emulator/device validation is claimed.
+    - name: Configure host tests
+      shell: pwsh
+      run: cmake -B build -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_OVERLAY_TRIPLETS="${{ github.workspace }}/ThirdParty/vcpkg_triplets" -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+    - name: Build host tests
+      shell: pwsh
+      run: cmake --build build --config Release --parallel
+
+    - name: Test
+      shell: pwsh
+      run: ctest --test-dir build -C Release -VV --no-tests=error

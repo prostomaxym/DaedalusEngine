@@ -1,10 +1,22 @@
 #include "dlpch.h"
 #include "OpenGLGPUTimer.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
+#ifdef DL_PLATFORM_ANDROID
+OpenGLGPUTimer::OpenGLGPUTimer()
+{
+	Log::Write(Log::Levels::Info, Log::Categories::Renderer, "GPU timestamps unavailable on this backend; CPU profiling remains enabled");
+}
+OpenGLGPUTimer::~OpenGLGPUTimer() = default;
+void OpenGLGPUTimer::BeginFrame() {}
+void OpenGLGPUTimer::EndFrame() {}
+void OpenGLGPUTimer::BeginScope(const char*) {}
+void OpenGLGPUTimer::EndScope() {}
+void OpenGLGPUTimer::Resolve(Frame&) {}
+#else
 OpenGLGPUTimer::OpenGLGPUTimer()
 {
 	for (auto& frame : m_frames)
@@ -132,3 +144,4 @@ void OpenGLGPUTimer::Resolve(Frame& frame)
 
 	Profiler::SubmitGpuSamples(m_resolved.data(), count);
 }
+#endif

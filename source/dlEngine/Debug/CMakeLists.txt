@@ -20,6 +20,7 @@ set(DEBUG_PROJECT_FILES
     BuildInfo.cpp
     DebugOverlay.h
     DebugOverlay.cpp
+    OverlayStatistics.h
     WorldAxisProjection.h
     WorldAxisProjection.cpp
     Tabs/GeneralDebugTab.h

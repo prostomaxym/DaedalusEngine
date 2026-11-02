@@ -41,6 +41,8 @@ namespace Daedalus {
 
 		virtual void SwapBuffers() = 0;
 		virtual void PollEvents() = 0;
+		virtual bool IsRenderable() const { return true; }
+		virtual bool ConsumeFrameClockReset() { return false; }
 
 		virtual void* GetNativeWindow() const = 0;
 		virtual int GetWidth() const = 0;

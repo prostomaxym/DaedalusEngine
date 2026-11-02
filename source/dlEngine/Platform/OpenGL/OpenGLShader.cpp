@@ -61,9 +61,12 @@ namespace
 			break;
 		case GL_INT: case GL_INT_VEC2: case GL_INT_VEC3: case GL_INT_VEC4:
 		case GL_BOOL: case GL_BOOL_VEC2: case GL_BOOL_VEC3: case GL_BOOL_VEC4:
-		case GL_SAMPLER_1D: case GL_SAMPLER_2D: case GL_SAMPLER_3D: case GL_SAMPLER_CUBE:
-		case GL_SAMPLER_1D_SHADOW: case GL_SAMPLER_2D_SHADOW: case GL_SAMPLER_CUBE_SHADOW:
-		case GL_SAMPLER_1D_ARRAY: case GL_SAMPLER_2D_ARRAY: case GL_SAMPLER_2D_ARRAY_SHADOW:
+#ifndef DL_PLATFORM_ANDROID
+		case GL_SAMPLER_1D: case GL_SAMPLER_1D_SHADOW: case GL_SAMPLER_1D_ARRAY:
+#endif
+		case GL_SAMPLER_2D: case GL_SAMPLER_3D: case GL_SAMPLER_CUBE:
+		case GL_SAMPLER_2D_SHADOW: case GL_SAMPLER_CUBE_SHADOW:
+		case GL_SAMPLER_2D_ARRAY: case GL_SAMPLER_2D_ARRAY_SHADOW:
 		case GL_INT_SAMPLER_2D: case GL_UNSIGNED_INT_SAMPLER_2D:
 		case GL_IMAGE_2D: case GL_INT_IMAGE_2D: case GL_UNSIGNED_INT_IMAGE_2D:
 			glGetUniformiv(source, source_location, integers);
@@ -128,6 +131,10 @@ namespace
 		}
 		for (const GLenum interface_type : { GL_UNIFORM_BLOCK, GL_SHADER_STORAGE_BLOCK })
 		{
+#ifdef DL_PLATFORM_ANDROID
+			// GLES SSBO binding points are specified by the shader's layout qualifiers.
+			if (interface_type == GL_SHADER_STORAGE_BLOCK) continue;
+#endif
 			glGetProgramInterfaceiv(source, interface_type, GL_ACTIVE_RESOURCES, &count);
 			glGetProgramInterfaceiv(source, interface_type, GL_MAX_NAME_LENGTH, &max_length);
 			buffer.resize(static_cast<size_t>((std::max)(max_length, 1)));
@@ -140,7 +147,9 @@ namespace
 				GLint binding = 0;
 				glGetProgramResourceiv(source, interface_type, static_cast<GLuint>(index), 1, &property, 1, nullptr, &binding);
 				if (interface_type == GL_UNIFORM_BLOCK) glUniformBlockBinding(target, resource, static_cast<GLuint>(binding));
+#ifndef DL_PLATFORM_ANDROID
 				else glShaderStorageBlockBinding(target, resource, static_cast<GLuint>(binding));
+#endif
 			}
 		}
 	}

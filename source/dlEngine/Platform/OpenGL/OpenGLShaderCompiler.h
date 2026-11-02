@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 namespace Daedalus {
 
@@ -32,6 +32,7 @@ namespace Daedalus {
 		[[nodiscard]] static GLuint TryBuildFromCode(const std::string& code);
 
 		static void SaveBinary(const std::filesystem::path& file_name, GLuint shader_id);
+		static std::string CacheIdentity();
 
 	private:
 		static GLuint CompileFromCode(const std::string& code, ShaderType type);

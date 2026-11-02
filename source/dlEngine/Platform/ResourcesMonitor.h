@@ -39,5 +39,8 @@ namespace Daedalus
 		static const std::string& GetProcessorName();
 
 		static const GpuInfo& GetGPUInfo();
+#ifdef DL_PLATFORM_ANDROID
+		static const std::string& GetDeviceDescription();
+#endif
 	};
 }

@@ -105,7 +105,7 @@ void ShaderLibrary::LoadCachedShaders(const std::vector<std::string>& cached_sha
 		const auto source = ReadSource(shader_name);
 		std::ifstream fingerprint(binary_path.string() + ".hash");
 		uint64_t cached_hash = 0;
-		if (ec || binary_time < m_latest_source_time || !(fingerprint >> cached_hash) || cached_hash != ContentFingerprint(source))
+		if (ec || binary_time < m_latest_source_time || !(fingerprint >> cached_hash) || cached_hash != ContentFingerprint(Shader::CacheIdentity() + source))
 		{
 			shader = Shader::CreateFromCode(source);
 			SaveCache(*shader, shader_name, source);
@@ -238,7 +238,7 @@ void ShaderLibrary::SaveCache(const Shader& shader, const std::string& name, con
 	auto fingerprint = binary;
 	fingerprint += ".hash";
 	std::ofstream output(fingerprint);
-	output << ContentFingerprint(source) << '\n';
+	output << ContentFingerprint(Shader::CacheIdentity() + source) << '\n';
 	if (!output) Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Cannot save shader cache fingerprint: {}", name);
 }
 

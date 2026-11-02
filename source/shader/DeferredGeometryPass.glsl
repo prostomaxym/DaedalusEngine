@@ -104,8 +104,8 @@ uniform ObjectData u_object;
 vec2 ParallaxMapping(vec2 tex_coords, vec3 view_dir)
 {
     const float heightScale = 0.1f;
-    const float minLayers = 8;
-    const float maxLayers = 32;
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), view_dir)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
@@ -135,11 +135,11 @@ vec2 ParallaxMapping(vec2 tex_coords, vec3 view_dir)
 
 void main()
 {
-    const vec3 view_dir = normalize(ubo_scene.view_pos - fs_in.frag_pos);
-    const vec2 tex_coord = u_object.enable_height_map ? ParallaxMapping(fs_in.uv, view_dir) : fs_in.uv;
+    vec3 view_dir = normalize(ubo_scene.view_pos - fs_in.frag_pos);
+    vec2 tex_coord = u_object.enable_height_map ? ParallaxMapping(fs_in.uv, view_dir) : fs_in.uv;
 
     // TODO: implement better way to show transparent objects in front of opaque objects
-    const float alpha = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, tex_coord).a : 1.0;
+    float alpha = u_object.enable_diffuse_map ? texture(u_object.tex_diffuse, tex_coord).a : 1.0;
     if (alpha < 0.99)
         discard;
 

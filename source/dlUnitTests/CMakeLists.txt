@@ -33,6 +33,7 @@ set(DEBUG_TEST_FILES
     DebugTests/InputCommandsTest.cpp
     DebugTests/LogTest.cpp
     DebugTests/OverlayInputTest.cpp
+    DebugTests/OverlayStatisticsTest.cpp
     DebugTests/ProfilerTest.cpp
     DebugTests/WorldAxisProjectionTest.cpp
     )
@@ -63,6 +64,7 @@ set(PHYSICS_TEST_FILES
 set(RENDERER_TEST_FILES
     RendererTests/BufferLayoutTest.cpp
     RendererTests/CacheEvictionTest.cpp
+    RendererTests/ShaderDialectTest.cpp
     RendererTests/CameraTest.cpp
     RendererTests/DirectionalLightSourceTest.cpp
     RendererTests/DecodedImageTest.cpp
@@ -79,6 +81,7 @@ set(THREADS_TEST_FILES
     )
 
 set(UTILS_TEST_FILES
+    UtilsTests/BundledFileInstallerTest.cpp
     UtilsTests/DeltaTimeTest.cpp
     UtilsTests/FixedStepClockTest.cpp
     UtilsTests/FPSLockerTest.cpp
@@ -86,6 +89,7 @@ set(UTILS_TEST_FILES
     UtilsTests/RandomTest.cpp
     UtilsTests/RingVectorTest.cpp
     UtilsTests/TimerTest.cpp
+    UtilsTests/TouchControlsTest.cpp
     UtilsTests/Utf8Test.cpp
     )
 

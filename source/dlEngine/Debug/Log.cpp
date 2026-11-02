@@ -4,6 +4,9 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#ifdef DL_PLATFORM_ANDROID
+#include "Platform/Android/AndroidLogSink.h"
+#endif
 
 
 #include "Config/PathConfig.h"
@@ -99,7 +102,11 @@ void Log::Init()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 
+#ifdef DL_PLATFORM_ANDROID
+	s_impl = CreateAndroidLogger();
+#else
 	s_impl = spdlog::stdout_color_mt("ENGINE");
+#endif
 	s_impl->set_level(spdlog::level::trace);
 
 	EnableAllCategories();

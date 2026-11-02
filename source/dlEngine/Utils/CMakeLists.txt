@@ -11,6 +11,8 @@ project(
 set(UTILS_PROJECT_FILES
    AssetSourceReader.h
    AssetSourceReader.cpp
+   BundledFileInstaller.h
+   BundledFileInstaller.cpp
    ContentFingerprint.h
    DeltaTime.h
    FixedStepClock.h
@@ -21,6 +23,7 @@ set(UTILS_PROJECT_FILES
    Random.cpp
    RingVector.h
    Timer.h
+   TouchControls.h
    Utf8.h
    VirtualFileSystem.h
    VirtualFileSystem.cpp

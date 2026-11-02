@@ -58,6 +58,17 @@ std::shared_ptr<Texture2D> Texture2D::Create(unsigned char* data, int width, int
 	return nullptr;
 }
 
+void Texture2D::BindTextureArray(uint32_t ID, uint32_t slot)
+{
+	switch (RendererAPI::GetAPI())
+	{
+	case RendererAPI::API::None:	Log::Write(Log::Levels::Warn, Log::Categories::Renderer, "RendererAPI::None is currently not supported!"); return;
+	case RendererAPI::API::OpenGL:  OpenGLTexture2D::BindTextureArrayImpl(ID, slot); return;
+	}
+
+	Log::Write(Log::Levels::Error, Log::Categories::Renderer, "Unknown RendererAPI!");
+}
+
 void Texture2D::BindTexture(uint32_t ID, uint32_t slot)
 {
 	switch (RendererAPI::GetAPI())

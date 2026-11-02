@@ -1,0 +1,43 @@
+plugins {
+	id 'com.android.application'
+}
+
+if (!providers.gradleProperty('daedalusStage').isPresent()) {
+	throw new GradleException('Set -PdaedalusStage to the native-library and shader staging directory.')
+}
+
+def stage = file(rootProject.property('daedalusStage'))
+
+android {
+	compileSdk 33
+	buildToolsVersion '33.0.2'
+
+	defaultConfig {
+		applicationId 'org.daedalus.sandbox'
+		minSdk 28
+		targetSdk 33
+		versionCode 1
+		versionName '0.1.0'
+		ndk { abiFilters 'arm64-v8a' }
+	}
+
+	sourceSets {
+		main {
+			jniLibs.srcDirs = [new File(stage, 'jniLibs')]
+			assets.srcDirs = [new File(stage, 'assets')]
+		}
+	}
+
+	aaptOptions {
+		// Every manifest-listed runtime file must reach the APK, including dotfiles.
+		ignoreAssetsPattern = ''
+	}
+
+	packagingOptions {
+		jniLibs {
+			// These are prebuilt libraries; retain their symbols for local diagnostics.
+			keepDebugSymbols += ['**/*.so']
+			useLegacyPackaging true
+		}
+	}
+}

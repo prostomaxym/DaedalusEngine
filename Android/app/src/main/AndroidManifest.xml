@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.daedalus.sandbox">
+	<uses-feature android:glEsVersion="0x00030002" android:required="true" />
+	<application
+		android:label="Daedalus Sandbox"
+		android:hasCode="false"
+		android:allowBackup="false"
+		android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
+		<activity
+			android:name="android.app.NativeActivity"
+			android:exported="true"
+			android:configChanges="orientation|keyboardHidden|screenSize">
+			<meta-data android:name="android.app.lib_name" android:value="dlSandbox" />
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+	</application>
+</manifest>

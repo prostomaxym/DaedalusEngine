@@ -2,6 +2,9 @@
 
 #include "Utils/Random.h"
 
+#include <cstdint>
+#include <functional>
+
 namespace Daedalus 
 {
 	class UUID
@@ -20,8 +23,6 @@ namespace Daedalus
 
 namespace std 
 {
-	template <typename T> struct hash;
-
 	template<>
 	struct hash<Daedalus::UUID>
 	{

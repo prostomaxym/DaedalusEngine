@@ -88,6 +88,7 @@ set(RENDERER_PROJECT_FILES
     Resources/Model.h
     Resources/Model.cpp
     Resources/Shader.h
+    Resources/ShaderDialect.h
     Resources/Shader.cpp
     Resources/ShaderLibrary.h
     Resources/ShaderLibrary.cpp

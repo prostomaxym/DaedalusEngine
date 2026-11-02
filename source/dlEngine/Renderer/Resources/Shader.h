@@ -82,6 +82,7 @@ namespace Daedalus {
 		virtual void DispatchCompute(uint32_t w, uint32_t h, int local_size) const = 0;
 
 	private:
+		static std::string CacheIdentity();
 		static std::shared_ptr<Shader> CreateFromCode(const std::string& code);
 		static std::shared_ptr<Shader> TryCreateFromCode(const std::string& code);
 		static std::shared_ptr<Shader> CreateFromFile(const std::filesystem::path& file_path);

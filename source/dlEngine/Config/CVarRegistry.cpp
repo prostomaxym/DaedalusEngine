@@ -21,8 +21,23 @@ namespace Daedalus
 		bool ParseNumber(std::string_view text, T& value)
 		{
 			if (text.empty()) return false;
-			const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
-			return result.ec == std::errc{} && result.ptr == text.data() + text.size();
+#if defined(_LIBCPP_VERSION)
+			if constexpr (std::is_floating_point_v<T>)
+			{
+				// libc++ in the Android NDK does not implement floating-point from_chars.
+				std::istringstream stream{ std::string(text) };
+				stream.imbue(std::locale::classic());
+				T parsed{};
+				if (!(stream >> parsed) || stream.peek() != std::char_traits<char>::eof()) return false;
+				value = parsed;
+				return true;
+			}
+			else
+#endif
+			{
+				const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
+				return result.ec == std::errc{} && result.ptr == text.data() + text.size();
+			}
 		}
 	}
 

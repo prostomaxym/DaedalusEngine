@@ -7,6 +7,7 @@
 
 extern Daedalus::Application* Daedalus::CreateApplication();
 
+#ifndef DL_PLATFORM_ANDROID
 int main(int argc, char** argv)
 {
 	Daedalus::Log::Init();
@@ -22,3 +23,4 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+#endif

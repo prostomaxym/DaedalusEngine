@@ -1,20 +1,20 @@
 #include "dlpch.h"
 #include "OpenGLVertexBuffer.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
 OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
 {
-	glCreateBuffers(1, &m_rendererID);
+	glGenBuffers(1, &m_rendererID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
 	glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
 OpenGLVertexBuffer::OpenGLVertexBuffer(const float* vertices, uint32_t size)
 {
-	glCreateBuffers(1, &m_rendererID);
+	glGenBuffers(1, &m_rendererID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 }

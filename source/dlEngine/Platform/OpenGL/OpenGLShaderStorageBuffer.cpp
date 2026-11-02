@@ -1,20 +1,20 @@
 #include "dlpch.h"
 #include "OpenGLShaderStorageBuffer.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
 OpenGLShaderStorageBuffer::OpenGLShaderStorageBuffer(uint32_t size, uint32_t binding, Type type)
 {
-	glCreateBuffers(1, &m_rendererID);
+	glGenBuffers(1, &m_rendererID);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_rendererID);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, m_rendererID);
 
 	if (type == Type::Static)
-		glNamedBufferData(m_rendererID, size, nullptr, GL_STATIC_DRAW);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, GL_STATIC_DRAW);
 	else
-		glNamedBufferData(m_rendererID, size, nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
 OpenGLShaderStorageBuffer::~OpenGLShaderStorageBuffer()
@@ -29,5 +29,9 @@ void OpenGLShaderStorageBuffer::Bind(uint32_t binding) const
 
 void OpenGLShaderStorageBuffer::SetData(const void* data, uint32_t size, uint32_t offset) const
 {
-	glNamedBufferSubData(m_rendererID, offset, size, data);
+	GLint previous = 0;
+	glGetIntegerv(GL_COPY_WRITE_BUFFER_BINDING, &previous);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, m_rendererID);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, offset, size, data);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, previous);
 }

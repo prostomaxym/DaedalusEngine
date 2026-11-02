@@ -82,7 +82,7 @@ void Application::Run()
 
 	while (m_running)
 	{
-		const auto update_dt = update_timer.UpdateDeltaTime();
+		auto update_dt = update_timer.UpdateDeltaTime();
 		if constexpr (IsDevBuild())
 			Renderer::BeginDebugDrawFrame();
 		if constexpr (IsDevBuild())
@@ -95,6 +95,18 @@ void Application::Run()
 			GetEventEngine().DispatchPending(DL_BIND_EVENT_FN(Application::OnEvent));
 		}
 		if (!m_running) break;
+		if (GetWindow().ConsumeFrameClockReset())
+		{
+			update_timer.StartTimer();
+			frame_timer.StartTimer();
+			fixed_clock = FixedStepClock{};
+			update_dt = DeltaTime(std::chrono::nanoseconds::zero());
+		}
+		if (!GetWindow().IsRenderable())
+		{
+			if constexpr (IsDevBuild()) Profiler::EndFrame();
+			continue;
+		}
 		m_engine->GetJobs().ProcessMainThread();
 		m_engine->GetAssets().Update();
 		auto& scenes = m_engine->GetScenes();

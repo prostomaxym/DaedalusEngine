@@ -55,10 +55,10 @@ float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int laye
     ivec2 texel_coord = ivec2(tex_coords * vec2(textureSize(shadow_map, 0)));
     vec2 texel_offset = fract(tex_coords * vec2(textureSize(shadow_map, 0)));
 
-    float top_left = texture(shadow_map, vec3((texel_coord + vec2(0.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
-    float top_right = texture(shadow_map, vec3((texel_coord + vec2(1.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
-    float bottom_left = texture(shadow_map, vec3((texel_coord + vec2(0.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
-    float bottom_right = texture(shadow_map, vec3((texel_coord + vec2(1.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float top_left = texture(shadow_map, vec3((vec2(texel_coord) + vec2(0.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float top_right = texture(shadow_map, vec3((vec2(texel_coord) + vec2(1.5, 0.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float bottom_left = texture(shadow_map, vec3((vec2(texel_coord) + vec2(0.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
+    float bottom_right = texture(shadow_map, vec3((vec2(texel_coord) + vec2(1.5, 1.5)) / vec2(textureSize(shadow_map, 0)), layer)).r;
 
     float top_interpolated = mix(top_left, top_right, texel_offset.x);
     float bottom_interpolated = mix(bottom_left, bottom_right, texel_offset.x);
@@ -70,9 +70,9 @@ float BilinearInterpolation(sampler2DArray shadow_map, vec2 tex_coords, int laye
 float CalculateShadowPCF(sampler2DArray shadow_map, vec2 proj_coords, int shadow_map_index, float test_depth)
 {
     float shadow = 0.0;
-    const vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
+    vec2 texel_size = 1.0 / vec2(textureSize(shadow_map, 0));
 
-    const int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
+    int off = (ubo_graphic_config.PCF_multiplier - 1) / 2;
     for (int x = -off; x <= off; ++x)
     {
         for (int y = -off; y <= off; ++y)
@@ -86,14 +86,14 @@ float CalculateShadowPCF(sampler2DArray shadow_map, vec2 proj_coords, int shadow
         }
     }
 
-    shadow /= pow(ubo_graphic_config.PCF_multiplier, 2);
+    shadow /= pow(float(ubo_graphic_config.PCF_multiplier), 2.0);
     return shadow;
 }
 
 float CalculateCascadePlaneDistance(float znear, float zfar, int cascade_plane_inx, int number_of_cascades)
 {
-    const float percent = float(cascade_plane_inx) / float(number_of_cascades);
-    const float cascade_exponent = ubo_graphic_config.csm_exponent;
+    float percent = float(cascade_plane_inx) / float(number_of_cascades);
+    float cascade_exponent = ubo_graphic_config.csm_exponent;
     return znear + (zfar - znear) * pow(percent, cascade_exponent);
 }
 
@@ -161,16 +161,16 @@ int FindShadowCubeIndex(vec3 light_pos)
 
 float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 {
-    const int cascade_ind = p_light.type == POINT_LIGHT_SOURCE ? FindShadowCubeIndex(p_light.position) : FindCascadeIndex(p_light);
-    const vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(g_frag_pos, 1.0);
-    const vec3 proj_coords = 0.5 * (frag_pos_light_space.xyz / frag_pos_light_space.w) + 0.5;
+    int cascade_ind = p_light.type == POINT_LIGHT_SOURCE ? FindShadowCubeIndex(p_light.position) : FindCascadeIndex(p_light);
+    vec4 frag_pos_light_space = ubo_light_proj_view[p_light.shadowmap_index + cascade_ind] * vec4(g_frag_pos, 1.0);
+    vec3 proj_coords = 0.5 * (frag_pos_light_space.xyz / frag_pos_light_space.w) + 0.5;
 
     if (proj_coords.z > 1.0)
         return 1.0;
 
-    const float bias = CalculateShadowBias(p_light.direction, p_light.type, p_light.number_of_shadow_cascades, cascade_ind);
-    const float current_depth = proj_coords.z;
-    const float test_depth = current_depth - bias;
+    float bias = CalculateShadowBias(p_light.direction, p_light.type, p_light.number_of_shadow_cascades, cascade_ind);
+    float current_depth = proj_coords.z;
+    float test_depth = current_depth - bias;
 
     float shadow = CalculateShadowPCF(shadow_map, proj_coords.xy, p_light.shadowmap_index + cascade_ind, test_depth);
 
@@ -181,9 +181,9 @@ float CalculateShadow(Light p_light, sampler2DArray shadow_map)
 // ------------------------------------------------- Core Lighting Functions ------------------------------------------------ //
 vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
 {
-    const vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
-    const float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
-    const float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), g_shininess);
+    vec3 halfway_dir = normalize(p_light_dir + g_view_dir);
+    float diffuse_coef  = max(dot(g_normal, p_light_dir), 0.0);
+    float specular_coef = pow(max(dot(g_normal, halfway_dir), 0.0), g_shininess);
 
     float visability = p_light.cast_shadows ? CalculateShadow(p_light, u_shadowmaps) : 1.0;
     float visability_trip = pow(visability, 3.0);
@@ -195,7 +195,7 @@ vec3 BlinnPhong(Light p_light, vec3 p_light_dir, float p_luminosity)
 
 float CalculateAttenuation(vec3 p_light_position, float p_constant, float p_linear, float p_quadratic)
 {
-    const float distance = length(p_light_position - g_frag_pos);
+    float distance = length(p_light_position - g_frag_pos);
     return 1.0 / (p_constant + p_linear * distance + p_quadratic * (distance * distance));
 }
 
@@ -206,20 +206,20 @@ vec3 CalculateDirectionalLight(Light p_light)
 
 vec3 CalculatePointLight(Light p_light)
 {
-    const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
-    const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
+    vec3 light_direction  = normalize(p_light.position - g_frag_pos);
+    float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
 
     return BlinnPhong(p_light, light_direction, p_light.power * luminosity);
 }
 
 vec3 CalculateSpotLight(Light p_light)
 {
-    const vec3 light_direction  = normalize(p_light.position - g_frag_pos);
-    const float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
+    vec3 light_direction  = normalize(p_light.position - g_frag_pos);
+    float luminosity      = CalculateAttenuation(p_light.position, p_light.constant, p_light.linear, p_light.quadratic);
 
-    const float theta           = dot(light_direction, normalize(-p_light.direction)); 
-    const float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
-    const float spot_intensity  = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
+    float theta           = dot(light_direction, normalize(-p_light.direction));
+    float epsilon         = p_light.cutoff_angle - p_light.outer_cutoff_angle;
+    float spot_intensity  = smoothstep(0.0, 1.0, (theta - p_light.outer_cutoff_angle) / epsilon);
     
      return BlinnPhong(p_light, light_direction, p_light.power * luminosity * spot_intensity);
 }

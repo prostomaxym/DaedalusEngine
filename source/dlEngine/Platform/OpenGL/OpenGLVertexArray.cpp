@@ -4,7 +4,7 @@
 #include "Renderer/Primitives/VertexBuffer.h"
 #include "Renderer/Primitives/IndexBuffer.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
@@ -36,7 +36,7 @@ OpenGLVertexArray::OpenGLVertexArray() :
 	m_rendererID(0),
 	m_vertex_buffer_index(0)
 {
-	glCreateVertexArrays(1, &m_rendererID);
+	glGenVertexArrays(1, &m_rendererID);
 }
 
 OpenGLVertexArray::~OpenGLVertexArray()

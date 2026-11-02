@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 #----------------- Dependencies config --------------------------#
-find_package(OpenGL REQUIRED)
-find_package(glad CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+if(NOT ANDROID)
+    find_package(OpenGL REQUIRED)
+    find_package(glad CONFIG REQUIRED)
+    find_package(glfw3 CONFIG REQUIRED)
+endif()
 
 #------------------ Project config ------------------------------#
 project(
@@ -16,15 +19,10 @@ set(PLATFORM_PROJECT_FILES
     Platform.h
     Platform.cpp
     ResourcesMonitor.h
-    ResourcesMonitor.cpp
 
-    GLFW/GLFWInput.h
-    GLFW/GLFWInput.cpp
-    GLFW/GLFWWindow.h
-    GLFW/GLFWWindow.cpp
-
-    OpenGL/OpenGLContext.h
-    OpenGL/OpenGLContext.cpp
+    ImGuiBackend.h
+    OpenGL/OpenGLHeaders.h
+    OpenGL/OpenGLTextureBinding.h
     OpenGL/OpenGLFrameBuffer.h
     OpenGL/OpenGLFrameBuffer.cpp
     OpenGL/OpenGLGPUTimer.h
@@ -60,9 +58,26 @@ set(PLATFORM_PROJECT_FILES
     Linux/LinuxResourcesMonitor.h
     Linux/LinuxResourcesMonitor.cpp
 
-    Nvidia/NvidiaGPUMonitor.h
-    Nvidia/NvidiaGPUMonitor.cpp
 )
+
+if(ANDROID)
+    list(APPEND PLATFORM_PROJECT_FILES
+        Android/AndroidBootstrap.h Android/AndroidBootstrap.cpp
+        Android/AndroidRuntime.h Android/AndroidRuntime.cpp
+        Android/AndroidWindow.h Android/AndroidWindow.cpp
+        Android/AndroidInput.h Android/AndroidInput.cpp
+        Android/AndroidContext.h Android/AndroidContext.cpp
+        Android/AndroidResourcesMonitor.cpp
+        Android/AndroidLogSink.h
+        Android/AndroidImGui.cpp)
+else()
+    list(APPEND PLATFORM_PROJECT_FILES
+        ResourcesMonitor.cpp
+        GLFW/GLFWInput.h GLFW/GLFWInput.cpp
+        GLFW/GLFWWindow.h GLFW/GLFWWindow.cpp GLFW/GLFWImGui.cpp
+        OpenGL/OpenGLContext.h OpenGL/OpenGLContext.cpp
+        Nvidia/NvidiaGPUMonitor.h Nvidia/NvidiaGPUMonitor.cpp)
+endif()
 
 add_library(${PROJECT_NAME} STATIC ${PLATFORM_PROJECT_FILES})
 
@@ -87,10 +102,14 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Config
-        ${OPENGL_LIBRARIES}
-        glad::glad
-        glfw
+        imgui::imgui
 )
+
+if(ANDROID)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AndroidNativeGlueHeaders EGL GLESv3 android log)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES} glad::glad glfw)
+endif()
 
 IF(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE pdh)

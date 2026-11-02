@@ -2,6 +2,7 @@
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Config/GraphicsConfig.h"
 #include "Renderer/API/Renderer.h"
+#include "Renderer/API/RenderConstants.h"
 #include "Renderer/Primitives/VertexArray.h"
 #include "Renderer/Primitives/IndexBuffer.h"
 #include "Renderer/Primitives/VertexBuffer.h"
@@ -12,7 +13,7 @@
 
 #include "Renderer/Resources/ResourceManager.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
@@ -46,10 +47,12 @@ void OpenGLRendererAPI::Init()
 
 void OpenGLRendererAPI::SetupGraphicSettings()
 {
+#ifndef DL_PLATFORM_ANDROID
 	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 		glEnable(GL_MULTISAMPLE);
 	else
 		glDisable(GL_MULTISAMPLE);
+#endif
 	
 	//if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 	//{
@@ -62,10 +65,12 @@ void OpenGLRendererAPI::SetupGraphicSettings()
 	//}
 	glDisable(GL_BLEND);
 	
+#ifndef DL_PLATFORM_ANDROID
 	if (Daedalus::GraphicsConfig::IsMultisampleEnabled())
 		glEnable(GL_LINE_SMOOTH);
 	else
 		glDisable(GL_LINE_SMOOTH);
+#endif
 		
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -131,8 +136,12 @@ void OpenGLRendererAPI::DrawDebugLines(const VertexArray* vertex_array, VertexBu
 	glGetFloatv(GL_LINE_WIDTH, &line_width);
 	const auto blend_enabled = glIsEnabledi(GL_BLEND, 0);
 	glDisablei(GL_BLEND, 0);
+#ifdef DL_PLATFORM_ANDROID
+	const std::array<GLenum, 3> capabilities = { GL_DEPTH_TEST, GL_SCISSOR_TEST, GL_STENCIL_TEST };
+#else
 	const std::array<GLenum, 5> capabilities = { GL_DEPTH_TEST, GL_LINE_SMOOTH, GL_SCISSOR_TEST, GL_STENCIL_TEST, GL_COLOR_LOGIC_OP };
-	std::array<GLboolean, 5> enabled;
+#endif
+	std::array<GLboolean, capabilities.size()> enabled;
 	for (size_t i = 0; i < capabilities.size(); ++i)
 	{
 		enabled[i] = glIsEnabled(capabilities[i]);

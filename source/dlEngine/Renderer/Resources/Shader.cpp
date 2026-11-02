@@ -2,9 +2,14 @@
 
 #include "Renderer/API/RendererAPI.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLShaderCompiler.h"
 
 using namespace Daedalus;
 
+std::string Shader::CacheIdentity()
+{
+	return RendererAPI::GetAPI() == RendererAPI::API::OpenGL ? OpenGLShaderCompiler::CacheIdentity() : std::string{};
+}
 
 std::shared_ptr<Shader> Shader::CreateFromCode(const std::string& code)
 {

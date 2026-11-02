@@ -4,6 +4,14 @@
 #include "Linux/LinuxWindow.h"
 #include "Windows/WindowsInput.h"
 #include "Windows/WindowsWindow.h"
+#ifdef DL_PLATFORM_ANDROID
+#include "Android/AndroidWindow.h"
+#include "Android/AndroidInput.h"
+#include "Android/AndroidRuntime.h"
+#include <android_native_app_glue.h>
+#include <android/native_window.h>
+#include <thread>
+#endif
 
 #include "Debug/Log.h"
 
@@ -72,6 +80,8 @@ std::unique_ptr<Window> Platform::createWindow(const WindowProps& props)
 	return std::make_unique<WindowsWindow>(props);
 #elif defined DL_PLATFORM_LINUX
 	return std::make_unique<LinuxWindow>(props);
+#elif defined DL_PLATFORM_ANDROID
+	return std::make_unique<AndroidWindow>(props);
 #else
 	static_assert(false, "Unsupported Platform")
 #endif
@@ -83,6 +93,8 @@ std::unique_ptr<Input> Platform::CreateInputSystem()
 	return std::make_unique<WindowsInput>();
 #elif defined DL_PLATFORM_LINUX
 	return std::make_unique<LinuxInput>();
+#elif defined DL_PLATFORM_ANDROID
+	return std::make_unique<AndroidInput>();
 #else
 	static_assert(false, "Unsupported Platfrom")
 #endif
@@ -109,6 +121,9 @@ std::pair<int, int> Platform::GetMonitorResolution()
 	return WindowsWindow::GetMonitorResolution();
 #elif defined DL_PLATFORM_LINUX
 	return LinuxWindow::GetMonitorResolution();
+#elif defined DL_PLATFORM_ANDROID
+	const auto* window = AndroidRuntime::Get().GetApp().window;
+	return window ? std::pair<int, int>{ ANativeWindow_getWidth(const_cast<ANativeWindow*>(window)), ANativeWindow_getHeight(const_cast<ANativeWindow*>(window)) } : std::pair<int, int>{ 0, 0 };
 #else
 	static_assert(false, "Unsupported Platform")
 #endif
@@ -130,7 +145,7 @@ void Platform::PreciseThreadSleep(long long ns)
         return;
     }
     WaitForSingleObject(timer_ptr, INFINITE);
-#elif defined DL_PLATFORM_LINUX //TODO: not implemented, using nonprecise timer
+#elif defined(DL_PLATFORM_LINUX) || defined(DL_PLATFORM_ANDROID) //TODO: not implemented, using nonprecise timer
 	std::this_thread::sleep_for(std::chrono::nanoseconds(ns));
 #else
 	static_assert(false, "Unsupported Platform")

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-list(PREPEND VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/CMakeScripts/vcpkg_triplets")
+list(PREPEND VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/vcpkg_triplets")
+set(VCPKG_INSTALLED_DIR "${CMAKE_CURRENT_LIST_DIR}/ThirdParty/vcpkg_installed" CACHE PATH "vcpkg installed packages")
 
 #------------------ Project config ------------------------------#
 project(
@@ -10,6 +11,15 @@ project(
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(ANDROID)
+  enable_language(C)
+  if(ENABLE_TESTS)
+    message(FATAL_ERROR "Android builds require ENABLE_TESTS=OFF; run the graphics-independent suite on the host")
+  endif()
+  add_library(AndroidNativeGlueHeaders INTERFACE)
+  target_include_directories(AndroidNativeGlueHeaders INTERFACE "${ANDROID_NDK}/sources/android/native_app_glue")
+endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Version.cmake)
 
@@ -36,7 +46,10 @@ set(CMAKE_MAP_IMPORTED_CONFIG_RELEASEDEVTOOLS Release)
 add_compile_definitions($<$<OR:$<CONFIG:Debug>,$<CONFIG:ReleaseDevTools>>:DL_DEV_TOOLS>)
 
 # Platform specific config
-IF(WIN32)
+IF(ANDROID)
+  set(PLATFORM_NAME "android")
+  add_compile_definitions(DL_PLATFORM_ANDROID)
+ELSEIF(WIN32)
   set(PLATFORM_NAME "windows")
   add_compile_definitions(DL_PLATFORM_WINDOWS)
   add_compile_definitions(_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
@@ -55,7 +68,11 @@ if (MSVC)
 endif()
 
 # Binaries output dir config
-set(COMPILE_OUTPUT_FOLDER ${CMAKE_SOURCE_DIR}/runtime/bin/${PLATFORM_NAME}-x64/)
+if(ANDROID)
+  set(COMPILE_OUTPUT_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/lib/${ANDROID_ABI}/)
+else()
+  set(COMPILE_OUTPUT_FOLDER ${CMAKE_SOURCE_DIR}/runtime/bin/${PLATFORM_NAME}-x64/)
+endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPILE_OUTPUT_FOLDER})
@@ -69,5 +86,7 @@ endif()
 add_subdirectory(source)
 
 # Install setup
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Install.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Pack.cmake)
+if(NOT ANDROID)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Install.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Pack.cmake)
+endif()

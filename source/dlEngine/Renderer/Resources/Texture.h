@@ -63,6 +63,7 @@ namespace Daedalus {
 	public:
 
 		static void BindTexture(uint32_t ID, uint32_t slot);
+		static void BindTextureArray(uint32_t ID, uint32_t slot);
 		static void BindTextureImage(uint32_t ID, uint32_t slot, ColorFormat format, bool read, bool write);
 	};
 

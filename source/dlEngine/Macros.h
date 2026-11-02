@@ -9,7 +9,7 @@
 	#else
 		#define DAEDALUS_API __declspec(dllimport)
 	#endif
-#elif defined DL_PLATFORM_LINUX
+#elif defined(DL_PLATFORM_LINUX) || defined(DL_PLATFORM_ANDROID)
 	#ifdef DL_BUILD_DLL
 		#define DAEDALUS_API __attribute__((visibility("default")))
 	#elif DL_BUILD_STATIC
@@ -18,7 +18,7 @@
 		#define DAEDALUS_API
 	#endif
 #else
-	#error Daedalus only support Windows and Linux
+	#error Unsupported Daedalus platform
 #endif
 
 

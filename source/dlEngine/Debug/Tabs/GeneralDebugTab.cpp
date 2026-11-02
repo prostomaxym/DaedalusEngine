@@ -1,12 +1,13 @@
 #include "dlpch.h"
 #include "GeneralDebugTab.h"
 #include "Debug/WorldAxisProjection.h"
+#include "Debug/OverlayStatistics.h"
 #include "Core/Application.h"
 #include "ECS/Scene.h"
 #include "Renderer/Objects/Camera.h"
 #include "Platform/ResourcesMonitor.h"
 #include <algorithm>
-#include <numeric>
+#include <limits>
 #include <implot.h>
 
 using namespace Daedalus;
@@ -20,35 +21,31 @@ namespace
 
 	float Average(const std::vector<float>& v)
 	{
-		if (v.empty())
-			return 0.0;
+		return OverlayStatistics::Average(v);
+	}
 
-		const auto it = std::find_if(v.begin(), v.end(),
-			[](const auto val) {
-				return val <= 0.f;
-			});
-
-		float sum = std::accumulate(v.begin(), it, 0.0);
-
-		if (v.size() > 0)
-			return sum / v.size();
+	void RenderMetric(const char* label, float value, const char* unit)
+	{
+		if (std::isfinite(value) && value >= 0.f)
+			ImGui::Text("%s: %.2f %s", label, value, unit);
 		else
-			return 0.f;
+			ImGui::Text("%s: Unavailable", label);
 	}
 
 }
 
 void GeneralDebugTab::Init()
 {
-	m_frame_times.resize(GraphSize, 0.f);
-	m_cpu_app_load.resize(GraphSize, 0.f);
-	m_cpu_total_load.resize(GraphSize, 0.f);
-	m_ram_app_load.resize(GraphSize, 0.f);
-	m_ram_total_load.resize(GraphSize, 0.f);
+	const auto unavailable = std::numeric_limits<float>::quiet_NaN();
+	m_frame_times.resize(GraphSize, unavailable);
+	m_cpu_app_load.resize(GraphSize, unavailable);
+	m_cpu_total_load.resize(GraphSize, unavailable);
+	m_ram_app_load.resize(GraphSize, unavailable);
+	m_ram_total_load.resize(GraphSize, unavailable);
 	m_x_axe_values.resize(GraphSize, 0.f);
-	m_gpu_utillization.resize(GraphSize, 0.f);
-	m_gpu_memory_utillization.resize(GraphSize, 0.f);
-	m_gpu_memory_used.resize(GraphSize, 0.f);
+	m_gpu_utillization.resize(GraphSize, unavailable);
+	m_gpu_memory_utillization.resize(GraphSize, unavailable);
+	m_gpu_memory_used.resize(GraphSize, unavailable);
 
 	for (auto i = 0; i < m_x_axe_values.size(); i++)
 	{
@@ -89,11 +86,10 @@ void GeneralDebugTab::RenderFPSSection(DeltaTime dt)
 	static int frame_count = 0;
 	static float fps = 0.f;
 	static float ms = 0.f;
-	static float frametime_1 = 0.f;
-	static float frametime_01 = 0.f;
-	static float avg_fps = 0.f;
-	static float avg_ms = 0.f;
-	static int frame_index = 0;
+	static float frametime_1 = -1.f;
+	static float frametime_01 = -1.f;
+	static float avg_fps = -1.f;
+	static float avg_ms = -1.f;
 
 	time_accum += dt.GetMilliseconds();
 	frame_count++;
@@ -118,10 +114,10 @@ void GeneralDebugTab::RenderFPSSection(DeltaTime dt)
 		}
 	}
 
-	ImGui::Text("Average FPS: %.2f", avg_fps);
-	ImGui::Text("1%% FPS: %.2f", MilliMult / frametime_1);
-	ImGui::Text("0.1%% FPS: %.2f", MilliMult / frametime_01);
-	ImGui::Text("Frame Time: %.2f ms", avg_ms);
+	RenderMetric("Average FPS", avg_fps, "");
+	RenderMetric("1% FPS", frametime_1 > 0.f ? MilliMult / frametime_1 : -1.f, "");
+	RenderMetric("0.1% FPS", frametime_01 > 0.f ? MilliMult / frametime_01 : -1.f, "");
+	RenderMetric("Frame Time", avg_ms, "ms");
 
 	constexpr float plot_height = 300.0f;
 	constexpr float plot_width = 500.0f;
@@ -148,10 +144,10 @@ void GeneralDebugTab::RenderCPUSection(DeltaTime dt)
 	ImGui::CollapsingHeader("CPU", ImGuiTreeNodeFlags_Bullet);
 
 	static float time_accum = 0.f;
-	static float app_load = 0.f;
-	static float total_load = 0.f;
-	static float avg_app_load = 0.f;
-	static float avg_total_load = 0.f;
+	static float app_load = -1.f;
+	static float total_load = -1.f;
+	static float avg_app_load = -1.f;
+	static float avg_total_load = -1.f;
 
 	time_accum += dt.GetMilliseconds();
 
@@ -161,8 +157,8 @@ void GeneralDebugTab::RenderCPUSection(DeltaTime dt)
 		total_load = ResourcesMonitor::GetTotalCPUUsage();
 		time_accum = 0.0f;;
 
-		m_cpu_app_load.push_back(app_load);
-		m_cpu_total_load.push_back(total_load);
+		m_cpu_app_load.push_back(app_load >= 0.f ? app_load : std::numeric_limits<float>::quiet_NaN());
+		m_cpu_total_load.push_back(total_load >= 0.f ? total_load : std::numeric_limits<float>::quiet_NaN());
 
 		const std::vector<float> last_sec_app(m_cpu_app_load.begin() + LastSecondIdx, m_cpu_app_load.end());
 		const std::vector<float> last_sec_total(m_cpu_total_load.begin() + LastSecondIdx, m_cpu_total_load.end());
@@ -171,8 +167,11 @@ void GeneralDebugTab::RenderCPUSection(DeltaTime dt)
 	}
 
 	ImGui::Text("Processor: %s", m_processor_name.c_str());
-	ImGui::Text("Application CPU load: %.2f %%", avg_app_load);
-	ImGui::Text("Total CPU load: %.2f %%", avg_total_load);
+	RenderMetric("Application CPU load", app_load >= 0.f ? avg_app_load : -1.f, "%");
+	RenderMetric("Total CPU load", total_load >= 0.f ? avg_total_load : -1.f, "%");
+#ifdef DL_PLATFORM_ANDROID
+	ImGui::TextUnformatted("App CPU normalized to online logical CPUs");
+#endif
 
 	constexpr float plot_height = 300.0f;
 	constexpr float plot_width = 500.0f;
@@ -201,10 +200,10 @@ void GeneralDebugTab::RenderRAMSection(DeltaTime dt)
 	ImGui::CollapsingHeader("RAM", ImGuiTreeNodeFlags_Bullet);
 
 	static float time_accum = 0.f;
-	static float app_load = 0.f;
-	static float total_load = 0.f;
-	static float avg_app_load = 0.f;
-	static float avg_total_load = 0.f;\
+	static float app_load = -1.f;
+	static float total_load = -1.f;
+	static float avg_app_load = -1.f;
+	static float avg_total_load = -1.f;
 
 	time_accum += dt.GetMilliseconds();
 
@@ -214,8 +213,8 @@ void GeneralDebugTab::RenderRAMSection(DeltaTime dt)
 		total_load = ResourcesMonitor::GetTotalRAMUsageInGB();
 		time_accum = 0.0f;
 
-		m_ram_app_load.push_back(app_load);
-		m_ram_total_load.push_back(total_load);
+		m_ram_app_load.push_back(app_load >= 0.f ? app_load : std::numeric_limits<float>::quiet_NaN());
+		m_ram_total_load.push_back(total_load >= 0.f ? total_load : std::numeric_limits<float>::quiet_NaN());
 
 		const std::vector<float> last_sec_app(m_ram_app_load.begin() + LastSecondIdx, m_ram_app_load.end());
 		const std::vector<float> last_sec_total(m_ram_total_load.begin() + LastSecondIdx, m_ram_total_load.end());
@@ -223,8 +222,14 @@ void GeneralDebugTab::RenderRAMSection(DeltaTime dt)
 		avg_total_load = Average(last_sec_total);
 	}
 
-	ImGui::Text("Application RAM load: %.3f GB", avg_app_load);
-	ImGui::Text("Total RAM load: %.3f GB", avg_total_load);
+#ifdef DL_PLATFORM_ANDROID
+	RenderMetric("Application resident RAM", app_load >= 0.f ? avg_app_load : -1.f, "GiB");
+	RenderMetric("System RAM (total - free, includes cache)", total_load >= 0.f ? avg_total_load : -1.f, "GiB");
+	RenderMetric("Physical RAM", m_total_ram_GB, "GiB");
+#else
+	RenderMetric("Application RAM load", app_load >= 0.f ? avg_app_load : -1.f, "GiB");
+	RenderMetric("Total RAM load", total_load >= 0.f ? avg_total_load : -1.f, "GiB");
+#endif
 
 	constexpr float plot_height = 300.0f;
 	constexpr float plot_width = 500.0f;
@@ -233,7 +238,7 @@ void GeneralDebugTab::RenderRAMSection(DeltaTime dt)
 
 	if (ImPlot::BeginPlot("RAM Load", ImVec2(plot_width, plot_height), ImPlotFlags_None))
 	{
-		ImPlot::SetupAxes("Realtime (s)", "RAM (GB)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
+		ImPlot::SetupAxes("Realtime (s)", "RAM (GiB)", ImPlotAxisFlags_None, ImPlotAxisFlags_None);
 		ImPlot::SetupAxesLimits(-NumberOfSecondsTracked, 0.f, plot_min, plot_max, ImPlotCond_Once);
 
 		const auto app_data = m_ram_app_load.linearize();
@@ -301,11 +306,20 @@ void GeneralDebugTab::RenderGPUSection(DeltaTime dt)
 	ImGui::BeginChild("GPU", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("GPU", ImGuiTreeNodeFlags_Bullet);
 
+#ifdef DL_PLATFORM_ANDROID
+	ImGui::TextWrapped("Device: %s", ResourcesMonitor::GetDeviceDescription().c_str());
+	const auto& info = ResourcesMonitor::GetGPUInfo();
+	ImGui::TextWrapped("GPU: %s", info.name.empty() ? "Unavailable" : info.name.c_str());
+	ImGui::TextWrapped("Graphics API / driver: %s", info.driver_version.empty() ? "Unavailable" : info.driver_version.c_str());
+	ImGui::TextWrapped("GPU load, clocks, temperature and power: Unavailable");
+	ImGui::TextWrapped("GPU memory usage/budget: Unavailable (shared system memory)");
+	ImGui::EndChild();
+#else
+
 	static float time_accum = 0.f;
 	static float gpu_load = 0.f;
 	static float temp = 0.f;
 	static float power = 0.f;
-	static float clock = 0.f;
 
 	static float memory_load = 0.f;
 	static float memory_clock = 0.f;
@@ -346,7 +360,7 @@ void GeneralDebugTab::RenderGPUSection(DeltaTime dt)
 
 	ImGui::Text("GPU Processor: %s", m_gpu_name.c_str());
 	ImGui::Text("GPU Load: %.2f %%", avg_gpu_util);
-	ImGui::Text("GPU Clock: %.1f MHz", memory_clock);
+	ImGui::Text("GPU Clock: %.1f MHz", gpu_clock);
 	ImGui::Text("Temperature: %.1f C", temp);
 	ImGui::Text("Power: %.2f W", power);
 	
@@ -374,7 +388,7 @@ void GeneralDebugTab::RenderGPUSection(DeltaTime dt)
 	ImGui::BeginChild("GPU Memory", SectionDefaultSize, ImGuiChildFlags_Borders);
 	ImGui::CollapsingHeader("GPU Memory", ImGuiTreeNodeFlags_Bullet);
 
-	ImGui::Text("GPU Clock: %.2f MHz", memory_clock);
+	ImGui::Text("Memory Clock: %.2f MHz", memory_clock);
 	ImGui::Text("GPU Memory Utilization: %.2f %%", avg_gpu_memory_util);
 	ImGui::Text("Memory Load: %.2f/%.2f GB", avg_memory, m_total_gpu_ram_GB);
 
@@ -389,6 +403,7 @@ void GeneralDebugTab::RenderGPUSection(DeltaTime dt)
 		ImPlot::EndPlot();
 	}
 	ImGui::EndChild();
+#endif
 }
 
 float GeneralDebugTab::CalculateLowPercentile(float percentile) const
@@ -398,6 +413,12 @@ float GeneralDebugTab::CalculateLowPercentile(float percentile) const
 
 	const auto data = m_frame_times.linearize();
 	std::vector<float> sorted(data.begin() + LastSecondIdx, data.end());
+	sorted.erase(std::remove_if(sorted.begin(), sorted.end(), [](float value)
+	{
+		return !std::isfinite(value) || value <= 0.f;
+	}), sorted.end());
+	if (sorted.empty())
+		return -1.f;
 	std::sort(sorted.begin(), sorted.end());
 
 	size_t count = static_cast<size_t>(percentile * sorted.size());

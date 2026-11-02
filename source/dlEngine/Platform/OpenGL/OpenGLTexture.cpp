@@ -1,6 +1,7 @@
 #include "dlpch.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 #include "Renderer/Resources/DecodedImage.h"
+#include "OpenGLTextureBinding.h"
 
 #ifdef DL_PLATFORM_LINUX
 	#define STBI_NO_SIMD //Have no idea why, but linux gcc fails to compile with simd
@@ -34,21 +35,22 @@ OpenGLTextureCubemap::OpenGLTextureCubemap(const std::vector<std::shared_ptr<Dec
 	const auto width = faces.front()->GetWidth();
 	for (const auto& face : faces)
 		if (!face || !face->GetPixels() || face->GetWidth() != width || face->GetHeight() != width || face->GetChannels() != 3) return;
-	glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_rendererID);
+	glGenTextures(1, &m_rendererID);
 	if (!m_rendererID) return;
-	glTextureStorage2D(m_rendererID, 1, GL_RGB8, width, width);
+	ScopedTextureBinding binding(GL_TEXTURE_CUBE_MAP, m_rendererID);
+	glTexStorage2D(GL_TEXTURE_CUBE_MAP, 1, GL_RGB8, width, width);
 	GLint allocated_width = 0;
-	glGetTextureLevelParameteriv(m_rendererID, 0, GL_TEXTURE_WIDTH, &allocated_width);
+	glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_WIDTH, &allocated_width);
 	if (allocated_width != width) return;
 	GLint alignment = 4;
 	glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	for (size_t face = 0; face < faces.size(); ++face)
-		glTextureSubImage3D(m_rendererID, 0, 0, 0, static_cast<GLint>(face), width, width, 1, GL_RGB, GL_UNSIGNED_BYTE, faces[face]->GetPixels());
+		glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(face), 0, 0, 0, width, width, GL_RGB, GL_UNSIGNED_BYTE, faces[face]->GetPixels());
 	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	for (const auto parameter : { GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R }) glTextureParameteri(m_rendererID, parameter, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	for (const auto parameter : { GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R }) glTexParameteri(GL_TEXTURE_CUBE_MAP, parameter, GL_CLAMP_TO_EDGE);
 	m_width = static_cast<uint32_t>(width); m_height = m_width; m_faces_loaded = 6;
 }
 
@@ -109,15 +111,15 @@ OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, int channels)
 	m_internal_format = GL_RGBA8;
 	m_data_format = GL_RGBA;
 
-	glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
-	glBindTexture(GL_TEXTURE_2D, m_rendererID);
-	glTextureStorage2D(m_rendererID, 1, m_internal_format, m_width, m_height);
+	glGenTextures(1, &m_rendererID);
+	ScopedTextureBinding binding(GL_TEXTURE_2D, m_rendererID);
+	glTexStorage2D(GL_TEXTURE_2D, 1, m_internal_format, m_width, m_height);
 
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
@@ -158,15 +160,16 @@ OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
 		m_internal_format = internalFormat;
 		m_data_format = dataFormat;
 
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
-		glTextureStorage2D(m_rendererID, 1, internalFormat, m_width, m_height);
+		glGenTextures(1, &m_rendererID);
+		ScopedTextureBinding binding(GL_TEXTURE_2D, m_rendererID);
+		glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, m_width, m_height);
 
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, img_data);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, dataFormat, GL_UNSIGNED_BYTE, img_data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		stbi_image_free(data);
 	}
@@ -183,26 +186,27 @@ OpenGLTexture2D::OpenGLTexture2D(unsigned char* data, int width, int height, int
 	const GLenum storage[]{ GL_R8, GL_RG8, GL_RGB8, GL_RGBA8 };
 	m_internal_format = storage[channels - 1]; m_data_format = formats[channels - 1];
 	m_width = static_cast<uint32_t>(width); m_height = static_cast<uint32_t>(height);
-	glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
+	glGenTextures(1, &m_rendererID);
 	if (!m_rendererID) return;
-	glTextureStorage2D(m_rendererID, 1, m_internal_format, width, height);
+	ScopedTextureBinding binding(GL_TEXTURE_2D, m_rendererID);
+	glTexStorage2D(GL_TEXTURE_2D, 1, m_internal_format, width, height);
 	GLint allocated_width = 0;
-	glGetTextureLevelParameteriv(m_rendererID, 0, GL_TEXTURE_WIDTH, &allocated_width);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &allocated_width);
 	if (allocated_width != width) return;
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	if (channels <= 2)
 	{
-		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_G, GL_RED);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_B, GL_RED);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_SWIZZLE_A, channels == 2 ? GL_GREEN : GL_ONE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, channels == 2 ? GL_GREEN : GL_ONE);
 	}
 	GLint alignment = 4;
 	glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTextureSubImage2D(m_rendererID, 0, 0, 0, width, height, m_data_format, GL_UNSIGNED_BYTE, data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, m_data_format, GL_UNSIGNED_BYTE, data);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
 	m_is_loaded = true;
 }
@@ -246,17 +250,17 @@ OpenGLTexture2D::OpenGLTexture2D(float* data, int width, int height, int channel
 		m_internal_format = internalFormat;
 		m_data_format = dataFormat;
 
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
-		glBindTexture(GL_TEXTURE_2D, m_rendererID);
-		glTextureStorage2D(m_rendererID, 1, internalFormat, m_width, m_height);
+		glGenTextures(1, &m_rendererID);
+		ScopedTextureBinding binding(GL_TEXTURE_2D, m_rendererID);
+		glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, m_width, m_height);
 
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTextureParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// Only one immutable level exists; RGB32F mipmap generation is also invalid on GLES.
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, dataFormat, GL_FLOAT, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, dataFormat, GL_FLOAT, data);
 	}
 	else
 	{
@@ -293,17 +297,23 @@ void OpenGLTexture2D::SetData(void* data, uint32_t size)
 {
 	uint32_t bpp = m_data_format == GL_RGBA ? 4 : 3;
 	DL_ASSERT(size == m_width * m_height * bpp, Log::Categories::Renderer, "Data must be entire texture!");
-	glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, m_data_format, GL_UNSIGNED_BYTE, data);
+	ScopedTextureBinding binding(GL_TEXTURE_2D, m_rendererID);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, m_data_format, GL_UNSIGNED_BYTE, data);
 }
 
 void OpenGLTexture2D::Bind(uint32_t slot) const
 {
-	glBindTextureUnit(slot, m_rendererID);
+	BindTextureUnit(slot, GL_TEXTURE_2D, m_rendererID);
 }
 
 void OpenGLTexture2D::BindTextureImpl(uint32_t ID, uint32_t slot)
 {
-	glBindTextureUnit(slot, ID);
+	BindTextureUnit(slot, GL_TEXTURE_2D, ID);
+}
+
+void OpenGLTexture2D::BindTextureArrayImpl(uint32_t ID, uint32_t slot)
+{
+	BindTextureUnit(slot, GL_TEXTURE_2D_ARRAY, ID);
 }
 
 void OpenGLTexture2D::BindTextureImageImpl(uint32_t slot, uint32_t ID, ColorFormat format, bool read, bool write)
@@ -368,5 +378,5 @@ OpenGLTextureCubemap::~OpenGLTextureCubemap()
 
 void OpenGLTextureCubemap::Bind(uint32_t slot) const
 {
-	glBindTextureUnit(slot, m_rendererID);
+	BindTextureUnit(slot, GL_TEXTURE_CUBE_MAP, m_rendererID);
 }

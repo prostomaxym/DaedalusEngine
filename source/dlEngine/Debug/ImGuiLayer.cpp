@@ -1,10 +1,9 @@
 #include "dlpch.h"
 #include "ImGuiLayer.h"
 
-#include <GLFW/glfw3.h>
+#include "Platform/ImGuiBackend.h"
 
 #include <imgui_impl_opengl3.h>
-#include <imgui_impl_glfw.h>
 #include <ImGuizmo.h>
 #include <implot.h>
 #include <implot3d.h>
@@ -78,10 +77,8 @@ void ImGuiLayer::OnAttach()
 	SetDarkThemeColors();
 
 	const auto app = Application::GetInstance();
-	GLFWwindow* window = static_cast<GLFWwindow*>(app->GetWindow().GetNativeWindow());
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 450");
+	ImGuiBackend::Initialize(app->GetWindow());
+	ImGui_ImplOpenGL3_Init(ImGuiBackend::ShaderVersion());
 
 	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "ImGui Layer is attached;");
 }
@@ -90,7 +87,7 @@ void ImGuiLayer::OnDetach()
 {
 	SaveConfig();
 	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
+	ImGuiBackend::Shutdown();
 	ImPlot::DestroyContext();
 	ImGui::DestroyContext();
 	ImPlot3D::DestroyContext();
@@ -120,7 +117,7 @@ void ImGuiLayer::OnEvent(Event& evt)
 void ImGuiLayer::BeginFrame()
 {
 	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
+	ImGuiBackend::NewFrame();
 	ImGui::NewFrame();
 	ImGuizmo::BeginFrame();
 	const auto& window = Application::GetInstance()->GetWindow();
@@ -140,17 +137,11 @@ void ImGuiLayer::OnImGuiRender(DeltaTime dt)
 
 void ImGuiLayer::EndFrame()
 {
-	ImGuiIO& io = ImGui::GetIO();
+	ImGuiBackend::DrawControls();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	{
-		GLFWwindow* backup_current_context = glfwGetCurrentContext();
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-		glfwMakeContextCurrent(backup_current_context);
-	}
+	ImGuiBackend::RenderPlatformWindows();
 }
 
 void ImGuiLayer::SetDarkThemeColors()

@@ -7,13 +7,34 @@ High-level map of the current Daedalus implementation. For build commands and co
 | Project | Path | Role |
 |---|---|---|
 | `dlEngine` | `source/dlEngine` | Shared engine library, assembled from static module libraries (exports via `DAEDALUS_API`) |
-| `dlSandbox` | `source/dlSandbox` | Client executable; implements `CreateApplication()` (`SandboxApp.cpp`) and loads a configured runtime scene |
+| `dlSandbox` | `source/dlSandbox` | Desktop executable or Android shared client; implements `CreateApplication()` (`SandboxApp.cpp`) and loads a configured runtime scene |
 | `dlUnitTests` | `source/dlUnitTests` | gtest suite, one executable (`-DENABLE_TESTS=ON`) |
+| `dlAndroidProbe` | `source/dlAndroidProbe` | Standalone NDK/GLES feasibility executable; configured separately, not part of the engine or desktop tests |
 | shaders | `source/shader` | GLSL shaders loaded at runtime |
 
-The client links the engine; `Core/EntryPoint.h` supplies the executable entry point and calls the client's `CreateApplication()`.
+The client links the engine; `Core/EntryPoint.h` supplies the desktop entry point and calls the client's `CreateApplication()`. Android uses `AndroidEntry.cpp` and NDK native-app glue to pass the client factory to the engine-owned NativeActivity bootstrap.
 
-The root CMake project requires C++20 and supports Windows and Linux. Each engine module is a static library linked privately into `dlEngine`; whole-archive linking on MSVC and Linux retains public APIs without internal callers. This is one shared engine library, not independently loaded module plugins. Debug and ReleaseDevTools enable `DL_DEV_TOOLS`; Release is the production configuration. Binaries are emitted under `runtime/bin/<platform>-x64`, and build steps copy shaders to `runtime/shader`. Source files are registered explicitly in each target's `CMakeLists.txt`.
+The root CMake project requires C++20 and supports Windows, Linux and Android.
+
+The vcpkg submodule lives at `ThirdParty/vcpkg`; all project-owned overlay triplets live at `ThirdParty/vcpkg_triplets`. Desktop CMake configuration defaults to `ThirdParty/vcpkg_installed`; Android dependency/build helpers default to `ThirdParty/vcpkg_installed_android`. Each install root owns a separate package database: triplet folders alone do not prevent manifest reconciliation from removing packages belonging to the other target graph. Android's root contains `arm64-android` target packages and required `x64-windows` host tools. Explicit Android install-root overrides remain supported and must stay separate from desktop. Android APK builds disable manifest mode and consume preinstalled dependencies. Build-folder cleanup preserves both installed-package roots and custom triplets. Desktop configure helpers install manifest dependencies directly; no separate package-update or configure-and-packages wrapper is required.
+
+Android CMake builds `dlEngine` and `dlSandbox` as shared libraries into ABI-local build output, not the desktop runtime tree; desktop install/pack scripts and shader-copy steps are excluded. The vcpkg selection omits GLFW/desktop GLAD, selects ImGui's Android backend and disables Assimp's unused 3MF exporter to avoid ZIP-library symbol collisions. `WinScripts/Android/Dependencies.ps1` builds dependencies independently. `Build.ps1` uses NDK 27.2/CMake to build native libraries and Gradle 7.3.3/AGP 7.2.0 to package a debug NativeActivity app from `Android/`. It stages exactly the two native libraries, matching shared libc++ and shader sources; reference scenes and user assets are not copied. Build outputs live outside source. See [Android.md](Android.md) for exact prerequisites and validation limits.
+
+### Android native ownership and runtime paths
+
+The user accepted the initial Android port's lifecycle behavior; exhaustive forced EGL context-loss recovery is not separately established.
+
+The bootstrap uses NativeActivity's private data path explicitly, creates `asset`, `shader`, `config` and `logs`, and extracts bundled shader/include files through temporary files. It does not search for a desktop `bin` ancestor or install reference scenes. Runtime content remains manually supplied. Android engine logging uses a platform-owned logcat sink. Initial input maps native keyboard/pointer events and clears pending state when inactive; gamepad reports unavailable. The ImGui platform bridge selects Android/GLFW without platform headers in the debug layer; Android multi-viewport rendering is disabled.
+
+Android touch state lives in graphics-independent `Utils/TouchControls`: independent pointer IDs own movement, relative look and upward movement. The Android adapter maps movement/Up to the currently configured keyboard actions, preserving existing camera/player consumers, while look accumulates into the virtual mouse position without touch-down jumps. A platform ImGui hook draws the stick and Up button; the desktop hook is a no-op. This frame path runs in Release as well as developer builds. Android requests `#version 300 es` for ImGui's GLES-specific shader selection independently of the engine's GLSL ES 320 scene shaders. Movement is digital with a deadzone, not an analog axis or gamepad emulation. Up is the existing MoveUp action, not a new physics jump. Reset and viewport resize cancel active controls.
+
+The hard-coded sandbox touch layout also includes Down, POV, Flashlight and developer-only Console/Debug. Down holds MoveDown; POV/Flashlight use release-latched configured-key pulses so short taps survive frame polling. Console/Debug queue existing key-release events to the application event engine; they retain developer-build restrictions, with fallback bindings only if absent. ReleaseDevTools APK builds are selectable through the helper; production Release is unchanged. This is not a customizable runtime UI or a new physics jump implementation.
+
+Windows Android batch helpers wrap dependency setup, Release/developer APK builds and safe ADB deployment. `Build.ps1 -Deploy` invokes `Deploy.ps1`, which requires a unique authorized device or explicit serial, installs with data preservation and checks activity launch/process presence. Android CI targets development/master pushes and pull requests, builds both app configurations and runs the host-only CTest suite; it does not run device tests. The initial port is user-accepted except for the unresolved skybox rendering issue. Temporary skybox probes are removed; the vertex-count and GLES fixes remain.
+
+Android resource monitoring exposes device/OS/SoC identity, normalized process CPU usage, resident/system memory and GLES identity. Unsupported system CPU and GPU telemetry is explicitly unavailable rather than a zero measurement.
+
+The GL backend selects GLES declarations and compatible bound-object operations on Android, including explicit array-texture binding for shadow maps.
 
 ## Engine modules (`source/dlEngine`)
 
@@ -24,7 +45,7 @@ The root CMake project requires C++20 and supports Windows and Linux. Each engin
 | `Debug` | Logging with category/level filtering, CPU/GPU profiler, ImGui debug UI and build-information reporting | `Log`, `Profiler`, `ProfileScope`, `ProfilerStats`, `ImGuiLayer`, `DebugOverlay`, `ConsoleOverlay`, `BuildInfo` |
 | `Events` | Thread-safe enqueue, owner-thread dispatch, event types | `Event`, `EventDispatcher`, `EventsEngine`, `EventTable` |
 | `Threads` | Engine-owned dependency scheduler, worker pool, main-thread jobs and thread-lifetime helpers | `JobSystem`, `JobHandle`, `ThreadRunner`, `ThreadPool`, `ThreadJoiner`, `DaedalusThreads` |
-| `Platform` | OS and windowing backends behind abstractions | `Platform.h`, `GLFW/`, `Windows/`, `Linux/`, `OpenGL/` |
+| `Platform` | OS and windowing backends behind abstractions | `Platform.h`, `GLFW/`, `Windows/`, `Linux/`, `Android/`, `OpenGL/` |
 | `Renderer` | Deferred renderer, passes, developer debug drawing, GPU resources, caches and statistics | `API/`, `Debug/DebugDrawBatch`, `Objects/`, `Passes/`, `Primitives/`, `Resources/` |
 | `ECS` | Scene management, EnTT entities, native scripts, systems and scene persistence | `SceneManager`, `Scene`, `Entity`, `Components.h`, `NativeScriptComponent`, `NativeScripts/`, `Systems/`, `Serialization/` |
 | `Physics` | Engine-owned world factory and independent Bullet worlds | `Physics`, `PhysicsWorld` |

@@ -2,7 +2,7 @@
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
 #include "OpenGLTexture.h"
 
-#include <glad/glad.h>
+#include "OpenGLHeaders.h"
 
 using namespace Daedalus;
 
@@ -11,8 +11,8 @@ namespace
 	// Do not know how to make it platform independent, so will cover only common scenario
 	GLint GetMainFramebufferFormat(int current_id)
 	{
-		GLint depth_size;
-		GLint stencil_size;
+		GLint depth_size = 0;
+		GLint stencil_size = 0;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &depth_size);
 		glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencil_size);
@@ -29,7 +29,7 @@ namespace
 		else
 		{
 			if(depth_size == 32)
-				format = GL_DEPTH_COMPONENT32;
+				format = GL_DEPTH_COMPONENT32F;
 			else if (depth_size == 24)
 				format = GL_DEPTH_COMPONENT24;
 			else if (depth_size == 16)
@@ -81,7 +81,7 @@ namespace
 
 	void CreateTextures(bool multisampled, bool multilayer, uint32_t* outID, uint32_t count)
 	{
-		glCreateTextures(TextureTarget(multisampled, multilayer), count, outID);
+		glGenTextures(count, outID);
 	}
 
 	void BindTexture(bool multisampled, bool multilayer, uint32_t id)
@@ -96,11 +96,11 @@ namespace
 
 		if (multisampled && multilayer)
 		{
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, GL_FALSE);
+			glTexStorage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, layers, GL_FALSE);
 		}
 		else if (multisampled)
 		{
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
+			glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
 		}
 		else if (multilayer)
 		{
@@ -133,7 +133,7 @@ namespace
 		}
 
 		if (multilayer)
-			glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, true), id, 0, 0);
+			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, id, 0, 0);
 		else
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled, false), id, 0);
 	}
@@ -144,25 +144,15 @@ namespace
 		bool multilayer = layers > 0;
 		if (multisampled && multilayer)
 		{
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, format, width, height, GL_FALSE);
+			glTexStorage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, format, width, height, layers, GL_FALSE);
 		}
 		else if (multisampled)
 		{
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+			glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
 		}
 		else if (multilayer)
 		{
-			glTexImage3D(
-				GL_TEXTURE_2D_ARRAY,
-				0,
-				format,
-				width,
-				height,
-				layers,
-				0,
-				GL_DEPTH_COMPONENT,
-				GL_FLOAT,
-				nullptr);
+			glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, format, width, height, layers);
 
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -170,7 +160,7 @@ namespace
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 			float border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+			glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border_color);
 		}
 		else
 		{
@@ -245,7 +235,8 @@ void OpenGLFramebuffer::CopyColorAttachmentImpl(unsigned int src_id, unsigned in
 	glReadBuffer(src_attach_id);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_id);
-	glDrawBuffer(dest_attach_id);
+	const GLenum draw_buffer = static_cast<GLenum>(dest_attach_id);
+	glDrawBuffers(1, &draw_buffer);
 
 	glBlitFramebuffer(
 		0, 0, width, height, // Source dimensions
@@ -298,7 +289,7 @@ void OpenGLFramebuffer::Invalidate()
 		m_depth_attachment = 0;
 	}
 
-	glCreateFramebuffers(1, &m_rendererID);
+	glGenFramebuffers(1, &m_rendererID);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 
 	bool multisample = m_specification.samples > 1;
@@ -316,22 +307,22 @@ void OpenGLFramebuffer::Invalidate()
 			switch (m_color_attachment_specifications[i].texture_format)
 			{
 			case Texture::ColorFormat::RGBA8:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
 				case Texture::ColorFormat::RGBA16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA16F, GL_RGBA, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
 				case Texture::ColorFormat::RGBA32U:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
 					break;
 				case Texture::ColorFormat::RED_INTEGER:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, GL_UNSIGNED_BYTE, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32I, GL_RED_INTEGER, GL_INT, m_specification.width, m_specification.height, i);
 					break;
 				case Texture::ColorFormat::RED16F:
 					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R16F, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 					break;
 				case Texture::ColorFormat::RED_FLOAT:
-					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_RED, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
+					AttachColorTexture(m_color_attachments[i], m_specification.samples, m_specification.layers, GL_R32F, GL_RED, GL_FLOAT, m_specification.width, m_specification.height, i);
 				break;
 			}
 		}
@@ -369,7 +360,8 @@ void OpenGLFramebuffer::Invalidate()
 	else if (m_color_attachments.empty())
 	{
 		// Only depth-pass
-		glDrawBuffer(GL_NONE);
+		const GLenum draw_buffer = GL_NONE;
+		glDrawBuffers(1, &draw_buffer);
 		glReadBuffer(GL_NONE);
 	}
 
@@ -432,6 +424,16 @@ void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	DL_ASSERT(attachmentIndex < m_color_attachments.size(), Log::Renderer, "Incorret attachment index");
 
 	auto& spec = m_color_attachment_specifications[attachmentIndex];
+#ifdef DL_PLATFORM_ANDROID
+	(void)spec;
+	GLint previous = 0;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_rendererID);
+	const GLint clear_value[4]{ value, 0, 0, 0 };
+	glClearBufferiv(GL_COLOR, static_cast<GLint>(attachmentIndex), clear_value);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, static_cast<GLuint>(previous));
+#else
 	glClearTexImage(m_color_attachments[attachmentIndex], 0,
 		OpenGLTexture2D::DaedalusTextureFormatToGL(spec.texture_format), GL_INT, &value);
+#endif
 }

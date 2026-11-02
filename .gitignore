@@ -5,6 +5,8 @@ build-debug/
 build-release-devtools/
 install/
 vcpkg_installed/
+/ThirdParty/vcpkg_installed/
+/ThirdParty/vcpkg_installed_android/
 .vs/
 .idea/
 cmake-build-debug/

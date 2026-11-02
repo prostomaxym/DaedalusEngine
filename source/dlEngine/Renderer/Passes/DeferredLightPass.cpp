@@ -36,7 +36,7 @@ void DeferredLightPass::Render(FrameContext& context)
 		light_shader->SetInt(ShaderConstants::SSAOFinalBuffer, 6);
 	}
 
-	Texture2D::BindTexture(context.GetTexture(PassTexture::ShadowMap), 7);
+	Texture2D::BindTextureArray(context.GetTexture(PassTexture::ShadowMap), 7);
 	light_shader->SetInt(ShaderConstants::ShadowMaps, 7);
 
 	Renderer::DrawUnitQuad();

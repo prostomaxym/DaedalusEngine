@@ -73,6 +73,7 @@ if(ANDROID)
 else()
     list(APPEND PLATFORM_PROJECT_FILES
         ResourcesMonitor.cpp
+        GLFW/GamepadButtonEvents.h
         GLFW/GLFWInput.h GLFW/GLFWInput.cpp
         GLFW/GLFWWindow.h GLFW/GLFWWindow.cpp GLFW/GLFWImGui.cpp
         OpenGL/OpenGLContext.h OpenGL/OpenGLContext.cpp

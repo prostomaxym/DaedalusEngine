@@ -29,6 +29,7 @@ namespace Daedalus {
 		[[nodiscard]] static bool IsActionHold(const std::string& name);
 		[[nodiscard]] static bool IsActionReleased(const std::string& name);
 		[[nodiscard]] static float GetAxis(const std::string& name);
+		[[nodiscard]] static float GetMovementAction(const std::string& name_positive, const std::string& name_negative);
 
 		//Input configuration
 		static void EnableKeyboardInput(bool enable);
@@ -41,7 +42,7 @@ namespace Daedalus {
 		// Keyboard + mouse input
 		inline static bool IsKeyPressed(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyPressedImpl(keycode); }
 		inline static bool IsKeyHold(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyHoldImpl(keycode); }
-		inline static bool IsKeyReleased(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyReleasedImpl(keycode); }
+		inline static bool IsKeyReleased(int keycode) { return IsKeyboardInputEnabled() && GetInstance()->IsKeyReleasedImpl(keycode); }	
 
 		inline static bool IsMouseButtonPressed(int button) { return GetInstance()->IsMouseButtonPressedImpl(button); }
 		inline static std::pair<float, float> GetMousePos() { return GetInstance()->GetMousePosImpl(); }

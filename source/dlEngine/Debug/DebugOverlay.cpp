@@ -9,6 +9,7 @@
 #include "Core/Window.h"
 #include "Config/KeybindConfig.h"
 #include "Events/KeyEvent.h"
+#include "Events/GamepadEvent.h"
 #include "Events/EventDispatcher.h"
 #include "Renderer/API/Renderer.h"
 #include <imgui.h>
@@ -92,6 +93,7 @@ void DebugOverlay::Update(DeltaTime dt)
 void DebugOverlay::OnEvent(Event& evt)
 {
 	EventDispatcher::ProcessEvent<KeyReleasedEvent>(evt, DL_BIND_EVENT_FN(DebugOverlay::OnKeyReleased));
+	EventDispatcher::ProcessEvent<GpadReleasedEvent>(evt, DL_BIND_EVENT_FN(DebugOverlay::OnGamepadReleased));
 }
 
 bool DebugOverlay::OnKeyReleased(KeyReleasedEvent& event)
@@ -99,10 +101,25 @@ bool DebugOverlay::OnKeyReleased(KeyReleasedEvent& event)
 	const auto key_code = event.GetKeyCode();
 	if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Debug"))
 	{
-		Toggle();
-		auto& wnd = Application::GetInstance()->GetWindow();
-		wnd.FreeCursor(IsShown());
-		return true;
+		return ToggleVisibility();
 	}
 	return false;
+}
+
+bool DebugOverlay::OnGamepadReleased(GpadReleasedEvent& event)
+{
+	const auto* binding = KeybindConfig::FindActionBind("Debug");
+	if (IsDevBuild() && binding && binding->gamepad_button >= 0 && event.GetKeyCode() == binding->gamepad_button)
+	{
+		return ToggleVisibility();
+	}
+	return false;
+}
+
+bool DebugOverlay::ToggleVisibility()
+{
+	Toggle();
+	auto& wnd = Application::GetInstance()->GetWindow();
+	wnd.FreeCursor(IsShown());
+	return true;
 }

@@ -7,36 +7,34 @@ using namespace Daedalus;
 
 void CameraController::OnUpdate(DeltaTime ts)
 {
+	const auto dt = ts.GetSeconds();
+	ProcessMovement(dt);
+	ProcessMouse(dt);
+	ProcessGamepad(dt);
+}
+
+void CameraController::ProcessMovement(float dt)
+{
 	auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 
-	const auto dt = ts.GetSeconds();
+	const auto forward = Input::GetMovementAction("MoveForward", "MoveBackward");
+	if (forward != 0.f)
+		camera->ProcessKeyboard(CameraMovement::FORWARD, forward * dt);
 
-	const bool has_vertical_axis = KeybindConfig::FindAxisBind("MoveVertical") != nullptr;
-	const bool has_horizontal_axis = KeybindConfig::FindAxisBind("MoveHorizontal") != nullptr;
-
-	if (!has_vertical_axis)
-	{
-		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
-			camera->ProcessKeyboard(CameraMovement::FORWARD, dt);
-
-		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
-			camera->ProcessKeyboard(CameraMovement::BACKWARD, dt);
-	}
-
-	if (!has_horizontal_axis)
-	{
-		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
-			camera->ProcessKeyboard(CameraMovement::LEFT, dt);
-
-		if (Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
-			camera->ProcessKeyboard(CameraMovement::RIGHT, dt);
-	}
+	const auto right = Input::GetMovementAction("MoveRight", "MoveLeft");
+	if (right != 0.f)
+		camera->ProcessKeyboard(CameraMovement::RIGHT, right * dt);
 
 	if (Input::IsActionHold("MoveUp"))
 		camera->ProcessKeyboard(CameraMovement::UP, dt);
 
 	if (Input::IsActionHold("MoveDown"))
 		camera->ProcessKeyboard(CameraMovement::DOWN, dt);
+}
+
+void CameraController::ProcessMouse(float dt)
+{
+	auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
@@ -53,28 +51,23 @@ void CameraController::OnUpdate(DeltaTime ts)
 	yPrevious = yCurrent;
 
 	camera->ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
-	//TODO: add zoom
+}
 
-	// Explicit named axes replace the corresponding raw stick and digital path.
-	const auto [stick_x, stick_y] = Input::GetStickPos(Input::StickType::Left);
-	const float forward = has_vertical_axis ? Input::GetAxis("MoveVertical") : -stick_y;
-	const float right = has_horizontal_axis ? Input::GetAxis("MoveHorizontal") : stick_x;
-	if (forward != 0.f)
-		camera->MoveCamera(CameraMovement::FORWARD, forward * dt * 10.f);
-	if (right != 0.f)
-		camera->MoveCamera(CameraMovement::RIGHT, right * dt * 10.f);
-
+void CameraController::ProcessGamepad(float dt)
+{
 	if (Input::IsGamepadInputEnabled())
 	{
-		const auto [xAxeRight, yAxeRight] = Input::GetStickPos(Input::StickType::Right);
+		auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+		const auto x = Input::GetAxis("LookRight");
+		const auto y = Input::GetAxis("LookUp");
 
 		float xoffset = 0.f, yoffset = 0.f;
 
-		if (xAxeRight != 0.f)
-			xoffset = xAxeRight * dt * 100.f;
+		if (x != 0.f)
+			xoffset = x * dt * 100.f;
 
-		if (yAxeRight != 0.f)
-			yoffset  = -yAxeRight * dt * 100.f;
+		if (y != 0.f)
+			yoffset  = -y * dt * 100.f;
 
 		camera->ProcessMouseMovement(xoffset, yoffset);
 	}

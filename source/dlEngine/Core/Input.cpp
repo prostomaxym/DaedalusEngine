@@ -144,3 +144,23 @@ float Input::GetAxis(const std::string& name)
 	analog = magnitude <= binding->deadzone ? 0.f : std::copysign((magnitude - binding->deadzone) / (1.f - binding->deadzone), analog);
 	return std::clamp(digital + analog * binding->scale, -1.f, 1.f);
 }
+
+float Input::GetMovementAction(const std::string& name_positive, const std::string& name_negative)
+{
+	float axis = 0.f;
+
+	if (IsGamepadInputEnabled())
+	{
+		axis = GetAxis(name_positive);
+	}
+
+	if (IsKeyboardInputEnabled())
+	{
+		if (IsActionDown(name_positive))
+			axis += 1.f;
+		if (IsActionDown(name_negative))
+			axis -= 1.f;
+	}
+
+	return axis;
+}

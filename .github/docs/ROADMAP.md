@@ -34,6 +34,7 @@ Phases are ordered by dependency; each phase should leave the engine shippable a
 
 ### Phase 0 – Hygiene & foundations (short)
 1. ✅ C++ standard aligned on C++20 (CMake + instructions). ✅ CI runs `ctest` on both OSes. ⬜ Warnings-as-errors per target, ASan/UBSan Linux job, `.clang-format` check.
+	- ✅ Android CI SDK setup explicitly requests `platform-tools` instead of the action's default retired `tools` package, which caused `sdkmanager` to fail before the pinned toolchain installation. Hosted build verification remains pending.
 2. ✅ Merged `Renderer/Resourses` into `Renderer/Resources` (includes & CMake updated).
 3. ✅ Fixed: Sandbox app ownership (`CreateApplication` → `unique_ptr` in entry point), `/proc` file guards, stale Linux TODOs, ThreadPool task exception handling, `NativeScriptComponent` → `unique_ptr` (move-only exported type), `Input::EnableKeyboardInput` now gates key queries. ⬜ `SkyboxComponent` `DAEDALUS_API` export investigation.
 4. ✅ Test fixtures decoupled from `dlSandbox` (`dlUnitTests/fixtures/scenes`).

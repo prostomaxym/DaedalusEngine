@@ -6,6 +6,7 @@
 namespace Daedalus
 {
 	class KeyReleasedEvent;
+	class GpadReleasedEvent;
 	class GeneralDebugTab;
 	class RenderingDebugTab;
 	class ResourcesDebugTab;
@@ -23,8 +24,10 @@ namespace Daedalus
 
 		void OnEvent(Event& evt) override;
 		bool OnKeyReleased(KeyReleasedEvent& event);
+		bool OnGamepadReleased(GpadReleasedEvent& event);
 
 	private:
+		bool ToggleVisibility();
 		std::unique_ptr<GeneralDebugTab> m_general_tab;
 		std::unique_ptr<RenderingDebugTab> m_rendering_tab;
 		std::unique_ptr<ResourcesDebugTab> m_resources_tab;

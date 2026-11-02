@@ -32,6 +32,7 @@ set(DEBUG_TEST_FILES
     DebugTests/ConsoleCompletionTest.cpp
     DebugTests/InputCommandsTest.cpp
     DebugTests/LogTest.cpp
+    DebugTests/OverlayInputTest.cpp
     DebugTests/ProfilerTest.cpp
     DebugTests/WorldAxisProjectionTest.cpp
     )

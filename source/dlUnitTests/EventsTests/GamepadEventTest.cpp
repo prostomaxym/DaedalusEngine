@@ -1,6 +1,8 @@
 #include <Events/GamepadEvent.h>
+#include <Platform/GLFW/GamepadButtonEvents.h>
 
 #include <gtest/gtest.h>
+#include <vector>
 
 using namespace Daedalus;
 
@@ -80,4 +82,133 @@ TEST(GamepadEventTest, handled_flag_add_and_set)
 	EXPECT_TRUE(event.IsHandled());
 	event.SetHandle(false);
 	EXPECT_FALSE(event.IsHandled());
+}
+
+namespace
+{
+	class GamepadButtonEventsTest : public ::testing::Test
+	{
+	protected:
+		struct RecordedEvent
+		{
+			EventType type;
+			int button;
+			int repeat;
+		};
+
+		void Poll(int milliseconds)
+		{
+			m_tracker.Update(m_buttons, GamepadButtonEvents::Clock::time_point{} + std::chrono::milliseconds(milliseconds),
+				[this](Event& event)
+				{
+					EXPECT_TRUE(event.IsInCategory(EventCategory::GamepadButtonEvent));
+					EXPECT_FALSE(event.IsInCategory(EventCategory::KeyboardEvent));
+					const auto& button_event = static_cast<const GpadButtonEvent&>(event);
+					const int repeat = event.GetEventType() == EventType::GamepadPressed
+						? static_cast<const GpadPressedEvent&>(event).GetRepeatCount() : 0;
+					m_events.push_back({ event.GetEventType(), button_event.GetKeyCode(), repeat });
+				});
+		}
+
+		GamepadButtonEvents m_tracker;
+		GamepadButtonEvents::Buttons m_buttons{};
+		std::vector<RecordedEvent> m_events;
+	};
+}
+
+TEST_F(GamepadButtonEventsTest, idle_buttons_emit_no_events)
+{
+	Poll(0);
+	Poll(1000);
+	EXPECT_TRUE(m_events.empty());
+}
+
+TEST_F(GamepadButtonEventsTest, press_and_release_emit_once_per_transition)
+{
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	Poll(0);
+	Poll(100);
+	ASSERT_EQ(m_events.size(), 1u);
+	EXPECT_EQ(m_events[0].type, EventType::GamepadPressed);
+	EXPECT_EQ(m_events[0].button, DL_GAMEPAD_BUTTON_A);
+	EXPECT_EQ(m_events[0].repeat, 0);
+
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 0;
+	Poll(200);
+	Poll(1000);
+	ASSERT_EQ(m_events.size(), 2u);
+	EXPECT_EQ(m_events[1].type, EventType::GamepadReleased);
+	EXPECT_EQ(m_events[1].button, DL_GAMEPAD_BUTTON_A);
+}
+
+TEST_F(GamepadButtonEventsTest, repeats_observe_initial_delay_and_interval)
+{
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	Poll(0);
+	Poll(499);
+	ASSERT_EQ(m_events.size(), 1u);
+	Poll(500);
+	ASSERT_EQ(m_events.size(), 2u);
+	EXPECT_EQ(m_events[1].type, EventType::GamepadPressed);
+	EXPECT_EQ(m_events[1].button, DL_GAMEPAD_BUTTON_A);
+	EXPECT_EQ(m_events[1].repeat, 1);
+	Poll(549);
+	ASSERT_EQ(m_events.size(), 2u);
+	Poll(550);
+	ASSERT_EQ(m_events.size(), 3u);
+	EXPECT_EQ(m_events[2].repeat, 1);
+}
+
+TEST_F(GamepadButtonEventsTest, slow_polls_do_not_burst_repeat_events)
+{
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	Poll(0);
+	Poll(5000);
+	Poll(5000);
+	ASSERT_EQ(m_events.size(), 2u);
+	EXPECT_EQ(m_events[1].repeat, 1);
+	Poll(5050);
+	ASSERT_EQ(m_events.size(), 3u);
+}
+
+TEST_F(GamepadButtonEventsTest, buttons_track_repeat_deadlines_independently)
+{
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	Poll(0);
+	m_buttons[DL_GAMEPAD_BUTTON_LAST] = 1;
+	Poll(100);
+	Poll(500);
+	ASSERT_EQ(m_events.size(), 3u);
+	EXPECT_EQ(m_events[1].button, DL_GAMEPAD_BUTTON_LAST);
+	EXPECT_EQ(m_events[1].repeat, 0);
+	EXPECT_EQ(m_events[2].button, DL_GAMEPAD_BUTTON_A);
+	EXPECT_EQ(m_events[2].repeat, 1);
+	Poll(600);
+	ASSERT_EQ(m_events.size(), 5u);
+	EXPECT_EQ(m_events[4].button, DL_GAMEPAD_BUTTON_LAST);
+	EXPECT_EQ(m_events[4].repeat, 1);
+}
+
+TEST_F(GamepadButtonEventsTest, disconnect_releases_buttons_and_reconnect_resets_repeats)
+{
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	m_buttons[DL_GAMEPAD_BUTTON_LAST] = 1;
+	Poll(0);
+	m_buttons.fill(0);
+	Poll(500);
+	Poll(1000);
+	ASSERT_EQ(m_events.size(), 4u);
+	EXPECT_EQ(m_events[2].type, EventType::GamepadReleased);
+	EXPECT_EQ(m_events[2].button, DL_GAMEPAD_BUTTON_A);
+	EXPECT_EQ(m_events[3].type, EventType::GamepadReleased);
+	EXPECT_EQ(m_events[3].button, DL_GAMEPAD_BUTTON_LAST);
+
+	m_buttons[DL_GAMEPAD_BUTTON_A] = 1;
+	Poll(1100);
+	Poll(1599);
+	ASSERT_EQ(m_events.size(), 5u);
+	EXPECT_EQ(m_events[4].repeat, 0);
+	Poll(1600);
+	ASSERT_EQ(m_events.size(), 6u);
+	EXPECT_EQ(m_events[5].repeat, 1);
 }

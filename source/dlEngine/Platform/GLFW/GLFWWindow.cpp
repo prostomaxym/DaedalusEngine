@@ -217,6 +217,19 @@ void GLFWWindow::SwapBuffers()
 void GLFWWindow::PollEvents()
 {
 	glfwPollEvents();
+
+	GLFWgamepadstate state{};
+	GamepadButtonEvents::Buttons buttons{};
+	if (glfwGetGamepadState(GLFW_JOYSTICK_1, &state))
+	{
+		for (int button = 0; button <= DL_GAMEPAD_BUTTON_LAST; ++button)
+			buttons[button] = state.buttons[button];
+	}
+	m_gamepad_button_events.Update(buttons, GamepadButtonEvents::Clock::now(), [this](Event& event)
+		{
+			if (m_data.EventCallback)
+				m_data.EventCallback(event);
+		});
 }
 
 

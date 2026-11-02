@@ -14,6 +14,7 @@ struct ImGuiInputTextCallbackData;
 namespace Daedalus
 {
     class KeyReleasedEvent;
+    class GpadReleasedEvent;
 
     class DAEDALUS_API ConsoleOverlay : public ImGuiWindow
     {
@@ -26,8 +27,10 @@ namespace Daedalus
 
         void OnEvent(Event& evt) override;
         bool OnKeyReleased(KeyReleasedEvent& event);
+        bool OnGamepadReleased(GpadReleasedEvent& event);
 
     private:
+        bool ToggleVisibility();
         static int TextEditCallbackStub(ImGuiInputTextCallbackData* data);
 
         void Clear();

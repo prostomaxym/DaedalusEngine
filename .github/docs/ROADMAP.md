@@ -21,6 +21,12 @@ Spot light doesn't support ortho camera. No render graph,
 | Events, Threads, Utils, ECS/scene fixtures (own copies in `dlUnitTests/fixtures/scenes`) | No tests for
 | Audio, Animation, AI, Networking, Scripting, Editor | 🔴 | – | Not started. |
 
+### Android/development merge validation follow-up
+
+- The pre-fix Windows Release build succeeded; CTest ran 482 tests (472 passed, 2 skipped, 8 failed). All failures were the already-documented `InputActionsTest` movement-contract mismatch, not the new gamepad-event tests.
+- Per user decision, retained development's production input implementation unchanged and updated the eight obsolete movement tests. Current contracts use immediate action-down input, action-named movement/look axes, camera movement speed for analog translation, and no raw-stick or legacy-axis fallback. Axis-configuration tests run in isolated child processes because Config has no axis-removal API. Shared movement/toggle buttons remain intentionally shared in these tests; release toggles are still covered.
+- Validation pending: Test Explorer discovered no tests, including after requesting a build. Building the revised tests exposed an MSVC `SCOPED_TRACE` name collision inside `ASSERT_EXIT`; combined the two trace messages into one to correct it. The next `dlUnitTests` build attempt failed without additional diagnostics. The revised tests are not yet build/test verified; rerun the Windows Release build and full CTest suite before finalizing the merge. Linux/Android runtime validation remains deferred. This note supersedes earlier movement-contract descriptions below; the eight failures were already recorded on development before this merge.
+
 ## 2. Roadmap
 
 Phases are ordered by dependency; each phase should leave the engine shippable and green on both CI platforms.

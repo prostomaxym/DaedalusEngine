@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Daedalus.h>
-#include <Config/KeybindConfig.h>
 
 #include "ExampleLayer.h"
 
@@ -201,34 +200,9 @@ namespace Daedalus
 			glm::vec3 camera_forward = glm::normalize(camera->GetDirection());
 			glm::vec3 camera_right = glm::normalize(camera->GetRight());
 
-			glm::vec3 moveDirection(0.0f);
-
-			const bool has_vertical_axis = KeybindConfig::FindAxisBind("MoveVertical") != nullptr;
-			const bool has_horizontal_axis = KeybindConfig::FindAxisBind("MoveHorizontal") != nullptr;
-
-			if (!has_vertical_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveForward")))
-			{
-				moveDirection += camera_forward;
-			}
-			if (!has_vertical_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveBackward")))
-			{
-				moveDirection -= camera_forward;
-			}
-			if (!has_horizontal_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveLeft")))
-			{
-				moveDirection -= camera_right;
-			}
-			if (!has_horizontal_axis && Input::IsKeyHold(KeybindConfig::GetKeyboardBind("MoveRight")))
-			{
-				moveDirection += camera_right;
-			}
-
-			// Match camera movement: stick up is negative Y; buttons are not axes.
-			const auto [stick_x, stick_y] = Input::GetStickPos(Input::StickType::Left);
-			const float forward = has_vertical_axis ? Input::GetAxis("MoveVertical") : -stick_y;
-			const float right = has_horizontal_axis ? Input::GetAxis("MoveHorizontal") : stick_x;
-			moveDirection *= camera->GetMovementSpeed();
-			moveDirection += (camera_forward * forward + camera_right * right) * 10.f;
+			const auto forward = Input::GetMovementAction("MoveForward", "MoveBackward");
+			const auto right = Input::GetMovementAction("MoveRight", "MoveLeft");
+			glm::vec3 moveDirection = camera_forward * forward + camera_right * right;
 			// Facing is yaw-only, even when the camera is looking up or down.
 			moveDirection.y = 0.f;
 

@@ -28,6 +28,11 @@ android {
 		}
 	}
 
+	aaptOptions {
+		// Every manifest-listed runtime file must reach the APK, including dotfiles.
+		ignoreAssetsPattern = ''
+	}
+
 	packagingOptions {
 		jniLibs {
 			// These are prebuilt libraries; retain their symbols for local diagnostics.

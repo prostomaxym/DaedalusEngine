@@ -36,5 +36,6 @@ namespace Daedalus
 		std::pair<float, float> m_mouse{};
 		TouchControls m_touch;
 		std::array<bool, 2> m_toggle_pulses{};
+		bool m_bindings_ensured{ false };
 	};
 }

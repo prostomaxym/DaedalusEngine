@@ -9,6 +9,9 @@ param(
 	[string]$WorkDirectory,
 	[string]$GradlePath,
 	[string]$JavaHome = $env:JAVA_HOME,
+	[string]$AssetDirectory,
+	[string]$ConfigDirectory,
+	[string]$PathConfigFile,
 	[switch]$Deploy,
 	[string]$Serial
 )
@@ -20,6 +23,59 @@ function Invoke-Checked([string]$program, [string[]]$arguments)
 {
 	& $program @arguments
 	if ($LASTEXITCODE -ne 0) { throw "$program failed with exit code $LASTEXITCODE" }
+}
+
+function Copy-BundledRuntime([string]$destination, [string]$asset_directory, [string]$config_directory, [string]$path_config_file)
+{
+	$entries = [System.Collections.Generic.List[string]]::new()
+	foreach ($input_tree in @(@($asset_directory, 'asset'), @($config_directory, 'config')))
+	{
+		if (!$input_tree[0]) { continue }
+		$source = Get-Item -LiteralPath $input_tree[0] -Force
+		if (!$source.PSIsContainer -or ($source.Attributes -band [IO.FileAttributes]::ReparsePoint))
+		{
+			throw "Runtime input must be a directory, not a link: $($input_tree[0])"
+		}
+		$prefix = $source.FullName.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+		$staging_path = [IO.Path]::GetFullPath($destination)
+		if ($staging_path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
+			$staging_path.Equals($source.FullName, [StringComparison]::OrdinalIgnoreCase))
+		{
+			throw "Runtime input must not contain the APK staging directory: $($source.FullName)"
+		}
+		foreach ($item in Get-ChildItem -LiteralPath $source.FullName -Recurse -Force)
+		{
+			if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Runtime links are not supported: $($item.FullName)" }
+			if ($item.PSIsContainer) { continue }
+			$relative = $input_tree[1] + '/' + $item.FullName.Substring($prefix.Length).Replace('\', '/')
+			if ($relative.Contains("`n") -or $relative.Contains("`r")) { throw "Runtime filenames cannot contain newlines: $relative" }
+			$target = Join-Path $destination "runtime/$relative"
+			New-Item -ItemType Directory -Force (Split-Path -Parent $target) | Out-Null
+			Copy-Item -LiteralPath $item.FullName -Destination $target -Force
+			$entries.Add($relative)
+		}
+	}
+	if ($path_config_file)
+	{
+		$source = Get-Item -LiteralPath $path_config_file -Force
+		if ($source.PSIsContainer -or ($source.Attributes -band [IO.FileAttributes]::ReparsePoint))
+		{
+			throw "Path configuration must be a regular file: $path_config_file"
+		}
+		New-Item -ItemType Directory -Force (Join-Path $destination 'runtime') | Out-Null
+		Copy-Item -LiteralPath $source.FullName -Destination (Join-Path $destination 'runtime/path.ini') -Force
+		$entries.Add('path.ini')
+	}
+	if ($asset_directory -or $config_directory -or $path_config_file)
+	{
+		New-Item -ItemType Directory -Force $destination | Out-Null
+		[IO.File]::WriteAllLines((Join-Path $destination 'runtime-files.txt'), $entries, [Text.UTF8Encoding]::new($false))
+		if ((Get-Item -LiteralPath (Join-Path $destination 'runtime-files.txt')).Length -gt 16MB)
+		{
+			throw 'Bundled runtime manifest exceeds the 16 MiB startup limit.'
+		}
+		Write-Output "Bundled runtime files: $($entries.Count) (existing device files will be preserved)"
+	}
 }
 
 $repo_root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -70,12 +126,14 @@ try
 	$env:JAVA_HOME = $JavaHome
 	$env:ANDROID_HOME = $SdkRoot
 	$env:ANDROID_NDK_HOME = $ndk_root
+	Copy-BundledRuntime (Join-Path $stage 'assets') $AssetDirectory $ConfigDirectory $PathConfigFile
 	Invoke-Checked $cmake @(
 		'-S', $repo_root, '-B', $native_build, '-G', 'Ninja',
 		"-DCMAKE_MAKE_PROGRAM=$ninja", "-DCMAKE_TOOLCHAIN_FILE=$toolchain",
 		"-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$ndk_root/build/cmake/android.toolchain.cmake",
 		'-DVCPKG_MANIFEST_MODE=OFF', "-DVCPKG_INSTALLED_DIR=$installed", '-DVCPKG_TARGET_TRIPLET=arm64-android',
 		'-DANDROID_ABI=arm64-v8a', '-DANDROID_PLATFORM=android-28', '-DANDROID_STL=c++_shared',
+		'-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON',
 		'-DENABLE_TESTS=OFF', "-DCMAKE_BUILD_TYPE=$Configuration"
 	)
 	Invoke-Checked $cmake @('--build', $native_build, '--target', 'dlSandbox', '--parallel', '4')

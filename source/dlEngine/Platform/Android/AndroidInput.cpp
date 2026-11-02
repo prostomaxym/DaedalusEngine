@@ -37,6 +37,20 @@ namespace Daedalus
 			default: return -1;
 			}
 		}
+
+		// Android starts without a keybind INI, and the sandbox no longer creates defaults.
+		// Touch controls emulate these keys, so missing actions get fallback bindings.
+		void EnsureTouchActionBindings()
+		{
+			constexpr std::array<std::pair<const char*, int>, 8> defaults{ {
+				{ "MoveForward", DL_KEY_W }, { "MoveBackward", DL_KEY_S }, { "MoveLeft", DL_KEY_A }, { "MoveRight", DL_KEY_D },
+				{ "MoveUp", DL_KEY_SPACE }, { "MoveDown", DL_KEY_C }, { "Flashlight", DL_KEY_F }, { "ChangePOV", DL_KEY_V } } };
+			for (const auto& [action, key] : defaults)
+			{
+				if (!KeybindConfig::FindActionBind(action))
+					KeybindConfig::SetKeyboardBind(action, key);
+			}
+		}
 	}
 
 	AndroidInput::AndroidInput() { AndroidRuntime::Get().SetInput(this); }
@@ -44,6 +58,11 @@ namespace Daedalus
 	void AndroidInput::Reset() { m_pending.fill(false); m_mouse_buttons.fill(false); m_touch.Reset(); m_toggle_pulses.fill(false); }
 	void AndroidInput::UpdateImpl()
 	{
+		if (!m_bindings_ensured)
+		{
+			EnsureTouchActionBindings();
+			m_bindings_ensured = true;
+		}
 		if (auto* window = AndroidRuntime::Get().GetApp().window)
 			m_touch.Resize(static_cast<float>(ANativeWindow_getWidth(window)), static_cast<float>(ANativeWindow_getHeight(window)));
 		m_previous = m_current;

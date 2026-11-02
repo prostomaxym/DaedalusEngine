@@ -81,6 +81,7 @@ set(THREADS_TEST_FILES
     )
 
 set(UTILS_TEST_FILES
+    UtilsTests/BundledFileInstallerTest.cpp
     UtilsTests/DeltaTimeTest.cpp
     UtilsTests/FixedStepClockTest.cpp
     UtilsTests/FPSLockerTest.cpp

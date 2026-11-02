@@ -11,6 +11,8 @@ project(
 set(UTILS_PROJECT_FILES
    AssetSourceReader.h
    AssetSourceReader.cpp
+   BundledFileInstaller.h
+   BundledFileInstaller.cpp
    ContentFingerprint.h
    DeltaTime.h
    FixedStepClock.h

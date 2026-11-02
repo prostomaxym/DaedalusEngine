@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Window.h"
+#include "GamepadButtonEvents.h"
 
 #include <memory>
 #include <string>
@@ -58,6 +59,7 @@ namespace Daedalus {
 		};
 
 		WindowData m_data;
+		GamepadButtonEvents m_gamepad_button_events;
 		WindowProps::ScreenMode m_screenmode {WindowProps::ScreenMode::fullscreen};
 	};
 }

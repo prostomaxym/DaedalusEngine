@@ -18,6 +18,7 @@ set(PLATFORM_PROJECT_FILES
     ResourcesMonitor.h
     ResourcesMonitor.cpp
 
+    GLFW/GamepadButtonEvents.h
     GLFW/GLFWInput.h
     GLFW/GLFWInput.cpp
     GLFW/GLFWWindow.h

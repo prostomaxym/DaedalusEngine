@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "Events/KeyEvent.h"
+#include "Events/GamepadEvent.h"
 
 #include "Events/EventDispatcher.h"
 #include "Events/ApplicationEvent.h"
@@ -21,6 +22,7 @@ using namespace Daedalus;
 void ConsoleOverlay::OnEvent(Event& evt)
 {
     EventDispatcher::ProcessEvent<KeyReleasedEvent>(evt, DL_BIND_EVENT_FN(ConsoleOverlay::OnKeyReleased));
+    EventDispatcher::ProcessEvent<GpadReleasedEvent>(evt, DL_BIND_EVENT_FN(ConsoleOverlay::OnGamepadReleased));
 }
 
 bool ConsoleOverlay::OnKeyReleased(KeyReleasedEvent& event)
@@ -28,16 +30,32 @@ bool ConsoleOverlay::OnKeyReleased(KeyReleasedEvent& event)
     const auto key_code = event.GetKeyCode();
     if (IsDevBuild() && key_code == KeybindConfig::GetKeyboardBind("Console"))
     {
-        Toggle();
-        if (!IsShown())
-            SetTyping(false);
-        auto& wnd = Application::GetInstance()->GetWindow();
-        wnd.FreeCursor(IsShown());
-
-        return true; 
+        return ToggleVisibility();
     }
 
     return false;
+}
+
+bool ConsoleOverlay::OnGamepadReleased(GpadReleasedEvent& event)
+{
+    const auto* binding = KeybindConfig::FindActionBind("Console");
+    if (IsDevBuild() && binding && binding->gamepad_button >= 0 && event.GetKeyCode() == binding->gamepad_button)
+    {
+        return ToggleVisibility();
+    }
+
+    return false;
+}
+
+bool ConsoleOverlay::ToggleVisibility()
+{
+    Toggle();
+    if (!IsShown())
+        SetTyping(false);
+    auto& wnd = Application::GetInstance()->GetWindow();
+    wnd.FreeCursor(IsShown());
+
+    return true;
 }
 
 void ConsoleOverlay::Update(DeltaTime dt)

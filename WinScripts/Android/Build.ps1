@@ -12,6 +12,7 @@ param(
 	[string]$AssetDirectory,
 	[string]$ConfigDirectory,
 	[string]$PathConfigFile,
+	[string]$ScriptDirectory,
 	[switch]$Deploy,
 	[string]$Serial
 )
@@ -25,10 +26,10 @@ function Invoke-Checked([string]$program, [string[]]$arguments)
 	if ($LASTEXITCODE -ne 0) { throw "$program failed with exit code $LASTEXITCODE" }
 }
 
-function Copy-BundledRuntime([string]$destination, [string]$asset_directory, [string]$config_directory, [string]$path_config_file)
+function Copy-BundledRuntime([string]$destination, [string]$asset_directory, [string]$config_directory, [string]$path_config_file, [string]$script_directory)
 {
 	$entries = [System.Collections.Generic.List[string]]::new()
-	foreach ($input_tree in @(@($asset_directory, 'asset'), @($config_directory, 'config')))
+	foreach ($input_tree in @(@($asset_directory, 'asset'), @($config_directory, 'config'), @($script_directory, 'script')))
 	{
 		if (!$input_tree[0]) { continue }
 		$source = Get-Item -LiteralPath $input_tree[0] -Force
@@ -66,7 +67,7 @@ function Copy-BundledRuntime([string]$destination, [string]$asset_directory, [st
 		Copy-Item -LiteralPath $source.FullName -Destination (Join-Path $destination 'runtime/path.ini') -Force
 		$entries.Add('path.ini')
 	}
-	if ($asset_directory -or $config_directory -or $path_config_file)
+	if ($asset_directory -or $config_directory -or $path_config_file -or $script_directory)
 	{
 		New-Item -ItemType Directory -Force $destination | Out-Null
 		[IO.File]::WriteAllLines((Join-Path $destination 'runtime-files.txt'), $entries, [Text.UTF8Encoding]::new($false))
@@ -126,7 +127,7 @@ try
 	$env:JAVA_HOME = $JavaHome
 	$env:ANDROID_HOME = $SdkRoot
 	$env:ANDROID_NDK_HOME = $ndk_root
-	Copy-BundledRuntime (Join-Path $stage 'assets') $AssetDirectory $ConfigDirectory $PathConfigFile
+	Copy-BundledRuntime (Join-Path $stage 'assets') $AssetDirectory $ConfigDirectory $PathConfigFile $ScriptDirectory
 	Invoke-Checked $cmake @(
 		'-S', $repo_root, '-B', $native_build, '-G', 'Ninja',
 		"-DCMAKE_MAKE_PROGRAM=$ninja", "-DCMAKE_TOOLCHAIN_FILE=$toolchain",

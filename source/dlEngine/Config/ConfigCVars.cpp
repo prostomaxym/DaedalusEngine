@@ -38,6 +38,7 @@ namespace Daedalus
 		bind("graphics.recompile_shaders", "Startup shader recompilation", GraphicsConfig::RecompilingShadersEnabled);
 		bind("paths.assets", "Assets mount", [] { return Utf8ToString(PathConfig::GetAssetsPath().u8string()); });
 		bind("paths.shaders", "Shaders mount", [] { return Utf8ToString(PathConfig::GetShadersPath().u8string()); });
+		bind("paths.scripts", "Scripts mount", [] { return Utf8ToString(PathConfig::GetScriptsPath().u8string()); });
 		bind("paths.config", "Config mount", [] { return Utf8ToString(PathConfig::GetConfigPath().u8string()); });
 		bind("paths.logs", "Logs mount", [] { return Utf8ToString(PathConfig::GetLogsPath().u8string()); });
 		bind("paths.scene", "Configured scene asset", PathConfig::GetSceneAssetPath);

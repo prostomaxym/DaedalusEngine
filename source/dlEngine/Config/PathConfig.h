@@ -23,6 +23,7 @@ namespace Daedalus
 		
 		static std::filesystem::path GetAssetsPath() { return GetInstance().m_assets_dir; }
 		static std::filesystem::path GetShadersPath() { return GetInstance().m_shaders_dir; }
+		static std::filesystem::path GetScriptsPath() { return GetInstance().m_scripts_dir; }
 		static std::filesystem::path GetConfigPath() { return GetInstance().m_config_dir; }
 		static std::filesystem::path GetLogsPath() { return s_instance ? s_instance->m_logs_dir : std::filesystem::path("logs"); }
 		static std::filesystem::path GetScenePath() { return GetInstance().m_assets_dir / GetInstance().m_scene_file; }
@@ -41,6 +42,7 @@ namespace Daedalus
 
 		std::filesystem::path m_assets_dir;
 		std::filesystem::path m_shaders_dir;
+		std::filesystem::path m_scripts_dir;
 		std::filesystem::path m_logs_dir;
 		std::filesystem::path m_scene_file;
 

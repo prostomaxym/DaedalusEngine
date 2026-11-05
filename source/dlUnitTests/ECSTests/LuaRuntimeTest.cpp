@@ -3,6 +3,8 @@
 #include <ECS/Serialization/SceneJson.h>
 #include <ECS/Serialization/ScriptRegistry.h>
 #include <Core/Input.h>
+#include <Core/AssetPipeline.h>
+#include <Config/PathConfig.h>
 #include <Events/GameEvent.h>
 #include <Events/KeyEvent.h>
 #include <Events/MouseEvent.h>
@@ -12,6 +14,7 @@
 #include <gtest/gtest.h>
 #include <zip.h>
 #include <filesystem>
+#include <chrono>
 #include <fstream>
 #include <limits>
 #include <thread>
@@ -20,6 +23,11 @@ using namespace Daedalus;
 
 namespace
 {
+	struct PathDefaults
+	{
+		~PathDefaults() { PathConfig::LoadDefault(); }
+	};
+
 	class LuaRuntimeTest : public ::testing::Test
 	{
 	protected:
@@ -119,6 +127,52 @@ TEST_F(LuaRuntimeTest, updates_local_transform_from_authored_properties)
 	m_runtime->Update(0.25f);
 	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().translation.x, 1.f);
 	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+}
+
+TEST_F(LuaRuntimeTest, configured_script_mount_loads_reloads_and_captures_lua_records)
+{
+	const PathDefaults restore_paths;
+	std::filesystem::create_directories(m_root / "lua source");
+	std::filesystem::create_directories(m_root / "other_assets");
+	Write("function on_update(dt) state.value=1 end", "lua source/mover.lua");
+	Write("not valid Lua source", "other_assets/mover.lua");
+	Write("[Path]\nAssetsFolder=other_assets\nScriptsFolder=lua source\n", "path.ini");
+	PathConfig::Load(m_root / "path.ini");
+	VirtualFileSystem files;
+	ASSERT_TRUE(files.Mount("scripts", PathConfig::GetScriptsPath()));
+	ASSERT_TRUE(files.Mount("assets", PathConfig::GetAssetsPath()));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	ASSERT_TRUE(pipeline.Initialize());
+	ASSERT_NE(pipeline.GetRegistry().Find("scripts:/mover.lua"), nullptr);
+	ScriptRegistry registry;
+	ASSERT_TRUE(LuaScript::Register(registry, pipeline.GetFiles()));
+	auto record = Definition();
+	record.entities[0].scripts[0].properties["asset"] = std::string("scripts:/mover.lua");
+	Scene scene;
+	std::string error;
+	ASSERT_TRUE(SceneSerializer::Instantiate(record, scene, PathConfig::GetAssetsPath(), registry, error)) << error;
+	scene.UpdateScripts({});
+	auto* script = scene.GetEntityByUUID(Daedalus::UUID(42)).GetComponent<NativeScriptComponent>().GetScript<LuaScript>();
+	ASSERT_NE(script, nullptr);
+	EXPECT_DOUBLE_EQ(Number(script->GetRuntime(), "value"), 1.);
+	Write("function on_update(dt) state.value=2 end", "lua source/mover.lua");
+	scene.UpdateScripts(DeltaTime(std::chrono::milliseconds(500)));
+	EXPECT_DOUBLE_EQ(Number(script->GetRuntime(), "value"), 2.);
+	SceneRecord captured;
+	ASSERT_TRUE(SceneSerializer::Capture(scene, PathConfig::GetAssetsPath(), registry, captured, error)) << error;
+	ASSERT_EQ(captured.entities.size(), 1u);
+	EXPECT_EQ(std::get<std::string>(captured.entities[0].scripts[0].properties.at("asset")), "scripts:/mover.lua");
+}
+
+TEST_F(LuaRuntimeTest, existing_explicit_asset_mount_script_paths_remain_valid)
+{
+	Write("function on_update(dt) state.value=42 end");
+	ASSERT_TRUE(m_files.Mount("assets", m_root));
+	LuaRuntime runtime(m_scene, m_entity.GetUUID(), m_files, "assets:/script.lua");
+	runtime.Update(0.f);
+	EXPECT_TRUE(runtime.IsReady()) << runtime.GetLastError();
+	EXPECT_DOUBLE_EQ(Number(runtime, "value"), 42.);
 }
 
 TEST_F(LuaRuntimeTest, starts_once_and_restarts_from_authored_state)
@@ -660,6 +714,7 @@ TEST_F(LuaRuntimeTest, prefab_spawning_applies_lua_overrides_and_captures_expand
 
 TEST_F(LuaRuntimeTest, loads_lua_sources_from_zip_mounts)
 {
+	const PathDefaults restore_paths;
 	const std::string source = "function on_update(dt) state.value=42 end";
 	const auto path = m_root / "scripts.zip";
 	int code = 0;
@@ -670,10 +725,13 @@ TEST_F(LuaRuntimeTest, loads_lua_sources_from_zip_mounts)
 	ASSERT_GE(zip_file_add(archive.get(), "script.lua", buffer, ZIP_FL_ENC_UTF_8), 0);
 	ASSERT_EQ(zip_close(archive.get()), 0);
 	archive.release();
+	Write("[Path]\nScriptsFolder=scripts.zip\n", "path.ini");
+	PathConfig::Load(m_root / "path.ini");
 	VirtualFileSystem files;
 	std::string error;
-	ASSERT_TRUE(files.MountArchive("packed", path, error)) << error;
-	LuaRuntime runtime(m_scene, m_entity.GetUUID(), files, "packed:/script.lua");
+	ASSERT_TRUE(files.Mount("scripts", PathConfig::GetScriptsPath(), error)) << error;
+	EXPECT_TRUE(files.IsArchive("scripts"));
+	LuaRuntime runtime(m_scene, m_entity.GetUUID(), files, "scripts:/script.lua");
 	runtime.Update(0.f);
 	EXPECT_DOUBLE_EQ(Number(runtime, "value"), 42.);
 }

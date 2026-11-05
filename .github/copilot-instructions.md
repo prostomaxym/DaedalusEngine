@@ -74,3 +74,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 
 ## Prefab Persistence
 - For Daedalus prefab persistence, keep SceneSerializer Capture/Save expanded and source-independent rather than reconstructing prefab references and overrides. Retain prefab provenance at runtime only; reloading saved scenes should not pick up later source-prefab changes.
+
+## Scripting
+- Daedalus Lua scripts should load like other assets/shaders through a separate `PathConfig` `ScriptsFolder` and `scripts:/` VFS mount, rather than relying on `assets:/` script paths.

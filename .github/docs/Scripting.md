@@ -6,19 +6,34 @@ The Phase 2 implementation uses Lua and sol2 privately inside `ECS/Scripting`. E
 
 Register the built-in adapter with `LuaScript::Register(registry, engine.GetAssets().GetFiles())` before loading a scene. The sandbox does this alongside its native adapters. Registration copies the VFS mount configuration into adapters/runtimes; the registry can be destroyed without invalidating existing scripts. Asset contents are still read from the mounted source and are not copied into saved scenes.
 
+Configure the script root alongside assets and shaders in `path.ini`:
+
+```ini
+[Path]
+AssetsFolder=asset
+ShadersFolder=shader
+ScriptsFolder=script
+```
+
+`ScriptsFolder` defaults to `script`, resolved relative to the directory containing `path.ini` (normally `runtime/script`). `PathConfig::GetScriptsPath()` returns the resolved root; saving uses portable INI-relative paths. Engine startup mounts that folder as `scripts:/` and includes its sources in the existing asset registry/metadata and change scans. Missing directories enumerate as empty so applications without Lua scripts still start normally. `paths.scripts` exposes the configured root as a read-only console CVar; changing startup mounts requires restarting, not a live INI reload.
+
+Place `mover.lua` directly inside the configured script folder and reference it as `scripts:/mover.lua`. The root is independent of `AssetsFolder` and `ShadersFolder`; no implicit search inside the scene's asset folder occurs. Existing explicit paths such as `assets:/scripts/mover.lua` remain supported when that source is still mounted; saved records are not rewritten automatically. Keep separately indexed content roots disjoint to avoid duplicate UUID sidecars through aliased mounts.
+
 A scene entity's existing `scripts` array accepts:
 
 ```json
 {
   "type": "Lua",
   "properties": {
-	"asset": "assets:/scripts/mover.lua",
+	"asset": "scripts:/mover.lua",
 	"speed": 2.5
   }
 }
 ```
 
 `asset` is a reserved string property containing a canonical mounted `.lua` path. It is not relative to the containing scene/prefab. Other properties use the existing bool/number/string/vec3 schema. Each runtime permits at most 128 parameters, with nonempty keys up to 128 bytes, strings up to 4096 bytes, finite numbers and finite vectors bounded to magnitude 100000000 per component. Script reads are text-only and capped at 256 KiB. Directory and ZIP mounts share the same loading path; deploy scripts manually with the rest of the runtime assets. No example assets are automatically copied.
+
+`ScriptsFolder=script/game.zip` selects a read-only ZIP mount with the same `scripts:/` references. Generate/preserve adjacent `.meta` sidecars in a directory-backed script tree before packaging; the registry does not repair metadata inside archives. Runtime Lua reads and its 0.5-second hot-reload poll still use bounded VFS reads; registry scanning does not replace the per-VM reload contract. Desktop installs include the manually supplied `runtime/script` tree when present. Custom script roots must be distributed separately with matching configuration. Android bundling accepts `-ScriptDirectory`, stages it under private `script/`, and installs missing files only; use `ScriptsFolder=script` for that layout. Existing device scripts are preserved.
 
 Validation reads and executes top-level code in a restricted staging VM before scene construction. The factory stages it again before attaching an executable runtime, and failures participate in existing scene/prefab rollback. V5 records already support the adapter; no new scene version is needed. Prefab variants/instances can replace the existing whole `scripts` collection. Use entity links rather than embedding entity UUIDs in arbitrary properties: prefab composition does not remap script-property strings.
 
@@ -113,6 +128,6 @@ Every top-level execution and callback has a 100000-Lua-instruction budget, chec
 
 ## Validation and remaining scope
 
-`LuaRuntimeTest` supplies 47 headless regressions for lifecycle, bindings and malformed arguments, VM isolation, restricted capabilities, instruction/memory limits, failed/successful reload, state recovery, empty-source initialization/restart, deferred and worker-posted events, physics-source filtering, factory cleanup/duplicate protection, record round-trips, prefab overrides and ZIP loading. All 47 passed five repetitions in each Windows configuration. Full executable and CTest suites passed: Release 697 tests (694 passed / 3 skipped), ReleaseDevTools 697 (693 passed / 4 skipped). See the roadmap for validation details.
+`LuaRuntimeTest` supplies 49 headless regressions for lifecycle, bindings and malformed arguments, VM isolation, restricted capabilities, instruction/memory limits, failed/successful reload, state recovery, empty-source initialization/restart, deferred and worker-posted events, physics-source filtering, factory cleanup/duplicate protection, record round-trips, prefab overrides, configured script-folder loading/reload/capture, legacy mounted paths and ZIP loading. PathConfig, registry/pipeline and installer tests separately cover relative/portable roots, source metadata/change detection and install-missing preservation. See the roadmap for configuration-specific validation results.
 
 Multiple Lua assets per entity, script module imports, coroutine gameplay, arbitrary component/physics/render bindings, general savegame VM snapshots, asset-registry change subscriptions, an editor debugger and configurable security policies are not implemented. Linux/WSL and Android builds/runtime checks, and interactive scene behavior, remain separate validation work.

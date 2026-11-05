@@ -73,7 +73,7 @@ namespace Daedalus
 		void SetOrientationQuat(const glm::quat& q)
 		{
 			// glm::eulerAngles returns radians; convert to degrees and store as (pitch, yaw, roll)
-			rotation = glm::degrees(glm::eulerAngles(q));
+			rotation = glm::vec3(glm::degrees(glm::eulerAngles(glm::normalize(glm::dquat(q)))));
 		}
 	};
 

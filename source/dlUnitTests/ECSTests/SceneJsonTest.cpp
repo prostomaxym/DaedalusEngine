@@ -131,7 +131,7 @@ TEST(SceneJsonTest, rejects_unknown_components)
 TEST(SceneJsonTest, rejects_unsupported_version)
 {
 	auto record = Sample();
-	record.version = 2;
+	record.version = 3;
 	std::string error;
 	EXPECT_FALSE(SceneJson::Validate(record, error));
 }
@@ -223,6 +223,7 @@ TEST(SceneJsonTest, rejects_camera_without_primary_selection)
 TEST(SceneJsonTest, rejects_invalid_projection_and_parallel_up)
 {
 	auto record = Sample();
+	record.version = 1;
 	std::string error;
 	record.entities[0].camera->near_plane = 500.f;
 	EXPECT_FALSE(SceneJson::Validate(record, error));

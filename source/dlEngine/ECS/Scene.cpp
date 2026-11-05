@@ -81,7 +81,12 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 void Scene::OnFixedUpdateRuntime(DeltaTime dt)
 {
 	DL_PROFILE_SCOPE("Scene::FixedUpdate");
-	if (m_is_running && !m_is_paused) m_physics_system->OnUpdateRuntime(dt);
+	if (m_is_running && !m_is_paused) StepPhysics(dt);
+}
+
+void Scene::StepPhysics(DeltaTime dt)
+{
+	m_physics_system->OnUpdateRuntime(dt);
 }
 
 void Scene::OnRenderRuntime(DeltaTime dt)
@@ -181,6 +186,7 @@ Entity Scene::GetEntityByUUID(UUID uuid)
 
 Camera* Scene::GetCamera()
 {
+	UpdateWorldTransforms();
 	auto ent = static_cast<uint64_t>(m_primary_camera) ? GetEntityByUUID(m_primary_camera) : FindEntityByName("Main Camera");
 
 	if (!ent.IsValid() || !ent.HasComponent<CameraComponent>())

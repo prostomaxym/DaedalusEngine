@@ -5,17 +5,30 @@
 
 using namespace Daedalus;
 
+Entity CameraController::GetCameraEntity() const
+{
+	return m_entity.HasComponent<CameraComponent>() ? m_entity : m_entity.GetLinkedEntity("camera");
+}
+
 void CameraController::OnUpdate(DeltaTime ts)
 {
+	auto entity = GetCameraEntity();
+	if (!entity || !entity.HasComponent<CameraComponent>() || !entity.GetComponent<CameraComponent>().camera) return;
+	auto& transform = entity.GetComponent<TransformComponent>();
+	auto& camera = *entity.GetComponent<CameraComponent>().camera;
+	camera.SetPose(transform.translation, transform.GetOrientationQuat());
 	const auto dt = ts.GetSeconds();
 	ProcessMovement(dt);
 	ProcessMouse(dt);
 	ProcessGamepad(dt);
+	transform.translation = camera.GetPosition();
+	transform.SetOrientationQuat(camera.GetOrientation());
+	entity.GetScene().UpdateWorldTransforms();
 }
 
 void CameraController::ProcessMovement(float dt)
 {
-	auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+	auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 
 	const auto forward = Input::GetMovementAction("MoveForward", "MoveBackward");
 	if (forward != 0.f)
@@ -34,7 +47,7 @@ void CameraController::ProcessMovement(float dt)
 
 void CameraController::ProcessMouse(float dt)
 {
-	auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+	auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 
 	const auto [xCurrent, yCurrent] = Input::GetMousePos();
 
@@ -50,14 +63,14 @@ void CameraController::ProcessMouse(float dt)
 	xPrevious = xCurrent;
 	yPrevious = yCurrent;
 
-	camera->ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
+	if (dx != 0.f || dy != 0.f) camera->ProcessMouseMovement(dx * dt * 2.f, dy * dt * 2.f);
 }
 
 void CameraController::ProcessGamepad(float dt)
 {
 	if (Input::IsGamepadInputEnabled())
 	{
-		auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+		auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 		const auto x = Input::GetAxis("LookRight");
 		const auto y = Input::GetAxis("LookUp");
 
@@ -69,6 +82,6 @@ void CameraController::ProcessGamepad(float dt)
 		if (y != 0.f)
 			yoffset  = -y * dt * 100.f;
 
-		camera->ProcessMouseMovement(xoffset, yoffset);
+		if (xoffset != 0.f || yoffset != 0.f) camera->ProcessMouseMovement(xoffset, yoffset);
 	}
 }

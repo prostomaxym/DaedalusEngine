@@ -24,6 +24,7 @@ namespace Daedalus
         PhysicsWorld& GetWorld() { return *m_world; }
 
     private:
+        void PrepareBodies() const;
         entt::registry& m_registry;
         Scene* m_scene { nullptr };
         std::unique_ptr<PhysicsWorld> m_world;

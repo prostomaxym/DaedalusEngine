@@ -71,6 +71,7 @@ namespace
 		{
 			f("id", r.id); f("name", r.name); f("transform", r.transform);
 			f("parent", r.parent);
+			f("links", r.links);
 			f("model", r.model); f("camera", r.camera);
 			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
 			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body); f("scripts", r.scripts);
@@ -96,7 +97,7 @@ namespace
 			for (const auto& item : value) result.push_back(Encode(item));
 			return result;
 		}
-		else if constexpr (std::is_same_v<T, std::map<std::string, ScriptProperty>>)
+		else if constexpr (std::is_same_v<T, std::map<std::string, ScriptProperty>> || std::is_same_v<T, std::map<std::string, std::string>>)
 		{
 			auto result = Json::object();
 			for (const auto& item : value) result[item.first] = Encode(item.second);
@@ -116,6 +117,21 @@ namespace
 				}
 				else result[name] = Encode(field);
 			});
+			if constexpr (std::is_same_v<T, SceneRecord>)
+			{
+				if (value.version >= 2)
+					for (auto& entity : result["entities"])
+					{
+						if (entity.contains("camera"))
+							for (const auto* key : { "position", "up", "yaw", "pitch" }) entity["camera"].erase(key);
+						for (const auto* key : { "directional_light", "point_light", "spot_light" })
+							if (entity.contains(key))
+							{
+								entity[key].erase("position");
+								entity[key].erase("direction");
+							}
+					}
+			}
 			return result;
 		}
 	}
@@ -202,12 +218,12 @@ namespace
 			}
 			return true;
 		}
-		else if constexpr (std::is_same_v<T, std::map<std::string, ScriptProperty>>)
+		else if constexpr (std::is_same_v<T, std::map<std::string, ScriptProperty>> || std::is_same_v<T, std::map<std::string, std::string>>)
 		{
 			if (!json.is_object()) return Fail(error, path, "expected a property object");
 			for (auto it = json.begin(); it != json.end(); ++it)
 			{
-				ScriptProperty property;
+				typename T::mapped_type property;
 				if (!ValidUtf8(it.key()) || !Decode(it.value(), property, path + "." + it.key(), error))
 					return Fail(error, path, "invalid property");
 				value.emplace(it.key(), std::move(property));
@@ -296,7 +312,7 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	error.clear();
 	SceneRecord checked;
 	if (!Decode(Encode(record), checked, "$", error)) return false;
-	if (record.version != 1) return Fail(error, "$.version", "unsupported scene version (expected 1)");
+	if (record.version != 1 && record.version != 2) return Fail(error, "$.version", "unsupported scene version (expected 1 or 2)");
 	std::set<std::string> ids;
 	bool primary_found = record.primary_camera.empty();
 	bool has_camera = false;
@@ -317,15 +333,15 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 			if (camera.projection != "perspective" && camera.projection != "orthographic") return Fail(error, path + ".camera.projection", "unknown projection");
 			if (camera.near_plane >= camera.far_plane || camera.aspect_ratio <= 0.f || camera.fov <= 0.f || camera.fov >= 180.f ||
 				(camera.projection == "perspective" && camera.near_plane <= 0.f) || camera.left >= camera.right || camera.bottom >= camera.top ||
-				camera.movement_speed < 0.f || camera.sensitivity < 0.f || camera.zoom_speed < 0.f || camera.pitch <= -90.f || camera.pitch >= 90.f)
+				camera.movement_speed < 0.f || camera.sensitivity < 0.f || camera.zoom_speed < 0.f || (record.version == 1 && (camera.pitch <= -90.f || camera.pitch >= 90.f)))
 				return Fail(error, path + ".camera", "invalid projection or camera controls");
 			const glm::vec3 front{ std::cos(glm::radians(camera.yaw)) * std::cos(glm::radians(camera.pitch)), std::sin(glm::radians(camera.pitch)), std::sin(glm::radians(camera.yaw)) * std::cos(glm::radians(camera.pitch)) };
-			if (glm::length(glm::cross(front, camera.up)) < 0.000001f) return Fail(error, path + ".camera.up", "up must not be zero or parallel to the view direction");
+			if (record.version == 1 && glm::length(glm::cross(front, camera.up)) < 0.000001f) return Fail(error, path + ".camera.up", "up must not be zero or parallel to the view direction");
 			if (entity.id == record.primary_camera) primary_found = true;
 		}
-		if (entity.directional_light && !CheckLight(*entity.directional_light, path + ".directional_light", error)) return false;
+		if (entity.directional_light && !CheckLight(*entity.directional_light, path + ".directional_light", error, false, record.version == 1)) return false;
 		if (entity.point_light && !CheckLight(*entity.point_light, path + ".point_light", error, false, false)) return false;
-		if (entity.spot_light && !CheckLight(*entity.spot_light, path + ".spot_light", error, true)) return false;
+		if (entity.spot_light && !CheckLight(*entity.spot_light, path + ".spot_light", error, true, record.version == 1)) return false;
 		if (entity.directional_light && entity.directional_light->cast_shadows) shadow_maps += entity.directional_light->cascades;
 		if (entity.point_light && entity.point_light->cast_shadows) shadow_maps += 6;
 		if (entity.spot_light && entity.spot_light->cast_shadows) shadow_maps += entity.spot_light->cascades;
@@ -347,9 +363,17 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	for (const auto& entity : record.entities) hierarchy.emplace(entity.id, &entity);
 	for (const auto& entity : record.entities)
 	{
+		for (const auto& [name, target] : entity.links)
+		{
+			const auto linked = hierarchy.find(target);
+			if (name.empty() || linked == hierarchy.end()) return Fail(error, "$.entities.links", "links require nonempty names and existing entity IDs");
+			if ((name == "camera" && !linked->second->camera) ||
+				(name == "spot_light" && !linked->second->spot_light))
+				return Fail(error, "$.entities.links", "named pose link references an entity without the required component");
+		}
 		if (!entity.parent) continue;
 		if (!hierarchy.count(*entity.parent)) return Fail(error, "$.entities.parent", "must reference an existing entity");
-		if (entity.rigid_body || entity.kinematic_body) return Fail(error, "$.entities.parent", "physics bodies must remain roots");
+		if (record.version == 1 && (entity.rigid_body || entity.kinematic_body)) return Fail(error, "$.entities.parent", "version 1 physics bodies must remain roots");
 	}
 	std::set<std::string> visited;
 	for (const auto& entity : record.entities)
@@ -363,6 +387,11 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 		}
 		visited.insert(chain.begin(), chain.end());
 	}
+	for (const auto& entity : record.entities)
+		if (entity.rigid_body || entity.kinematic_body)
+			for (auto parent = entity.parent; parent; parent = hierarchy.at(*parent)->parent)
+				if (hierarchy.at(*parent)->transform.scale != glm::vec3(1.f))
+					return Fail(error, "$.entities.parent", "physics ancestors require unit scale");
 	if (!primary_found || (has_camera && record.primary_camera.empty())) return Fail(error, "$.primary_camera", "must reference a camera entity");
 	return true;
 }
@@ -384,8 +413,17 @@ bool SceneJson::Parse(std::string_view text, SceneRecord& record, std::string& e
 	if (!json.is_object() || !json.contains("version") || !json.contains("entities")) return Fail(error, "$", "version and entities are required");
 	SceneRecord result;
 	if (!Decode(json, result, "$", error) || !Validate(result, error)) return false;
-	record = std::move(result);
-	return true;
+	if (result.version == 2)
+		for (const auto& entity : json["entities"])
+		{
+			if (entity.contains("camera"))
+				for (const auto* key : { "position", "up", "yaw", "pitch" })
+					if (entity["camera"].contains(key)) return Fail(error, "$.entities.camera", "version 2 camera pose belongs in entity transform");
+			for (const auto* key : { "directional_light", "point_light", "spot_light" })
+				if (entity.contains(key) && (entity[key].contains("position") || entity[key].contains("direction")))
+					return Fail(error, "$.entities.light", "version 2 light pose belongs in entity transform");
+		}
+	return Upgrade(result, record, error);
 }
 
 bool SceneJson::Serialize(const SceneRecord& record, std::string& text, std::string& error)

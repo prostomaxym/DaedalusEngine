@@ -11,6 +11,8 @@ namespace Daedalus
 	struct PhysicsBodyComponent
 	{
 		RigidBodyHandle handle = 0;
+		bool pose_initialized{ false };
+		uint64_t synchronized_parent{ 0 };
 		BodyRecord description;
 
 		PhysicsBodyComponent() = default;
@@ -18,7 +20,7 @@ namespace Daedalus
 		PhysicsBodyComponent& operator=(const PhysicsBodyComponent&) = delete;
 
 		PhysicsBodyComponent(PhysicsBodyComponent&& other) noexcept
-			: handle(std::exchange(other.handle, 0)), description(std::move(other.description)),
+			: handle(std::exchange(other.handle, 0)), pose_initialized(other.pose_initialized), synchronized_parent(other.synchronized_parent), description(std::move(other.description)),
 			m_collider(std::move(other.m_collider)), m_kinematic(other.m_kinematic), m_cleanup(std::move(other.m_cleanup))
 		{
 			other.m_cleanup = {};
@@ -30,6 +32,8 @@ namespace Daedalus
 			{
 				Release();
 				handle = std::exchange(other.handle, 0);
+				pose_initialized = other.pose_initialized;
+				synchronized_parent = other.synchronized_parent;
 				description = std::move(other.description);
 				m_collider = std::move(other.m_collider);
 				m_kinematic = other.m_kinematic;
@@ -49,6 +53,8 @@ namespace Daedalus
 			if (m_cleanup) m_cleanup();
 			m_cleanup = {};
 			handle = 0;
+			pose_initialized = false;
+			synchronized_parent = 0;
 		}
 
 		void Attach(PhysicsWorld& world)

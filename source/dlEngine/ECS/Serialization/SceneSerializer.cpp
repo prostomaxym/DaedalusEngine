@@ -81,8 +81,8 @@ namespace
 	LightProps Props(const LightRecord& r)
 	{
 		LightProps p;
-		p.light_pos = r.position; p.ambient_color = r.ambient; p.diffuse_color = r.diffuse;
-		p.specular_color = r.specular; p.direction = r.direction; p.light_power = r.power;
+		p.ambient_color = r.ambient; p.diffuse_color = r.diffuse;
+		p.specular_color = r.specular; p.direction = { 0.f, 0.f, -1.f }; p.light_power = r.power;
 		p.max_distance = r.max_distance; p.theta_angle = r.inner_angle; p.outer_cutoff = r.outer_angle;
 		p.cast_shadows = r.cast_shadows; p.number_of_shadow_cascades = static_cast<int>(r.cascades);
 		return p;
@@ -92,8 +92,8 @@ namespace
 	{
 		const auto& p = light.GetProps();
 		LightRecord r;
-		r.position = p.light_pos; r.ambient = p.ambient_color; r.diffuse = p.diffuse_color;
-		r.specular = p.specular_color; r.direction = p.direction; r.power = p.light_power;
+		r.ambient = p.ambient_color; r.diffuse = p.diffuse_color;
+		r.specular = p.specular_color; r.power = p.light_power;
 		r.max_distance = p.max_distance; r.inner_angle = p.theta_angle; r.outer_angle = p.outer_cutoff;
 		r.cast_shadows = p.cast_shadows; r.cascades = static_cast<uint32_t>(p.number_of_shadow_cascades);
 		return r;
@@ -101,10 +101,9 @@ namespace
 
 	void AddCamera(Entity entity, const CameraRecord& r)
 	{
-		CameraPositionProps position(r.position, r.up, r.yaw, r.pitch);
 		auto& component = r.projection == "perspective"
-			? entity.AddComponent<CameraComponent>(CameraProjectionProps(r.fov, r.aspect_ratio, r.near_plane, r.far_plane), position)
-			: entity.AddComponent<CameraComponent>(r.left, r.right, r.bottom, r.top, r.near_plane, r.far_plane, position);
+			? entity.AddComponent<CameraComponent>(CameraProjectionProps(r.fov, r.aspect_ratio, r.near_plane, r.far_plane))
+			: entity.AddComponent<CameraComponent>(r.left, r.right, r.bottom, r.top, r.near_plane, r.far_plane);
 		component.viewport_aspect = r.viewport_aspect;
 		component.camera->SetMovementSpeed(r.movement_speed);
 		component.camera->SetSensivitity(r.sensitivity);
@@ -116,7 +115,6 @@ namespace
 	{
 		const auto* camera = component.camera.get();
 		if (!camera) { error = "Cannot save a null camera"; return false; }
-		r.position = camera->GetPosition(); r.up = camera->GetWorldUp(); r.yaw = camera->GetYaw(); r.pitch = camera->GetPitch();
 		r.near_plane = camera->GetNearPlane(); r.far_plane = camera->GetFarPlane();
 		r.movement_speed = camera->GetMovementSpeed(); r.sensitivity = camera->GetSensitivity(); r.zoom_speed = camera->GetZoomSpeed();
 		r.distance = camera->GetPersonDistance(); r.height = camera->GetPersonHeight(); r.viewport_aspect = component.viewport_aspect;
@@ -174,12 +172,13 @@ namespace
 	}
 }
 
-bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
+bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const std::filesystem::path& assets,
 	const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline)
 {
 	error.clear();
 	if (scene.IsRunning() || !scene.IsEmpty()) { error = "Scene loading requires an empty, stopped scene"; return false; }
-	if (!SceneJson::Validate(record, error)) return false;
+	SceneRecord record;
+	if (!SceneJson::Upgrade(source, record, error)) return false;
 	for (const auto& entity : record.entities)
 	{
 		if (!scripts.Validate(entity, error)) return false;
@@ -234,6 +233,12 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 	}
 	for (const auto& r : record.entities)
 	{
+		for (const auto& [name, target] : r.links)
+			if (!scene.SetEntityLink(Id(r.id), name, Id(target)))
+			{
+				error = "Failed to link entity " + r.id;
+				return rollback();
+			}
 		if (r.parent && !scene.SetParent(Id(r.id), Id(*r.parent)))
 		{
 			error = "Failed to parent entity " + r.id;
@@ -281,6 +286,8 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 		if (static_cast<uint64_t>(parent) != 0) r.parent = std::to_string(static_cast<uint64_t>(parent));
 		const auto& transform = entity.GetComponent<TransformComponent>();
 		r.transform = { transform.translation, transform.rotation, transform.scale };
+		for (const auto& [name, target] : scene.m_transform_nodes.at(entity.GetUUID()).links)
+			r.links.emplace(name, std::to_string(static_cast<uint64_t>(target)));
 		if (entity.HasComponent<RenderableObjectComponent>())
 		{
 			const auto& component = entity.GetComponent<RenderableObjectComponent>();

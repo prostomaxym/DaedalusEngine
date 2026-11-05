@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Components.h"
 #include "NativeScriptComponent.h"
+#include "Debug/Log.h"
 #include "Systems/RenderSystem.h"
 #include <entt/entity/helper.hpp>
 
@@ -22,14 +23,24 @@ template<> void Scene::OnComponentRemoved<CameraComponent>(CameraComponent&) {}
 template<> void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent& component)
 {
 	const auto entity = entt::to_entity(m_registry.storage<RigidBodyComponent>(), component);
-	(void)SetParent(m_registry.get<IDComponent>(entity).ID);
+	const auto id = m_registry.get<IDComponent>(entity).ID;
+	if (!HasUnitScaleAncestors(id))
+	{
+		Log::Write(Log::Levels::Warn, Log::Categories::ECS, "Detaching physics body from scaled ancestors");
+		(void)SetParent(id);
+	}
 	component.Attach(GetPhysicsWorld());
 }
 template<> void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent&) {}
 template<> void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent& component)
 {
 	const auto entity = entt::to_entity(m_registry.storage<KinematicBodyComponent>(), component);
-	(void)SetParent(m_registry.get<IDComponent>(entity).ID);
+	const auto id = m_registry.get<IDComponent>(entity).ID;
+	if (!HasUnitScaleAncestors(id))
+	{
+		Log::Write(Log::Levels::Warn, Log::Categories::ECS, "Detaching physics body from scaled ancestors");
+		(void)SetParent(id);
+	}
 	component.Attach(GetPhysicsWorld());
 }
 template<> void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent&) {}

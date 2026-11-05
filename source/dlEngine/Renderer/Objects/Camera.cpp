@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
 using namespace Daedalus;
 
@@ -20,7 +21,7 @@ Frustum Camera::GetViewFrustum() const
 glm::mat4 Camera::GetViewMatrix() const
 {
 	glm::vec3 position = m_position;
-	position.y += m_height;
+	position += m_world_up * m_height;
 	position += m_front * (-m_distance);
 
 	return glm::lookAt(position, m_position + m_front, m_up);
@@ -42,7 +43,7 @@ glm::mat4 Camera::GetProjectionViewMatrixWithoutTranslation(float rotate_angle) 
 	glm::vec3 rotated_vector = glm::vec3(rotation_matrix * glm::vec4(m_front, 0.0f));
 
 	glm::vec3 position = m_position;
-	position.y += m_height;
+	position += m_world_up * m_height;
 	position += rotated_vector * (-m_distance);
 	glm::mat4 view_matrix_without_translation = glm::mat4(glm::mat3(glm::lookAt(position, m_position + rotated_vector, m_up)));
 
@@ -54,6 +55,23 @@ void Camera::SetPosition(glm::vec3 position)
 	m_position = position;
 
 	UpdateView();
+}
+
+void Camera::SetPose(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& reference_up)
+{
+	m_position = position;
+	const auto rotation = glm::normalize(orientation);
+	m_front = rotation * glm::vec3(0.f, 0.f, -1.f);
+	m_up = rotation * glm::vec3(0.f, 1.f, 0.f);
+	m_right = rotation * glm::vec3(1.f, 0.f, 0.f);
+	m_world_up = reference_up;
+	m_yaw = glm::degrees(std::atan2(m_front.z, m_front.x));
+	m_pitch = glm::degrees(std::asin(glm::clamp(m_front.y, -1.f, 1.f)));
+}
+
+glm::quat Camera::GetOrientation() const
+{
+	return glm::normalize(glm::quat_cast(glm::mat3(m_right, m_up, -m_front)));
 }
 
 void Camera::SetPersonParams(float distance, float height)

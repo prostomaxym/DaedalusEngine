@@ -3,9 +3,9 @@ Cross-platform (Windows + Linux + Android) C++20 game engine. Personal project. 
 
 ## Builds
 
-[![Windows-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml)
-[![Linux-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml)
-[![Android-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Android-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Android-Dev-CI.yml)
+[![Windows-Dev-CI](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Windows-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Windows-Dev-CI.yml)
+[![Linux-Dev-CI](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Linux-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Linux-Dev-CI.yml)
+[![Android-Dev-CI](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Android-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/DaedalusEngine/actions/workflows/Android-Dev-CI.yml)
 
 ## Requirements
 - CMake 3.21+ (required by `CMakePresets.json`)
@@ -30,7 +30,7 @@ On Linux (single-config generators) pick one with `-DCMAKE_BUILD_TYPE=<config>`;
 
 Clone with submodules:
 ```console
-git clone --recursive https://github.com/prostomaxym/daedalus_engine
+git clone --recursive https://github.com/prostomaxym/DaedalusEngine
 ```
 or run `git submodule update --init` in an existing clone.
 

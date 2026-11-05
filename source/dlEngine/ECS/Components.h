@@ -2,6 +2,7 @@
 
 #include "UUID.h"
 #include "PhysicsBodyComponent.h"
+#include "PhysicsGameplayComponents.h"
 
 #include "Renderer/Resources/ResourceManager.h"
 #include "Renderer/Objects/Cubemap.h"

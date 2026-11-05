@@ -61,10 +61,7 @@ namespace Daedalus
 		{
 			Release();
 			const glm::quat orientation(glm::radians(m_collider.rotation));
-			if (m_collider.shape == "box")
-				handle = world.CreateBoxRigidBody(m_collider.mass, m_collider.half_extents, m_collider.position, orientation, m_kinematic);
-			else if (m_collider.shape == "sphere")
-				handle = world.CreateSphereRigidBody(m_collider.mass, m_collider.radius, m_collider.position, orientation, m_kinematic);
+			handle = world.CreateRigidBody(m_collider, m_collider.mass, m_collider.position, orientation, m_kinematic, m_collider.settings);
 			if (handle) m_cleanup = world.MakeBodyCleanup(handle);
 		}
 

@@ -28,7 +28,7 @@ bool Scene::SetParent(UUID child, UUID parent)
 	{
 		const auto [id, inherited_scale] = pending[index];
 		const auto handle = m_entity_map.at(id);
-		if (static_cast<uint64_t>(parent) != 0 && inherited_scale && m_registry.any_of<RigidBodyComponent, KinematicBodyComponent>(handle)) return false;
+		if (static_cast<uint64_t>(parent) != 0 && inherited_scale && m_registry.any_of<RigidBodyComponent, KinematicBodyComponent, CharacterControllerComponent>(handle)) return false;
 		const auto* transform = m_registry.try_get<TransformComponent>(handle);
 		for (auto descendant : m_transform_nodes.at(id).children)
 			pending.emplace_back(descendant, inherited_scale || (transform && transform->scale != glm::vec3(1.f)));

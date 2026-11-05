@@ -10,8 +10,11 @@
 #include "NativeScript.h"
 #include "NativeScriptComponent.h"
 #include "Physics/Physics.h"
+#include "Events/PhysicsEvent.h"
+#include "Renderer/API/Renderer.h"
 #include "Systems/RenderSystem.h"
 #include "Systems/PhysicsSystem.h"
+#include <algorithm>
 
 using namespace Daedalus;
 
@@ -88,6 +91,7 @@ void Scene::OnFixedUpdateRuntime(DeltaTime dt)
 
 void Scene::StepPhysics(DeltaTime dt)
 {
+	if (m_is_iterating) return;
 	m_is_iterating = true;
 	m_physics_system->OnUpdateRuntime(dt);
 	m_is_iterating = false;
@@ -98,6 +102,13 @@ void Scene::OnRenderRuntime(DeltaTime dt)
 	DL_PROFILE_SCOPE("Scene::Render");
 	m_is_iterating = true;
 	if (m_is_running && GetCamera()) m_render_system->OnUpdateRuntime(dt);
+#ifdef DL_DEV_TOOLS
+	if (m_is_running && m_physics_debug_draw)
+		GetPhysicsWorld().DrawDebug([](const auto& start, const auto& end, const auto& color)
+		{
+			(void)Renderer::DebugLine(start, end, color);
+		});
+#endif
 	m_is_iterating = false;
 }
 
@@ -140,6 +151,13 @@ Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 void Scene::DestroyEntity(Entity entity)
 {
 	if (entity.m_scene != this || !m_registry.valid(static_cast<entt::entity>(entity))) return;
+	const auto destroyed_id = std::to_string(static_cast<uint64_t>(entity.GetUUID()));
+	for (auto handle : m_registry.view<JointComponent>())
+	{
+		auto& component = m_registry.get<JointComponent>(handle);
+		if (std::erase_if(component.description, [&](const auto& joint) { return joint.target == destroyed_id; }) != 0)
+			component.joints.clear();
+	}
 	if (entity.HasComponent<DirectionalLightComponent>()) entity.RemoveComponent<DirectionalLightComponent>();
 	if (entity.HasComponent<PointLightComponent>()) entity.RemoveComponent<PointLightComponent>();
 	if (entity.HasComponent<SpotLightComponent>()) entity.RemoveComponent<SpotLightComponent>();
@@ -152,6 +170,23 @@ void Scene::DestroyEntity(Entity entity)
 	m_prefab_origins.erase(entity.GetUUID());
 	m_entity_map.erase(entity.GetUUID());
 	m_registry.destroy(entity);
+}
+
+void Scene::SetPhysicsEventCallback(std::function<void(const ScenePhysicsEvent&)> callback)
+{
+	m_physics_callback = callback ? std::make_shared<std::function<void(const ScenePhysicsEvent&)>>(std::move(callback)) : nullptr;
+}
+
+Daedalus::UUID Scene::GetPhysicsEntity(uint64_t body) const
+{
+	if (!body) return UUID(0);
+	for (auto handle : m_registry.view<RigidBodyComponent>())
+		if (m_registry.get<RigidBodyComponent>(handle).handle == body) return m_registry.get<IDComponent>(handle).ID;
+	for (auto handle : m_registry.view<KinematicBodyComponent>())
+		if (m_registry.get<KinematicBodyComponent>(handle).handle == body) return m_registry.get<IDComponent>(handle).ID;
+	for (auto handle : m_registry.view<CharacterControllerComponent>())
+		if (m_registry.get<CharacterControllerComponent>(handle).handle == body) return m_registry.get<IDComponent>(handle).ID;
+	return UUID(0);
 }
 
 std::span<const PrefabOrigin> Scene::GetPrefabOrigins(UUID entity) const

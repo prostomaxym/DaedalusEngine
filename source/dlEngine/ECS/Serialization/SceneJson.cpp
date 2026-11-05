@@ -1,11 +1,13 @@
 #include "dlpch.h"
 #include "SceneJson.h"
+#include "Physics/PhysicsWorld.h"
 #include "Utils/Utf8.h"
 #include "Utils/VirtualFileSystem.h"
 
 #include <nlohmann/json.hpp>
 
 #include <charconv>
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <limits>
@@ -62,6 +64,27 @@ namespace
 			f("shape", r.shape); f("mass", r.mass); f("half_extents", r.half_extents);
 			f("radius", r.radius); f("bounds_scale", r.bounds_scale); f("bounds_offset", r.bounds_offset);
 			f("position", r.position); f("rotation", r.rotation);
+			f("height", r.height); f("vertices", r.vertices); f("indices", r.indices); f("settings", r.settings);
+		}
+		else if constexpr (std::is_same_v<R, PhysicsBodySettings>)
+		{
+			f("group", r.group); f("mask", r.mask); f("trigger", r.trigger);
+			f("friction", r.friction); f("restitution", r.restitution); f("rolling_friction", r.rolling_friction);
+			f("linear_damping", r.linear_damping); f("angular_damping", r.angular_damping);
+		}
+		else if constexpr (std::is_same_v<R, CharacterSettings>)
+		{
+			f("radius", r.radius); f("height", r.height); f("step_height", r.step_height); f("max_slope", r.max_slope);
+			f("jump_speed", r.jump_speed); f("fall_speed", r.fall_speed); f("gravity", r.gravity);
+			f("group", r.group); f("mask", r.mask);
+		}
+		else if constexpr (std::is_same_v<R, JointRecord>)
+		{
+			f("target", r.target); f("type", r.type); f("pivot_a", r.pivot_a); f("pivot_b", r.pivot_b);
+			f("rotation_a", r.rotation_a); f("rotation_b", r.rotation_b);
+			f("lower_limit", r.lower_limit); f("upper_limit", r.upper_limit);
+			f("angular_lower_limit", r.angular_lower_limit); f("angular_upper_limit", r.angular_upper_limit);
+			f("swing_limits", r.swing_limits); f("collide_connected", r.collide_connected); f("breaking_impulse", r.breaking_impulse);
 		}
 		else if constexpr (std::is_same_v<R, ScriptRecord>)
 		{
@@ -75,6 +98,7 @@ namespace
 		{
 			f("id", r.id); f("name", r.name); f("transform", r.transform); f("parent", r.parent);
 			f("links", r.links); f("scripts", r.scripts); f("remove", r.remove);
+			f("character_controller", r.character_controller); f("joints", r.joints);
 			f("model", r.model); f("camera", r.camera);
 			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
 			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body);
@@ -85,6 +109,7 @@ namespace
 			f("parent", r.parent);
 			f("links", r.links);
 			f("prefab", r.prefab);
+			f("character_controller", r.character_controller); f("joints", r.joints);
 			f("model", r.model); f("camera", r.camera);
 			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
 			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body); f("scripts", r.scripts);
@@ -92,8 +117,33 @@ namespace
 		else if constexpr (std::is_same_v<R, SceneRecord>)
 		{
 			f("version", r.version); f("name", r.name); f("primary_camera", r.primary_camera); f("entities", r.entities);
+			f("gravity", r.gravity);
 			f("base_prefab", r.base_prefab); f("overrides", r.overrides);
 		}
+	}
+
+	bool PhysicsFields(Json& value, bool strip)
+	{
+		if (value.is_object() && value.contains("id"))
+		{
+			for (const auto* key : { "character_controller", "joints" })
+				if (value.contains(key))
+				{
+					if (!strip) return false;
+					value.erase(key);
+				}
+			for (const auto* body : { "rigid_body", "kinematic_body" })
+				if (value.contains(body) && value[body].is_object())
+					for (const auto* key : { "height", "vertices", "indices", "settings" })
+						if (value[body].contains(key))
+						{
+							if (!strip) return false;
+							value[body].erase(key);
+						}
+		}
+		if (value.is_structured())
+			for (auto& child : value) if (!PhysicsFields(child, strip)) return false;
+		return true;
 	}
 
 	bool Poses(Json& value, bool strip)
@@ -153,6 +203,7 @@ namespace
 			if constexpr (std::is_same_v<T, SceneRecord>)
 			{
 				if (value.version >= 2) Poses(result, true);
+				if (value.version < 5) PhysicsFields(result, true);
 				if (value.version < 4)
 				{
 					result.erase("overrides");
@@ -238,6 +289,13 @@ namespace
 		else if constexpr (Vector<T>::value)
 		{
 			if (!json.is_array()) return Fail(error, path, "expected an array");
+			using Item = typename Vector<T>::Value;
+			if constexpr (std::is_same_v<Item, glm::vec3>)
+				if (json.size() > 65536) return Fail(error, path, "collider vertex limit exceeded");
+			if constexpr (std::is_same_v<Item, uint32_t>)
+				if (json.size() > 196608) return Fail(error, path, "collider index limit exceeded");
+			if constexpr (std::is_same_v<Item, JointRecord>)
+				if (json.size() > 128) return Fail(error, path, "joint count limit exceeded");
 			for (size_t i = 0; i < json.size(); ++i)
 			{
 				typename Vector<T>::Value item;
@@ -324,8 +382,13 @@ namespace
 	bool CheckBody(const BodyRecord& body, const EntityRecord& entity, bool kinematic, const std::string& path, std::string& error)
 	{
 		if (body.mass < 0.f || (kinematic && body.mass != 0.f)) return Fail(error, path, "invalid body mass");
-		if (body.shape != "box" && body.shape != "sphere" && body.shape != "model_box" && body.shape != "model_sphere")
-			return Fail(error, path + ".shape", "unknown collider shape");
+		auto collider = static_cast<const ColliderDescription&>(body);
+		if (collider.shape == "model_box") collider.shape = "box";
+		if (collider.shape == "model_sphere") collider.shape = "sphere";
+		if (!PhysicsWorld::ValidateCollider(collider) || !PhysicsWorld::ValidateBodySettings(body.settings))
+			return Fail(error, path, "invalid collider geometry, material or collision filter");
+		if (body.shape == "triangle_mesh" && !kinematic && body.mass > 0.f)
+			return Fail(error, path, "triangle meshes require static or kinematic bodies");
 		if ((body.shape == "model_box" || body.shape == "model_sphere") && !entity.model)
 			return Fail(error, path, "model-derived collider requires a model");
 		if ((body.shape == "box" && !Positive(body.half_extents)) || body.radius <= 0.f ||
@@ -334,15 +397,26 @@ namespace
 		return true;
 	}
 
+	bool ExtendedBody(const BodyRecord& body)
+	{
+		return (body.shape != "box" && body.shape != "sphere" && body.shape != "model_box" && body.shape != "model_sphere") ||
+			body.height != 1.f || !body.vertices.empty() || !body.indices.empty() || Encode(body.settings) != Encode(PhysicsBodySettings{});
+	}
+
 	bool CheckOverrides(const std::vector<EntityOverrideRecord>& overrides, uint32_t version, const std::string& path, std::string& error)
 	{
 		if (version < 4 && !overrides.empty()) return Fail(error, path, "overrides require scene version 4");
 		std::set<std::string> ids;
 		const std::set<std::string> removable{
-			"model", "camera", "directional_light", "point_light", "spot_light", "skybox", "rigid_body", "kinematic_body"
+			"model", "camera", "directional_light", "point_light", "spot_light", "skybox", "rigid_body", "kinematic_body", "character_controller", "joints"
 		};
 		for (const auto& patch : overrides)
 		{
+			if (version < 5 && (patch.character_controller || patch.joints ||
+				(patch.rigid_body && ExtendedBody(*patch.rigid_body)) || (patch.kinematic_body && ExtendedBody(*patch.kinematic_body)) ||
+				std::find(patch.remove.begin(), patch.remove.end(), "character_controller") != patch.remove.end() ||
+				std::find(patch.remove.begin(), patch.remove.end(), "joints") != patch.remove.end()))
+				return Fail(error, path, "extended physics requires scene version 5");
 			if (!ValidId(patch.id) || !ids.insert(patch.id).second) return Fail(error, path, "override targets must be unique template UUIDs");
 			if (patch.name && patch.name->empty()) return Fail(error, path, "override name must not be empty");
 			if (patch.parent && !patch.parent->empty() && !ValidId(*patch.parent)) return Fail(error, path, "invalid override parent UUID");
@@ -370,6 +444,7 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	if (!Decode(Encode(record), checked, "$", error)) return false;
 	if (record.version < 1 || record.version > CurrentSceneVersion)
 		return Fail(error, "$.version", "unsupported scene version (expected 1.." + std::to_string(CurrentSceneVersion) + ")");
+	if (record.version < 5 && record.gravity) return Fail(error, "$.gravity", "scene gravity requires version 5");
 	if (!CheckOverrides(record.overrides, record.version, "$.overrides", error)) return false;
 	if (record.base_prefab)
 	{
@@ -426,6 +501,14 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 				if (!AssetPath(face)) return Fail(error, path + ".skybox.faces", "invalid asset path");
 		}
 		if (entity.rigid_body && entity.kinematic_body) return Fail(error, path, "an entity cannot have both body types");
+		if (record.version < 5 && (entity.character_controller || !entity.joints.empty() ||
+			(entity.rigid_body && ExtendedBody(*entity.rigid_body)) || (entity.kinematic_body && ExtendedBody(*entity.kinematic_body))))
+			return Fail(error, path, "extended physics requires scene version 5");
+		if (entity.character_controller && (entity.rigid_body || entity.kinematic_body || !PhysicsWorld::ValidateCharacterSettings(*entity.character_controller)))
+			return Fail(error, path, "invalid character controller or conflicting body component");
+		if (entity.joints.size() > 128) return Fail(error, path, "joint count limit exceeded");
+		for (const auto& joint : entity.joints)
+			if (!ValidId(joint.target) || !PhysicsWorld::ValidateJointSettings(joint)) return Fail(error, path, "invalid joint target or settings");
 		if (entity.rigid_body && !CheckBody(*entity.rigid_body, entity, false, path + ".rigid_body", error)) return false;
 		if (entity.kinematic_body && !CheckBody(*entity.kinematic_body, entity, true, path + ".kinematic_body", error)) return false;
 		std::set<std::string> script_types;
@@ -436,6 +519,14 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	for (const auto& entity : record.entities) hierarchy.emplace(entity.id, &entity);
 	for (const auto& entity : record.entities)
 	{
+		for (const auto& joint : entity.joints)
+		{
+			const auto target = hierarchy.find(joint.target);
+			if (joint.target == entity.id || target == hierarchy.end() ||
+				(!entity.rigid_body && !entity.kinematic_body) || (!target->second->rigid_body && !target->second->kinematic_body) ||
+				(!(entity.rigid_body && entity.rigid_body->mass > 0.f) && !(target->second->rigid_body && target->second->rigid_body->mass > 0.f)))
+				return Fail(error, "$.entities.joints", "joints require two distinct bodies with at least one dynamic body");
+		}
 		for (const auto& [name, target] : entity.links)
 		{
 			const auto linked = hierarchy.find(target);
@@ -461,7 +552,7 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 		visited.insert(chain.begin(), chain.end());
 	}
 	for (const auto& entity : record.entities)
-		if (entity.rigid_body || entity.kinematic_body)
+		if (entity.rigid_body || entity.kinematic_body || entity.character_controller)
 			for (auto parent = entity.parent; parent; parent = hierarchy.at(*parent)->parent)
 				if (hierarchy.at(*parent)->transform.scale != glm::vec3(1.f))
 					return Fail(error, "$.entities.parent", "physics ancestors require unit scale");
@@ -488,6 +579,7 @@ bool SceneJson::Parse(std::string_view text, SceneRecord& record, std::string& e
 	if (!Decode(json, result, "$", error) || !Validate(result, error)) return false;
 	if (result.version >= 2 && !Poses(json, false))
 		return Fail(error, "$.entities", "camera/light pose belongs in entity transform for scene versions 2 and later");
+	if (result.version < 5 && !PhysicsFields(json, false)) return Fail(error, "$.entities", "extended physics fields require scene version 5");
 	return Upgrade(result, record, error);
 }
 

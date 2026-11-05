@@ -41,6 +41,7 @@ set(DEBUG_TEST_FILES
 set(ECS_TEST_FILES
     ECSTests/EntityTest.cpp
     ECSTests/HierarchyIntegrationTest.cpp
+    ECSTests/PhysicsSceneTest.cpp
     ECSTests/NativeScriptTest.cpp
     ECSTests/SceneTest.cpp
     ECSTests/SceneManagerTest.cpp
@@ -63,6 +64,7 @@ set(EVENTS_TEST_FILES
 
 set(PHYSICS_TEST_FILES
     PhysicsTests/PhysicsTest.cpp
+    PhysicsTests/PhysicsEnhancementsTest.cpp
     )
 
 set(RENDERER_TEST_FILES

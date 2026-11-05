@@ -9,6 +9,7 @@
 #include "Utils/Utf8.h"
 #include "Core/AssetPipeline.h"
 #include "Physics/PhysicsWorld.h"
+#include "ECS/Systems/PhysicsSystem.h"
 
 #include <algorithm>
 #include <charconv>
@@ -168,7 +169,8 @@ namespace
 			entt::type_hash<IDComponent>::value(), entt::type_hash<TagComponent>::value(), entt::type_hash<TransformComponent>::value(),
 			entt::type_hash<RenderableObjectComponent>::value(), entt::type_hash<CameraComponent>::value(), entt::type_hash<SkyboxComponent>::value(),
 			entt::type_hash<DirectionalLightComponent>::value(), entt::type_hash<PointLightComponent>::value(), entt::type_hash<SpotLightComponent>::value(),
-			entt::type_hash<RigidBodyComponent>::value(), entt::type_hash<KinematicBodyComponent>::value(), entt::type_hash<NativeScriptComponent>::value()
+			entt::type_hash<RigidBodyComponent>::value(), entt::type_hash<KinematicBodyComponent>::value(), entt::type_hash<NativeScriptComponent>::value(),
+			entt::type_hash<CharacterControllerComponent>::value(), entt::type_hash<JointComponent>::value()
 		};
 		return types;
 	}
@@ -219,6 +221,7 @@ bool SceneSerializer::SpawnPrefab(const PrefabRecord& prefab, Scene& scene, cons
 		entity.id = remap.at(entity.id);
 		if (entity.parent) entity.parent = remap.at(*entity.parent);
 		for (auto& [name, target] : entity.links) target = remap.at(target);
+		for (auto& joint : entity.joints) joint.target = remap.at(joint.target);
 		for (auto& origin : entity.prefab_origins) origin.instance = remap.at(origin.instance);
 		if (is_anchor)
 		{
@@ -248,6 +251,8 @@ bool SceneSerializer::SpawnPrefab(const PrefabRecord& prefab, Scene& scene, cons
 		if (entity.HasComponent<SpotLightComponent>()) existing.spot_light = Light(entity.GetComponent<SpotLightComponent>().light);
 		if (entity.HasComponent<RigidBodyComponent>()) existing.rigid_body = entity.GetComponent<RigidBodyComponent>().description;
 		if (entity.HasComponent<KinematicBodyComponent>()) existing.kinematic_body = entity.GetComponent<KinematicBodyComponent>().description;
+		if (entity.HasComponent<CharacterControllerComponent>()) existing.character_controller = entity.GetComponent<CharacterControllerComponent>().description;
+		if (entity.HasComponent<JointComponent>()) existing.joints = entity.GetComponent<JointComponent>().description;
 		for (auto* body : { &existing.rigid_body, &existing.kinematic_body })
 			if (*body && ((*body)->shape == "model_box" || (*body)->shape == "model_sphere")) (*body)->shape = "box";
 		assembled.entities.push_back(std::move(existing));
@@ -278,12 +283,15 @@ bool SceneSerializer::Construct(const SceneRecord& record, Scene& scene, const s
 	}
 	const auto previous_name = scene.GetSceneName();
 	const auto previous_paused = scene.IsPaused();
+	const auto previous_gravity = scene.GetPhysicsWorld().GetGravity();
+	if (!append && record.gravity) scene.GetPhysicsWorld().SetGravity(*record.gravity);
 	std::vector<UUID> created;
 	const auto rollback = [&]()
 	{
 		for (auto it = created.rbegin(); it != created.rend(); ++it) scene.DestroyEntity(scene.GetEntityByUUID(*it));
 		scene.SetSceneName(previous_name);
 		scene.SetPaused(previous_paused);
+		scene.GetPhysicsWorld().SetGravity(previous_gravity);
 		return false;
 	};
 	for (const auto& r : record.entities)
@@ -328,6 +336,12 @@ bool SceneSerializer::Construct(const SceneRecord& record, Scene& scene, const s
 		}
 		if (r.rigid_body && !AddBody<RigidBodyComponent>(entity, *r.rigid_body, error)) return rollback();
 		if (r.kinematic_body && !AddBody<KinematicBodyComponent>(entity, *r.kinematic_body, error)) return rollback();
+		if (r.character_controller && !entity.AddComponent<CharacterControllerComponent>(*r.character_controller).handle)
+		{
+			error = "Cannot create character controller for " + r.id;
+			return rollback();
+		}
+		if (!r.joints.empty()) entity.AddComponent<JointComponent>(r.joints);
 	}
 	for (const auto& r : record.entities)
 	{
@@ -346,8 +360,11 @@ bool SceneSerializer::Construct(const SceneRecord& record, Scene& scene, const s
 	scene.UpdateWorldTransforms();
 	for (const auto& r : record.entities)
 	{
-		if (!append || !r.parent) continue;
+		if (!r.parent && !r.character_controller) continue;
 		auto entity = scene.GetEntityByUUID(Id(r.id));
+		if (r.character_controller)
+			(void)scene.GetPhysicsWorld().WarpCharacter(entity.GetComponent<CharacterControllerComponent>().handle,
+				glm::vec3((*scene.GetWorldTransform(entity.GetUUID()))[3]));
 		for (auto* body : { entity.HasComponent<RigidBodyComponent>() ? static_cast<PhysicsBodyComponent*>(&entity.GetComponent<RigidBodyComponent>()) : nullptr,
 			entity.HasComponent<KinematicBodyComponent>() ? static_cast<PhysicsBodyComponent*>(&entity.GetComponent<KinematicBodyComponent>()) : nullptr })
 			if (body)
@@ -356,6 +373,11 @@ bool SceneSerializer::Construct(const SceneRecord& record, Scene& scene, const s
 				body->pose_initialized = scene.IsRunning();
 				body->synchronized_parent = static_cast<uint64_t>(scene.GetParent(entity.GetUUID()));
 			}
+	}
+	if (!scene.m_physics_system->PrepareJoints(created))
+	{
+		error = "Cannot create scene joints";
+		return rollback();
 	}
 	if (!append) scene.SetSceneName(record.name);
 	if (!append && !record.primary_camera.empty() && !scene.SetPrimaryCamera(Id(record.primary_camera)))
@@ -388,6 +410,7 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 		}
 	SceneRecord result;
 	result.name = scene.m_scene_name;
+	result.gravity = scene.GetPhysicsWorld().GetGravity();
 	for (const auto handle : scene.m_registry.view<IDComponent>())
 	{
 		Entity entity(handle, &scene);
@@ -430,6 +453,8 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 		}
 		if (entity.HasComponent<RigidBodyComponent>()) r.rigid_body = entity.GetComponent<RigidBodyComponent>().description;
 		if (entity.HasComponent<KinematicBodyComponent>()) r.kinematic_body = entity.GetComponent<KinematicBodyComponent>().description;
+		if (entity.HasComponent<CharacterControllerComponent>()) r.character_controller = entity.GetComponent<CharacterControllerComponent>().description;
+		if (entity.HasComponent<JointComponent>()) r.joints = entity.GetComponent<JointComponent>().description;
 		if (entity.HasComponent<NativeScriptComponent>() && !scripts.Capture(entity.GetComponent<NativeScriptComponent>(), r.scripts, error)) return false;
 		if (!scripts.Validate(r, error)) return false;
 		result.entities.push_back(std::move(r));

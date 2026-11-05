@@ -15,7 +15,7 @@ Status legend: 🟢 solid · 🟡 functional, needs work · 🔴 missing / stub
 | Utils | 🟡 | Timer, DeltaTime, FPSLocker, RingVector, Random, Utf8, WorkingDirectory; directory/ZIP `VirtualFileSystem`, bounded reads, named UTF-8 mounts, containment checks and content fingerprints | `WorkingDirectory` hardcodes `bin`, `path.ini`, 5-level upward search. ZIP encryption and an engine archive-packing tool are not provided. |
 | Platform | 🟡 | GLFW window, OpenGL context, Win/Linux resources monitor (guarded `/proc` access), Nvidia high-perf request | Imprecise Linux sleep (`Platform.cpp`). |
 Spot light doesn't support ortho camera. No render graph,
-| `SkyboxComponent` export TODO (still open). No transform
+| ECS / Scene | 🟡 | UUID entities, native scripts, scene persistence, parent/child local transforms and dirty cached world matrices | Physics bodies remain roots; camera/light poses are independent of entity transforms. Prefabs and serializer migrations remain open. |
 | Physics | 🟡 | Bullet3 world, rigid bodies via `PhysicsSystem`, fixed step | Verify/extend: collision events → Events, raycasts/queries API, character controller, triggers, debug draw, serialization of all collider shapes. |
 | Not yet config-driven generic `dlGame`. |
 | Events, Threads, Utils, ECS/scene fixtures (own copies in `dlUnitTests/fixtures/scenes`) | No tests for
@@ -44,7 +44,7 @@ Phases are ordered by dependency; each phase should leave the engine shippable a
 
 ### Phase 1 – Core infrastructure
 1. ✅ **Initial profiler implementation complete**: CPU scopes (`DL_PROFILE_SCOPE`), Chrome trace capture, Profiler tab, per-scope rolling stats, non-blocking OpenGL GPU timestamp queries (`GPUTimer`) covering render+ImGui, each pass, skybox, depth copy and debug compute; p95/p99 per scope; stats aggregated independently of the UI; GPU timestamps calibrated to the profiler clock; dropped GPU frames counted; sortable tables, Ctrl-to-pause. Optional enhancements below are not completion requirements.
-2. ✅ **Job system**: engine-owned scheduler over ThreadPool with dependency/group counters, main-thread affinity tasks and parallel-for. Model material loading uses worker image decoding with ordered dependent main-thread uploads; RenderSystem prepares transform matrices from reusable snapshots in parallel for batches of 128+ objects. Shutdown rejects new submissions and drains accepted jobs before resource teardown. Graphics-independent regression coverage covers scheduler contracts, image decoding and transform preparation. General async scene loading and automatic arbitrary-ECS scheduling are not implemented; VFS/async asset APIs are supplied by item 3. Job submissions use bounded allocations, not a pooled job arena.
+2. ✅ **Job system**: engine-owned scheduler over ThreadPool with dependency/group counters, main-thread affinity tasks and parallel-for. Model material loading uses worker image decoding with ordered dependent main-thread uploads. The flat-snapshot parallel transform helper remains tested; Phase 2 replaces RenderSystem's former 128+ object snapshot batch with dirty hierarchical world-transform caching. Shutdown rejects new submissions and drains accepted jobs before resource teardown. Graphics-independent regression coverage covers scheduler contracts, image decoding and transform preparation. General async scene loading and automatic arbitrary-ECS scheduling are not implemented; VFS/async asset APIs are supplied by item 3. Job submissions use bounded allocations, not a pooled job arena.
 	- Validation: Windows Release and ReleaseDevTools builds and full CTest suites passed; all 26 new tests passed across 20 repetitions. Linux/WSL validation was deferred by user choice; no graphics-context smoke test was performed.
 3. ✅ **Virtual file system & asset pipeline**: Engine-owned `AssetPipeline`; `assets:/`, `shaders:/`, `config:/`, `logs:/` mounts from `PathConfig`; persistent nonzero 64-bit UUID sidecars and registry metadata; job-based binary/source reads with main-thread completion; serialized worker polling for asset discovery and shader-first hot-reload. Shader includes expand recursively on workers; reload preserves shared Shader objects and the last-good program, transfers compatible uniform/buffer bindings, rejects superseded generations and refreshes cache/statistics only after success. Invalid/duplicate metadata is rejected and reported. Graphics-independent regression coverage covers mount containment, metadata persistence/relocation, async contracts, changes, includes and shutdown.
 	- Validation: Windows Release and ReleaseDevTools builds and full CTest suites passed. The 26 new asset tests completed 20 repetitions in each configuration: 24 passed and 2 symlink tests skipped per run because Windows symlink creation was unavailable. Linux/WSL validation was deferred by user choice; real GL reload smoke validation has not been performed.
@@ -87,10 +87,16 @@ These enhancements are deferred and do not block completion of the initial CPU/G
 - ⬜ Capture hotkey and automatic capture on frame spikes.
 
 ### Phase 2 – Scene & gameplay foundations
-1. Transform hierarchy (parent/child, dirty flags), entity UUIDs, prefabs, scene versioning/migration in serializer.
+1. Scene identity, hierarchy and persistence:
+	- ✅ Entity UUIDs and parent/child transforms with dirty world-matrix caching. Parenting and parent destruction preserve local TRS; cycles and invalid UUIDs are rejected. Rendering consumes cached world matrices, with iterative traversal and retained buffers. Optional parent UUIDs round-trip through v1 scene JSON; existing flat files remain valid, and malformed hierarchies fail before construction.
+	- ✅ Root-only rigid/kinematic bodies: bodies cannot be parented; adding a body to a child detaches it. Visual children can follow bodies. Headless regression coverage includes composition, cache invalidation, lifetime, deep trees, body restrictions and persistence.
+	- Validation: Windows ReleaseDevTools workspace build and Release `dlUnitTests`/`dlSandbox` builds passed. All 18 new hierarchy tests passed five repetitions in ReleaseDevTools. Full CTest and executable suites passed in both configurations: Release 513 tests (510 passed / 3 skipped), ReleaseDevTools 513 tests (509 passed / 4 skipped). Linux/WSL and interactive graphics validation remain deferred.
+	- ⬜ Parented physics bodies and camera/light integration with entity world transforms. Cameras/lights still use their separate pose properties.
+	- ⬜ Prefabs and scene version migrations. The serializer remains version 1 with an optional parent field, not a migration framework.
 2. Physics enhancements: collision/trigger events, raycasts/shape queries, character controller, joints, debug draw, full serialization.
-3. **Convert dlSandbox → dlGame**: generic app loading scenes/configs purely from runtime assets.
-4. Game event types & scene-level messaging.
+3. **Scripting** (Lua via sol2 recommended first; Python optional): bindings for ECS/Input/Events, hot reload, sandboxing.
+4. **Convert dlSandbox → dlGame**: generic app loading scenes/configs purely from runtime assets.
+5. Game event types & scene-level messaging.
 
 ### Phase 3 – Rendering tech debt
 Order chosen so each step unlocks the next:
@@ -108,12 +114,11 @@ Order chosen so each step unlocks the next:
 ### Phase 4 – New engine systems
 1. **Audio** (e.g. miniaudio/OpenAL-soft): sources/listener components, 3D spatialization, streaming, mixer buses.
 2. **Animation**: skeletal animation from assimp, GPU skinning, blending/state machine, then IK.
-3. **Scripting** (Lua via sol2 recommended first; Python optional): bindings for ECS/Input/Events, hot reload, sandboxing.
-4. **Editor application (dlEditor)**: docking UI, scene hierarchy/inspector, ImGuizmo gizmos, asset browser, play-in-editor, undo/redo (command pattern). Depends on serialization, VFS, reflection.
-5. **Reflection/metadata** for components (needed by editor, serializer, scripting) – start before editor.
-6. **AI**: navmesh (Recast/Detour), pathfinding, behavior trees/state machines, perception.
-7. **UI for games** (runtime UI separate from ImGui).
-8. **Networking**: transport (ENet/GameNetworkingSockets), replication of ECS state, client prediction.
+3. **Editor application (dlEditor)**: docking UI, scene hierarchy/inspector, ImGuizmo gizmos, asset browser, play-in-editor, undo/redo (command pattern). Depends on serialization, VFS, reflection.
+4. **Reflection/metadata** for components (needed by editor, serializer, scripting) – start before editor.
+5. **AI**: navmesh (Recast/Detour), pathfinding, behavior trees/state machines, perception.
+6. **UI for games** (runtime UI separate from ImGui).
+7. **Networking**: transport (ENet/GameNetworkingSockets), replication of ECS state, client prediction.
 
 ### Phase 5 – Render backends & platform
 1. Harden `Renderer/API` abstraction (command buffers, explicit resource states) after render graph.

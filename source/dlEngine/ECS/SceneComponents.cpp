@@ -3,6 +3,7 @@
 #include "Components.h"
 #include "NativeScriptComponent.h"
 #include "Systems/RenderSystem.h"
+#include <entt/entity/helper.hpp>
 
 using namespace Daedalus;
 
@@ -18,9 +19,19 @@ template<> void Scene::OnComponentAdded<SkyboxComponent>(SkyboxComponent&) {}
 template<> void Scene::OnComponentRemoved<SkyboxComponent>(SkyboxComponent&) {}
 template<> void Scene::OnComponentAdded<CameraComponent>(CameraComponent&) {}
 template<> void Scene::OnComponentRemoved<CameraComponent>(CameraComponent&) {}
-template<> void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent& component) { component.Attach(GetPhysicsWorld()); }
+template<> void Scene::OnComponentAdded<RigidBodyComponent>(RigidBodyComponent& component)
+{
+	const auto entity = entt::to_entity(m_registry.storage<RigidBodyComponent>(), component);
+	(void)SetParent(m_registry.get<IDComponent>(entity).ID);
+	component.Attach(GetPhysicsWorld());
+}
 template<> void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent&) {}
-template<> void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent& component) { component.Attach(GetPhysicsWorld()); }
+template<> void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent& component)
+{
+	const auto entity = entt::to_entity(m_registry.storage<KinematicBodyComponent>(), component);
+	(void)SetParent(m_registry.get<IDComponent>(entity).ID);
+	component.Attach(GetPhysicsWorld());
+}
 template<> void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent&) {}
 template<> void Scene::OnComponentAdded<NativeScriptComponent>(NativeScriptComponent&) {}
 template<> void Scene::OnComponentRemoved<NativeScriptComponent>(NativeScriptComponent&) {}

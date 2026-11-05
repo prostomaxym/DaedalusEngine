@@ -21,6 +21,7 @@ set(ECS_PROJECT_FILES
     SceneComponents.inl
     SceneComponents.cpp
     Scene.cpp
+    SceneHierarchy.cpp
     SceneManager.h
     SceneManager.cpp
     Serialization/SceneRecord.h

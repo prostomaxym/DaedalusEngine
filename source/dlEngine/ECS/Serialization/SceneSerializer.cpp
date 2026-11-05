@@ -232,6 +232,15 @@ bool SceneSerializer::Instantiate(const SceneRecord& record, Scene& scene, const
 		if (r.rigid_body && !AddBody<RigidBodyComponent>(entity, *r.rigid_body, error)) return rollback();
 		if (r.kinematic_body && !AddBody<KinematicBodyComponent>(entity, *r.kinematic_body, error)) return rollback();
 	}
+	for (const auto& r : record.entities)
+	{
+		if (r.parent && !scene.SetParent(Id(r.id), Id(*r.parent)))
+		{
+			error = "Failed to parent entity " + r.id;
+			return rollback();
+		}
+	}
+	scene.UpdateWorldTransforms();
 	scene.SetSceneName(record.name);
 	if (!record.primary_camera.empty() && !scene.SetPrimaryCamera(Id(record.primary_camera)))
 	{
@@ -268,6 +277,8 @@ bool SceneSerializer::Capture(Scene& scene, const std::filesystem::path& assets,
 		Entity entity(handle, &scene);
 		EntityRecord r;
 		r.id = std::to_string(static_cast<uint64_t>(entity.GetUUID())); r.name = entity.GetName();
+		const auto parent = scene.GetParent(entity.GetUUID());
+		if (static_cast<uint64_t>(parent) != 0) r.parent = std::to_string(static_cast<uint64_t>(parent));
 		const auto& transform = entity.GetComponent<TransformComponent>();
 		r.transform = { transform.translation, transform.rotation, transform.scale };
 		if (entity.HasComponent<RenderableObjectComponent>())

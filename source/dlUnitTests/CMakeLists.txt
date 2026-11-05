@@ -46,6 +46,7 @@ set(ECS_TEST_FILES
     ECSTests/SceneJsonTest.cpp
     ECSTests/SceneSerializerTest.cpp
     ECSTests/TransformComponentTest.cpp
+    ECSTests/TransformHierarchyTest.cpp
     ECSTests/TransformPreparationTest.cpp
     ECSTests/UUIDTest.cpp
     )

@@ -103,6 +103,7 @@ namespace Daedalus
 		}
 
 	private:
+		friend class Scene;
 		entt::entity m_entity_handle{ entt::null };
 		Scene* m_scene{ nullptr };
 	};

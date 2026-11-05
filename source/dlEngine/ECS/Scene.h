@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <map>
+#include <functional>
 #include <memory>
 #include <span>
 #include <string>
@@ -23,6 +24,7 @@ namespace Daedalus
 	class PhysicsSystem;
 	class PhysicsWorld;
 	class Camera;
+	class ScenePhysicsEvent;
 	struct IDComponent;
 	struct TagComponent;
 	struct TransformComponent;
@@ -31,6 +33,8 @@ namespace Daedalus
 	struct CameraComponent;
 	struct RigidBodyComponent;
 	struct KinematicBodyComponent;
+	struct CharacterControllerComponent;
+	struct JointComponent;
 	struct DirectionalLightComponent;
 	struct PointLightComponent;
 	struct SpotLightComponent;
@@ -85,6 +89,10 @@ namespace Daedalus
 		[[nodiscard]] std::span<const PrefabOrigin> GetPrefabOrigins(UUID entity) const;
 		// Explicit physics-only stepping also supports headless tools and tests.
 		void StepPhysics(DeltaTime dt);
+		void SetPhysicsEventCallback(std::function<void(const ScenePhysicsEvent&)> callback);
+		UUID GetPhysicsEventSource() const { return m_physics_event_source; }
+		UUID GetPhysicsEntity(uint64_t body) const;
+		void SetPhysicsDebugDraw(bool enabled) { m_physics_debug_draw = enabled; }
 
 		const std::string& GetSceneName() const { return m_scene_name; }
 		void SetSceneName(const std::string& name) { m_scene_name = name; }
@@ -130,6 +138,9 @@ namespace Daedalus
 		std::unordered_map<UUID, entt::entity> m_entity_map;
 		std::unordered_map<UUID, std::vector<PrefabOrigin>> m_prefab_origins;
 		UUID m_primary_camera{ 0 };
+		UUID m_physics_event_source;
+		std::shared_ptr<std::function<void(const ScenePhysicsEvent&)>> m_physics_callback;
+		bool m_physics_debug_draw{ false };
 
 		std::unique_ptr<RenderSystem> m_render_system;
 		std::unique_ptr<PhysicsSystem> m_physics_system;

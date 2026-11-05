@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "Physics/PhysicsTypes.h"
 
 #include <cstdint>
 #include <map>
@@ -11,7 +12,7 @@
 
 namespace Daedalus
 {
-	inline constexpr uint32_t CurrentSceneVersion = 4;
+	inline constexpr uint32_t CurrentSceneVersion = 5;
 
 	struct TransformRecord
 	{
@@ -70,17 +71,20 @@ namespace Daedalus
 		float rotation = 0.f;
 	};
 
-	struct BodyRecord
+	struct BodyRecord : ColliderDescription
 	{
 		// Model-derived shapes use unscaled bounds, matching the existing sandbox.
-		std::string shape = "box";
 		float mass = 0.f;
-		glm::vec3 half_extents{ 0.5f };
-		float radius = 0.5f;
+		PhysicsBodySettings settings;
 		glm::vec3 bounds_scale{ 1.f };
 		glm::vec3 bounds_offset{ 0.f };
 		glm::vec3 position{ 0.f };
 		glm::vec3 rotation{ 0.f };
+	};
+
+	struct JointRecord : JointSettings
+	{
+		std::string target;
 	};
 
 	using ScriptProperty = std::variant<bool, double, std::string, glm::vec3>;
@@ -115,6 +119,8 @@ namespace Daedalus
 		std::optional<SkyboxRecord> skybox;
 		std::optional<BodyRecord> rigid_body;
 		std::optional<BodyRecord> kinematic_body;
+		std::optional<CharacterSettings> character_controller;
+		std::optional<std::vector<JointRecord>> joints;
 		std::vector<std::string> remove;
 	};
 
@@ -138,6 +144,8 @@ namespace Daedalus
 		std::optional<SkyboxRecord> skybox;
 		std::optional<BodyRecord> rigid_body;
 		std::optional<BodyRecord> kinematic_body;
+		std::optional<CharacterSettings> character_controller;
+		std::vector<JointRecord> joints;
 		std::vector<ScriptRecord> scripts;
 		std::optional<std::string> parent;
 		std::map<std::string, std::string> links;
@@ -151,6 +159,7 @@ namespace Daedalus
 		uint32_t version = CurrentSceneVersion;
 		std::string name;
 		std::string primary_camera;
+		std::optional<glm::vec3> gravity;
 		std::vector<EntityRecord> entities;
 		std::optional<std::string> base_prefab;
 		std::vector<EntityOverrideRecord> overrides;

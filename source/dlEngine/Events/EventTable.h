@@ -37,7 +37,8 @@ namespace Daedalus {
 
 		//Gamepad analog events
 		GamepadStick,
-		GamepadTrigger
+		GamepadTrigger,
+		PhysicsContact
 	};
 
 	enum EventCategory
@@ -50,7 +51,8 @@ namespace Daedalus {
 		MouseEvent = BITMASK(3),
 		ButtonMouseEvent = BITMASK(4),
 		GamepadButtonEvent = BITMASK(5),
-		GamepadAnalogEvent = BITMASK(6)
+		GamepadAnalogEvent = BITMASK(6),
+		PhysicsEvent = BITMASK(7)
 	};
 
 }

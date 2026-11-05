@@ -8,6 +8,7 @@
 #include "Physics/Physics.h"
 #include "Debug/Profiler.h"
 #include "Debug/Log.h"
+#include <cmath>
 
 using namespace Daedalus;
 
@@ -27,6 +28,7 @@ void PhysicsSystem::PrepareBodies() const
 	m_scene->UpdateWorldTransforms();
 	auto prepare = [&](auto& body, entt::entity handle, bool kinematic)
 	{
+		if (body.handle && !m_world->HasRigidBody(body.handle)) body.Release();
 		if (!body.handle) body.Attach(*m_world);
 		if (!body.handle) return;
 		const auto id = m_registry.get<IDComponent>(handle).ID;
@@ -56,21 +58,47 @@ void PhysicsSystem::PrepareBodies() const
 		prepare(m_registry.get<RigidBodyComponent>(handle), handle, false);
 	for (auto handle : m_registry.view<KinematicBodyComponent>())
 		prepare(m_registry.get<KinematicBodyComponent>(handle), handle, true);
+	PrepareCharacters();
+	(void)PrepareJoints();
+	const auto remember = [&](auto view)
+	{
+		for (auto entity : view)
+		{
+			const auto [component_ref] = view.get(entity);
+			const auto& component = component_ref;
+			if (component.handle) m_body_entities[component.handle] = static_cast<uint64_t>(m_registry.get<IDComponent>(entity).ID);
+		}
+	};
+	remember(m_registry.view<RigidBodyComponent>());
+	remember(m_registry.view<KinematicBodyComponent>());
+	remember(m_registry.view<CharacterControllerComponent>());
 }
 
 void PhysicsSystem::OnStopRuntime() const
 {
 	m_world->RegisterCollisionCallback({});
+	for (auto e : m_registry.view<JointComponent>()) m_registry.get<JointComponent>(e).joints.clear();
+	for (auto e : m_registry.view<CharacterControllerComponent>())
+	{
+		auto& character = m_registry.get<CharacterControllerComponent>(e);
+		character.Release();
+		character.velocity = glm::vec3(0.f);
+		character.jump_requested = false;
+		character.pose_initialized = false;
+	}
 	for (auto e : m_registry.view<RigidBodyComponent>()) m_registry.get<RigidBodyComponent>(e).Release();
 	for (auto e : m_registry.view<KinematicBodyComponent>()) m_registry.get<KinematicBodyComponent>(e).Release();
+	m_body_entities.clear();
 }
 
 void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 {
 	DL_PROFILE_SCOPE("PhysicsSystem::Step");
+	if (!std::isfinite(dt.GetSeconds()) || dt.GetSeconds() <= 0.f) return;
 	PrepareBodies();
 
 	m_world->StepSimulation(dt.GetSeconds());
+	PublishEvents();
 	// Collision callbacks may create, destroy or reparent entities.
 	m_scene->UpdateWorldTransforms();
 
@@ -78,6 +106,10 @@ void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 	// Refresh each ancestor before converting a descendant's world pose back to local TRS.
 	for (const auto id : m_scene->m_transform_order)
 	{
+		const auto* character = m_registry.try_get<CharacterControllerComponent>(m_scene->m_entity_map.at(id));
+		glm::vec3 character_position;
+		if (character && m_world->GetCharacterPosition(character->handle, character_position))
+			(void)m_scene->SetWorldPose(id, character_position, m_scene->GetWorldOrientation(id));
 		auto* body = m_registry.try_get<RigidBodyComponent>(m_scene->m_entity_map.at(id));
 		glm::vec3 position;
 		glm::quat orientation;

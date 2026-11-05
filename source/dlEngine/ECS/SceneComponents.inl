@@ -14,6 +14,10 @@ template<> DAEDALUS_API void Scene::OnComponentAdded<RigidBodyComponent>(RigidBo
 template<> DAEDALUS_API void Scene::OnComponentRemoved<RigidBodyComponent>(RigidBodyComponent&);
 template<> DAEDALUS_API void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyComponent&);
 template<> DAEDALUS_API void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<CharacterControllerComponent>(CharacterControllerComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<CharacterControllerComponent>(CharacterControllerComponent&);
+template<> DAEDALUS_API void Scene::OnComponentAdded<JointComponent>(JointComponent&);
+template<> DAEDALUS_API void Scene::OnComponentRemoved<JointComponent>(JointComponent&);
 template<> DAEDALUS_API void Scene::OnComponentAdded<DirectionalLightComponent>(DirectionalLightComponent&);
 template<> DAEDALUS_API void Scene::OnComponentRemoved<DirectionalLightComponent>(DirectionalLightComponent&);
 template<> DAEDALUS_API void Scene::OnComponentAdded<PointLightComponent>(PointLightComponent&);

@@ -1,5 +1,6 @@
 #include "dlpch.h"
 #include "PhysicsWorld.h"
+#include "PhysicsWorldInternal.h"
 #include "Debug/Profiler.h"
 #include <btBulletDynamicsCommon.h>
 #include <atomic>
@@ -8,10 +9,17 @@
 #include <unordered_map>
 
 using namespace Daedalus;
+using namespace Daedalus::PhysicsDetail;
 
-namespace
+namespace Daedalus::PhysicsDetail
 {
-	std::atomic<RigidBodyHandle> s_next_body{ 1 };
+	uint64_t NextHandle()
+	{
+		static std::atomic<uint64_t> next_handle{ 1 };
+		const auto handle = next_handle.fetch_add(1, std::memory_order_relaxed);
+		if (!handle) std::abort();
+		return handle;
+	}
 
 	bool Finite(const glm::vec3& value)
 	{
@@ -21,89 +29,85 @@ namespace
 	bool ValidPose(const glm::vec3& position, const glm::quat& orientation)
 	{
 		return Finite(position) && std::isfinite(orientation.x) && std::isfinite(orientation.y) &&
-			std::isfinite(orientation.z) && std::isfinite(orientation.w) && glm::dot(orientation, orientation) > 0.f;
+			std::isfinite(orientation.z) && std::isfinite(orientation.w) &&
+			std::isfinite(glm::dot(orientation, orientation)) && glm::dot(orientation, orientation) > 0.f;
 	}
 }
 
-struct PhysicsWorld::Impl
+PhysicsWorld::Impl::Impl()
 {
-	struct Body
-	{
-		std::unique_ptr<btCollisionShape> m_shape;
-		std::unique_ptr<btDefaultMotionState> m_motion;
-		std::unique_ptr<btRigidBody> m_body;
-	};
+	m_broadphase.getOverlappingPairCache()->setInternalGhostPairCallback(&m_ghost_callback);
+}
 
-	const std::thread::id m_owner{ std::this_thread::get_id() };
-	btDefaultCollisionConfiguration m_configuration;
-	btCollisionDispatcher m_dispatcher{ &m_configuration };
-	btDbvtBroadphase m_broadphase;
-	btSequentialImpulseConstraintSolver m_solver;
-	btDiscreteDynamicsWorld m_world{ &m_dispatcher, &m_broadphase, &m_solver, &m_configuration };
-	std::unordered_map<RigidBodyHandle, Body> m_bodies;
-	std::unordered_map<const btCollisionObject*, RigidBodyHandle> m_handles;
-	std::vector<std::pair<RigidBodyHandle, RigidBodyHandle>> m_contacts;
-	std::shared_ptr<CollisionCallback> m_callback;
-	bool m_stepping{ false };
+void PhysicsWorld::Impl::CheckThread() const
+{
+	DL_ASSERT(m_owner == std::this_thread::get_id(), Log::Categories::Physics, "PhysicsWorld must be used on its owning thread");
+	if (m_owner != std::this_thread::get_id()) std::abort();
+}
 
-	void CheckThread() const
+PhysicsWorld::Impl::~Impl()
+{
+	CheckThread();
+	while (!m_joints.empty()) RemoveJoint(m_joints.begin()->first);
+	while (!m_characters.empty()) RemoveCharacter(m_characters.begin()->first);
+	for (auto& entry : m_bodies) m_world.removeRigidBody(entry.second.m_body.get());
+}
+
+btRigidBody* PhysicsWorld::Impl::Find(RigidBodyHandle handle) const
+{
+	CheckThread();
+	const auto it = m_bodies.find(handle);
+	return it == m_bodies.end() ? nullptr : it->second.m_body.get();
+}
+
+RigidBodyHandle PhysicsWorld::CreateRigidBody(const ColliderDescription& collider, float mass, const glm::vec3& position,
+	const glm::quat& orientation, bool kinematic, const PhysicsBodySettings& settings)
+{
+	m_impl->CheckThread();
+	if (!std::isfinite(mass) || mass < 0.f || !ValidPose(position, orientation) ||
+		!ValidateCollider(collider) || !ValidateBodySettings(settings) ||
+		(collider.shape == "triangle_mesh" && mass > 0.f && !kinematic)) return 0;
+	const auto transform = Pose(position, orientation);
+	Impl::Body owned;
+	owned.m_shape = Shape(collider, owned.m_mesh);
+	owned.m_motion = std::make_unique<btDefaultMotionState>(transform);
+	const float body_mass = kinematic ? 0.f : mass;
+	btVector3 inertia(0, 0, 0);
+	if (body_mass > 0.f) owned.m_shape->calculateLocalInertia(body_mass, inertia);
+	btRigidBody::btRigidBodyConstructionInfo info(body_mass, owned.m_motion.get(), owned.m_shape.get(), inertia);
+	owned.m_body = std::make_unique<btRigidBody>(info);
+	if (kinematic)
 	{
-		DL_ASSERT(m_owner == std::this_thread::get_id(), Log::Categories::Physics, "PhysicsWorld must be used on its owning thread");
-		if (m_owner != std::this_thread::get_id()) std::abort();
+		owned.m_body->setCollisionFlags(owned.m_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+		owned.m_body->setActivationState(DISABLE_DEACTIVATION);
 	}
+	if (settings.trigger) owned.m_body->setCollisionFlags(owned.m_body->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	owned.m_body->setFriction(settings.friction);
+	owned.m_body->setRestitution(settings.restitution);
+	owned.m_body->setRollingFriction(settings.rolling_friction);
+	owned.m_body->setDamping(settings.linear_damping, settings.angular_damping);
+	const auto handle = NextHandle();
+	auto* body = owned.m_body.get();
+	m_impl->m_bodies.emplace(handle, std::move(owned));
+	m_impl->m_handles.emplace(body, handle);
+	m_impl->m_world.addRigidBody(body, static_cast<int>(settings.group), static_cast<int>(settings.mask));
+	return handle;
+}
 
-	~Impl()
+void PhysicsWorld::Impl::Remove(RigidBodyHandle handle)
+{
+	CheckThread();
+	const auto it = m_bodies.find(handle);
+	if (it == m_bodies.end()) return;
+	for (auto joint = m_joints.begin(); joint != m_joints.end();)
 	{
-		CheckThread();
-		for (auto& entry : m_bodies) m_world.removeRigidBody(entry.second.m_body.get());
+		const auto current = joint++;
+		if (current->second.m_first == handle || current->second.m_second == handle) RemoveJoint(current->first);
 	}
-
-	btRigidBody* Find(RigidBodyHandle handle) const
-	{
-		CheckThread();
-		const auto it = m_bodies.find(handle);
-		return it == m_bodies.end() ? nullptr : it->second.m_body.get();
-	}
-
-	RigidBodyHandle Create(std::unique_ptr<btCollisionShape> shape, float mass, const glm::vec3& position,
-		const glm::quat& orientation, bool kinematic)
-	{
-		CheckThread();
-		if (!std::isfinite(mass) || mass < 0.f || !ValidPose(position, orientation)) return 0;
-		const auto rotation = glm::normalize(orientation);
-		const btTransform transform(btQuaternion(rotation.x, rotation.y, rotation.z, rotation.w), btVector3(position.x, position.y, position.z));
-		Body owned;
-		owned.m_shape = std::move(shape);
-		owned.m_motion = std::make_unique<btDefaultMotionState>(transform);
-		const float body_mass = kinematic ? 0.f : mass;
-		btVector3 inertia(0, 0, 0);
-		if (body_mass > 0.f) owned.m_shape->calculateLocalInertia(body_mass, inertia);
-		btRigidBody::btRigidBodyConstructionInfo info(body_mass, owned.m_motion.get(), owned.m_shape.get(), inertia);
-		owned.m_body = std::make_unique<btRigidBody>(info);
-		if (kinematic)
-		{
-			owned.m_body->setCollisionFlags(owned.m_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-			owned.m_body->setActivationState(DISABLE_DEACTIVATION);
-		}
-		const auto handle = s_next_body.fetch_add(1, std::memory_order_relaxed);
-		if (!handle) std::abort();
-		auto* body = owned.m_body.get();
-		m_bodies.emplace(handle, std::move(owned));
-		m_handles.emplace(body, handle);
-		m_world.addRigidBody(body);
-		return handle;
-	}
-
-	void Remove(RigidBodyHandle handle)
-	{
-		CheckThread();
-		const auto it = m_bodies.find(handle);
-		if (it == m_bodies.end()) return;
-		m_world.removeRigidBody(it->second.m_body.get());
-		m_handles.erase(it->second.m_body.get());
-		m_bodies.erase(it);
-	}
-};
+	m_world.removeRigidBody(it->second.m_body.get());
+	m_handles.erase(it->second.m_body.get());
+	m_bodies.erase(it);
+}
 
 PhysicsWorld::PhysicsWorld(const glm::vec3& gravity) : m_impl(std::make_shared<Impl>())
 {
@@ -114,14 +118,17 @@ PhysicsWorld::~PhysicsWorld() = default;
 
 RigidBodyHandle PhysicsWorld::CreateBoxRigidBody(float mass, const glm::vec3& half_extents, const glm::vec3& position, const glm::quat& orientation, bool kinematic)
 {
-	if (!Finite(half_extents) || half_extents.x <= 0.f || half_extents.y <= 0.f || half_extents.z <= 0.f) return 0;
-	return m_impl->Create(std::make_unique<btBoxShape>(btVector3(half_extents.x, half_extents.y, half_extents.z)), mass, position, orientation, kinematic);
+	ColliderDescription collider;
+	collider.half_extents = half_extents;
+	return CreateRigidBody(collider, mass, position, orientation, kinematic);
 }
 
 RigidBodyHandle PhysicsWorld::CreateSphereRigidBody(float mass, float radius, const glm::vec3& position, const glm::quat& orientation, bool kinematic)
 {
-	if (!std::isfinite(radius) || radius <= 0.f) return 0;
-	return m_impl->Create(std::make_unique<btSphereShape>(radius), mass, position, orientation, kinematic);
+	ColliderDescription collider;
+	collider.shape = "sphere";
+	collider.radius = radius;
+	return CreateRigidBody(collider, mass, position, orientation, kinematic);
 }
 
 void PhysicsWorld::RemoveRigidBody(RigidBodyHandle handle) { m_impl->Remove(handle); }
@@ -142,6 +149,12 @@ bool PhysicsWorld::GetRigidBodyTransform(RigidBodyHandle handle, glm::vec3& posi
 	position = glm::vec3(p.x(), p.y(), p.z());
 	orientation = glm::quat(q.w(), q.x(), q.y(), q.z());
 	return true;
+}
+
+glm::vec3 PhysicsWorld::GetGravity() const
+{
+	m_impl->CheckThread();
+	return FromBullet(m_impl->m_world.getGravity());
 }
 
 bool PhysicsWorld::SetRigidBodyTransform(RigidBodyHandle handle, const glm::vec3& position, const glm::quat& orientation)
@@ -182,30 +195,19 @@ void PhysicsWorld::StepSimulation(float fixed_delta)
 	m_impl->CheckThread();
 	if (!std::isfinite(fixed_delta) || fixed_delta <= 0.f || m_impl->m_stepping) return;
 	m_impl->m_stepping = true;
+	for (auto& [handle, character] : m_impl->m_characters)
+		character.m_controller->setWalkDirection(ToBullet(character.m_velocity * fixed_delta));
 	m_impl->m_world.stepSimulation(fixed_delta, 0);
-	m_impl->m_contacts.clear();
+	for (auto& [handle, character] : m_impl->m_characters) character.m_has_stepped = true;
+	m_impl->CollectContacts();
 	const auto callback = m_impl->m_callback;
-	if (callback)
+	const auto contact_callback = m_impl->m_contact_callback;
+	// Events are immutable snapshots. No Bullet pointers survive into client callbacks.
+	for (const auto& contact : m_impl->m_events)
 	{
-		for (int i = 0; i < m_impl->m_dispatcher.getNumManifolds(); ++i)
-		{
-			const auto* manifold = m_impl->m_dispatcher.getManifoldByIndexInternal(i);
-			bool touching = false;
-			for (int j = 0; j < manifold->getNumContacts(); ++j)
-				touching = touching || manifold->getContactPoint(j).getDistance() <= 0;
-			if (!touching) continue;
-			const auto a = m_impl->m_handles.find(manifold->getBody0());
-			const auto b = m_impl->m_handles.find(manifold->getBody1());
-			if (a == m_impl->m_handles.end() || b == m_impl->m_handles.end()) continue;
-			m_impl->m_contacts.emplace_back((std::min)(a->second, b->second), (std::max)(a->second, b->second));
-		}
-		std::sort(m_impl->m_contacts.begin(), m_impl->m_contacts.end());
-		m_impl->m_contacts.erase(std::unique(m_impl->m_contacts.begin(), m_impl->m_contacts.end()), m_impl->m_contacts.end());
-		// Deliver after reading Bullet manifolds so callbacks may remove bodies safely.
-		for (const auto& pair : m_impl->m_contacts)
-		{
-			if (m_impl->Find(pair.first) && m_impl->Find(pair.second)) (*callback)(pair.first, pair.second);
-		}
+		if (contact_callback) (*contact_callback)(contact);
+		if (callback && !contact.trigger && contact.phase != ContactPhase::Exit &&
+			m_impl->Find(contact.first) && m_impl->Find(contact.second)) (*callback)(contact.first, contact.second);
 	}
 	m_impl->m_stepping = false;
 }

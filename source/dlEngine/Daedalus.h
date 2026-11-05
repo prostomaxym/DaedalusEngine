@@ -13,6 +13,8 @@
 #include "Config/KeybindConfig.h"
 
 #include "Debug/Log.h"
+#include "Events/PhysicsEvent.h"
+#include "Physics/PhysicsWorld.h"
 
 #include "Renderer/API/Renderer.h"
 

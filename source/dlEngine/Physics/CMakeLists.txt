@@ -16,6 +16,14 @@ set(PHYSICS_PROJECT_FILES
     Physics.cpp
     PhysicsWorld.h
     PhysicsWorld.cpp
+    PhysicsTypes.h
+    PhysicsWorldInternal.h
+    PhysicsColliders.cpp
+    PhysicsQueries.cpp
+    PhysicsContacts.cpp
+    PhysicsCharacters.cpp
+    PhysicsJoints.cpp
+    PhysicsDebugDraw.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${PHYSICS_PROJECT_FILES})

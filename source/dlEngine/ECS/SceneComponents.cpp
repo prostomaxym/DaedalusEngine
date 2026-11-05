@@ -44,6 +44,23 @@ template<> void Scene::OnComponentAdded<KinematicBodyComponent>(KinematicBodyCom
 	component.Attach(GetPhysicsWorld());
 }
 template<> void Scene::OnComponentRemoved<KinematicBodyComponent>(KinematicBodyComponent&) {}
+template<> void Scene::OnComponentAdded<CharacterControllerComponent>(CharacterControllerComponent& component)
+{
+	const auto entity = entt::to_entity(m_registry.storage<CharacterControllerComponent>(), component);
+	const auto id = m_registry.get<IDComponent>(entity).ID;
+	if (m_registry.any_of<RigidBodyComponent, KinematicBodyComponent>(entity))
+	{
+		Log::Write(Log::Levels::Warn, Log::Categories::ECS, "Character controllers cannot share an entity with a physics body");
+		return;
+	}
+	if (!HasUnitScaleAncestors(id)) (void)SetParent(id);
+	UpdateWorldTransforms();
+	const auto handle = GetPhysicsWorld().CreateCharacter(component.description, glm::vec3((*GetWorldTransform(id))[3]));
+	component.Own(handle, GetPhysicsWorld().MakeCharacterCleanup(handle));
+}
+template<> void Scene::OnComponentRemoved<CharacterControllerComponent>(CharacterControllerComponent&) {}
+template<> void Scene::OnComponentAdded<JointComponent>(JointComponent&) {}
+template<> void Scene::OnComponentRemoved<JointComponent>(JointComponent&) {}
 template<> void Scene::OnComponentAdded<NativeScriptComponent>(NativeScriptComponent&) {}
 template<> void Scene::OnComponentRemoved<NativeScriptComponent>(NativeScriptComponent&) {}
 

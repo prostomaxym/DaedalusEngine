@@ -15,6 +15,7 @@ project(
 set(ECS_PROJECT_FILES
     Components.h
     PhysicsBodyComponent.h
+    PhysicsGameplayComponents.h
     Entity.h
     Entity.cpp
     Scene.h
@@ -45,6 +46,7 @@ set(ECS_PROJECT_FILES
     Systems/TransformPreparation.cpp
     Systems/PhysicsSystem.h
     Systems/PhysicsSystem.cpp
+    Systems/PhysicsGameplaySystem.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${ECS_PROJECT_FILES})

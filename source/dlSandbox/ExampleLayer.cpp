@@ -7,7 +7,8 @@ using namespace Daedalus;
 void ExampleLayer::OnAttach()
 {
 	std::string error;
-	if (!RegisterSceneScripts(m_scripts))
+	if (!RegisterSceneScripts(m_scripts)
+		|| !LuaScript::Register(m_scripts, Application::GetInstance()->GetEngine().GetAssets().GetFiles()))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Failed to register scene scripts");
 		return;

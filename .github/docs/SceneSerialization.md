@@ -5,7 +5,7 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 ## Client workflow
 
 1. Create an empty `std::unique_ptr<Scene>` and an application-owned `ScriptRegistry`.
-2. Register the application's native-script adapters. The sandbox's `RegisterSceneScripts` in `source/dlSandbox/SceneScripts.cpp` is a complete example.
+2. Register the application's native-script adapters. The sandbox's `RegisterSceneScripts` in `source/dlSandbox/SceneScripts.cpp` is a complete example. For Lua records, also call `LuaScript::Register(scripts, engine.GetAssets().GetFiles())`; the sandbox registers both. See [Lua scripting](Scripting.md) for asset paths, properties, lifecycle and sandbox restrictions.
 3. Call `SceneSerializer::LoadAsset(engine.GetAssets(), virtual_path_or_uuid, *scene, scripts, error)`, or use the compatible physical-file `Load` API for tools.
 4. On success, transfer ownership with `Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene))`. At the next frame boundary the manager stops the old scene, activates the new one and starts runtime, logging any startup failure. The loaded name and primary-camera UUID are retained.
 5. The application forwards fixed updates, variable updates, rendering and viewport resizes through the scene manager. Request a null scene to unload it. Standalone tools may own scenes directly and use the corresponding runtime methods themselves.

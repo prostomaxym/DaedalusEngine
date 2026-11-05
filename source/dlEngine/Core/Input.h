@@ -24,6 +24,7 @@ namespace Daedalus {
 		Input& operator=(Input&&) = delete;
 
 		static void Update();
+		[[nodiscard]] static bool IsAvailable() { return s_instance != nullptr; }
 		[[nodiscard]] static bool IsActionDown(const std::string& name);
 		[[nodiscard]] static bool IsActionPressed(const std::string& name);
 		[[nodiscard]] static bool IsActionHold(const std::string& name);

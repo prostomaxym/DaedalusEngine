@@ -43,6 +43,7 @@ set(ECS_TEST_FILES
     ECSTests/HierarchyIntegrationTest.cpp
     ECSTests/PhysicsSceneTest.cpp
     ECSTests/NativeScriptTest.cpp
+    ECSTests/LuaRuntimeTest.cpp
     ECSTests/SceneTest.cpp
     ECSTests/SceneManagerTest.cpp
     ECSTests/SceneJsonTest.cpp

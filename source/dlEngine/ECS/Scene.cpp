@@ -11,6 +11,7 @@
 #include "NativeScriptComponent.h"
 #include "Physics/Physics.h"
 #include "Events/PhysicsEvent.h"
+#include "Events/EventsEngine.h"
 #include "Renderer/API/Renderer.h"
 #include "Systems/RenderSystem.h"
 #include "Systems/PhysicsSystem.h"
@@ -21,7 +22,9 @@ using namespace Daedalus;
 Scene::Scene() :
 	m_render_system(std::make_unique<RenderSystem>(m_registry, this))
 	, m_physics_system(std::make_unique<PhysicsSystem>(m_registry, this))
+	, m_script_events(std::make_unique<EventEngine>(256))
 {
+	m_script_events->Start();
 }
 
 Scene::~Scene()
@@ -48,6 +51,10 @@ bool Scene::OnRuntimeStart(const std::string& scenename)
 
 void Scene::OnRuntimeStop()
 {
+	for (auto handle : m_registry.view<NativeScriptComponent>())
+		for (auto& [type, script] : m_registry.get<NativeScriptComponent>(handle).native_scripts)
+			if (script) script->OnRuntimeStop();
+	m_script_events->CleanQueue();
 	if (m_is_running)
 	{
 		for (auto entity : m_registry.view<DirectionalLightComponent>())
@@ -65,20 +72,31 @@ void Scene::OnRuntimeStop()
 void Scene::OnUpdateRuntime(DeltaTime dt)
 {
 	DL_PROFILE_SCOPE("Scene::Update");
-	if (!m_is_running) return;
-	m_is_iterating = true;
-	if (!m_is_paused)
-	{
-		// Update scripts
-		{
-			DL_PROFILE_SCOPE("Scene::NativeScripts");
-			m_registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
-				{
-					for(auto& script : nsc.native_scripts)
-						script.second->OnUpdate(dt);
-				});
-		}
+	if (m_is_running && !m_is_paused) UpdateScripts(dt);
+}
 
+bool Scene::QueueScriptEvent(std::unique_ptr<Event> event)
+{
+	if (const auto* physics = dynamic_cast<const ScenePhysicsEvent*>(event.get());
+		physics && physics->GetScene() != static_cast<uint64_t>(m_physics_event_source)) return false;
+	return m_script_events->AddEvent(std::move(event));
+}
+
+void Scene::UpdateScripts(DeltaTime dt)
+{
+	if (m_is_iterating || m_is_constructing) return;
+	m_is_iterating = true;
+	m_script_events->DispatchPending([this](Event& event)
+	{
+		for (auto handle : m_registry.view<NativeScriptComponent>())
+			for (auto& [type, script] : m_registry.get<NativeScriptComponent>(handle).native_scripts)
+				if (script) script->OnEvent(event);
+	});
+	{
+		DL_PROFILE_SCOPE("Scene::Scripts");
+		for (auto handle : m_registry.view<NativeScriptComponent>())
+			for (auto& [type, script] : m_registry.get<NativeScriptComponent>(handle).native_scripts)
+				if (script) script->OnUpdate(dt);
 	}
 	m_is_iterating = false;
 }

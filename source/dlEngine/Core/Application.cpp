@@ -9,6 +9,7 @@
 #include "Events/EventsEngine.h"
 #include "Events/KeyEvent.h"
 #include "ECS/SceneManager.h"
+#include "ECS/Scene.h"
 
 #include "Macros.h"
 #include "Config/GraphicsConfig.h"
@@ -189,6 +190,9 @@ void Application::OnEvent(Event& event)
 
 		(*--it)->OnEvent(event);
 	}
+	if (!event.IsHandled())
+		if (auto* scene = GetMainScene(); scene && scene->IsRunning())
+			(void)scene->QueueScriptEvent(event.Clone());
 }
 
 void Application::PushLayer(std::unique_ptr<Layer>&& layer)

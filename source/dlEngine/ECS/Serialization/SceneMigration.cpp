@@ -106,13 +106,19 @@ namespace
 		return true;
 	}
 
+	bool UpgradeV3(SceneRecord& result, std::string&)
+	{
+		result.version = 4;
+		return true;
+	}
+
 	struct MigrationStep
 	{
 		uint32_t source_version;
 		bool (*apply)(SceneRecord&, std::string&);
 	};
 
-	constexpr std::array<MigrationStep, 2> Steps{ { { 1, UpgradeV1 }, { 2, UpgradeV2 } } };
+	constexpr std::array<MigrationStep, 3> Steps{ { { 1, UpgradeV1 }, { 2, UpgradeV2 }, { 3, UpgradeV3 } } };
 	static_assert(Steps.size() + 1 == CurrentSceneVersion);
 }
 

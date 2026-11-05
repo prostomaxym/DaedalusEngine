@@ -71,3 +71,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 
 ## Artifact Cleanup
 - When cleaning Daedalus build artifacts, preserve `ThirdParty/vcpkg_installed`, `ThirdParty/vcpkg_installed_android`, and all triplet files.
+
+## Prefab Persistence
+- For Daedalus prefab persistence, keep SceneSerializer Capture/Save expanded and source-independent rather than reconstructing prefab references and overrides. Retain prefab provenance at runtime only; reloading saved scenes should not pick up later source-prefab changes.

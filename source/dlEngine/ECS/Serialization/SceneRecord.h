@@ -11,7 +11,7 @@
 
 namespace Daedalus
 {
-	inline constexpr uint32_t CurrentSceneVersion = 3;
+	inline constexpr uint32_t CurrentSceneVersion = 4;
 
 	struct TransformRecord
 	{
@@ -95,6 +95,34 @@ namespace Daedalus
 	{
 		std::string path;
 		std::map<std::string, std::string> exports;
+		std::vector<struct EntityOverrideRecord> overrides;
+	};
+
+	struct EntityOverrideRecord
+	{
+		std::string id;
+		std::optional<std::string> name;
+		std::optional<TransformRecord> transform;
+		// An empty parent string explicitly makes the template entity a root.
+		std::optional<std::string> parent;
+		std::optional<std::map<std::string, std::string>> links;
+		std::optional<std::vector<ScriptRecord>> scripts;
+		std::optional<ModelRecord> model;
+		std::optional<CameraRecord> camera;
+		std::optional<LightRecord> directional_light;
+		std::optional<LightRecord> point_light;
+		std::optional<LightRecord> spot_light;
+		std::optional<SkyboxRecord> skybox;
+		std::optional<BodyRecord> rigid_body;
+		std::optional<BodyRecord> kinematic_body;
+		std::vector<std::string> remove;
+	};
+
+	struct PrefabOrigin
+	{
+		std::string path;
+		std::string instance;
+		std::string template_entity;
 	};
 
 	struct EntityRecord
@@ -114,6 +142,8 @@ namespace Daedalus
 		std::optional<std::string> parent;
 		std::map<std::string, std::string> links;
 		std::optional<PrefabRecord> prefab;
+		// Composition metadata only; JSON and expanded capture omit this lineage.
+		std::vector<PrefabOrigin> prefab_origins;
 	};
 
 	struct SceneRecord
@@ -122,5 +152,7 @@ namespace Daedalus
 		std::string name;
 		std::string primary_camera;
 		std::vector<EntityRecord> entities;
+		std::optional<std::string> base_prefab;
+		std::vector<EntityOverrideRecord> overrides;
 	};
 }

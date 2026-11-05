@@ -3,6 +3,7 @@
 #include "UUID.h"
 #include "Macros.h"
 #include "Utils/DeltaTime.h"
+#include "Serialization/SceneRecord.h"
 #include <entt/entity/registry.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -80,6 +81,8 @@ namespace Daedalus
 		[[nodiscard]] bool SetWorldPose(UUID entity, const glm::vec3& position, const glm::quat& orientation);
 		[[nodiscard]] bool SetEntityLink(UUID source, std::string name, UUID target);
 		[[nodiscard]] UUID GetEntityLink(UUID source, std::string_view name) const;
+		// Outermost to innermost source lineage; empty for non-prefab entities.
+		[[nodiscard]] std::span<const PrefabOrigin> GetPrefabOrigins(UUID entity) const;
 		// Explicit physics-only stepping also supports headless tools and tests.
 		void StepPhysics(DeltaTime dt);
 
@@ -125,6 +128,7 @@ namespace Daedalus
 		std::string m_scene_name;
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;
+		std::unordered_map<UUID, std::vector<PrefabOrigin>> m_prefab_origins;
 		UUID m_primary_camera{ 0 };
 
 		std::unique_ptr<RenderSystem> m_render_system;
@@ -132,6 +136,10 @@ namespace Daedalus
 
 		bool m_is_running{ false };
 		bool m_is_paused{ false };
+		bool m_is_iterating{ false };
+		bool m_is_constructing{ false };
+		uint32_t m_viewport_width{ 0 };
+		uint32_t m_viewport_height{ 0 };
 
 		friend class Entity;
 		friend class SceneSerializer;

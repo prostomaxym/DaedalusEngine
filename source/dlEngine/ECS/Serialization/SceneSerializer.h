@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Macros.h"
+#include "SceneRecord.h"
+#include "ECS/UUID.h"
 
 #include <filesystem>
 #include <string>
@@ -20,6 +22,11 @@ namespace Daedalus
 		// Prefabs expand before construction; capture saves their expanded entities.
 		static bool Instantiate(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
 			const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline = nullptr);
+		// Owner-thread, outside scene iteration. Failure leaves instance unchanged.
+		// Factories may inspect the assembled scene, but must not mutate unrelated entities.
+		static bool SpawnPrefab(const PrefabRecord& prefab, Scene& scene, const std::filesystem::path& assets,
+			const ScriptRegistry& scripts, UUID& instance, std::string& error, const TransformRecord& transform = {},
+			UUID parent = UUID(0), const AssetPipeline* pipeline = nullptr);
 		static bool LoadAsset(const AssetPipeline& pipeline, std::string_view path, Scene& scene, const ScriptRegistry& scripts, std::string& error);
 		static bool LoadAsset(const AssetPipeline& pipeline, AssetId id, Scene& scene, const ScriptRegistry& scripts, std::string& error);
 		static bool Capture(Scene& scene, const std::filesystem::path& assets,
@@ -28,5 +35,8 @@ namespace Daedalus
 			const ScriptRegistry& scripts, std::string& error);
 		static bool Save(const std::filesystem::path& path, Scene& scene, const std::filesystem::path& assets,
 			const ScriptRegistry& scripts, std::string& error);
+	private:
+		static bool Construct(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
+			const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline, bool append);
 	};
 }

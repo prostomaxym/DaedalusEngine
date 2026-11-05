@@ -11,6 +11,7 @@
 #include <zip.h>
 #include <algorithm>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
@@ -431,5 +432,532 @@ TEST_F(ScenePrefabTest, traversal_paths_and_unknown_override_fields_are_rejected
 	SceneRecord output;
 	EXPECT_FALSE(SceneComposer::Expand(source, m_files, output, m_error));
 	EXPECT_FALSE(SceneJson::Parse(R"({"version":3,"entities":[{"id":"1","prefab":{"path":"unit.prefab.json","overrides":{}}}]})", output, m_error));
+}
+
+TEST_F(ScenePrefabTest, override_schema_round_trips_components_and_removals_without_legacy_poses)
+{
+	auto source = Instance();
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	patch.name = "Overridden";
+	patch.transform = TransformRecord{};
+	patch.transform->translation.x = 7.f;
+	patch.camera = CameraRecord{};
+	patch.camera->movement_speed = 9.f;
+	patch.remove = { "rigid_body" };
+	source.entities[0].prefab->overrides.push_back(patch);
+	std::string text;
+	SceneRecord parsed;
+	ASSERT_TRUE(SceneJson::Serialize(source, text, m_error)) << m_error;
+	EXPECT_EQ(text.find("\"position\""), std::string::npos);
+	ASSERT_TRUE(SceneJson::Parse(text, parsed, m_error)) << m_error;
+	const auto& actual = parsed.entities[0].prefab->overrides[0];
+	EXPECT_EQ(actual.name, "Overridden");
+	EXPECT_FLOAT_EQ(actual.transform->translation.x, 7.f);
+	EXPECT_FLOAT_EQ(actual.camera->movement_speed, 9.f);
+	EXPECT_EQ(actual.remove, patch.remove);
+}
+
+TEST_F(ScenePrefabTest, legacy_versions_reject_variant_and_override_features)
+{
+	for (uint32_t version = 1; version < 4; ++version)
+	{
+		auto source = Instance();
+		source.version = version;
+		EntityOverrideRecord patch;
+		patch.id = "1";
+		patch.name = "New";
+		source.entities[0].prefab->overrides.push_back(patch);
+		EXPECT_FALSE(SceneJson::Validate(source, m_error));
+		source = SceneRecord{};
+		source.version = version;
+		source.base_prefab = "unit.prefab.json";
+		EXPECT_FALSE(SceneJson::Validate(source, m_error));
+	}
+}
+
+TEST_F(ScenePrefabTest, variants_inherit_base_entities_and_instance_overrides_win)
+{
+	SceneRecord variant;
+	variant.base_prefab = "unit.prefab.json";
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	patch.name = "Variant body";
+	patch.transform = TransformRecord{};
+	patch.transform->translation.x = 5.f;
+	variant.overrides.push_back(patch);
+	WriteRecord("variant.json", variant);
+	SceneRecord derived;
+	derived.base_prefab = "variant.json";
+	patch.name = "Derived body";
+	patch.transform.reset();
+	derived.overrides.push_back(patch);
+	WriteRecord("derived.json", derived);
+	auto source = Instance("derived.json");
+	patch.name = "Instance body";
+	source.entities[0].prefab->overrides.push_back(patch);
+	SceneRecord output;
+	ASSERT_TRUE(SceneComposer::Expand(source, m_files, output, m_error)) << m_error;
+	const auto& body = EntityById(output, output.entities[0].links.at("body"));
+	EXPECT_EQ(body.name, "Instance body");
+	EXPECT_FLOAT_EQ(body.transform.translation.x, 5.f);
+	EXPECT_EQ(body.links.at("camera"), output.primary_camera);
+	EXPECT_EQ(body.prefab_origins[0].path, "assets:/derived.json");
+}
+
+TEST_F(ScenePrefabTest, direct_variant_loading_resolves_inherited_primary_camera)
+{
+	SceneRecord variant;
+	variant.name = "Variant scene";
+	variant.base_prefab = "unit.prefab.json";
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(variant, scene, m_root, scripts, m_error)) << m_error;
+	EXPECT_EQ(scene.GetSceneName(), "Variant scene");
+	EXPECT_NE(scene.GetCamera(), nullptr);
+}
+
+TEST_F(ScenePrefabTest, repeated_instances_keep_overrides_independent)
+{
+	auto source = Instance();
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	patch.name = "First body";
+	source.entities[0].prefab->overrides.push_back(patch);
+	auto second = source.entities[0];
+	second.id = "20";
+	second.prefab->overrides[0].name = "Second body";
+	source.entities.push_back(second);
+	SceneRecord output;
+	ASSERT_TRUE(SceneComposer::Expand(source, m_files, output, m_error)) << m_error;
+	EXPECT_EQ(EntityById(output, EntityById(output, "10").links.at("body")).name, "First body");
+	EXPECT_EQ(EntityById(output, EntityById(output, "20").links.at("body")).name, "Second body");
+	EXPECT_EQ(Template().entities[0].name, "Body");
+}
+
+TEST_F(ScenePrefabTest, overrides_replace_components_scripts_links_and_parent_before_remapping)
+{
+	auto prefab = Template();
+	prefab.entities[0].kinematic_body.emplace();
+	prefab.entities[0].scripts.push_back({ "Old", {} });
+	WriteRecord("unit.prefab.json", prefab);
+	auto source = Instance();
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	patch.remove = { "kinematic_body" };
+	patch.rigid_body = BodyRecord{};
+	patch.rigid_body->mass = 2.f;
+	patch.scripts = std::vector<ScriptRecord>{};
+	patch.links = std::map<std::string, std::string>{ { "camera", "2" } };
+	source.entities[0].prefab->overrides.push_back(patch);
+	patch = EntityOverrideRecord{};
+	patch.id = "2";
+	patch.parent = "";
+	patch.camera = CameraRecord{};
+	patch.camera->fov = 90.f;
+	source.entities[0].prefab->overrides.push_back(patch);
+	SceneRecord output;
+	ASSERT_TRUE(SceneComposer::Expand(source, m_files, output, m_error)) << m_error;
+	const auto& body = EntityById(output, output.entities[0].links.at("body"));
+	EXPECT_FALSE(body.kinematic_body);
+	ASSERT_TRUE(body.rigid_body);
+	EXPECT_FLOAT_EQ(body.rigid_body->mass, 2.f);
+	EXPECT_TRUE(body.scripts.empty());
+	EXPECT_EQ(body.links.at("camera"), output.primary_camera);
+	EXPECT_EQ(EntityById(output, output.primary_camera).parent, "10");
+	EXPECT_FLOAT_EQ(EntityById(output, output.primary_camera).camera->fov, 90.f);
+}
+
+TEST_F(ScenePrefabTest, invalid_overrides_leave_composition_output_unchanged)
+{
+	for (int mode = 0; mode < 9; ++mode)
+	{
+		auto source = Instance();
+		EntityOverrideRecord patch;
+		patch.id = "1";
+		if (mode == 0) patch.id = "99";
+		if (mode == 1) patch.parent = "2";
+		if (mode == 2) patch.links = std::map<std::string, std::string>{ { "camera", "1" } };
+		if (mode == 3) patch.remove = { "unknown" };
+		if (mode == 4) { patch.camera = CameraRecord{}; patch.remove = { "camera" }; }
+		if (mode == 5) { patch.transform = TransformRecord{}; patch.transform->scale.x = 0.f; }
+		if (mode == 6) { patch.rigid_body = BodyRecord{}; patch.rigid_body->radius = -1.f; }
+		if (mode == 7) { patch.camera = CameraRecord{}; patch.camera->fov = std::numeric_limits<float>::quiet_NaN(); }
+		if (mode == 8) { patch.id = "2"; patch.remove = { "camera" }; }
+		source.entities[0].prefab->overrides.push_back(patch);
+		SceneRecord output;
+		output.name = "Unchanged";
+		EXPECT_FALSE(SceneComposer::Expand(source, m_files, output, m_error)) << mode;
+		EXPECT_EQ(output.name, "Unchanged");
+		EXPECT_FALSE(m_error.empty());
+	}
+}
+
+TEST_F(ScenePrefabTest, override_schema_rejects_duplicate_targets_and_legacy_pose_fields)
+{
+	SceneRecord output;
+	EXPECT_FALSE(SceneJson::Parse(R"({"version":4,"entities":[{"id":"10","prefab":{"path":"unit.prefab.json","overrides":[{"id":"1"},{"id":"1"}]}}]})", output, m_error));
+	EXPECT_FALSE(SceneJson::Parse(R"({"version":4,"entities":[{"id":"10","prefab":{"path":"unit.prefab.json","overrides":[{"id":"2","camera":{"position":[0,0,0]}}]}}]})", output, m_error));
+}
+
+TEST_F(ScenePrefabTest, variant_schema_rejects_authored_entities_and_missing_base)
+{
+	auto variant = Template();
+	variant.base_prefab = "unit.prefab.json";
+	EXPECT_FALSE(SceneJson::Validate(variant, m_error));
+	variant = SceneRecord{};
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	variant.overrides.push_back(patch);
+	EXPECT_FALSE(SceneJson::Validate(variant, m_error));
+}
+
+TEST_F(ScenePrefabTest, variant_and_mixed_nested_cycles_are_rejected)
+{
+	SceneRecord a, b;
+	a.base_prefab = "b.json";
+	b.base_prefab = "a.json";
+	WriteRecord("a.json", a);
+	WriteRecord("b.json", b);
+	SceneRecord output;
+	EXPECT_FALSE(SceneComposer::Expand(Instance("a.json"), m_files, output, m_error));
+	EXPECT_NE(m_error.find("cycle"), std::string::npos);
+	WriteRecord("b.json", Instance("a.json"));
+	EXPECT_FALSE(SceneComposer::Expand(Instance("a.json"), m_files, output, m_error));
+	EXPECT_NE(m_error.find("cycle"), std::string::npos);
+}
+
+TEST_F(ScenePrefabTest, variant_depth_uses_the_nested_prefab_budget)
+{
+	for (size_t index = 0; index <= SceneComposer::MaxPrefabDepth; ++index)
+	{
+		SceneRecord variant;
+		variant.base_prefab = "variant" + std::to_string(index + 1) + ".json";
+		WriteRecord("variant" + std::to_string(index) + ".json", variant);
+	}
+	SceneRecord output;
+	EXPECT_FALSE(SceneComposer::Expand(Instance("variant0.json"), m_files, output, m_error));
+	EXPECT_NE(m_error.find("depth limit"), std::string::npos);
+}
+
+TEST_F(ScenePrefabTest, nested_runtime_provenance_tracks_remapped_instance_lineage)
+{
+	WriteRecord("outer.json", Instance());
+	auto source = Instance("outer.json");
+	source.entities[0].prefab->exports = { { "nested", "10" } };
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(source, scene, m_root, scripts, m_error)) << m_error;
+	auto nested = scene.GetEntityByUUID(UUID(10)).GetLinkedEntity("nested");
+	ASSERT_TRUE(nested);
+	auto body = nested.GetLinkedEntity("body");
+	const auto origins = scene.GetPrefabOrigins(body.GetUUID());
+	ASSERT_EQ(origins.size(), 2u);
+	EXPECT_EQ(origins[0].path, "assets:/outer.json");
+	EXPECT_EQ(origins[0].instance, "10");
+	EXPECT_EQ(origins[1].path, "assets:/unit.prefab.json");
+	EXPECT_EQ(origins[1].instance, std::to_string(static_cast<uint64_t>(nested.GetUUID())));
+	EXPECT_EQ(origins[1].template_entity, "1");
+	const auto id = body.GetUUID();
+	scene.DestroyEntity(body);
+	EXPECT_TRUE(scene.GetPrefabOrigins(id).empty());
+	scene.Clear();
+	EXPECT_TRUE(scene.GetPrefabOrigins(UUID(10)).empty());
+}
+
+TEST_F(ScenePrefabTest, expanded_capture_does_not_restore_prefab_provenance)
+{
+	Scene scene, restored;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(Instance(), scene, m_root, scripts, m_error)) << m_error;
+	SceneRecord captured;
+	ASSERT_TRUE(SceneSerializer::Capture(scene, m_root, scripts, captured, m_error)) << m_error;
+	for (const auto& entity : captured.entities)
+	{
+		EXPECT_FALSE(entity.prefab);
+		EXPECT_TRUE(entity.prefab_origins.empty());
+	}
+	ASSERT_TRUE(SceneSerializer::Instantiate(captured, restored, {}, scripts, m_error)) << m_error;
+	EXPECT_TRUE(restored.GetPrefabOrigins(UUID(10)).empty());
+}
+
+TEST_F(ScenePrefabTest, repeated_spawning_preserves_existing_entities_camera_and_metadata)
+{
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(Template(), scene, {}, scripts, m_error)) << m_error;
+	scene.SetSceneName("Existing");
+	scene.SetPaused(true);
+	const auto* camera = scene.GetCamera();
+	UUID first(0), second(0);
+	const auto prefab = *Instance().entities[0].prefab;
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(prefab, scene, m_root, scripts, first, m_error)) << m_error;
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(prefab, scene, m_root, scripts, second, m_error)) << m_error;
+	EXPECT_NE(static_cast<uint64_t>(first), static_cast<uint64_t>(second));
+	EXPECT_TRUE(scene.GetEntityByUUID(UUID(1)));
+	EXPECT_TRUE(scene.GetEntityByUUID(UUID(2)));
+	EXPECT_EQ(scene.GetCamera(), camera);
+	EXPECT_EQ(scene.GetSceneName(), "Existing");
+	EXPECT_TRUE(scene.IsPaused());
+	auto first_body = scene.GetEntityByUUID(first).GetLinkedEntity("body");
+	auto second_body = scene.GetEntityByUUID(second).GetLinkedEntity("body");
+	ASSERT_TRUE(first_body);
+	ASSERT_TRUE(second_body);
+	EXPECT_NE(first_body.GetUUID(), second_body.GetUUID());
+	EXPECT_EQ(scene.GetPrefabOrigins(first_body.GetUUID())[0].instance, std::to_string(static_cast<uint64_t>(first)));
+}
+
+TEST_F(ScenePrefabTest, camera_free_prefabs_spawn_without_selecting_a_primary_camera)
+{
+	SceneRecord prefab;
+	EntityRecord body;
+	body.id = "1";
+	prefab.entities.push_back(body);
+	WriteRecord("body.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab({ "body.json", {} }, scene, m_root, scripts, instance, m_error)) << m_error;
+	EXPECT_NE(static_cast<uint64_t>(instance), 0u);
+	EXPECT_EQ(scene.GetCamera(), nullptr);
+}
+
+TEST_F(ScenePrefabTest, spawning_a_camera_requires_explicit_selection_before_capture)
+{
+	Scene scene;
+	ScriptRegistry scripts;
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error)) << m_error;
+	SceneRecord captured;
+	EXPECT_FALSE(SceneSerializer::Capture(scene, m_root, scripts, captured, m_error));
+	auto camera = scene.GetEntityByUUID(instance).GetLinkedEntity("camera");
+	ASSERT_TRUE(camera);
+	ASSERT_TRUE(scene.SetPrimaryCamera(camera.GetUUID()));
+	ASSERT_TRUE(SceneSerializer::Capture(scene, m_root, scripts, captured, m_error)) << m_error;
+	EXPECT_EQ(captured.primary_camera, std::to_string(static_cast<uint64_t>(camera.GetUUID())));
+}
+
+TEST_F(ScenePrefabTest, spawned_parented_bodies_have_world_poses_before_script_construction)
+{
+	auto prefab = Template();
+	prefab.entities[0].rigid_body.emplace();
+	prefab.entities[0].rigid_body->mass = 1.f;
+	prefab.entities[0].scripts.push_back({ "Probe", {} });
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	auto parent = scene.CreateEntity("Parent");
+	parent.GetComponent<TransformComponent>().translation.x = 20.f;
+	ScriptRegistry scripts;
+	bool observed = false;
+	ASSERT_TRUE(scripts.Register<ProbeScript>("Probe",
+		[](const ScriptRecord&, const EntityRecord&, std::string&) { return true; },
+		[&](Entity entity, const ScriptRecord&)
+		{
+			glm::vec3 position;
+			glm::quat orientation;
+			const auto handle = entity.GetComponent<RigidBodyComponent>().handle;
+			observed = scene.GetPhysicsWorld().GetRigidBodyTransform(handle, position, orientation);
+			EXPECT_NEAR(position.x, 32.f, 0.0001f);
+			EXPECT_FALSE(scene.GetPrefabOrigins(entity.GetUUID()).empty());
+			return entity.GetComponent<NativeScriptComponent>().AddScript<ProbeScript>(entity);
+		}, [](const ProbeScript&, ScriptRecord&) {}));
+	TransformRecord transform;
+	transform.translation.x = 10.f;
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error, transform, parent.GetUUID())) << m_error;
+	EXPECT_TRUE(observed);
+	EXPECT_EQ(scene.GetParent(instance), parent.GetUUID());
+}
+
+TEST_F(ScenePrefabTest, loaded_stopped_bodies_initialize_after_prestart_transform_edits)
+{
+	auto prefab = Template();
+	prefab.entities[0].rigid_body.emplace();
+	prefab.entities[0].rigid_body->mass = 1.f;
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(Instance(), scene, m_root, scripts, m_error)) << m_error;
+	auto anchor = scene.GetEntityByUUID(UUID(10));
+	auto body = anchor.GetLinkedEntity("body");
+	EXPECT_FALSE(body.GetComponent<RigidBodyComponent>().pose_initialized);
+	anchor.GetComponent<TransformComponent>().translation.x = 20.f;
+	scene.StepPhysics(DeltaTime(std::chrono::nanoseconds(16666667)));
+	glm::vec3 position;
+	glm::quat orientation;
+	ASSERT_TRUE(scene.GetPhysicsWorld().GetRigidBodyTransform(body.GetComponent<RigidBodyComponent>().handle, position, orientation));
+	EXPECT_NEAR(position.x, 22.f, 0.0001f);
+}
+
+TEST_F(ScenePrefabTest, spawned_stopped_bodies_honor_transform_edits_before_first_step)
+{
+	auto prefab = Template();
+	prefab.entities[0].rigid_body.emplace();
+	prefab.entities[0].rigid_body->mass = 1.f;
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error)) << m_error;
+	auto anchor = scene.GetEntityByUUID(instance);
+	auto body = anchor.GetLinkedEntity("body");
+	EXPECT_FALSE(body.GetComponent<RigidBodyComponent>().pose_initialized);
+	anchor.GetComponent<TransformComponent>().translation.x = 20.f;
+	scene.StepPhysics(DeltaTime(std::chrono::nanoseconds(16666667)));
+	glm::vec3 position;
+	glm::quat orientation;
+	ASSERT_TRUE(scene.GetPhysicsWorld().GetRigidBodyTransform(body.GetComponent<RigidBodyComponent>().handle, position, orientation));
+	EXPECT_NEAR(position.x, 22.f, 0.0001f);
+}
+
+TEST_F(ScenePrefabTest, late_spawn_failure_preserves_existing_scene_and_releases_spawned_bodies)
+{
+	auto prefab = Template();
+	prefab.entities[0].rigid_body.emplace();
+	prefab.entities[0].scripts.push_back({ "Fail", {} });
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(Template(), scene, {}, scripts, m_error)) << m_error;
+	scene.SetPaused(true);
+	SceneRecord before, after;
+	ASSERT_TRUE(SceneSerializer::Capture(scene, {}, scripts, before, m_error));
+	RigidBodyHandle spawned_body = 0;
+	ASSERT_TRUE(scripts.Register<ProbeScript>("Fail",
+		[](const ScriptRecord&, const EntityRecord&, std::string&) { return true; },
+		[&](Entity entity, const ScriptRecord&) -> ProbeScript*
+		{
+			spawned_body = entity.GetComponent<RigidBodyComponent>().handle;
+			return nullptr;
+		}, [](const ProbeScript&, ScriptRecord&) {}));
+	UUID instance(123);
+	const auto* camera = scene.GetCamera();
+	EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error));
+	EXPECT_EQ(static_cast<uint64_t>(instance), 123u);
+	EXPECT_EQ(scene.GetCamera(), camera);
+	EXPECT_TRUE(scene.IsPaused());
+	ASSERT_NE(spawned_body, 0u);
+	glm::vec3 position;
+	glm::quat orientation;
+	EXPECT_FALSE(scene.GetPhysicsWorld().GetRigidBodyTransform(spawned_body, position, orientation));
+	ASSERT_TRUE(SceneSerializer::Capture(scene, {}, scripts, after, m_error));
+	std::string a, b;
+	ASSERT_TRUE(SceneJson::Serialize(before, a, m_error));
+	ASSERT_TRUE(SceneJson::Serialize(after, b, m_error));
+	EXPECT_EQ(a, b);
+}
+
+TEST_F(ScenePrefabTest, script_validation_failure_does_not_append_any_entities)
+{
+	auto prefab = Template();
+	prefab.entities[0].scripts.push_back({ "Unknown", {} });
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	UUID instance(7);
+	EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error));
+	EXPECT_TRUE(scene.IsEmpty());
+	EXPECT_EQ(static_cast<uint64_t>(instance), 7u);
+}
+
+TEST_F(ScenePrefabTest, reentrant_spawning_from_a_factory_is_rejected)
+{
+	auto prefab = Template();
+	prefab.entities[0].scripts.push_back({ "Probe", {} });
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	bool rejected = false;
+	ASSERT_TRUE(scripts.Register<ProbeScript>("Probe",
+		[](const ScriptRecord&, const EntityRecord&, std::string&) { return true; },
+		[&](Entity entity, const ScriptRecord&)
+		{
+			UUID nested(0);
+			std::string error;
+			rejected = !SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, nested, error);
+			EXPECT_NE(error.find("boundary"), std::string::npos);
+			return entity.GetComponent<NativeScriptComponent>().AddScript<ProbeScript>(entity);
+		}, [](const ProbeScript&, ScriptRecord&) {}));
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error)) << m_error;
+	EXPECT_TRUE(rejected);
+}
+
+TEST_F(ScenePrefabTest, spawning_checks_existing_ancestor_scale_and_unknown_parent)
+{
+	auto prefab = Template();
+	prefab.entities[0].kinematic_body.emplace();
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	auto parent = scene.CreateEntity("Parent");
+	parent.GetComponent<TransformComponent>().scale.x = 2.f;
+	ScriptRegistry scripts;
+	UUID instance(0);
+	EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error, {}, parent.GetUUID()));
+	EXPECT_NE(m_error.find("unit scale"), std::string::npos);
+	EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error, {}, UUID(0xffff)));
+	SceneRecord captured;
+	ASSERT_TRUE(SceneSerializer::Capture(scene, {}, scripts, captured, m_error));
+	EXPECT_EQ(captured.entities.size(), 1u);
+}
+
+TEST_F(ScenePrefabTest, spawning_checks_the_existing_scene_shadow_budget)
+{
+	auto prefab = Template();
+	prefab.entities[0].directional_light.emplace();
+	prefab.entities[0].directional_light->cast_shadows = true;
+	prefab.entities[0].directional_light->cascades = 17;
+	WriteRecord("unit.prefab.json", prefab);
+	Scene scene;
+	ScriptRegistry scripts;
+	ASSERT_TRUE(SceneSerializer::Instantiate(prefab, scene, {}, scripts, m_error)) << m_error;
+	UUID instance(0);
+	EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error));
+	EXPECT_NE(m_error.find("32 shadow-map"), std::string::npos);
+}
+
+TEST_F(ScenePrefabTest, spawning_during_physics_iteration_is_rejected)
+{
+	Scene scene;
+	const auto first = scene.GetPhysicsWorld().CreateBoxRigidBody(0.f, glm::vec3(1.f), glm::vec3(0.f));
+	const auto second = scene.GetPhysicsWorld().CreateBoxRigidBody(1.f, glm::vec3(1.f), glm::vec3(0.f));
+	ASSERT_NE(first, 0u);
+	ASSERT_NE(second, 0u);
+	ScriptRegistry scripts;
+	bool called = false;
+	scene.GetPhysicsWorld().RegisterCollisionCallback([&](RigidBodyHandle, RigidBodyHandle)
+	{
+		called = true;
+		UUID instance(0);
+		EXPECT_FALSE(SceneSerializer::SpawnPrefab(*Instance().entities[0].prefab, scene, m_root, scripts, instance, m_error));
+		EXPECT_NE(m_error.find("boundary"), std::string::npos);
+	});
+	scene.StepPhysics(DeltaTime(std::chrono::nanoseconds(16666667)));
+	EXPECT_TRUE(called);
+	EXPECT_TRUE(scene.IsEmpty());
+}
+
+TEST_F(ScenePrefabTest, zip_pipeline_spawns_variants_with_instance_overrides)
+{
+	SceneRecord variant;
+	variant.base_prefab = "unit.prefab.json";
+	std::string variant_text, prefab_text;
+	ASSERT_TRUE(SceneJson::Serialize(variant, variant_text, m_error));
+	ASSERT_TRUE(SceneJson::Serialize(Template(), prefab_text, m_error));
+	ASSERT_TRUE(WriteArchive({ { "variant.json", variant_text }, { "unit.prefab.json", prefab_text } }));
+	VirtualFileSystem files;
+	ASSERT_TRUE(files.MountArchive("assets", m_root / "prefabs.zip", m_error)) << m_error;
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	auto prefab = *Instance("variant.json").entities[0].prefab;
+	EntityOverrideRecord patch;
+	patch.id = "1";
+	patch.name = "ZIP instance";
+	prefab.overrides.push_back(patch);
+	Scene scene;
+	ScriptRegistry scripts;
+	UUID instance(0);
+	ASSERT_TRUE(SceneSerializer::SpawnPrefab(prefab, scene, {}, scripts, instance, m_error, {}, UUID(0), &pipeline)) << m_error;
+	EXPECT_EQ(scene.GetEntityByUUID(instance).GetLinkedEntity("body").GetName(), "ZIP instance");
 }
 }

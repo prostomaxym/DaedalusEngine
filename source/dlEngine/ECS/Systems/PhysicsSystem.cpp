@@ -7,6 +7,7 @@
 #include "ECS/Scene.h"
 #include "Physics/Physics.h"
 #include "Debug/Profiler.h"
+#include "Debug/Log.h"
 
 using namespace Daedalus;
 
@@ -18,28 +19,43 @@ PhysicsSystem::PhysicsSystem(PhysicsSystem&& other) noexcept = default;
 
 void PhysicsSystem::OnStartRuntime() const
 {
-	for (auto e : m_registry.view<RigidBodyComponent>())
-	{
-		auto& body = m_registry.get<RigidBodyComponent>(e);
-		if (!body.handle) body.Attach(*m_world);
-	}
-	for (auto e : m_registry.view<KinematicBodyComponent>())
-	{
-		auto& body = m_registry.get<KinematicBodyComponent>(e);
-		if (!body.handle) body.Attach(*m_world);
-	}
-	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
+	PrepareBodies();
+}
 
-	for (const auto e : kinematic_body_view)
+void PhysicsSystem::PrepareBodies() const
+{
+	m_scene->UpdateWorldTransforms();
+	auto prepare = [&](auto& body, entt::entity handle, bool kinematic)
 	{
-		Entity entity = { e, m_scene };
-		auto& kb = entity.GetComponent<KinematicBodyComponent>();
-		auto& tf = entity.GetComponent<TransformComponent>();
-		if (kb.handle == 0)
-			continue;
-		// Set initial transform from TransformComponent to physics body
-		m_world->SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
-	}
+		if (!body.handle) body.Attach(*m_world);
+		if (!body.handle) return;
+		const auto id = m_registry.get<IDComponent>(handle).ID;
+		if (!m_scene->HasUnitScaleAncestors(id))
+		{
+			glm::vec3 position;
+			glm::quat orientation;
+			if (m_world->GetRigidBodyTransform(body.handle, position, orientation))
+			{
+				Log::Write(Log::Levels::Warn, Log::Categories::ECS, "Detaching physics body from scaled ancestors");
+				(void)m_scene->SetParent(id);
+				(void)m_scene->SetWorldPose(id, position, orientation);
+				m_scene->UpdateWorldTransforms();
+			}
+		}
+		const bool parented = static_cast<uint64_t>(m_scene->GetParent(id)) != 0;
+		if (kinematic || (parented && !body.pose_initialized) ||
+			(m_world->IsStaticBody(body.handle) && (parented || body.synchronized_parent != 0)))
+		{
+			const auto* transform = m_scene->GetWorldTransform(id);
+			m_world->SetRigidBodyTransform(body.handle, glm::vec3((*transform)[3]), m_scene->GetWorldOrientation(id));
+		}
+		body.pose_initialized = true;
+		body.synchronized_parent = static_cast<uint64_t>(m_scene->GetParent(id));
+	};
+	for (auto handle : m_registry.view<RigidBodyComponent>())
+		prepare(m_registry.get<RigidBodyComponent>(handle), handle, false);
+	for (auto handle : m_registry.view<KinematicBodyComponent>())
+		prepare(m_registry.get<KinematicBodyComponent>(handle), handle, true);
 }
 
 void PhysicsSystem::OnStopRuntime() const
@@ -52,42 +68,29 @@ void PhysicsSystem::OnStopRuntime() const
 void PhysicsSystem::OnUpdateRuntime(DeltaTime dt) const
 {
 	DL_PROFILE_SCOPE("PhysicsSystem::Step");
-	const auto kinematic_body_view = m_registry.view<KinematicBodyComponent>();
-	for (const auto e : kinematic_body_view)
-	{
-		Entity entity = { e, m_scene };
-		auto& kb = entity.GetComponent<KinematicBodyComponent>();
-		auto& tf = entity.GetComponent<TransformComponent>();
-		if (kb.handle == 0)
-			continue;
-
-		m_world->SetRigidBodyTransform(kb.handle, tf.translation, tf.GetOrientationQuat());
-	}
+	PrepareBodies();
 
 	m_world->StepSimulation(dt.GetSeconds());
+	// Collision callbacks may create, destroy or reparent entities.
+	m_scene->UpdateWorldTransforms();
 
 	DL_PROFILE_SCOPE("PhysicsSystem::SyncTransforms");
-	// Update transforms from physics for entities that have both a rigid body and a transform.
-	const auto view = m_registry.view<RigidBodyComponent>();
-
-	for (const auto e : view)
+	// Refresh each ancestor before converting a descendant's world pose back to local TRS.
+	for (const auto id : m_scene->m_transform_order)
 	{
-		Entity entity = { e, m_scene };
-		auto& rb = entity.GetComponent<RigidBodyComponent>();
-		auto& tf = entity.GetComponent<TransformComponent>();
-
-		if (rb.handle == 0)
-			continue;
-
-		glm::vec3 phys_pos;
-		glm::quat phys_orient;
-		if (m_world->GetRigidBodyTransform(rb.handle, phys_pos, phys_orient)
-			&& !m_world->IsStaticBody(rb.handle))
+		auto* body = m_registry.try_get<RigidBodyComponent>(m_scene->m_entity_map.at(id));
+		glm::vec3 position;
+		glm::quat orientation;
+		if (body && body->handle && !m_world->IsStaticBody(body->handle)
+			&& m_world->GetRigidBodyTransform(body->handle, position, orientation))
 		{
-			// Physics returns orientation as a quaternion. TransformComponent stores rotation as
-			// Euler angles in degrees (pitch, yaw, roll), so convert.
-			tf.translation = phys_pos;
-			tf.SetOrientationQuat(phys_orient);
+			(void)m_scene->SetWorldPose(id, position, orientation);
 		}
+		m_scene->UpdateWorldTransform(id);
+		const auto* kinematic = m_registry.try_get<KinematicBodyComponent>(m_scene->m_entity_map.at(id));
+		const auto* driven = kinematic ? static_cast<const PhysicsBodyComponent*>(kinematic)
+			: body && m_world->IsStaticBody(body->handle) ? static_cast<const PhysicsBodyComponent*>(body) : nullptr;
+		if (driven && driven->handle && (kinematic || static_cast<uint64_t>(m_scene->GetParent(id)) != 0 || driven->synchronized_parent != 0))
+			m_world->SetRigidBodyTransform(driven->handle, glm::vec3((*m_scene->GetWorldTransform(id))[3]), m_scene->GetWorldOrientation(id));
 	}
 }

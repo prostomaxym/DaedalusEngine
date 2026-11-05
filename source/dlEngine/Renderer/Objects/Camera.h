@@ -3,6 +3,7 @@
 #include "Geometry.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace Daedalus {
 	enum class DAEDALUS_API CameraMovement
@@ -72,6 +73,8 @@ namespace Daedalus {
 		virtual float GetFarPlane() const = 0;
 
 		void SetPosition(glm::vec3 position);
+		void SetPose(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& reference_up = glm::vec3(0.f, 1.f, 0.f));
+		glm::quat GetOrientation() const;
 		void SetRotation(float xoffset, float yoffset);
 		void SetMovementSpeed(float speed) { m_movement_speed = speed; }
 		void SetSensivitity(float senc) { m_mouse_sensitivity = senc; }

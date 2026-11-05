@@ -234,7 +234,7 @@ TEST(TransformHierarchyTest, transform_replacement_and_removal_invalidate_cached
 	EXPECT_EQ(scene.UpdateWorldTransforms(), 0u);
 }
 
-TEST(TransformHierarchyTest, physics_bodies_remain_roots_but_can_parent_visuals)
+TEST(TransformHierarchyTest, physics_bodies_accept_unit_scale_parents)
 {
 	Scene scene;
 	auto parent = scene.CreateEntity();
@@ -242,12 +242,12 @@ TEST(TransformHierarchyTest, physics_bodies_remain_roots_but_can_parent_visuals)
 	auto kinematic = scene.CreateEntity();
 	rigid.AddComponent<RigidBodyComponent>();
 	kinematic.AddComponent<KinematicBodyComponent>();
-	EXPECT_FALSE(scene.SetParent(rigid.GetUUID(), parent.GetUUID()));
-	EXPECT_FALSE(scene.SetParent(kinematic.GetUUID(), parent.GetUUID()));
-	EXPECT_TRUE(scene.SetParent(parent.GetUUID(), rigid.GetUUID()));
+	EXPECT_TRUE(scene.SetParent(rigid.GetUUID(), parent.GetUUID()));
+	EXPECT_TRUE(scene.SetParent(kinematic.GetUUID(), parent.GetUUID()));
+	EXPECT_FALSE(scene.SetParent(parent.GetUUID(), rigid.GetUUID()));
 }
 
-TEST(TransformHierarchyTest, adding_physics_body_detaches_existing_child)
+TEST(TransformHierarchyTest, adding_physics_body_preserves_valid_parent)
 {
 	Scene scene;
 	auto parent = scene.CreateEntity();
@@ -258,9 +258,9 @@ TEST(TransformHierarchyTest, adding_physics_body_detaches_existing_child)
 	rigid.GetComponent<TransformComponent>().translation.x = 3.f;
 	rigid.AddComponent<RigidBodyComponent>();
 	kinematic.AddComponent<KinematicBodyComponent>();
-	EXPECT_EQ(scene.GetParent(rigid.GetUUID()), UUID(0));
-	EXPECT_EQ(scene.GetParent(kinematic.GetUUID()), UUID(0));
-	EXPECT_TRUE(scene.GetChildren(parent.GetUUID()).empty());
+	EXPECT_EQ(scene.GetParent(rigid.GetUUID()), parent.GetUUID());
+	EXPECT_EQ(scene.GetParent(kinematic.GetUUID()), parent.GetUUID());
+	EXPECT_EQ(scene.GetChildren(parent.GetUUID()).size(), 2u);
 	EXPECT_FLOAT_EQ(rigid.GetComponent<TransformComponent>().translation.x, 3.f);
 }
 
@@ -295,13 +295,14 @@ TEST(TransformHierarchyTest, persistence_rejects_cycles_before_mutating_scene)
 	EXPECT_TRUE(scene.IsEmpty());
 }
 
-TEST(TransformHierarchyTest, persistence_rejects_missing_parent_and_parented_bodies)
+TEST(TransformHierarchyTest, persistence_rejects_missing_parent_and_scaled_physics_ancestors)
 {
 	std::string error;
 	auto record = HierarchyRecord();
 	record.entities[0].parent = "3";
 	EXPECT_FALSE(SceneJson::Validate(record, error));
 	record = HierarchyRecord();
+	record.entities[1].transform.scale.x = 2.f;
 	record.entities[0].rigid_body.emplace();
 	EXPECT_FALSE(SceneJson::Validate(record, error));
 	record.entities[0].rigid_body.reset();

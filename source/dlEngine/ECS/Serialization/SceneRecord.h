@@ -104,11 +104,12 @@ namespace Daedalus
 		std::optional<BodyRecord> kinematic_body;
 		std::vector<ScriptRecord> scripts;
 		std::optional<std::string> parent;
+		std::map<std::string, std::string> links;
 	};
 
 	struct SceneRecord
 	{
-		uint32_t version = 1;
+		uint32_t version = 2;
 		std::string name;
 		std::string primary_camera;
 		std::vector<EntityRecord> entities;

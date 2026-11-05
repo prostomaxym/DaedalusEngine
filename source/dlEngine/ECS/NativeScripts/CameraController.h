@@ -17,6 +17,7 @@ namespace Daedalus {
        std::optional<float> yPrevious{ std::nullopt };
 
     private:
+        Entity GetCameraEntity() const;
         void ProcessMovement(float dt);
         void ProcessMouse(float dt);
         void ProcessGamepad(float dt);

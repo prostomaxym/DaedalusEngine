@@ -53,6 +53,7 @@ void RenderSystem::OnStartRuntime() const
 void RenderSystem::OnUpdateRuntime(DeltaTime dt) const
 {
 	DL_PROFILE_SCOPE("RenderSystem::OnUpdateRuntime");
+	m_scene->UpdateWorldTransforms();
 	const auto count = m_registry.view<RenderableObjectComponent>().size();
 	const auto reserve_count = count <= static_cast<size_t>((std::numeric_limits<int>::max)())
 		? std::optional<int>(static_cast<int>(count)) : std::nullopt;
@@ -104,7 +105,6 @@ void RenderSystem::RenderSkybox() const
 
 void RenderSystem::SubmitModels() const
 {
-	m_scene->UpdateWorldTransforms();
 	const auto models_view = m_registry.view<RenderableObjectComponent>();
 	for (const auto e : models_view)
 	{

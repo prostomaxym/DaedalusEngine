@@ -27,7 +27,8 @@ Installation still packages the contents of the runtime asset folder like other 
 | `SceneJson::Parse` / `Serialize` | Convert JSON text and persistent records; no graphics/physics initialization required. |
 | `SceneJson::Load` / `Save` | Read/write persistent records as JSON files. |
 | `SceneJson::Load(files, virtual_path, ...)` | Read records through directory/ZIP VFS without graphics. |
-| `SceneJson::Validate` | Validate the v1 record schema and renderer shadow-map budget. |
+| `SceneJson::Validate` | Validate the v1/v2 record schema, hierarchy/links and renderer shadow-map budget. |
+| `SceneJson::Upgrade` | Convert validated v1 records into v2 TRS entities and named links; v2 is unchanged. |
 | `SceneSerializer::Instantiate` | Build a runtime `Scene` from records. |
 | `SceneSerializer::Capture` | Capture a stopped scene into records. |
 | `SceneSerializer::Load` / `Save` | Combine the file and runtime operations. |
@@ -37,13 +38,13 @@ All operations return `bool` and provide a diagnostic in `error`; log it through
 
 Resource instantiation must run on the application/GL-context thread after rendering, physics, and resource services have been constructed. Each Scene creates its own physics world through the physics factory; there is no shared global Bullet world. Record parsing/validation is independent of those services. Loading does not start runtime. Loading a camera-free record is permitted for tools/tests, but starting runtime requires a camera and an application/window.
 
-## Version 1 file structure
+## Version 2 file structure
 
-See `source/dlSandbox/scenes/nuke.scene.json` for a complete hand-authored example, and `source/dlEngine/ECS/Serialization/SceneRecord.h` for every property and its default.
+The reference scenes in `source/dlSandbox/scenes` remain v1 migration examples. See `source/dlEngine/ECS/Serialization/SceneRecord.h` for settings/defaults; camera/light pose members there are legacy v1 migration inputs, not v2 pose authority.
 
 ### Scene
 
-- `version`: required integer, currently `1`. Unsupported versions fail; there is no implicit migration.
+- `version`: required integer, currently `2`. Version 1 is upgraded on Parse/Load and Instantiate; unsupported versions fail. Capture produces v2. Serialize/Save preserve an explicitly supplied version, so call Upgrade before exporting a legacy record as v2.
 - `name`: scene display name, defaults to an empty string.
 - `primary_camera`: entity UUID string. Required when any camera is present; it must reference an entity with a camera. Selection does not depend on the entity's name.
 - `entities`: required array of entity objects.
@@ -52,7 +53,7 @@ See `source/dlSandbox/scenes/nuke.scene.json` for a complete hand-authored examp
 
 Every entity requires `id`, a unique, nonzero decimal uint64 **string**. Strings preserve UUIDs above JavaScript's exact-integer range. Leading zeros, duplicate IDs, and invalid/overflowing IDs fail. `name` defaults to `Entity` and must not be empty.
 
-An optional `parent` UUID string references another entity in the same scene; omission means a root. Forward references are allowed. Missing parents, self-parenting, cycles and parents on rigid/kinematic body entities are rejected before scene construction. Local `transform` TRS is preserved; world matrices compose as `parent_world * local`. Parent links and world matrices are established before client scripts are constructed. Existing flat version-1 files remain supported; older engine readers that do not recognize `parent` reject hierarchical files. This is an optional schema extension, not a version-migration framework.
+An optional `parent` UUID string references another entity in the same scene; omission means a root. Forward references are allowed. Missing parents, self-parenting, cycles and non-unit-scale physics ancestors are rejected before construction. Local `transform` TRS is preserved; world matrices compose as `parent_world * local`. Optional `links` maps nonempty names to entity UUID strings, for example `"links": { "camera": "12", "spot_light": "13" }`. Links do not imply parenting or ownership. All targets must exist; reserved `camera` and `spot_light` links must target the corresponding components. Parent links, named links and world poses exist before script construction.
 
 Components are named fields on each entity, not C++ type names or memory snapshots:
 
@@ -60,8 +61,8 @@ Components are named fields on each entity, not C++ type names or memory snapsho
 | --- | --- |
 | `transform` | Local `translation`, `rotation`, `scale`, each a three-number array. Rotation is pitch/yaw/roll in degrees. Defaults are zero translation/rotation and unit scale; zero scale is rejected. |
 | `model` | Asset-root-relative or canonical virtual `path`, plus numeric `import_flags` (`ModelParserFlags`/Assimp bitmask). Material dependencies use VFS-relative resolution, including ZIP entries and embedded textures; runtime material overrides are not saved. |
-| `camera` | `projection` (`perspective` or `orthographic`), position/up/yaw/pitch, projection parameters, viewport policy, and control settings. |
-| `directional_light`, `point_light`, `spot_light` | Position, direction, ambient/diffuse/specular colors, power, range, angles, shadow settings. |
+| `camera` | `projection` (`perspective` or `orthographic`), projection parameters, viewport policy, and control settings. Pose comes from entity TRS. |
+| `directional_light`, `point_light`, `spot_light` | Ambient/diffuse/specular colors, power, range, angles, shadow settings. Pose comes from entity TRS. |
 | `skybox` | Six `faces` in right, left, top, bottom, front, back order, plus rotation in degrees. Images must decode to matching square faces. |
 | `rigid_body`, `kinematic_body` | Collider shape, initial pose, dimensions, mass, and optional model-bound derivation settings. An entity cannot have both body types. |
 | `scripts` | Array of stable registered `type` strings and `properties` objects. |
@@ -72,11 +73,11 @@ Omitted optional components are absent. Omitted configuration properties use rec
 
 Perspective cameras use `fov` in degrees, `aspect_ratio`, `near_plane`, and `far_plane`. With `viewport_aspect: true` (the default), the aspect ratio updates from the actual viewport at runtime startup and resize. Set it to `false` for a fixed aspect ratio. Orthographic cameras use `left`, `right`, `bottom`, `top`, `near_plane`, and `far_plane`.
 
-`position`, `up`, `yaw`, and `pitch` define the camera's view independently of the entity transform, preserving existing engine behavior. `movement_speed`, `sensitivity`, `zoom_speed`, `distance`, and `height` configure controls and the third-person offset. The file is an authored definition, so transient input/zoom accumulators are not stored.
+Entity TRS defines the view: -Z is forward and +Y is up. World position includes ancestor scale; orientation composes rotations without scale/shear. Version 2 rejects camera `position`, `up`, `yaw`, and `pitch` fields rather than silently accepting duplicate pose authority. `movement_speed`, `sensitivity`, `zoom_speed`, `distance`, and `height` configure controls and the third-person offset. Height follows parent +Y, or world +Y for roots. CameraController edits local TRS, including through a `camera` link; idle input preserves roll, while look input uses yaw/pitch controls. Transient input/zoom accumulators are not stored.
 
 ### Lights
 
-Positions and directions remain independent of the entity transform. File angles (`inner_angle`, `outer_angle`) are in degrees, not shader cosine values. Point lights do not require a nonzero direction. Directional and spot lights do. Directional shadow cascades must be in `1..32`; spotlights support exactly one cascade. The total enabled shadow-map count must not exceed the current geometry shader's 32 invocations. Point lights consume six maps regardless of their stored cascade setting.
+Positions derive from entity world matrices; directions use rotated -Z without inherited scale/shear. Version 2 rejects light `position` and `direction` fields. File angles (`inner_angle`, `outer_angle`) are in degrees, not shader cosine values. Directional shadow cascades must be in `1..32`; spotlights support exactly one cascade. The total enabled shadow-map count must not exceed the current geometry shader's 32 invocations. Point lights consume six maps regardless of their stored cascade setting.
 
 ### Physics
 
@@ -87,9 +88,15 @@ Shapes are `box`, `sphere`, `model_box`, and `model_sphere`:
 - `model_box`: requires a model; resolves to `model AABB extents * bounds_scale + bounds_offset`. Resolved dimensions must be finite and positive.
 - `model_sphere`: requires a model; uses its bounding-sphere radius.
 
-Model-derived dimensions deliberately use **unscaled model bounds**, matching the previous sandbox. Body `position` and Euler `rotation` are independent of the entity transform; for example, the Nuke static floor has a distinct collision pose. Mass must be nonnegative; kinematic mass must be zero. Physics components own their handles exclusively and are movable, not copyable.
+Model-derived dimensions deliberately use **unscaled model bounds**; a body's own visual scale does not resize its collider. Root rigid bodies retain their authored body `position`/Euler `rotation` creation pose, preserving independent static-floor offsets. Parented bodies initialize from entity world TRS instead. All ancestors of a physics body must have exactly unit local scale. Parenting a subtree beneath incompatible scale is rejected; adding a body under scaled ancestors detaches it with a warning, preserving local TRS. Direct ancestor-scale edits detach affected bodies at their last Bullet world pose at the next physics boundary, also with a warning. Mass must be nonnegative; kinematic mass must be zero. Physics components own their handles exclusively and are movable, not copyable.
 
-The stored body description is its creation configuration, not Bullet's evolving state. Use `scene.GetPhysicsWorld()` for body queries, gravity, transforms and collision callbacks; handles from other scenes or removed bodies are rejected. Components are attached to that world by the Scene's component hooks. Runtime stop releases bodies; restart recreates them using the resolved collider configuration. The fixed-update kinematic system synchronizes kinematic bodies with entity transforms.
+The stored body description is its creation configuration, not Bullet's evolving state. Use `scene.GetPhysicsWorld()` for body queries, gravity, transforms and collision callbacks; handles from other scenes or removed bodies are rejected. Components attach through Scene hooks. Runtime stop releases bodies; restart recreates them. Kinematic and parented static bodies follow entity poses; dynamic bodies remain world-authoritative after initialization and write back local TRS in parent-first order, so moving a parent does not teleport an active dynamic child. `Scene::StepPhysics` supports explicit headless physics-only stepping.
+
+### Version 1 migration
+
+Upgrade first validates the original v1 contract, including root-only bodies and valid camera/light directions. Legacy camera/light positions were world-space and independent of entity TRS. A dedicated pose entity retains its ID and receives the converted TRS. An entity with multiple pose components, a model/body/skybox, a parent, or children keeps its original transform and hierarchy anchor; each independent camera/light moves to a new root entity. New IDs are the lowest available nonzero decimal IDs, avoiding collisions deterministically. Named `camera`, `directional_light`, `point_light`, and `spot_light` links connect the source to the new entities. Primary-camera selection follows a moved camera. Existing conflicting reserved links cause a diagnostic, not silent replacement.
+
+Scripts remain on their original entities. Custom adapters/scripts must support links if they require moved components; engine CameraController and sandbox adapters do. The example player uses its linked camera and spotlight, retaining independent model facing and aim. Migration changes records in memory only; source/runtime asset files are not rewritten. Capture/export explicitly saves v2. Migration is idempotent and does not provide prefabs or a general registry of future version migrations.
 
 ### Asset references
 
@@ -114,9 +121,9 @@ Sandbox bindings:
 
 | Script | Properties / prerequisites |
 | --- | --- |
-| `CameraController` | No properties; camera required. |
-| `LogPositionScript` | No properties; camera required. |
-| `PlayerControllerScript` | No properties; camera, model, kinematic body, and spotlight required. |
+| `CameraController` | No properties; camera component or `camera` link required. |
+| `LogPositionScript` | No properties; camera component or `camera` link required. |
+| `PlayerControllerScript` | No properties; camera component/link, model, kinematic body, and spotlight component/link required. |
 | `RotationModelScript` | Numeric `speed`, preserving its existing degrees-per-millisecond convention. |
 | `TankMovementScript` | Positive numeric `distance`, nonzero `forward_direction` vector. |
 
@@ -130,6 +137,6 @@ This is checked, cross-platform replacement, **not an atomic/power-loss-durable 
 
 ## Scope and validation
 
-Version 1 covers authored scene definitions including local transform hierarchies, not savegames, prefabs, automatic scene restart, custom material serialization or arbitrary reflected components. Physics bodies must remain roots; visual children may follow them. Cameras and lights retain their independent pose properties rather than inheriting entity world transforms. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
+Version 2 covers authored scene definitions, local transform hierarchies, unit-scale-ancestor physics parenting, named links and v1 camera/light migration. It is not a savegame, prefab, automatic restart, custom material serializer or arbitrary reflected-component framework. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
 
 Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or the configuration built). Scene tests and the asset follow-up tests cover record/VFS/ZIP loading and CPU model/texture imports without a GL context. GPU upload/replacement and visual behavior still require a separate sandbox smoke test.

@@ -10,6 +10,22 @@ using namespace Daedalus;
 
 namespace
 {
+	Camera& AddLinkedCamera(Entity owner)
+	{
+		auto entity = owner.GetScene().CreateEntity();
+		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		entity.GetComponent<TransformComponent>().SetOrientationQuat(camera.GetOrientation());
+		EXPECT_TRUE(owner.GetScene().SetEntityLink(owner.GetUUID(), "camera", entity.GetUUID()));
+		owner.GetScene().UpdateWorldTransforms();
+		return camera;
+	}
+
+	void ResetCameraPosition(Entity owner)
+	{
+		owner.GetLinkedEntity("camera").GetComponent<TransformComponent>().translation = glm::vec3(0.f);
+		owner.GetScene().UpdateWorldTransforms();
+	}
+
 	class TestCameraController : public CameraController
 	{
 	public:
@@ -216,6 +232,134 @@ TEST_F(InputActionsTest, AllGamepadAxesAndTriggerNormalizationAreSupported)
 	}
 }
 
+TEST_F(InputActionsTest, camera_controller_writes_local_trs_under_rotated_parent)
+{
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
+	for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
+		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+	Input::EnableGamepadInput(false);
+	Scene scene;
+	auto owner = scene.CreateEntity();
+	auto parent = scene.CreateEntity();
+	auto& camera = AddLinkedCamera(owner);
+	auto entity = owner.GetLinkedEntity("camera");
+	parent.GetComponent<TransformComponent>().translation.x = 10.f;
+	parent.GetComponent<TransformComponent>().rotation.y = 90.f;
+	ASSERT_TRUE(scene.SetParent(entity.GetUUID(), parent.GetUUID()));
+	TestCameraController script(owner);
+	m_input.keys[DL_KEY_W] = true;
+	Input::Update();
+	script.Tick(DeltaTime(std::chrono::seconds(1)));
+	EXPECT_NEAR(entity.GetComponent<TransformComponent>().translation.x, camera.GetMovementSpeed(), 0.0001f);
+	EXPECT_NEAR(camera.GetPosition().x, 10.f, 0.0001f);
+	EXPECT_NEAR(camera.GetPosition().z, -camera.GetMovementSpeed(), 0.0001f);
+}
+
+TEST_F(InputActionsTest, camera_controller_preserves_roll_without_look_input)
+{
+	for (const auto* name : { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" })
+		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+	Input::EnableGamepadInput(false);
+	Scene scene;
+	auto owner = scene.CreateEntity();
+	AddLinkedCamera(owner);
+	auto entity = owner.GetLinkedEntity("camera");
+	auto& transform = entity.GetComponent<TransformComponent>();
+	transform.rotation = { 10.f, 20.f, 30.f };
+	const auto expected = transform.GetOrientationQuat();
+	TestCameraController script(owner);
+	script.Tick(DeltaTime(std::chrono::seconds(1)));
+	EXPECT_NEAR(std::abs(glm::dot(expected, transform.GetOrientationQuat())), 1.f, 0.0001f);
+}
+
+TEST_F(InputActionsTest, player_facing_converts_world_movement_to_parent_space)
+{
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
+	for (const auto* name : { "MoveBackward", "MoveLeft", "MoveRight", "Flashlight", "ChangePOV" })
+		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+	Input::EnableGamepadInput(false);
+	Scene scene;
+	auto entity = scene.CreateEntity();
+	auto parent = scene.CreateEntity();
+	AddLinkedCamera(entity);
+	parent.GetComponent<TransformComponent>().rotation.y = 90.f;
+	ASSERT_TRUE(scene.SetParent(entity.GetUUID(), parent.GetUUID()));
+	TestPlayerController script(entity);
+	m_input.keys[DL_KEY_W] = true;
+	Input::Update();
+	script.Tick(DeltaTime(std::chrono::seconds(1)));
+	EXPECT_NEAR(entity.GetComponent<TransformComponent>().rotation.y, 0.f, 0.0001f);
+	const auto front = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
+	EXPECT_NEAR(front.x, 1.f, 0.0001f);
+	EXPECT_NEAR(front.z, 0.f, 0.0001f);
+}
+
+TEST_F(InputActionsTest, player_facing_survives_world_pose_euler_writeback_across_frames)
+{
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveForward", { DL_KEY_W, -1 }));
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveBackward", { DL_KEY_S, -1 }));
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveLeft", { DL_KEY_A, -1 }));
+	ASSERT_TRUE(KeybindConfig::SetActionBind("MoveRight", { DL_KEY_D, -1 }));
+	for (const auto* name : { "MoveUp", "MoveDown", "Flashlight", "ChangePOV" })
+		ASSERT_TRUE(KeybindConfig::SetActionBind(name, {}));
+	Input::EnableGamepadInput(false);
+	const DeltaTime dt(std::chrono::milliseconds(16));
+	for (const float parent_yaw : { 0.f, 90.f })
+	{
+		SCOPED_TRACE(parent_yaw);
+		Scene scene;
+		auto entity = scene.CreateEntity();
+		auto& camera = AddLinkedCamera(entity);
+		auto camera_entity = entity.GetLinkedEntity("camera");
+		camera_entity.GetComponent<TransformComponent>().rotation = glm::vec3(0.f);
+		auto& transform = entity.GetComponent<TransformComponent>();
+		transform.rotation = { 0.f, 180.f, 0.f };
+		transform.scale = glm::vec3(2.f);
+		if (parent_yaw != 0.f)
+		{
+			auto parent = scene.CreateEntity();
+			parent.GetComponent<TransformComponent>().rotation.y = parent_yaw;
+			ASSERT_TRUE(scene.SetParent(entity.GetUUID(), parent.GetUUID()));
+		}
+		auto& body = entity.AddComponent<KinematicBodyComponent>();
+		scene.UpdateWorldTransforms();
+		TestCameraController camera_script(entity);
+		TestPlayerController player_script(entity);
+		for (const int key : { DL_KEY_W, DL_KEY_D, DL_KEY_S, DL_KEY_A })
+		{
+			SCOPED_TRACE(key);
+			m_input.keys.fill(false);
+			m_input.keys[key] = true;
+			for (int frame = 0; frame < 90; ++frame)
+			{
+				Input::Update();
+				const auto previous = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
+				camera_script.Tick(dt);
+				player_script.Tick(dt);
+				scene.StepPhysics(dt);
+				const auto facing = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
+				EXPECT_GE(glm::dot(previous, facing), std::cos(glm::radians(540.f * dt.GetSeconds())) - 0.0001f);
+				EXPECT_NEAR(facing.y, 0.f, 0.0001f);
+			}
+			const auto expected = glm::normalize(camera.GetDirection() * Input::GetMovementAction("MoveForward", "MoveBackward")
+				+ camera.GetRight() * Input::GetMovementAction("MoveRight", "MoveLeft"));
+			const auto facing = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
+			EXPECT_NEAR(glm::distance(facing, expected), 0.f, 0.0001f);
+			EXPECT_NEAR(glm::distance(glm::vec3((*scene.GetWorldTransform(entity.GetUUID()))[3]), camera.GetPosition()), 0.f, 0.0001f);
+			glm::vec3 body_position;
+			glm::quat body_orientation;
+			ASSERT_TRUE(scene.GetPhysicsWorld().GetRigidBodyTransform(body.handle, body_position, body_orientation));
+			EXPECT_NEAR(glm::distance(body_orientation * glm::vec3(0.f, 0.f, 1.f), expected), 0.f, 0.0001f);
+			EXPECT_NEAR(glm::distance(transform.scale, glm::vec3(2.f)), 0.f, 0.0001f);
+		}
+		m_input.keys.fill(false);
+		Input::Update();
+		const auto idle_orientation = scene.GetWorldOrientation(entity.GetUUID());
+		player_script.Tick(dt);
+		EXPECT_NEAR(std::abs(glm::dot(idle_orientation, scene.GetWorldOrientation(entity.GetUUID()))), 1.f, 0.0001f);
+	}
+}
+
 TEST_F(InputActionsTest, UnknownNamesAndUnboundMappingsAreNeutral)
 {
 	EXPECT_FALSE(Input::IsActionDown("missing_input_action"));
@@ -260,7 +404,7 @@ TEST_F(InputActionsTest, camera_uses_planar_action_down_and_vertical_action_hold
 {
 	Scene scene;
 	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+	auto& camera = AddLinkedCamera(entity);
 	TestCameraController script(entity);
 	const DeltaTime dt(std::chrono::milliseconds(100));
 	const char* names[] = { "MoveForward", "MoveBackward", "MoveLeft", "MoveRight", "MoveUp", "MoveDown" };
@@ -272,7 +416,7 @@ TEST_F(InputActionsTest, camera_uses_planar_action_down_and_vertical_action_hold
 	for (int i = 0; i < 6; ++i)
 	{
 		SCOPED_TRACE(names[i]);
-		camera.SetPosition(glm::vec3(0.f));
+		ResetCameraPosition(entity);
 		PerspectiveCamera expected;
 		m_input.buttons[i] = true;
 		Input::Update();
@@ -300,7 +444,7 @@ TEST_F(InputActionsTest, shared_movement_and_pov_button_moves_on_down_and_toggle
 	Input::Update();
 	Scene scene;
 	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+	auto& camera = AddLinkedCamera(entity);
 	entity.AddComponent<RenderableObjectComponent>();
 	entity.AddComponent<SpotLightComponent>();
 	TestCameraController camera_script(entity);
@@ -337,7 +481,7 @@ TEST_F(InputActionsTest, camera_moves_on_first_keyboard_frame_and_ignores_unmapp
 	Input::Update();
 	Scene scene;
 	auto entity = scene.CreateEntity();
-	auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+	auto& camera = AddLinkedCamera(entity);
 	TestCameraController script(entity);
 	const DeltaTime dt(std::chrono::milliseconds(100));
 	PerspectiveCamera expected;
@@ -356,7 +500,7 @@ TEST_F(InputActionsTest, camera_moves_on_first_keyboard_frame_and_ignores_unmapp
 	Input::Update();
 	script.Tick(dt);
 	EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
-	EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
+	EXPECT_NEAR(camera.GetYaw(), expected.GetYaw(), 0.0001f);
 }
 
 TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComponents)
@@ -366,7 +510,7 @@ TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComp
 	Input::Update();
 	Scene scene;
 	auto entity = scene.CreateEntity();
-	entity.AddComponent<CameraComponent>(CameraProjectionProps{});
+	(void)AddLinkedCamera(entity);
 	entity.AddComponent<RenderableObjectComponent>();
 	entity.AddComponent<SpotLightComponent>();
 	TestPlayerController script(entity);
@@ -407,7 +551,7 @@ TEST_F(InputActionsTest, player_waits_for_both_devices_to_release_and_uses_named
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
-		entity.AddComponent<CameraComponent>(CameraProjectionProps{}, CameraPositionProps(glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f), 0.f, 0.f));
+		(void)AddLinkedCamera(entity);
 		entity.AddComponent<RenderableObjectComponent>();
 		entity.AddComponent<SpotLightComponent>();
 		TestPlayerController script(entity);
@@ -448,7 +592,7 @@ TEST_F(InputActionsTest, camera_uses_signed_action_named_movement_and_look_axes)
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
-		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		auto& camera = AddLinkedCamera(entity);
 		TestCameraController script(entity);
 		const DeltaTime dt(std::chrono::milliseconds(100));
 		const std::array<std::pair<float, float>, 7> positions{
@@ -457,7 +601,7 @@ TEST_F(InputActionsTest, camera_uses_signed_action_named_movement_and_look_axes)
 		for (const auto& [x, y] : positions)
 		{
 			SCOPED_TRACE(::testing::Message() << "x=" << x << ", y=" << y);
-			camera.SetPosition(glm::vec3(0.f));
+			ResetCameraPosition(entity);
 			m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = x;
 			m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = y;
 			Input::Update();
@@ -467,7 +611,7 @@ TEST_F(InputActionsTest, camera_uses_signed_action_named_movement_and_look_axes)
 			script.Tick(dt);
 			EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		}
-		camera.SetPosition(glm::vec3(0.f));
+		ResetCameraPosition(entity);
 		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 0.f;
 		m_input.axes[DL_GAMEPAD_AXIS_LEFT_Y] = 0.f;
 		m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 0.5f;
@@ -476,13 +620,13 @@ TEST_F(InputActionsTest, camera_uses_signed_action_named_movement_and_look_axes)
 		expected.ProcessMouseMovement(0.5f * dt.GetSeconds() * 100.f, 0.25f * dt.GetSeconds() * 100.f);
 		Input::Update();
 		script.Tick(dt);
-		EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
-		EXPECT_FLOAT_EQ(camera.GetPitch(), expected.GetPitch());
+		EXPECT_NEAR(camera.GetYaw(), expected.GetYaw(), 0.0001f);
+		EXPECT_NEAR(camera.GetPitch(), expected.GetPitch(), 0.0001f);
 		Input::EnableGamepadInput(false);
 		m_input.axes[DL_GAMEPAD_AXIS_LEFT_X] = 1.f;
 		script.Tick(dt);
 		EXPECT_NEAR(glm::length(camera.GetPosition()), 0.f, 0.00001f);
-		EXPECT_FLOAT_EQ(camera.GetYaw(), expected.GetYaw());
+		EXPECT_NEAR(camera.GetYaw(), expected.GetYaw(), 0.0001f);
 		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
 	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
@@ -498,7 +642,7 @@ TEST_F(InputActionsTest, player_faces_signed_named_axes_and_ignores_neutral_or_d
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
-		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		auto& camera = AddLinkedCamera(entity);
 		entity.AddComponent<SpotLightComponent>();
 		TestPlayerController script(entity);
 		auto& transform = entity.GetComponent<TransformComponent>();
@@ -508,6 +652,7 @@ TEST_F(InputActionsTest, player_faces_signed_named_axes_and_ignores_neutral_or_d
 		for (const float pitch : { 0.f, 60.f, -60.f })
 		{
 			camera.SetRotation(-45.f, pitch);
+			entity.GetLinkedEntity("camera").GetComponent<TransformComponent>().SetOrientationQuat(camera.GetOrientation());
 			for (const auto& [x, y] : positions)
 			{
 				transform.rotation.y = 0.f;
@@ -553,7 +698,7 @@ TEST_F(InputActionsTest, player_combines_immediate_keyboard_input_with_named_ana
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
-		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		auto& camera = AddLinkedCamera(entity);
 		entity.AddComponent<SpotLightComponent>();
 		TestPlayerController script(entity);
 		auto& transform = entity.GetComponent<TransformComponent>();
@@ -590,7 +735,7 @@ TEST_F(InputActionsTest, action_named_movement_axes_respect_remapping_and_device
 		Input::Update();
 		Scene scene;
 		auto entity = scene.CreateEntity();
-		auto& camera = *entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+		auto& camera = AddLinkedCamera(entity);
 		entity.AddComponent<SpotLightComponent>();
 		TestCameraController camera_script(entity);
 		TestPlayerController player_script(entity);
@@ -604,7 +749,7 @@ TEST_F(InputActionsTest, action_named_movement_axes_respect_remapping_and_device
 		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		ASSERT_TRUE(KeybindConfig::SetAxisBind("MoveRight", { "", "", GamepadAxis::RightX, -1.f, 0.f }));
 		m_input.axes[DL_GAMEPAD_AXIS_RIGHT_X] = 0.25f;
-		camera.SetPosition(glm::vec3(0.f));
+		ResetCameraPosition(entity);
 		expected.SetPosition(glm::vec3(0.f));
 		expected.ProcessKeyboard(CameraMovement::FORWARD, 0.5f * dt.GetSeconds());
 		expected.ProcessKeyboard(CameraMovement::RIGHT, -0.25f * dt.GetSeconds());
@@ -618,7 +763,7 @@ TEST_F(InputActionsTest, action_named_movement_axes_respect_remapping_and_device
 		Input::EnableGamepadInput(false);
 		m_input.keys[DL_KEY_W] = true;
 		Input::Update();
-		camera.SetPosition(glm::vec3(0.f));
+		ResetCameraPosition(entity);
 		expected.SetPosition(glm::vec3(0.f));
 		expected.SetRotation(camera.GetYaw(), camera.GetPitch());
 		expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());

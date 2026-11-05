@@ -39,7 +39,10 @@ namespace Daedalus
 
 		virtual void OnUpdate(DeltaTime dt) override
 		{
-			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+			auto entity = m_entity.HasComponent<CameraComponent>() ? m_entity : m_entity.GetLinkedEntity("camera");
+			if (!entity) return;
+			entity.GetScene().UpdateWorldTransforms();
+			auto camera = entity.GetComponent<CameraComponent>().camera.get();
 			const auto pos = camera->GetPosition();
 			const auto message = std::string("Position - ") + "X: " + std::to_string(pos.x) + " / " + "Y: " + std::to_string(pos.y) + " / " + "Z: " + std::to_string(pos.z);
 			Log::Write(Log::Levels::Trace, Log::Categories::Application, "{}", message);
@@ -124,9 +127,12 @@ namespace Daedalus
 	protected:
 		virtual void OnUpdate(DeltaTime dt) override
 		{
+			if (!GetCameraEntity()) return;
+			m_entity.GetScene().UpdateWorldTransforms();
 			UpdatePlayerView();
 			UpdatePlayerModel(dt);
 			UpdateSpotLight();
+			m_entity.GetScene().UpdateWorldTransforms();
 		}
 
 	private:
@@ -135,14 +141,21 @@ namespace Daedalus
 		const float m_turn_speed = 540.f;
 		std::unique_ptr<RenderableObjectComponent> m_temp_component_storage;
 
+		Entity GetCameraEntity() const
+		{
+			return m_entity.HasComponent<CameraComponent>() ? m_entity : m_entity.GetLinkedEntity("camera");
+		}
+
 		void UpdateSpotLight()
 		{
+			auto entity = m_entity.GetLinkedEntity("spot_light");
+			if (!entity) entity = m_entity;
 			const auto key_pressed = Input::IsActionReleased("Flashlight");
 
 			if (key_pressed && m_spotlight_enabled)
 			{
 				m_spotlight_enabled = false;
-				m_entity.RemoveComponent<SpotLightComponent>();
+				if (entity.HasComponent<SpotLightComponent>()) entity.RemoveComponent<SpotLightComponent>();
 				
 			}
 			else if (key_pressed)
@@ -161,49 +174,42 @@ namespace Daedalus
 				props.outer_cutoff = 35.f;
 				props.cast_shadows = false;
 				props.number_of_shadow_cascades = 1;
-				m_entity.AddComponent<SpotLightComponent>(props);;
+				entity.AddComponent<SpotLightComponent>(props);
 			}
 
-			if (!m_entity.HasComponent<SpotLightComponent>())
+			if (!entity.HasComponent<SpotLightComponent>())
 				return;
+			if (entity == m_entity) return;
 
-			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
-			auto& light = m_entity.GetComponent<SpotLightComponent>().light;
+			auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 
 			if (!m_thirdperson)
 			{
-				light.SetPosition(camera->GetPosition());
-				light.SetDirection(camera->GetDirection());
+				(void)entity.GetScene().SetWorldPose(entity.GetUUID(), camera->GetPosition(), camera->GetOrientation());
 			}
 			else
 			{
-				auto& trans = m_entity.GetComponent<TransformComponent>();
-
-				light.SetPosition(camera->GetPosition() + camera->GetDirection());
-				const auto yaw = camera->GetYaw();
-				glm::vec3 front;
-				front.x = std::cos(glm::radians(-trans.rotation.y - 90.f)) * std::cos(glm::radians(trans.rotation.x));
-				front.y = std::sin(glm::radians(trans.rotation.x));
-				front.z = std::sin(glm::radians(-trans.rotation.y - 90.f)) * std::cos(glm::radians(trans.rotation.x));
-				front = glm::normalize(front);
-
-				light.SetDirection(-front);
+				const auto orientation = m_entity.GetScene().GetWorldOrientation(m_entity.GetUUID())
+					* glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
+				(void)entity.GetScene().SetWorldPose(entity.GetUUID(), camera->GetPosition() + camera->GetDirection(), orientation);
 			}
 		}
 
 		void UpdatePlayerModel(DeltaTime dt)
 		{
-			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+			auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 			auto& trans = m_entity.GetComponent<TransformComponent>();
-			trans.translation = camera->GetPosition();
+			const auto parent = m_entity.GetScene().GetParent(m_entity.GetUUID());
+			const auto parent_rotation = m_entity.GetScene().GetWorldOrientation(parent);
+			(void)m_entity.GetScene().SetWorldPose(m_entity.GetUUID(), camera->GetPosition(), parent_rotation * trans.GetOrientationQuat());
 
 			glm::vec3 camera_forward = glm::normalize(camera->GetDirection());
 			glm::vec3 camera_right = glm::normalize(camera->GetRight());
 
 			const auto forward = Input::GetMovementAction("MoveForward", "MoveBackward");
 			const auto right = Input::GetMovementAction("MoveRight", "MoveLeft");
-			glm::vec3 moveDirection = camera_forward * forward + camera_right * right;
-			// Facing is yaw-only, even when the camera is looking up or down.
+			glm::vec3 moveDirection = glm::inverse(parent_rotation) * (camera_forward * forward + camera_right * right);
+			// Facing is yaw-only in parent space, independent of camera pitch.
 			moveDirection.y = 0.f;
 
 			if (glm::length(moveDirection) > 0.0f)
@@ -221,7 +227,10 @@ namespace Daedalus
 				}
 
 				// Calculate the difference and adjust for shortest path
-				float currentYaw = trans.rotation.y;
+				// Quaternion-to-Euler writeback can represent yaw > 90 with 180-degree pitch/roll.
+				const auto model_forward = trans.GetOrientationQuat() * glm::vec3(0.f, 0.f, 1.f);
+				float currentYaw = glm::degrees(atan2(model_forward.x, model_forward.z));
+				if (currentYaw < 0.f) currentYaw += 360.f;
 				float deltaYaw = desiredYaw - currentYaw;
 
 				if (deltaYaw > 180.0f)
@@ -247,14 +256,15 @@ namespace Daedalus
 					newYaw -= 360.0f;
 				}
 
-				trans.rotation.y = newYaw;
+				trans.rotation = glm::vec3(0.f, newYaw, 0.f);
 			}
+			m_entity.GetScene().UpdateWorldTransforms();
 		}
 
 		void UpdatePlayerView()
 		{
 			const auto key_pressed = Input::IsActionReleased("ChangePOV");
-			auto camera = m_entity.GetComponent<CameraComponent>().camera.get();
+			auto camera = GetCameraEntity().GetComponent<CameraComponent>().camera.get();
 
 			if (key_pressed && m_thirdperson)
 			{

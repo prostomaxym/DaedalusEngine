@@ -264,14 +264,14 @@ TEST(SceneSerializerTest, light_setter_changes_survive_capture)
 	ASSERT_TRUE(SceneSerializer::Instantiate(input, scene, ".", scripts, error)) << error;
 	auto& light = scene.GetEntityByUUID(Daedalus::UUID(42)).GetComponent<SpotLightComponent>().light;
 	light.SetCutoffAngle(glm::cos(glm::radians(20.f)));
-	light.SetPosition({ 1.f, 2.f, 3.f });
+	scene.GetEntityByUUID(Daedalus::UUID(42)).GetComponent<TransformComponent>().translation = { 1.f, 2.f, 3.f };
 	light.SetMaxDistance(123.f);
 	light.SetPower(5.f);
 	SceneRecord output;
 	ASSERT_TRUE(SceneSerializer::Capture(scene, ".", scripts, output, error)) << error;
 	const auto& captured = *output.entities[0].spot_light;
 	EXPECT_NEAR(captured.inner_angle, 20.f, 0.0001f);
-	EXPECT_FLOAT_EQ(captured.position.y, 2.f);
+	EXPECT_FLOAT_EQ(output.entities[0].transform.translation.y, 2.f);
 	EXPECT_FLOAT_EQ(captured.max_distance, 123.f);
 	EXPECT_FLOAT_EQ(captured.power, 5.f);
 }
@@ -458,11 +458,11 @@ TEST_F(SceneFileTest, validation_failure_does_not_overwrite_existing_file)
 	auto input = BasicScene();
 	std::string error;
 	ASSERT_TRUE(SceneJson::Save(path, input, error)) << error;
-	input.version = 2;
+	input.version = 3;
 	EXPECT_FALSE(SceneJson::Save(path, input, error));
 	SceneRecord output;
 	ASSERT_TRUE(SceneJson::Load(path, output, error)) << error;
-	EXPECT_EQ(output.version, 1u);
+	EXPECT_EQ(output.version, 2u);
 }
 
 TEST_F(SceneFileTest, pending_recovery_file_is_not_overwritten)

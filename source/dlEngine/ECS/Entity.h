@@ -90,6 +90,11 @@ namespace Daedalus
 		operator uint32_t() const { return (uint32_t)m_entity_handle; }
 
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		Scene& GetScene() const { return *m_scene; }
+		Entity GetLinkedEntity(std::string_view name) const
+		{
+			return m_scene->GetEntityByUUID(m_scene->GetEntityLink(GetComponent<IDComponent>().ID, name));
+		}
 		const std::string& GetName() const { return GetComponent<TagComponent>().tag; }
 
 		bool operator==(const Entity& other) const

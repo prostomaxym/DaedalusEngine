@@ -10,7 +10,7 @@ namespace
 {
 	bool CameraScript(const ScriptRecord& script, const EntityRecord& entity, std::string& error)
 	{
-		if (!script.properties.empty() || !entity.camera)
+		if (!script.properties.empty() || (!entity.camera && !entity.links.contains("camera")))
 		{
 			error = "requires a camera and no properties";
 			return false;
@@ -44,7 +44,7 @@ bool Daedalus::RegisterSceneScripts(ScriptRegistry& registry)
 			[](const ScriptRecord& script, const EntityRecord& entity, std::string& error)
 			{
 				if (!CameraScript(script, entity, error)) return false;
-				if (!entity.model || !entity.kinematic_body || !entity.spot_light)
+				if (!entity.model || !entity.kinematic_body || (!entity.spot_light && !entity.links.contains("spot_light")))
 				{
 					error = "requires model, kinematic_body and spot_light components";
 					return false;

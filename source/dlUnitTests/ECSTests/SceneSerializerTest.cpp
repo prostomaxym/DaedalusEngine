@@ -458,11 +458,11 @@ TEST_F(SceneFileTest, validation_failure_does_not_overwrite_existing_file)
 	auto input = BasicScene();
 	std::string error;
 	ASSERT_TRUE(SceneJson::Save(path, input, error)) << error;
-	input.version = 3;
+	input.version = CurrentSceneVersion + 1;
 	EXPECT_FALSE(SceneJson::Save(path, input, error));
 	SceneRecord output;
 	ASSERT_TRUE(SceneJson::Load(path, output, error)) << error;
-	EXPECT_EQ(output.version, 2u);
+	EXPECT_EQ(output.version, CurrentSceneVersion);
 }
 
 TEST_F(SceneFileTest, pending_recovery_file_is_not_overwritten)

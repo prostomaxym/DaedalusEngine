@@ -67,11 +67,16 @@ namespace
 		{
 			f("type", r.type); f("properties", r.properties);
 		}
+		else if constexpr (std::is_same_v<R, PrefabRecord>)
+		{
+			f("path", r.path); f("exports", r.exports);
+		}
 		else if constexpr (std::is_same_v<R, EntityRecord>)
 		{
 			f("id", r.id); f("name", r.name); f("transform", r.transform);
 			f("parent", r.parent);
 			f("links", r.links);
+			f("prefab", r.prefab);
 			f("model", r.model); f("camera", r.camera);
 			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
 			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body); f("scripts", r.scripts);
@@ -312,7 +317,8 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	error.clear();
 	SceneRecord checked;
 	if (!Decode(Encode(record), checked, "$", error)) return false;
-	if (record.version != 1 && record.version != 2) return Fail(error, "$.version", "unsupported scene version (expected 1 or 2)");
+	if (record.version < 1 || record.version > CurrentSceneVersion)
+		return Fail(error, "$.version", "unsupported scene version (expected 1.." + std::to_string(CurrentSceneVersion) + ")");
 	std::set<std::string> ids;
 	bool primary_found = record.primary_camera.empty();
 	bool has_camera = false;
@@ -326,6 +332,14 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 		if (entity.transform.scale.x == 0.f || entity.transform.scale.y == 0.f || entity.transform.scale.z == 0.f)
 			return Fail(error, path + ".transform.scale", "scale must be nonzero");
 		if (entity.model && !AssetPath(entity.model->path)) return Fail(error, path + ".model.path", "expected a portable asset-root-relative path without traversal");
+		if (entity.prefab)
+		{
+			if (record.version < 3) return Fail(error, path + ".prefab", "prefabs require scene version 3");
+			if (!AssetPath(entity.prefab->path)) return Fail(error, path + ".prefab.path", "expected a portable prefab asset path");
+			for (const auto& [name, target] : entity.prefab->exports)
+				if (name.empty() || !ValidId(target)) return Fail(error, path + ".prefab.exports", "exports require nonempty names and template entity UUID strings");
+			if (entity.id == record.primary_camera) primary_found = true;
+		}
 		if (entity.camera)
 		{
 			has_camera = true;
@@ -413,15 +427,15 @@ bool SceneJson::Parse(std::string_view text, SceneRecord& record, std::string& e
 	if (!json.is_object() || !json.contains("version") || !json.contains("entities")) return Fail(error, "$", "version and entities are required");
 	SceneRecord result;
 	if (!Decode(json, result, "$", error) || !Validate(result, error)) return false;
-	if (result.version == 2)
+	if (result.version >= 2)
 		for (const auto& entity : json["entities"])
 		{
 			if (entity.contains("camera"))
 				for (const auto* key : { "position", "up", "yaw", "pitch" })
-					if (entity["camera"].contains(key)) return Fail(error, "$.entities.camera", "version 2 camera pose belongs in entity transform");
+					if (entity["camera"].contains(key)) return Fail(error, "$.entities.camera", "camera pose belongs in entity transform for scene versions 2 and later");
 			for (const auto* key : { "directional_light", "point_light", "spot_light" })
 				if (entity.contains(key) && (entity[key].contains("position") || entity[key].contains("direction")))
-					return Fail(error, "$.entities.light", "version 2 light pose belongs in entity transform");
+					return Fail(error, "$.entities.light", "light pose belongs in entity transform for scene versions 2 and later");
 		}
 	return Upgrade(result, record, error);
 }

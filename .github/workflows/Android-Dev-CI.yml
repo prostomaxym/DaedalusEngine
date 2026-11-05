@@ -1,10 +1,10 @@
-name: Android-CI
+name: Android-Dev-CI
 
 on:
   push:
-    branches: [ "development", "master" ]
+    branches: [ "development" ]
   pull_request:
-    branches: [ "development", "master" ]
+    branches: [ "development" ]
 
 permissions:
   contents: read

@@ -69,7 +69,15 @@ namespace
 		}
 		else if constexpr (std::is_same_v<R, PrefabRecord>)
 		{
-			f("path", r.path); f("exports", r.exports);
+			f("path", r.path); f("exports", r.exports); f("overrides", r.overrides);
+		}
+		else if constexpr (std::is_same_v<R, EntityOverrideRecord>)
+		{
+			f("id", r.id); f("name", r.name); f("transform", r.transform); f("parent", r.parent);
+			f("links", r.links); f("scripts", r.scripts); f("remove", r.remove);
+			f("model", r.model); f("camera", r.camera);
+			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
+			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body);
 		}
 		else if constexpr (std::is_same_v<R, EntityRecord>)
 		{
@@ -84,7 +92,27 @@ namespace
 		else if constexpr (std::is_same_v<R, SceneRecord>)
 		{
 			f("version", r.version); f("name", r.name); f("primary_camera", r.primary_camera); f("entities", r.entities);
+			f("base_prefab", r.base_prefab); f("overrides", r.overrides);
 		}
+	}
+
+	bool Poses(Json& value, bool strip)
+	{
+		if (value.is_object())
+		{
+			for (const auto* component : { "camera", "directional_light", "point_light", "spot_light" })
+				if (value.contains(component) && value[component].is_object())
+					for (const auto* key : { "position", "direction", "up", "yaw", "pitch" })
+						if (value[component].contains(key))
+						{
+							if (!strip) return false;
+							value[component].erase(key);
+						}
+		}
+		if (value.is_structured())
+			for (auto& child : value)
+				if (!Poses(child, strip)) return false;
+		return true;
 	}
 
 	template<typename T>
@@ -124,18 +152,13 @@ namespace
 			});
 			if constexpr (std::is_same_v<T, SceneRecord>)
 			{
-				if (value.version >= 2)
+				if (value.version >= 2) Poses(result, true);
+				if (value.version < 4)
+				{
+					result.erase("overrides");
 					for (auto& entity : result["entities"])
-					{
-						if (entity.contains("camera"))
-							for (const auto* key : { "position", "up", "yaw", "pitch" }) entity["camera"].erase(key);
-						for (const auto* key : { "directional_light", "point_light", "spot_light" })
-							if (entity.contains(key))
-							{
-								entity[key].erase("position");
-								entity[key].erase("direction");
-							}
-					}
+						if (entity.contains("prefab")) entity["prefab"].erase("overrides");
+				}
 			}
 			return result;
 		}
@@ -310,6 +333,34 @@ namespace
 			return Fail(error, path, "invalid collider dimensions");
 		return true;
 	}
+
+	bool CheckOverrides(const std::vector<EntityOverrideRecord>& overrides, uint32_t version, const std::string& path, std::string& error)
+	{
+		if (version < 4 && !overrides.empty()) return Fail(error, path, "overrides require scene version 4");
+		std::set<std::string> ids;
+		const std::set<std::string> removable{
+			"model", "camera", "directional_light", "point_light", "spot_light", "skybox", "rigid_body", "kinematic_body"
+		};
+		for (const auto& patch : overrides)
+		{
+			if (!ValidId(patch.id) || !ids.insert(patch.id).second) return Fail(error, path, "override targets must be unique template UUIDs");
+			if (patch.name && patch.name->empty()) return Fail(error, path, "override name must not be empty");
+			if (patch.parent && !patch.parent->empty() && !ValidId(*patch.parent)) return Fail(error, path, "invalid override parent UUID");
+			if (patch.links)
+				for (const auto& [name, target] : *patch.links)
+					if (name.empty() || !ValidId(target)) return Fail(error, path, "invalid override link");
+			if (patch.model && !AssetPath(patch.model->path)) return Fail(error, path, "invalid override model path");
+			if (patch.skybox)
+				for (const auto& face : patch.skybox->faces)
+					if (!AssetPath(face)) return Fail(error, path, "invalid override skybox path");
+			std::set<std::string> removed;
+			const auto fields = Encode(patch);
+			for (const auto& component : patch.remove)
+				if (!removable.contains(component) || !removed.insert(component).second || fields.contains(component))
+					return Fail(error, path, "unknown, duplicate or simultaneously replaced removed component: " + component);
+		}
+		return true;
+	}
 }
 
 bool SceneJson::Validate(const SceneRecord& record, std::string& error)
@@ -319,6 +370,13 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 	if (!Decode(Encode(record), checked, "$", error)) return false;
 	if (record.version < 1 || record.version > CurrentSceneVersion)
 		return Fail(error, "$.version", "unsupported scene version (expected 1.." + std::to_string(CurrentSceneVersion) + ")");
+	if (!CheckOverrides(record.overrides, record.version, "$.overrides", error)) return false;
+	if (record.base_prefab)
+	{
+		if (record.version < 4 || !AssetPath(*record.base_prefab)) return Fail(error, "$.base_prefab", "expected a version 4 portable prefab path");
+		if (!record.entities.empty() || !record.primary_camera.empty()) return Fail(error, "$.base_prefab", "variants inherit entities and primary camera from their base");
+	}
+	else if (!record.overrides.empty()) return Fail(error, "$.overrides", "scene-level overrides require a base prefab");
 	std::set<std::string> ids;
 	bool primary_found = record.primary_camera.empty();
 	bool has_camera = false;
@@ -338,6 +396,7 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 			if (!AssetPath(entity.prefab->path)) return Fail(error, path + ".prefab.path", "expected a portable prefab asset path");
 			for (const auto& [name, target] : entity.prefab->exports)
 				if (name.empty() || !ValidId(target)) return Fail(error, path + ".prefab.exports", "exports require nonempty names and template entity UUID strings");
+			if (!CheckOverrides(entity.prefab->overrides, record.version, path + ".prefab.overrides", error)) return false;
 			if (entity.id == record.primary_camera) primary_found = true;
 		}
 		if (entity.camera)
@@ -415,7 +474,7 @@ bool SceneJson::Parse(std::string_view text, SceneRecord& record, std::string& e
 	error.clear();
 	bool duplicate = false;
 	std::vector<std::set<std::string>> keys;
-	const auto json = Json::parse(text.begin(), text.end(), [&](int, Json::parse_event_t event, Json& parsed)
+	auto json = Json::parse(text.begin(), text.end(), [&](int, Json::parse_event_t event, Json& parsed)
 	{
 		if (event == Json::parse_event_t::object_start) keys.emplace_back();
 		else if (event == Json::parse_event_t::key && !keys.back().insert(parsed.get<std::string>()).second) duplicate = true;
@@ -427,16 +486,8 @@ bool SceneJson::Parse(std::string_view text, SceneRecord& record, std::string& e
 	if (!json.is_object() || !json.contains("version") || !json.contains("entities")) return Fail(error, "$", "version and entities are required");
 	SceneRecord result;
 	if (!Decode(json, result, "$", error) || !Validate(result, error)) return false;
-	if (result.version >= 2)
-		for (const auto& entity : json["entities"])
-		{
-			if (entity.contains("camera"))
-				for (const auto* key : { "position", "up", "yaw", "pitch" })
-					if (entity["camera"].contains(key)) return Fail(error, "$.entities.camera", "camera pose belongs in entity transform for scene versions 2 and later");
-			for (const auto* key : { "directional_light", "point_light", "spot_light" })
-				if (entity.contains(key) && (entity[key].contains("position") || entity[key].contains("direction")))
-					return Fail(error, "$.entities.light", "light pose belongs in entity transform for scene versions 2 and later");
-		}
+	if (result.version >= 2 && !Poses(json, false))
+		return Fail(error, "$.entities", "camera/light pose belongs in entity transform for scene versions 2 and later");
 	return Upgrade(result, record, error);
 }
 

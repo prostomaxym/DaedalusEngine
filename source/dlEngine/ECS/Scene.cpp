@@ -63,6 +63,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 {
 	DL_PROFILE_SCOPE("Scene::Update");
 	if (!m_is_running) return;
+	m_is_iterating = true;
 	if (!m_is_paused)
 	{
 		// Update scripts
@@ -76,6 +77,7 @@ void Scene::OnUpdateRuntime(DeltaTime dt)
 		}
 
 	}
+	m_is_iterating = false;
 }
 
 void Scene::OnFixedUpdateRuntime(DeltaTime dt)
@@ -86,18 +88,24 @@ void Scene::OnFixedUpdateRuntime(DeltaTime dt)
 
 void Scene::StepPhysics(DeltaTime dt)
 {
+	m_is_iterating = true;
 	m_physics_system->OnUpdateRuntime(dt);
+	m_is_iterating = false;
 }
 
 void Scene::OnRenderRuntime(DeltaTime dt)
 {
 	DL_PROFILE_SCOPE("Scene::Render");
+	m_is_iterating = true;
 	if (m_is_running && GetCamera()) m_render_system->OnUpdateRuntime(dt);
+	m_is_iterating = false;
 }
 
 void Scene::OnViewportResize(uint32_t width, uint32_t height)
 {
 	if (width == 0 || height == 0) return;
+	m_viewport_width = width;
+	m_viewport_height = height;
 	for (auto entity : m_registry.view<CameraComponent>())
 	{
 		auto& component = m_registry.get<CameraComponent>(entity);
@@ -141,8 +149,15 @@ void Scene::DestroyEntity(Entity entity)
 		m_render_system->SetCamera(nullptr);
 	}
 	RemoveFromHierarchy(entity.GetUUID());
+	m_prefab_origins.erase(entity.GetUUID());
 	m_entity_map.erase(entity.GetUUID());
 	m_registry.destroy(entity);
+}
+
+std::span<const PrefabOrigin> Scene::GetPrefabOrigins(UUID entity) const
+{
+	const auto found = m_prefab_origins.find(entity);
+	return found == m_prefab_origins.end() ? std::span<const PrefabOrigin>{} : std::span<const PrefabOrigin>(found->second);
 }
 
 void Scene::Clear()

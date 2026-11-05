@@ -8,6 +8,7 @@
 #include "ECS/Scene.h"
 #include "Utils/Utf8.h"
 #include "Core/AssetPipeline.h"
+#include "Physics/PhysicsWorld.h"
 
 #include <algorithm>
 #include <charconv>
@@ -178,12 +179,94 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 {
 	error.clear();
 	if (scene.IsRunning() || !scene.IsEmpty()) { error = "Scene loading requires an empty, stopped scene"; return false; }
+	if (scene.m_is_iterating || scene.m_is_constructing) { error = "Scene construction requires a scene boundary"; return false; }
 	SceneRecord upgraded, record;
 	if (!SceneJson::Upgrade(source, upgraded, error)) return false;
 	VirtualFileSystem files;
-	if (!pipeline && std::any_of(upgraded.entities.begin(), upgraded.entities.end(), [](const auto& entity) { return entity.prefab.has_value(); }))
+	if (!pipeline && (upgraded.base_prefab || std::any_of(upgraded.entities.begin(), upgraded.entities.end(), [](const auto& entity) { return entity.prefab.has_value(); })))
 		if (!files.Mount("assets", assets, error)) return false;
 	if (!SceneComposer::Expand(upgraded, pipeline ? pipeline->GetFiles() : files, record, error)) return false;
+	return Construct(record, scene, assets, scripts, error, pipeline, false);
+}
+
+bool SceneSerializer::SpawnPrefab(const PrefabRecord& prefab, Scene& scene, const std::filesystem::path& assets,
+	const ScriptRegistry& scripts, UUID& instance, std::string& error, const TransformRecord& transform, UUID parent, const AssetPipeline* pipeline)
+{
+	error.clear();
+	if (scene.m_is_iterating || scene.m_is_constructing) { error = "Prefab spawning requires a scene boundary"; return false; }
+	if (static_cast<uint64_t>(parent) != 0 && !scene.GetEntityByUUID(parent)) { error = "Unknown prefab parent"; return false; }
+	VirtualFileSystem files;
+	if (!pipeline && !files.Mount("assets", assets, error)) return false;
+	SceneRecord record;
+	if (!SceneComposer::ExpandPrefab(prefab, pipeline ? pipeline->GetFiles() : files, record, error)) return false;
+	if (scene.m_entity_map.size() > SceneComposer::MaxEntities || record.entities.size() > SceneComposer::MaxEntities - scene.m_entity_map.size())
+	{
+		error = "Prefab destination entity limit exceeded";
+		return false;
+	}
+	std::map<std::string, std::string> remap;
+	std::set<uint64_t> allocated;
+	for (const auto& entity : record.entities)
+	{
+		UUID uuid;
+		while (static_cast<uint64_t>(uuid) == 0 || scene.m_entity_map.contains(uuid) || !allocated.insert(static_cast<uint64_t>(uuid)).second) uuid = UUID();
+		remap.emplace(entity.id, std::to_string(static_cast<uint64_t>(uuid)));
+	}
+	const auto anchor = Id(remap.at("1"));
+	for (auto& entity : record.entities)
+	{
+		const bool is_anchor = entity.id == "1";
+		entity.id = remap.at(entity.id);
+		if (entity.parent) entity.parent = remap.at(*entity.parent);
+		for (auto& [name, target] : entity.links) target = remap.at(target);
+		for (auto& origin : entity.prefab_origins) origin.instance = remap.at(origin.instance);
+		if (is_anchor)
+		{
+			entity.transform = transform;
+			if (static_cast<uint64_t>(parent) != 0) entity.parent = std::to_string(static_cast<uint64_t>(parent));
+		}
+	}
+	if (!record.primary_camera.empty()) record.primary_camera = remap.at(record.primary_camera);
+	// Only structural/renderer constraints are needed from existing entities; no script capture or asset IO.
+	SceneRecord assembled = record;
+	for (const auto handle : scene.m_registry.view<IDComponent>())
+	{
+		Entity entity(handle, &scene);
+		EntityRecord existing;
+		existing.id = std::to_string(static_cast<uint64_t>(entity.GetUUID()));
+		const auto& local = entity.GetComponent<TransformComponent>();
+		existing.transform = { local.translation, local.rotation, local.scale };
+		const auto ancestor = scene.GetParent(entity.GetUUID());
+		if (static_cast<uint64_t>(ancestor) != 0) existing.parent = std::to_string(static_cast<uint64_t>(ancestor));
+		if (entity.HasComponent<CameraComponent>())
+		{
+			existing.camera.emplace();
+			if (assembled.primary_camera.empty() || entity.GetUUID() == scene.m_primary_camera) assembled.primary_camera = existing.id;
+		}
+		if (entity.HasComponent<DirectionalLightComponent>()) existing.directional_light = Light(entity.GetComponent<DirectionalLightComponent>().light);
+		if (entity.HasComponent<PointLightComponent>()) existing.point_light = Light(entity.GetComponent<PointLightComponent>().light);
+		if (entity.HasComponent<SpotLightComponent>()) existing.spot_light = Light(entity.GetComponent<SpotLightComponent>().light);
+		if (entity.HasComponent<RigidBodyComponent>()) existing.rigid_body = entity.GetComponent<RigidBodyComponent>().description;
+		if (entity.HasComponent<KinematicBodyComponent>()) existing.kinematic_body = entity.GetComponent<KinematicBodyComponent>().description;
+		for (auto* body : { &existing.rigid_body, &existing.kinematic_body })
+			if (*body && ((*body)->shape == "model_box" || (*body)->shape == "model_sphere")) (*body)->shape = "box";
+		assembled.entities.push_back(std::move(existing));
+	}
+	if (!SceneJson::Validate(assembled, error)) return false;
+	if (!Construct(record, scene, assets, scripts, error, pipeline, true)) return false;
+	instance = anchor;
+	return true;
+}
+
+bool SceneSerializer::Construct(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
+	const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline, bool append)
+{
+	struct ConstructionGuard
+	{
+		bool& active;
+		~ConstructionGuard() { active = false; }
+	} guard{ scene.m_is_constructing };
+	scene.m_is_constructing = true;
 	for (const auto& entity : record.entities)
 	{
 		if (!scripts.Validate(entity, error)) return false;
@@ -195,9 +278,10 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 	}
 	const auto previous_name = scene.GetSceneName();
 	const auto previous_paused = scene.IsPaused();
+	std::vector<UUID> created;
 	const auto rollback = [&]()
 	{
-		scene.Clear();
+		for (auto it = created.rbegin(); it != created.rend(); ++it) scene.DestroyEntity(scene.GetEntityByUUID(*it));
 		scene.SetSceneName(previous_name);
 		scene.SetPaused(previous_paused);
 		return false;
@@ -205,6 +289,9 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 	for (const auto& r : record.entities)
 	{
 		auto entity = scene.CreateEntityWithUUID(Id(r.id), r.name);
+		if (!entity) { error = "Duplicate entity UUID during construction: " + r.id; return rollback(); }
+		created.push_back(entity.GetUUID());
+		if (!r.prefab_origins.empty()) scene.m_prefab_origins.emplace(entity.GetUUID(), r.prefab_origins);
 		auto& transform = entity.GetComponent<TransformComponent>();
 		transform.translation = r.transform.translation; transform.rotation = r.transform.rotation; transform.scale = r.transform.scale;
 		if (r.model)
@@ -217,7 +304,13 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 				return rollback();
 			}
 		}
-		if (r.camera) AddCamera(entity, *r.camera);
+		if (r.camera)
+		{
+			AddCamera(entity, *r.camera);
+			if (scene.IsRunning() && r.camera->viewport_aspect && scene.m_viewport_height != 0)
+				if (auto* camera = dynamic_cast<PerspectiveCamera*>(entity.GetComponent<CameraComponent>().camera.get()))
+					camera->SetAspectRatio(static_cast<float>(scene.m_viewport_width) / static_cast<float>(scene.m_viewport_height));
+		}
 		if (r.directional_light) entity.AddComponent<DirectionalLightComponent>(Props(*r.directional_light));
 		if (r.point_light) entity.AddComponent<PointLightComponent>(Props(*r.point_light));
 		if (r.spot_light) entity.AddComponent<SpotLightComponent>(Props(*r.spot_light));
@@ -251,8 +344,21 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 		}
 	}
 	scene.UpdateWorldTransforms();
-	scene.SetSceneName(record.name);
-	if (!record.primary_camera.empty() && !scene.SetPrimaryCamera(Id(record.primary_camera)))
+	for (const auto& r : record.entities)
+	{
+		if (!append || !r.parent) continue;
+		auto entity = scene.GetEntityByUUID(Id(r.id));
+		for (auto* body : { entity.HasComponent<RigidBodyComponent>() ? static_cast<PhysicsBodyComponent*>(&entity.GetComponent<RigidBodyComponent>()) : nullptr,
+			entity.HasComponent<KinematicBodyComponent>() ? static_cast<PhysicsBodyComponent*>(&entity.GetComponent<KinematicBodyComponent>()) : nullptr })
+			if (body)
+			{
+				scene.GetPhysicsWorld().SetRigidBodyTransform(body->handle, glm::vec3((*scene.GetWorldTransform(entity.GetUUID()))[3]), scene.GetWorldOrientation(entity.GetUUID()));
+				body->pose_initialized = scene.IsRunning();
+				body->synchronized_parent = static_cast<uint64_t>(scene.GetParent(entity.GetUUID()));
+			}
+	}
+	if (!append) scene.SetSceneName(record.name);
+	if (!append && !record.primary_camera.empty() && !scene.SetPrimaryCamera(Id(record.primary_camera)))
 	{
 		error = "Failed to select the primary camera";
 		return rollback();

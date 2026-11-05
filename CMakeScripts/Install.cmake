@@ -64,6 +64,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/runtime/shader DESTINATION .
 
 install(DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}/runtime/asset
+        ${CMAKE_CURRENT_SOURCE_DIR}/runtime/script
         DESTINATION .
         OPTIONAL
         )

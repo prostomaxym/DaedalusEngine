@@ -1,6 +1,7 @@
 #include <Config/CVarRegistry.h>
 #include <Config/GraphicsConfig.h>
 #include <Config/KeybindConfig.h>
+#include <Config/PathConfig.h>
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <limits>
@@ -198,12 +199,14 @@ TEST_F(ConfigCVarTest, StartupBindingsAreReadOnly)
 	CVarRegistry registry;
 	Daedalus::RegisterConfigCVars(registry);
 	std::string error, value;
-	for (const auto* name : { "graphics.vsync", "graphics.gamma_value", "graphics.ssao", "graphics.window_width", "paths.assets", "paths.scene" })
+	for (const auto* name : { "graphics.vsync", "graphics.gamma_value", "graphics.ssao", "graphics.window_width", "paths.assets", "paths.scripts", "paths.scene" })
 	{
 		ASSERT_TRUE(registry.Get(name, value, error));
 		EXPECT_FALSE(registry.Set(name, "0", error));
 		EXPECT_NE(error.find("Read-only"), std::string::npos);
 	}
+	ASSERT_TRUE(registry.Get("paths.scripts", value, error));
+	EXPECT_EQ(value, Daedalus::Utf8ToString(Daedalus::PathConfig::GetScriptsPath().u8string()));
 }
 
 TEST_F(ConfigCVarTest, KeyboardBindingChangesExistingConfigAndValidatesKeyCodes)

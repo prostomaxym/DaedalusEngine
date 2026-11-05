@@ -18,6 +18,7 @@ set(EVENTS_PROJECT_FILES
     MouseEvent.h
     GamepadEvent.h
     PhysicsEvent.h
+    GameEvent.h
     EventsEngine.h
     EventsEngine.cpp
 )

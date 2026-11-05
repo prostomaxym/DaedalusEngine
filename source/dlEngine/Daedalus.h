@@ -14,6 +14,7 @@
 
 #include "Debug/Log.h"
 #include "Events/PhysicsEvent.h"
+#include "Events/GameEvent.h"
 #include "Physics/PhysicsWorld.h"
 
 #include "Renderer/API/Renderer.h"
@@ -23,6 +24,7 @@
 #include "ECS/Entity.h"
 #include "ECS/NativeScriptComponent.h"
 #include "ECS/NativeScripts/CameraController.h"
+#include "ECS/Scripting/LuaScript.h"
 #include "ECS/Serialization/SceneJson.h"
 #include "ECS/Serialization/SceneComposer.h"
 #include "ECS/Serialization/SceneSerializer.h"

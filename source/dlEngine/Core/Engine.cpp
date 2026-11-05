@@ -63,6 +63,7 @@ struct Engine::State
 		};
 		mount("assets", PathConfig::GetAssetsPath());
 		mount("shaders", PathConfig::GetShadersPath());
+		mount("scripts", PathConfig::GetScriptsPath());
 		mount("config", PathConfig::GetConfigPath());
 		mount("logs", PathConfig::GetLogsPath());
 		m_assets = std::make_unique<AssetPipeline>(m_jobs, std::move(files));

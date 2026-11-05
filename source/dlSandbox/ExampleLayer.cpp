@@ -1,13 +1,12 @@
 #include "ExampleLayer.h"
 #include <Daedalus.h>
-#include "SceneScripts.h"
 
 using namespace Daedalus;
 
 void ExampleLayer::OnAttach()
 {
 	std::string error;
-	if (!RegisterSceneScripts(m_scripts))
+	if (!LuaScript::Register(m_scripts, Application::GetInstance()->GetEngine().GetAssets().GetFiles()))
 	{
 		Log::Write(Log::Levels::Error, Log::Categories::Application, "Failed to register scene scripts");
 		return;

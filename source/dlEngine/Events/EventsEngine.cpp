@@ -4,7 +4,11 @@
 
 using namespace Daedalus;
 
-EventEngine::EventEngine() : m_owner_thread(std::this_thread::get_id())
+EventEngine::EventEngine() : EventEngine(0)
+{
+}
+
+EventEngine::EventEngine(size_t max_pending) : m_owner_thread(std::this_thread::get_id()), m_max_pending(max_pending)
 {
 }
 
@@ -53,7 +57,7 @@ bool EventEngine::AddEvent(std::unique_ptr<Event> event)
 	if (!event) return false;
 	event->StartTimer();
 	std::lock_guard<std::mutex> lock(m_mutex);
-	if (!m_running) return false;
+	if (!m_running || (m_max_pending && m_event_queue.size() >= m_max_pending)) return false;
 	m_event_queue.push_back(std::move(event));
 	return true;
 }

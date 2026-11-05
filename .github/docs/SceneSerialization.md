@@ -5,7 +5,7 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 ## Client workflow
 
 1. Create an empty `std::unique_ptr<Scene>` and an application-owned `ScriptRegistry`.
-2. Register the application's native-script adapters. The sandbox's `RegisterSceneScripts` in `source/dlSandbox/SceneScripts.cpp` is a complete example.
+2. Register the adapters used by the scene. The sandbox uses only `LuaScript::Register(scripts, engine.GetAssets().GetFiles())` in `source/dlSandbox/ExampleLayer.cpp`. Other clients can additionally register their own native-script adapters. See [Lua scripting](Scripting.md) for asset paths, properties, lifecycle and sandbox restrictions.
 3. Call `SceneSerializer::LoadAsset(engine.GetAssets(), virtual_path_or_uuid, *scene, scripts, error)`, or use the compatible physical-file `Load` API for tools.
 4. On success, transfer ownership with `Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene))`. At the next frame boundary the manager stops the old scene, activates the new one and starts runtime, logging any startup failure. The loaded name and primary-camera UUID are retained.
 5. The application forwards fixed updates, variable updates, rendering and viewport resizes through the scene manager. Request a null scene to unload it. Standalone tools may own scenes directly and use the corresponding runtime methods themselves.
@@ -19,6 +19,8 @@ For Windows PowerShell, packaging `runtime/asset/*` into `runtime/game.zip` keep
 Place your scene JSON and its referenced models, textures, and skybox images under the runtime asset folder manually. The files in `source/dlSandbox/scenes` are reference examples only: they are not part of the sandbox target and are not automatically deployed by builds or explicitly installed from source. To try one, manually copy `nuke.scene.json` or `anor_londo.scene.json` into `runtime/asset/scenes`, supply its referenced assets under `runtime/asset`, and set `[Path]` `SceneFile=scenes/nuke.scene.json` or `SceneFile=scenes/anor_londo.scene.json`. Alternatively, name your deployed scene `startup.scene.json` to use the default. Switching scenes requires changing configuration, not rebuilding the application.
 
 Installation still packages the contents of the runtime asset folder like other manually supplied assets. Missing or invalid scene files produce a logged loading error; there is no fallback to an example scene.
+
+Both reference scenes use `Lua` script records. Manually copy the `.lua` files from `source/dlSandbox/scripts` into the configured `ScriptsFolder` (default `runtime/script`); their `scripts:/` references are independent of the scene's asset folder. These Lua examples are also excluded from the sandbox project and all automatic build copying.
 
 ### API responsibilities
 
@@ -199,15 +201,17 @@ Property values support booleans, finite numbers (`double`), strings, and three-
 
 Register a C++ type under only one name. Unknown scripts and unsupported component storages fail capture rather than disappearing from a saved file. Capture sorts native-script names and entity UUIDs for stable output. Script runtime state, such as tank movement progress or previous mouse coordinates, is intentionally reset on load.
 
-Sandbox bindings:
+Sandbox Lua examples (all use `type: "Lua"` and an `asset` property):
 
-| Script | Properties / prerequisites |
+| Asset under `scripts:/` | Properties / prerequisites |
 | --- | --- |
-| `CameraController` | No properties; camera component or `camera` link required. |
-| `LogPositionScript` | No properties; camera component or `camera` link required. |
-| `PlayerControllerScript` | No properties; camera component/link, model, kinematic body, and spotlight component/link required. |
-| `RotationModelScript` | Numeric `speed`, preserving its existing degrees-per-millisecond convention. |
-| `TankMovementScript` | Positive numeric `distance`, nonzero `forward_direction` vector. |
+| `camera_controller.lua` | Camera component or `camera` link. |
+| `log_position.lua` | Camera component or `camera` link; logs at Trace level. |
+| `player_controller.lua` | Includes camera controls; camera component/link, player model and optional spotlight component/link. Optional `third_person_distance` (7), `third_person_height` (4) and `turn_speed` (540 degrees/second). The Nuke example also supplies a kinematic body. |
+| `rotation_model.lua` | Numeric `speed` (default 0.1), preserving degrees per millisecond. |
+| `tank_movement.lua` | Positive numeric `distance` (default 50), nonzero `forward_direction` vector (default `[1,0,0]`). |
+
+The legacy v1 examples still migrate camera/light poses into separate linked entities. Their player script resolves those links; only one Lua asset is attached to each entity. Missing optional targets are ignored safely. Visibility changes retain the model component and are not serialized; camera/light parameters and transforms retain ordinary capture behavior.
 
 ## Saving and recovery
 

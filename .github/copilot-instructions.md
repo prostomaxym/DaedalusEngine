@@ -11,7 +11,7 @@ Personal cross-platform (Windows + Linux) C++ game engine in early development. 
 
 ## Repository layout
 - `source/dlEngine` – engine library. Modules: `Config`, `Core`, `Debug`, `ECS`, `Events`, `Physics`, `Platform`, `Renderer`, `Threads`, `Utils`.
-- `source/dlSandbox` – sample/client application (intended to evolve into a generic game application that loads scenes entirely from runtime asset files selected through config paths). Keep example scenes only as reference files, excluded from the application project and automatic copying; runtime assets are supplied manually.
+- `source/dlSandbox` – sample/client application (intended to evolve into a generic game application that loads scenes entirely from runtime asset files selected through config paths). Keep example scenes only as reference files, excluded from the application project and automatic copying; runtime assets are supplied manually. Daedalus example Lua scripts should live under `source/dlSandbox/scripts` as reference assets only, excluded from the sandbox project, build source lists, and automatic copying; deploy runtime scripts manually.
 - `source/dlUnitTests` – gtest unit tests (built only with `-DENABLE_TESTS=ON`).
 - `source/shader` – shaders.
 - `CMakeScripts/` – install/pack scripts. `WinScripts/`, `LinuxScripts/` – helper scripts.
@@ -74,3 +74,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 
 ## Prefab Persistence
 - For Daedalus prefab persistence, keep SceneSerializer Capture/Save expanded and source-independent rather than reconstructing prefab references and overrides. Retain prefab provenance at runtime only; reloading saved scenes should not pick up later source-prefab changes.
+
+## Scripting
+- Daedalus Lua scripts should load like other assets/shaders through a separate `PathConfig` `ScriptsFolder` and `scripts:/` VFS mount, rather than relying on `assets:/` script paths.

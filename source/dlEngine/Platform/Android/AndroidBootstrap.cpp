@@ -67,7 +67,7 @@ namespace Daedalus
 		{
 			const std::filesystem::path root(app.activity->internalDataPath);
 			std::error_code error;
-			for (const auto* folder : { "asset", "shader", "config", "logs" })
+			for (const auto* folder : { "asset", "shader", "script", "config", "logs" })
 			{
 				std::filesystem::create_directories(root / folder, error);
 				if (error) return false;

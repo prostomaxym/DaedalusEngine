@@ -56,6 +56,26 @@ TEST(BundledFileInstallerTest, preserves_uuid_sidecars)
 	EXPECT_EQ(files.Read("asset/models/model.bin.meta"), "DaedalusAsset 1\n123\n");
 }
 
+TEST(BundledFileInstallerTest, installs_script_sources_and_metadata)
+{
+	BundledFiles files;
+	ASSERT_TRUE(files.Install("script/game/mover.lua", "state.value=1")) << files.error;
+	ASSERT_TRUE(files.Install("script/game/mover.lua.meta", "DaedalusAsset 1\n123\n")) << files.error;
+	EXPECT_EQ(files.Read("script/game/mover.lua"), "state.value=1");
+	EXPECT_EQ(files.Read("script/game/mover.lua.meta"), "DaedalusAsset 1\n123\n");
+}
+
+TEST(BundledFileInstallerTest, preserves_existing_script_without_reading_bundle)
+{
+	BundledFiles files;
+	ASSERT_TRUE(files.Install("script/mover.lua", "user script")) << files.error;
+	bool called = false;
+	ASSERT_TRUE(BundledFileInstaller::InstallMissing(files.root, "script/mover.lua",
+		[&called](std::ostream&) { called = true; return false; }, files.error)) << files.error;
+	EXPECT_FALSE(called);
+	EXPECT_EQ(files.Read("script/mover.lua"), "user script");
+}
+
 TEST(BundledFileInstallerTest, supports_utf8_filenames)
 {
 	BundledFiles files;
@@ -121,7 +141,8 @@ TEST(BundledFileInstallerTest, rejects_unsafe_or_unsupported_paths)
 {
 	BundledFiles files;
 	for (const std::string path : { "", "/asset/file", "../outside", "asset/../outside", "asset/./file",
-		"asset//file", "asset/", "C:/asset/file", "asset\\file", "shader/file.glsl", "logs/file", "asset", "config", "asset/file\nname" })
+		"asset//file", "asset/", "C:/asset/file", "asset\\file", "shader/file.glsl", "logs/file", "asset", "config", "asset/file\nname",
+		"script", "script/", "script/../outside", "script//file.lua", "script\\file.lua" })
 	{
 		bool called = false;
 		EXPECT_FALSE(BundledFileInstaller::InstallMissing(files.root, path,

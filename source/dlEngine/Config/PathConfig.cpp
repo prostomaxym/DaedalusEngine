@@ -10,6 +10,7 @@ namespace
 	constexpr auto PathSectionName = "Path";
 	constexpr auto AssetsDirName = "AssetsFolder";
 	constexpr auto ShadersDirName = "ShadersFolder";
+	constexpr auto ScriptsDirName = "ScriptsFolder";
 	constexpr auto LogsDirName = "LogsFolder";
 	constexpr auto SceneFileName = "SceneFile";
 	constexpr auto DefaultSceneFile = "scenes/startup.scene.json";
@@ -38,6 +39,7 @@ PathConfig* PathConfig::s_instance = nullptr;
 PathConfig::PathConfig()
 	: m_assets_dir("asset")
 	, m_shaders_dir("shader")
+	, m_scripts_dir("script")
 	, m_config_dir("config")
 	, m_logs_dir("logs")
 	, m_scene_file(DefaultSceneFile)
@@ -83,6 +85,7 @@ void PathConfig::LoadImpl(const std::filesystem::path& path)
 
 	m_assets_dir = (base / ini.GetValue(PathSectionName, AssetsDirName, "asset")).lexically_normal();
 	m_shaders_dir = (base / ini.GetValue(PathSectionName, ShadersDirName, "shader")).lexically_normal();
+	m_scripts_dir = (base / ini.GetValue(PathSectionName, ScriptsDirName, "script")).lexically_normal();
 	m_config_dir = (base / ini.GetValue(ConfigSectionName, ConfigDirName, "config")).lexically_normal();
 	m_logs_dir = (base / ini.GetValue(PathSectionName, LogsDirName, "logs")).lexically_normal();
 	m_scene_file = ini.GetValue(PathSectionName, SceneFileName, DefaultSceneFile);
@@ -98,6 +101,7 @@ void PathConfig::SaveImpl(const std::filesystem::path& path)
 
 	ini.SetValue(PathSectionName, AssetsDirName, MakeRelativePath(m_assets_dir, base).generic_string().c_str());
 	ini.SetValue(PathSectionName, ShadersDirName, MakeRelativePath(m_shaders_dir, base).generic_string().c_str());
+	ini.SetValue(PathSectionName, ScriptsDirName, MakeRelativePath(m_scripts_dir, base).generic_string().c_str());
 	ini.SetValue(PathSectionName, LogsDirName, MakeRelativePath(m_logs_dir, base).generic_string().c_str());
 	ini.SetValue(PathSectionName, SceneFileName, MakeRelativePath(m_assets_dir / m_scene_file, m_assets_dir).generic_string().c_str());
 	ini.SetValue(ConfigSectionName, ConfigDirName, MakeRelativePath(m_config_dir, base).generic_string().c_str());
@@ -127,6 +131,7 @@ void PathConfig::LoadWorkDirectory(const std::filesystem::path& path)
 {
 	m_assets_dir = path / "asset";
 	m_shaders_dir = path / "shader";
+	m_scripts_dir = path / "script";
 	m_config_dir = path / "config";
 	m_logs_dir = path / "logs";
 }

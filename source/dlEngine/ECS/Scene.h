@@ -25,6 +25,8 @@ namespace Daedalus
 	class PhysicsWorld;
 	class Camera;
 	class ScenePhysicsEvent;
+	class Event;
+	class EventEngine;
 	struct IDComponent;
 	struct TagComponent;
 	struct TransformComponent;
@@ -55,6 +57,10 @@ namespace Daedalus
 		void OnUpdateRuntime(DeltaTime dt);
 		void OnFixedUpdateRuntime(DeltaTime dt);
 		void OnRenderRuntime(DeltaTime dt);
+		// Owner-thread script-only stepping for headless tools; queued events drain before updates.
+		void UpdateScripts(DeltaTime dt);
+		// Thread-safe, bounded queue; events posted while draining wait until the next update.
+		[[nodiscard]] bool QueueScriptEvent(std::unique_ptr<Event> event);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
@@ -144,6 +150,7 @@ namespace Daedalus
 
 		std::unique_ptr<RenderSystem> m_render_system;
 		std::unique_ptr<PhysicsSystem> m_physics_system;
+		std::unique_ptr<EventEngine> m_script_events;
 
 		bool m_is_running{ false };
 		bool m_is_paused{ false };

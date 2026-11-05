@@ -62,7 +62,7 @@ namespace Daedalus
 		std::set<AssetId> duplicates;
 		for (const auto& [mount, root] : files.GetMounts())
 		{
-			if (mount != "assets" && mount != "shaders") continue;
+			if (mount != "assets" && mount != "shaders" && mount != "scripts") continue;
 			std::string error;
 			const bool visited = files.VisitSources(mount, [&](const std::string& path, const VirtualFileSystem::ReadCallback& reader)
 			{

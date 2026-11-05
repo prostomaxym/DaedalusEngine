@@ -6,7 +6,7 @@
     {
       "id": "1", "name": "Main Camera",
       "camera": { "fov": 80, "near_plane": 0.1, "far_plane": 10000, "yaw": -90, "movement_speed": 15, "sensitivity": 5 },
-      "scripts": [ { "type": "CameraController" } ]
+      "scripts": [ { "type": "Lua", "properties": { "asset": "scripts:/camera_controller.lua" } } ]
     },
     {
       "id": "2", "name": "Main Light",
@@ -25,13 +25,13 @@
       "id": "4", "name": "Miranda",
       "transform": { "translation": [-9, -6, -20], "scale": [2, 2, 2] },
       "model": { "path": "models/Miranda/ME3_360_CHARACTER_Miranda_Lawson.obj", "import_flags": 6291659 },
-      "scripts": [ { "type": "RotationModelScript", "properties": { "speed": 0.1 } } ]
+      "scripts": [ { "type": "Lua", "properties": { "asset": "scripts:/rotation_model.lua", "speed": 0.1 } } ]
     },
     {
       "id": "5", "name": "Marci",
       "transform": { "translation": [-9, -6, -35], "scale": [0.0002, 0.0002, 0.0002] },
       "model": { "path": "models/Marci/marci.fbx", "import_flags": 6291659 },
-      "scripts": [ { "type": "RotationModelScript", "properties": { "speed": 0.1 } } ]
+      "scripts": [ { "type": "Lua", "properties": { "asset": "scripts:/rotation_model.lua", "speed": 0.1 } } ]
     },
     { "id": "100", "name": "m0000B1A15", "transform": { "translation": [510, -240, 730], "rotation": [0, -90, 0], "scale": [2, 2, 2] }, "model": { "path": "models/Anor Londo/m0000B1A15.obj", "import_flags": 6291659 } },
     { "id": "101", "name": "m0010B1A15", "transform": { "translation": [510, -240, 730], "rotation": [0, -90, 0], "scale": [2, 2, 2] }, "model": { "path": "models/Anor Londo/m0010B1A15.obj", "import_flags": 6291659 } },

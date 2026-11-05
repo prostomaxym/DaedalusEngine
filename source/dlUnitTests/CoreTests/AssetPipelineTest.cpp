@@ -346,6 +346,84 @@ TEST(AssetPipelineTest, detects_header_changes_without_graphics_context)
 	EXPECT_EQ(changed, (std::vector<std::string>{ "shaders:/shared.hglsl" }));
 }
 
+TEST(AssetRegistryTest, scans_script_mount_with_persistent_metadata)
+{
+	AssetTestFiles fixture;
+	fixture.Write("scripts/mover.lua", "state.value=1");
+	auto files = fixture.Mounts();
+	ASSERT_TRUE(files.Mount("scripts", fixture.m_root / "scripts"));
+	AssetRegistry registry;
+	ASSERT_TRUE(registry.Scan(files));
+	const auto* script = registry.Find("scripts:/mover.lua");
+	ASSERT_NE(script, nullptr);
+	const auto id = script->id;
+	EXPECT_NE(id, 0u);
+	EXPECT_TRUE(std::filesystem::exists(fixture.m_root / "scripts/mover.lua.meta"));
+	ASSERT_TRUE(registry.Scan(files));
+	ASSERT_NE(registry.Find(id), nullptr);
+	EXPECT_EQ(registry.Find(id)->virtual_path, "scripts:/mover.lua");
+}
+
+TEST(AssetPipelineTest, loads_scripts_by_mounted_path_and_asset_id)
+{
+	AssetTestFiles fixture;
+	fixture.Write("scripts/mover.lua", "state.value=1");
+	auto files = fixture.Mounts();
+	ASSERT_TRUE(files.Mount("scripts", fixture.m_root / "scripts"));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	ASSERT_TRUE(pipeline.Initialize());
+	const auto id = FindId(pipeline, "scripts:/mover.lua");
+	for (bool by_id : { false, true })
+	{
+		bool called = false;
+		auto callback = [&](AssetLoadResult result)
+		{
+			called = true;
+			EXPECT_TRUE(result.Succeeded()) << result.error;
+			EXPECT_EQ(result.id, id);
+			EXPECT_EQ(result.virtual_path, "scripts:/mover.lua");
+			EXPECT_EQ(result.data, "state.value=1");
+		};
+		const auto job = by_id ? pipeline.LoadAsync(id, callback) : pipeline.LoadAsync("scripts:/mover.lua", callback);
+		EXPECT_TRUE(jobs.Wait(job));
+		EXPECT_TRUE(called);
+	}
+}
+
+TEST(AssetPipelineTest, refresh_reports_script_edits_and_removal)
+{
+	AssetTestFiles fixture;
+	fixture.Write("scripts/mover.lua", "state.value=1");
+	auto files = fixture.Mounts();
+	ASSERT_TRUE(files.Mount("scripts", fixture.m_root / "scripts"));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	ASSERT_TRUE(pipeline.Initialize());
+	std::vector<std::string> changed;
+	pipeline.SetChangeCallback([&](const auto& paths) { changed = paths; });
+	fixture.Write("scripts/mover.lua", "state.value=2");
+	EXPECT_TRUE(jobs.Wait(pipeline.Refresh()));
+	EXPECT_EQ(changed, (std::vector<std::string>{ "scripts:/mover.lua" }));
+	changed.clear();
+	std::filesystem::remove(fixture.m_root / "scripts/mover.lua");
+	EXPECT_TRUE(jobs.Wait(pipeline.Refresh()));
+	EXPECT_EQ(changed, (std::vector<std::string>{ "scripts:/mover.lua" }));
+	EXPECT_EQ(pipeline.GetRegistry().Find("scripts:/mover.lua"), nullptr);
+}
+
+TEST(AssetRegistryTest, missing_script_folder_preserves_existing_asset_startup)
+{
+	AssetTestFiles fixture;
+	fixture.Write("assets/existing.txt", "asset");
+	auto files = fixture.Mounts();
+	ASSERT_TRUE(files.Mount("scripts", fixture.m_root / "missing_scripts"));
+	AssetRegistry registry;
+	EXPECT_TRUE(registry.Scan(files));
+	EXPECT_TRUE(registry.GetErrors().empty());
+	EXPECT_NE(registry.Find("assets:/existing.txt"), nullptr);
+}
+
 TEST(AssetPipelineTest, expands_nested_shader_includes_and_crlf_on_workers)
 {
 	AssetTestFiles fixture;

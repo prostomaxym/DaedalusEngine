@@ -5,6 +5,8 @@
 
 namespace Daedalus 
 {
+	class Event;
+
 	class DAEDALUS_API NativeScript
 	{
 	public:
@@ -19,6 +21,8 @@ namespace Daedalus
 
 	protected:
 		virtual void OnUpdate(DeltaTime dt) {}
+		virtual void OnEvent(const Event& event) {}
+		virtual void OnRuntimeStop() {}
 
 		Entity m_entity;
 		friend class Scene;

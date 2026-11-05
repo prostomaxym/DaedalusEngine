@@ -41,7 +41,7 @@ namespace Daedalus
 		if (Utf8ToString(relative.generic_u8string()) != relative_path)
 			return fail("noncanonical path");
 		const auto first = *relative.begin();
-		if (relative != "path.ini" && !((first == "asset" || first == "config") && relative.has_parent_path()))
+		if (relative != "path.ini" && !((first == "asset" || first == "script" || first == "config") && relative.has_parent_path()))
 			return fail("unsupported runtime location");
 
 		std::error_code ec;

@@ -14,6 +14,7 @@ namespace Daedalus
 	{
 	public:
 		EventEngine();
+		explicit EventEngine(size_t max_pending);
 		~EventEngine() { Stop(); }
 		EventEngine(const EventEngine&) = delete;
 		EventEngine& operator=(const EventEngine&) = delete;
@@ -32,6 +33,7 @@ namespace Daedalus
 		std::deque<std::unique_ptr<Event>> m_dispatch_queue;
 		std::mutex m_mutex;
 		const std::thread::id m_owner_thread;
+		const size_t m_max_pending;
 		bool m_running{ false };
 		bool m_paused{ false };
 		bool m_dispatching{ false };

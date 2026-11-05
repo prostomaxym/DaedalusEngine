@@ -18,6 +18,8 @@
         {"name": "entt"},
         {"name": "simpleini"},
         {"name": "nlohmann-json"},
+        {"name": "lua", "features": ["cpp"]},
+        {"name": "sol2"},
         {"name": "fmt"},
         {"name": "bullet3", "features": ["multithreading"]}
     ],

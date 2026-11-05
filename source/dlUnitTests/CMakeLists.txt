@@ -43,6 +43,7 @@ set(ECS_TEST_FILES
     ECSTests/HierarchyIntegrationTest.cpp
     ECSTests/PhysicsSceneTest.cpp
     ECSTests/NativeScriptTest.cpp
+    ECSTests/LuaRuntimeTest.cpp
     ECSTests/SceneTest.cpp
     ECSTests/SceneManagerTest.cpp
     ECSTests/SceneJsonTest.cpp
@@ -121,6 +122,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     DL_ASSET_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/asset_test_data"
     DL_SCENE_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/scenes"
     DL_SCENE_TEST_OUTPUT="${CMAKE_CURRENT_BINARY_DIR}/scene_test_data"
+    DL_SANDBOX_EXAMPLES="${CMAKE_CURRENT_SOURCE_DIR}/../dlSandbox"
     DL_TEST_APPLICATION_VERSION="${DAEDALUS_VERSION}"
     DL_TEST_BUILD_CONFIGURATION="$<CONFIG>"
     DL_TEST_BUILD_PLATFORM="${CMAKE_SYSTEM_NAME}"

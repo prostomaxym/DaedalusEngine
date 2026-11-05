@@ -1,5 +1,5 @@
 #include <Core/Input.h>
-#include "../../dlSandbox/ExampleScripts.h"
+#include <Daedalus.h>
 #include <gtest/gtest.h>
 #include <array>
 #include <cmath>
@@ -26,18 +26,36 @@ namespace
 		owner.GetScene().UpdateWorldTransforms();
 	}
 
-	class TestCameraController : public CameraController
+	class TestExampleScript
 	{
 	public:
-		using CameraController::CameraController;
-		void Tick(DeltaTime dt) { OnUpdate(dt); }
+		TestExampleScript(Entity entity, const std::string& asset)
+			: m_runtime(entity.GetScene(), entity.GetUUID(), Files(), asset) {}
+		void Tick(DeltaTime dt)
+		{
+			m_runtime.Update(dt.GetSeconds());
+			EXPECT_TRUE(m_runtime.IsReady()) << m_runtime.GetLastError();
+		}
+	private:
+		static VirtualFileSystem Files()
+		{
+			VirtualFileSystem files;
+			EXPECT_TRUE(files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+			return files;
+		}
+		LuaRuntime m_runtime;
 	};
 
-	class TestPlayerController : public PlayerControllerScript
+	class TestCameraController : public TestExampleScript
 	{
 	public:
-		using PlayerControllerScript::PlayerControllerScript;
-		void Tick(DeltaTime dt) { OnUpdate(dt); }
+		explicit TestCameraController(Entity entity) : TestExampleScript(entity, "scripts:/camera_controller.lua") {}
+	};
+
+	class TestPlayerController : public TestExampleScript
+	{
+	public:
+		explicit TestPlayerController(Entity entity) : TestExampleScript(entity, "scripts:/player_controller.lua") {}
 	};
 
 	class FakeInput : public Input
@@ -288,7 +306,7 @@ TEST_F(InputActionsTest, player_facing_converts_world_movement_to_parent_space)
 	m_input.keys[DL_KEY_W] = true;
 	Input::Update();
 	script.Tick(DeltaTime(std::chrono::seconds(1)));
-	EXPECT_NEAR(entity.GetComponent<TransformComponent>().rotation.y, 0.f, 0.0001f);
+	EXPECT_NEAR(std::remainder(entity.GetComponent<TransformComponent>().rotation.y, 360.f), 0.f, 0.0001f);
 	const auto front = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
 	EXPECT_NEAR(front.x, 1.f, 0.0001f);
 	EXPECT_NEAR(front.z, 0.f, 0.0001f);
@@ -323,7 +341,6 @@ TEST_F(InputActionsTest, player_facing_survives_world_pose_euler_writeback_acros
 		}
 		auto& body = entity.AddComponent<KinematicBodyComponent>();
 		scene.UpdateWorldTransforms();
-		TestCameraController camera_script(entity);
 		TestPlayerController player_script(entity);
 		for (const int key : { DL_KEY_W, DL_KEY_D, DL_KEY_S, DL_KEY_A })
 		{
@@ -334,7 +351,6 @@ TEST_F(InputActionsTest, player_facing_survives_world_pose_euler_writeback_acros
 			{
 				Input::Update();
 				const auto previous = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
-				camera_script.Tick(dt);
 				player_script.Tick(dt);
 				scene.StepPhysics(dt);
 				const auto facing = scene.GetWorldOrientation(entity.GetUUID()) * glm::vec3(0.f, 0.f, 1.f);
@@ -447,7 +463,6 @@ TEST_F(InputActionsTest, shared_movement_and_pov_button_moves_on_down_and_toggle
 	auto& camera = AddLinkedCamera(entity);
 	entity.AddComponent<RenderableObjectComponent>();
 	entity.AddComponent<SpotLightComponent>();
-	TestCameraController camera_script(entity);
 	TestPlayerController player_script(entity);
 	const DeltaTime dt(std::chrono::seconds(1));
 	PerspectiveCamera expected;
@@ -456,7 +471,6 @@ TEST_F(InputActionsTest, shared_movement_and_pov_button_moves_on_down_and_toggle
 	{
 		Input::Update();
 		expected.ProcessKeyboard(CameraMovement::FORWARD, dt.GetSeconds());
-		camera_script.Tick(dt);
 		player_script.Tick(dt);
 		EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
 		EXPECT_NEAR(glm::distance(entity.GetComponent<TransformComponent>().translation, expected.GetPosition()), 0.f, 0.00001f);
@@ -464,10 +478,9 @@ TEST_F(InputActionsTest, shared_movement_and_pov_button_moves_on_down_and_toggle
 	}
 	m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
 	Input::Update();
-	camera_script.Tick(dt);
 	player_script.Tick(dt);
 	EXPECT_NEAR(glm::distance(camera.GetPosition(), expected.GetPosition()), 0.f, 0.00001f);
-	EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
+	EXPECT_FALSE(entity.GetComponent<RenderableObjectComponent>().visible);
 	EXPECT_TRUE(entity.HasComponent<SpotLightComponent>());
 	EXPECT_EQ(KeybindConfig::FindActionBind("MoveForward")->gamepad_button, DL_GAMEPAD_BUTTON_B);
 	EXPECT_EQ(KeybindConfig::FindActionBind("ChangePOV")->gamepad_button, DL_GAMEPAD_BUTTON_B);
@@ -503,7 +516,7 @@ TEST_F(InputActionsTest, camera_moves_on_first_keyboard_frame_and_ignores_unmapp
 	EXPECT_NEAR(camera.GetYaw(), expected.GetYaw(), 0.0001f);
 }
 
-TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComponents)
+TEST_F(InputActionsTest, LuaPlayerGamepadTogglesOnlyOnReleaseAndRestoresVisibilityAndPower)
 {
 	ASSERT_TRUE(KeybindConfig::SetActionBind("Flashlight", { DL_KEY_F, DL_GAMEPAD_BUTTON_Y }));
 	ASSERT_TRUE(KeybindConfig::SetActionBind("ChangePOV", { DL_KEY_V, DL_GAMEPAD_BUTTON_B }));
@@ -512,7 +525,9 @@ TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComp
 	auto entity = scene.CreateEntity();
 	(void)AddLinkedCamera(entity);
 	entity.AddComponent<RenderableObjectComponent>();
-	entity.AddComponent<SpotLightComponent>();
+	LightProps light;
+	light.light_power = 4.f;
+	entity.AddComponent<SpotLightComponent>(light);
 	TestPlayerController script(entity);
 	for (const bool initially_present : { true, false })
 	{
@@ -520,22 +535,22 @@ TEST_F(InputActionsTest, ExamplePlayerGamepadTogglesOnlyOnReleaseAndRestoresComp
 		m_input.buttons[DL_GAMEPAD_BUTTON_B] = true;
 		Input::Update();
 		script.Tick({});
-		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), initially_present);
-		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), initially_present);
+		EXPECT_FLOAT_EQ(entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, initially_present ? 4.f : 0.f);
+		EXPECT_EQ(entity.GetComponent<RenderableObjectComponent>().visible, initially_present);
 		Input::Update();
 		script.Tick({});
-		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), initially_present);
-		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), initially_present);
+		EXPECT_FLOAT_EQ(entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, initially_present ? 4.f : 0.f);
+		EXPECT_EQ(entity.GetComponent<RenderableObjectComponent>().visible, initially_present);
 		m_input.buttons[DL_GAMEPAD_BUTTON_Y] = false;
 		m_input.buttons[DL_GAMEPAD_BUTTON_B] = false;
 		Input::Update();
 		script.Tick({});
-		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), !initially_present);
-		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), !initially_present);
+		EXPECT_FLOAT_EQ(entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, initially_present ? 0.f : 4.f);
+		EXPECT_EQ(entity.GetComponent<RenderableObjectComponent>().visible, !initially_present);
 		Input::Update();
 		script.Tick({});
-		EXPECT_EQ(entity.HasComponent<SpotLightComponent>(), !initially_present);
-		EXPECT_EQ(entity.HasComponent<RenderableObjectComponent>(), !initially_present);
+		EXPECT_FLOAT_EQ(entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, initially_present ? 0.f : 4.f);
+		EXPECT_EQ(entity.GetComponent<RenderableObjectComponent>().visible, !initially_present);
 	}
 }
 
@@ -573,8 +588,8 @@ TEST_F(InputActionsTest, player_waits_for_both_devices_to_release_and_uses_named
 		m_input.keys[DL_KEY_V] = false;
 		Input::Update();
 		script.Tick({});
-		EXPECT_FALSE(entity.HasComponent<SpotLightComponent>());
-		EXPECT_FALSE(entity.HasComponent<RenderableObjectComponent>());
+		EXPECT_FLOAT_EQ(entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, 0.f);
+		EXPECT_FALSE(entity.GetComponent<RenderableObjectComponent>().visible);
 		std::exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
 	}()), ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }

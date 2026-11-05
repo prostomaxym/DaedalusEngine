@@ -83,6 +83,7 @@ namespace Daedalus
 		std::shared_ptr<Model> model;
 		std::filesystem::path source_path;
 		ModelParserFlags import_flags = ModelParserFlags::NONE;
+		bool visible = true;
 
 		RenderableObjectComponent() = default;
 		RenderableObjectComponent(const RenderableObjectComponent&) = default;

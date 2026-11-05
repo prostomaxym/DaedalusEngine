@@ -40,6 +40,21 @@ namespace Daedalus
 			auto text = value.as<std::string>();
 			return text.size() <= MaxStringBytes ? text : std::string{};
 		}
+
+		sol::optional<float> Number(const sol::object& value)
+		{
+			if (value.get_type() != sol::type::number) return sol::nullopt;
+			const auto number = value.as<double>();
+			if (!std::isfinite(number) || std::abs(number) > 1.e8) return sol::nullopt;
+			return static_cast<float>(number);
+		}
+
+		sol::optional<glm::vec3> Vector(const sol::object& value)
+		{
+			if (value.get_type() != sol::type::userdata || !value.is<glm::vec3>()) return sol::nullopt;
+			const auto vector = value.as<glm::vec3>();
+			return Finite(vector) ? sol::optional<glm::vec3>(vector) : sol::nullopt;
+		}
 	}
 
 	struct LuaRuntime::State
@@ -238,6 +253,132 @@ namespace Daedalus
 			bind_transform("position", "set_position", &TransformComponent::translation);
 			bind_transform("rotation", "set_rotation", &TransformComponent::rotation);
 			bind_transform("scale", "set_scale", &TransformComponent::scale);
+			ecs.set_function("parent", [&scene, resolve](sol::object id)
+			{
+				auto entity = resolve(id);
+				return std::to_string(static_cast<uint64_t>(entity ? scene.GetParent(entity.GetUUID()) : UUID(0)));
+			});
+			ecs.set_function("world_position", [&scene, resolve](sol::object id) -> sol::optional<glm::vec3>
+			{
+				auto entity = resolve(id);
+				if (!entity) return sol::nullopt;
+				scene.UpdateWorldTransforms();
+				const auto* transform = scene.GetWorldTransform(entity.GetUUID());
+				return transform ? sol::optional<glm::vec3>(glm::vec3((*transform)[3])) : sol::nullopt;
+			});
+			ecs.set_function("world_rotation", [&scene, resolve](sol::object id) -> sol::optional<glm::vec3>
+			{
+				auto entity = resolve(id);
+				if (!entity) return sol::nullopt;
+				scene.UpdateWorldTransforms();
+				return glm::vec3(glm::degrees(glm::eulerAngles(scene.GetWorldOrientation(entity.GetUUID()))));
+			});
+			ecs.set_function("set_world_pose", [&scene, resolve](sol::object id, sol::object position, sol::object rotation, sol::object yaw_offset)
+			{
+				auto entity = resolve(id);
+				const auto p = Vector(position), r = Vector(rotation);
+				const auto yaw = yaw_offset.valid() ? Number(yaw_offset) : sol::optional<float>(0.f);
+				if (!entity || !p || !r || !yaw) return false;
+				scene.UpdateWorldTransforms();
+				const auto orientation = glm::quat(glm::radians(*r)) * glm::angleAxis(glm::radians(*yaw), glm::vec3(0.f, 1.f, 0.f));
+				return scene.SetWorldPose(entity.GetUUID(), *p, orientation);
+			});
+			ecs.set_function("forward", [resolve](sol::object id) -> sol::optional<glm::vec3>
+			{
+				auto entity = resolve(id);
+				if (!entity || !entity.HasComponent<TransformComponent>()) return sol::nullopt;
+				return entity.GetComponent<TransformComponent>().GetOrientationQuat() * glm::vec3(0.f, 0.f, 1.f);
+			});
+			ecs.set_function("local_direction", [&scene, resolve](sol::object id, sol::object value) -> sol::optional<glm::vec3>
+			{
+				const auto direction = Vector(value);
+				if (!direction) return sol::nullopt;
+				if (Text(id) == "0") return direction;
+				auto entity = resolve(id);
+				if (!entity) return sol::nullopt;
+				scene.UpdateWorldTransforms();
+				return glm::inverse(scene.GetWorldOrientation(entity.GetUUID())) * *direction;
+			});
+			ecs.set_function("set_visible", [resolve](sol::object id, sol::object value)
+			{
+				auto entity = resolve(id);
+				if (!entity || !entity.HasComponent<RenderableObjectComponent>() || value.get_type() != sol::type::boolean) return false;
+				entity.GetComponent<RenderableObjectComponent>().visible = value.as<bool>();
+				return true;
+			});
+			ecs.set_function("spotlight_power", [resolve](sol::object id) -> sol::optional<float>
+			{
+				auto entity = resolve(id);
+				if (!entity || !entity.HasComponent<SpotLightComponent>()) return sol::nullopt;
+				return entity.GetComponent<SpotLightComponent>().light.GetProps().light_power;
+			});
+			ecs.set_function("set_spotlight_power", [resolve](sol::object id, sol::object value)
+			{
+				auto entity = resolve(id);
+				const auto power = Number(value);
+				if (!entity || !entity.HasComponent<SpotLightComponent>() || !power || *power < 0.f) return false;
+				entity.GetComponent<SpotLightComponent>().light.SetPower(*power);
+				return true;
+			});
+
+			// Camera pointers never leave a binding; every access resolves the current component.
+			auto resolve_camera = [&scene, resolve](const sol::object& id) -> Camera*
+			{
+				auto entity = resolve(id);
+				if (!entity || !entity.HasComponent<CameraComponent>()) return nullptr;
+				scene.UpdateWorldTransforms();
+				return entity.GetComponent<CameraComponent>().camera.get();
+			};
+			auto camera = lua.create_named_table("camera");
+			auto bind_camera_vector = [&](const char* name, glm::vec3 (Camera::*get)() const)
+			{
+				camera.set_function(name, [resolve_camera, get](sol::object id) -> sol::optional<glm::vec3>
+				{
+					const auto* value = resolve_camera(id);
+					return value ? sol::optional<glm::vec3>((value->*get)()) : sol::nullopt;
+				});
+			};
+			bind_camera_vector("position", &Camera::GetPosition);
+			bind_camera_vector("direction", &Camera::GetDirection);
+			bind_camera_vector("right", &Camera::GetRight);
+			camera.set_function("move", [&scene, resolve, resolve_camera](sol::object id, sol::object axes, sol::object time)
+			{
+				const auto movement = Vector(axes);
+				const auto dt = Number(time);
+				if (!movement || !dt || *dt < 0.f) return false;
+				auto* value = resolve_camera(id);
+				if (!value) return false;
+				const auto position = value->GetPosition() + value->GetMovementSpeed() * *dt
+					* (value->GetRight() * movement->x + value->GetWorldUp() * movement->y + value->GetDirection() * movement->z);
+				if (!Finite(position)) return false;
+				return scene.SetWorldPose(resolve(id).GetUUID(), position, value->GetOrientation());
+			});
+			camera.set_function("look", [&scene, resolve, resolve_camera](sol::object id, sol::object x, sol::object y)
+			{
+				const auto dx = Number(x), dy = Number(y);
+				if (!dx || !dy) return false;
+				auto* value = resolve_camera(id);
+				if (!value) return false;
+				if (*dx == 0.f && *dy == 0.f) return true;
+				value->ProcessMouseMovement(*dx, *dy);
+				return scene.SetWorldPose(resolve(id).GetUUID(), value->GetPosition(), value->GetOrientation());
+			});
+			camera.set_function("set_person", [resolve_camera](sol::object id, sol::object distance, sol::object height)
+			{
+				const auto d = Number(distance), h = Number(height);
+				if (!d || !h || *d < 0.f) return false;
+				auto* value = resolve_camera(id);
+				if (!value) return false;
+				value->SetPersonParams(*d, *h);
+				return true;
+			});
+			auto log = lua.create_named_table("log");
+			log.set_function("trace", [](sol::object value)
+			{
+				if (value.get_type() != sol::type::string || value.as<std::string>().size() > MaxStringBytes) return false;
+				Log::Write(Log::Levels::Trace, Log::Categories::Application, "{}", Text(value));
+				return true;
+			});
 
 			auto input = lua.create_named_table("input");
 			auto bind_action = [&](const char* name, bool (*query)(const std::string&))
@@ -257,6 +398,18 @@ namespace Daedalus
 				const auto name = Text(value);
 				return !name.empty() && name.size() <= 128 && Input::IsAvailable() ? Input::GetAxis(name) : 0.f;
 			});
+			input.set_function("movement", [](sol::object positive, sol::object negative)
+			{
+				const auto p = Text(positive), n = Text(negative);
+				return !p.empty() && !n.empty() && p.size() <= 128 && n.size() <= 128 && Input::IsAvailable()
+					? Input::GetMovementAction(p, n) : 0.f;
+			});
+			input.set_function("mouse_position", []
+			{
+				const auto [x, y] = Input::IsAvailable() ? Input::GetMousePos() : std::pair<float, float>{};
+				return glm::vec3(x, y, 0.f);
+			});
+			input.set_function("gamepad_enabled", [] { return Input::IsAvailable() && Input::IsGamepadInputEnabled(); });
 			auto events = lua.create_named_table("events");
 			events.set_function("emit", [&scene, self](sol::object topic, sol::object data)
 			{

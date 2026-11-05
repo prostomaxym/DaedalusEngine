@@ -113,7 +113,7 @@ void RenderSystem::SubmitModels() const
 		const auto& model_component = entity.GetComponent<RenderableObjectComponent>();
 		const auto* transform = m_scene->GetWorldTransform(entity.GetUUID());
 
-		if (transform) Renderer::Submit(model_component.model.get(), *transform);
+		if (transform && model_component.visible) Renderer::Submit(model_component.model.get(), *transform);
 	}
 }
 

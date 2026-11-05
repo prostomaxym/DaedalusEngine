@@ -9,9 +9,6 @@ project(
 set(PROJECT_FILES
   ExampleLayer.h
   ExampleLayer.cpp
-  ExampleScripts.h
-	SceneScripts.h
-  SceneScripts.cpp
   SandboxApp.h
 	SandboxApp.cpp)
 

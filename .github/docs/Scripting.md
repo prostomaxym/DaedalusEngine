@@ -4,7 +4,7 @@ The Phase 2 implementation uses Lua and sol2 privately inside `ECS/Scripting`. E
 
 ## Registration and runtime assets
 
-Register the built-in adapter with `LuaScript::Register(registry, engine.GetAssets().GetFiles())` before loading a scene. The sandbox does this alongside its native adapters. Registration copies the VFS mount configuration into adapters/runtimes; the registry can be destroyed without invalidating existing scripts. Asset contents are still read from the mounted source and are not copied into saved scenes.
+Register the built-in adapter with `LuaScript::Register(registry, engine.GetAssets().GetFiles())` before loading a scene. The sandbox registers only this adapter; its example scenes use Lua exclusively. Other clients can still register native adapters. Registration copies the VFS mount configuration into adapters/runtimes; the registry can be destroyed without invalidating existing scripts. Asset contents are still read from the mounted source and are not copied into saved scenes.
 
 Configure the script root alongside assets and shaders in `path.ini`:
 
@@ -72,7 +72,7 @@ All callbacks are optional and must be functions when supplied:
 | `on_reload()` | Runs in the candidate VM with copied state, before commit and before engine bindings are available. Must be pure state migration. |
 | `on_stop()` | Runs once for a started, healthy VM on scene stop or script removal, then the VM is released. Faulted VMs skip it. |
 
-Top-level code has `properties`, `state`, `vec3` and allowed Lua libraries, but no `ecs`, `input` or `events`. Define callbacks there; do engine work inside active callbacks. This restriction prevents failed staging/reloads from changing the live scene. Active callback side effects are not transactional: mutations completed before a later Lua error remain applied.
+Top-level code has `properties`, `state`, `vec3` and allowed Lua libraries, but no `ecs`, `camera`, `input`, `events` or `log`. Define callbacks there; do engine work inside active callbacks. This restriction prevents failed staging/reloads from changing the live scene. Active callback side effects are not transactional: mutations completed before a later Lua error remain applied.
 
 Scripts run on their constructing scene thread. A protected callback error disables that VM and logs a bounded diagnostic through the engine logger, without stopping other entities. A source edit or explicit reload can recover it. Native scripts have default no-op event and stop hooks. `Scene::UpdateScripts(dt)` is an explicit headless/owner-thread entry point, analogous to `StepPhysics`; it bypasses normal running/paused checks and must not be used to step a paused game accidentally. It rejects nested scene iteration/construction.
 
@@ -88,12 +88,32 @@ IDs are decimal strings, never Lua numbers or borrowed entity pointers. Lookups 
 | `ecs.link(id, name)` | Named link target UUID string; `"0"` if absent. |
 | `ecs.position(id)` / `rotation(id)` / `scale(id)` | Copy local TRS as a vector, or nil if unavailable. Rotation is Euler degrees. |
 | `ecs.set_position(id, value)` / `set_rotation` / `set_scale` | Validate a vector and update local TRS; return bool. World caches refresh through normal scene processing. |
+| `ecs.parent(id)` | Parent UUID string, or `"0"` for a root/missing entity. |
+| `ecs.world_position(id)` / `world_rotation(id)` | Refresh world caches and return copied position / Euler degrees, or nil. |
+| `ecs.set_world_pose(id, position, rotation[, yaw_offset])` | Apply world position and Euler degrees through the parent, retaining local scale. Optional local-Y rotation offset in degrees defaults to zero. Returns bool. |
+| `ecs.forward(id)` | Local orientation's +Z forward vector (for model facing), or nil. |
+| `ecs.local_direction(id, direction)` | Inverse world orientation applied to a copied direction, ignoring scale. `"0"` denotes the identity/root frame; missing IDs return nil. |
+| `ecs.set_visible(id, bool)` | Toggle model submission without removing the renderable component. Transient; not serialized. Returns bool. |
+| `ecs.spotlight_power(id)` / `set_spotlight_power(id, number)` | Read/write the existing spotlight power; nil/false if absent. Power must be nonnegative. |
+| `camera.position(id)` / `direction(id)` / `right(id)` | Refresh world caches and return copied camera vectors, or nil. Position is the camera's base position, before third-person view offsets. |
+| `camera.move(id, axes, dt)` | Move in camera-right/reference-up/forward directions (`axes.x/y/z`), using the configured movement speed and nonnegative seconds. Write back world pose; return bool. |
+| `camera.look(id, x, y)` | Apply sensitivity-scaled yaw/pitch offsets, clamp pitch to ±89 degrees and write back world pose. Zero offsets preserve authored roll. Returns bool. |
+| `camera.set_person(id, distance, height)` | Set third-person view offsets; distance must be nonnegative. Returns bool. |
 | `vec3(x, y, z)` | New vector value with writable `x`, `y`, `z`; nonnumeric arguments return nil. No component references are retained. |
 | `input.down(name)` / `pressed` / `held` / `released` | Existing named action queries and enable gates. |
 | `input.axis(name)` | Existing named digital/analog axis query. |
+| `input.movement(positive, negative)` | Existing `Input::GetMovementAction` query, including named-axis and keyboard/gamepad enable gates. |
+| `input.mouse_position()` / `gamepad_enabled()` | Copied mouse position as `vec3(x,y,0)` / gamepad enable gate. Neutral without an input service. |
+| `log.trace(message)` | Write a string of at most 4096 bytes through the engine Application logger at Trace level; return bool. |
 | `events.emit(topic, payload)` | Queue a scene-local `GameMessage`; both arguments are strings; return false for invalid values or a full queue. |
 
 Script-facing string/vector arguments are type-checked before native conversions. Invalid arguments return neutral/failure results. TRS setters reject nonfinite values and vectors outside the bounds above. They do not resize colliders or remove existing unit-scale-ancestor physics restrictions. Input queries return neutral values in headless tools without an input service; ordinary input APIs retain their fail-fast lifetime contract.
+
+Gameplay scalar arguments must be finite numbers with absolute value at most 100000000; vector arguments use the same per-component bounds as TRS. Camera/spotlight bindings require an existing component and never create or remove components. World/camera reads refresh scene-derived poses; setters write authoritative TRS rather than keeping independent camera transforms.
+
+## Sandbox examples
+
+`source/dlSandbox/scripts` contains standalone camera, player, rotation, tank patrol and position-logging Lua examples. They replace the sandbox's native example classes and adapters, but are not listed in project targets, compiled, or copied by builds. Manually place them in `ScriptsFolder`; the reference scenes use matching `scripts:/` paths. The player asset includes camera controls because one Lua asset per entity and no module imports are supported. It uses named `camera`/`spot_light` links after legacy scene migration, retains model components when hiding them, and toggles existing spotlight power. Healthy stop callbacks restore model visibility, third-person offsets and flashlight power. See the [sandbox README](../../source/dlSandbox/README.md) for deployment and properties.
 
 ## Events and thread safety
 
@@ -128,6 +148,6 @@ Every top-level execution and callback has a 100000-Lua-instruction budget, chec
 
 ## Validation and remaining scope
 
-`LuaRuntimeTest` supplies 49 headless regressions for lifecycle, bindings and malformed arguments, VM isolation, restricted capabilities, instruction/memory limits, failed/successful reload, state recovery, empty-source initialization/restart, deferred and worker-posted events, physics-source filtering, factory cleanup/duplicate protection, record round-trips, prefab overrides, configured script-folder loading/reload/capture, legacy mounted paths and ZIP loading. PathConfig, registry/pipeline and installer tests separately cover relative/portable roots, source metadata/change detection and install-missing preservation. See the roadmap for configuration-specific validation results.
+`LuaRuntimeTest` supplies 59 headless regressions for lifecycle, bindings and malformed arguments, VM isolation, restricted capabilities, instruction/memory limits, failed/successful reload, state recovery, empty-source initialization/restart, deferred and worker-posted events, physics-source filtering, factory cleanup/duplicate protection, record round-trips, prefab overrides, configured script-folder loading/reload/capture, legacy mounted paths and ZIP loading. Gameplay coverage includes parent-aware camera/world poses, visibility/power toggles, example-scene asset validation, rotation speed, patrol reload state, logging and linked player cleanup. `InputActionsTest` runs the real Lua controller examples for movement, device gates, analog axes, player facing and release-edge toggles. PathConfig, registry/pipeline and installer tests separately cover relative/portable roots, source metadata/change detection and install-missing preservation. See the roadmap for configuration-specific validation results.
 
 Multiple Lua assets per entity, script module imports, coroutine gameplay, arbitrary component/physics/render bindings, general savegame VM snapshots, asset-registry change subscriptions, an editor debugger and configurable security policies are not implemented. Linux/WSL and Android builds/runtime checks, and interactive scene behavior, remain separate validation work.

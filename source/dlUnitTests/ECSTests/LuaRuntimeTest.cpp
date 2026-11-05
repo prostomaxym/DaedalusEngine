@@ -15,6 +15,7 @@
 #include <zip.h>
 #include <filesystem>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <limits>
 #include <thread>
@@ -58,6 +59,13 @@ namespace
 		{
 			Write(source);
 			m_runtime = std::make_unique<LuaRuntime>(m_scene, m_entity.GetUUID(), m_files, "lua:/script.lua", std::move(properties));
+			ASSERT_TRUE(m_runtime->Reload()) << m_runtime->GetLastError();
+		}
+
+		void LoadExample(const std::string& name, LuaRuntime::Properties properties = {})
+		{
+			ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+			m_runtime = std::make_unique<LuaRuntime>(m_scene, m_entity.GetUUID(), m_files, "scripts:/" + name, std::move(properties));
 			ASSERT_TRUE(m_runtime->Reload()) << m_runtime->GetLastError();
 		}
 
@@ -127,6 +135,38 @@ TEST_F(LuaRuntimeTest, updates_local_transform_from_authored_properties)
 	m_runtime->Update(0.25f);
 	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().translation.x, 1.f);
 	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+}
+
+TEST_F(LuaRuntimeTest, sandbox_player_follows_linked_camera_and_restores_presentation_on_stop)
+{
+	auto parent = m_scene.CreateEntity("Parent");
+	parent.GetComponent<TransformComponent>().rotation.y = 30.f;
+	ASSERT_TRUE(m_scene.SetParent(m_entity.GetUUID(), parent.GetUUID()));
+	m_entity.GetComponent<TransformComponent>().rotation.y = 180.f;
+	m_entity.AddComponent<RenderableObjectComponent>();
+	auto camera = m_scene.CreateEntity("Camera");
+	camera.GetComponent<TransformComponent>().translation = { 2.f, 3.f, 4.f };
+	camera.AddComponent<CameraComponent>(CameraProjectionProps{});
+	auto light = m_scene.CreateEntity("Flashlight");
+	LightProps props;
+	props.light_power = 4.f;
+	light.AddComponent<SpotLightComponent>(props);
+	ASSERT_TRUE(m_scene.SetEntityLink(m_entity.GetUUID(), "camera", camera.GetUUID()));
+	ASSERT_TRUE(m_scene.SetEntityLink(m_entity.GetUUID(), "spot_light", light.GetUUID()));
+	LoadExample("player_controller.lua");
+	m_runtime->Update(0.f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	m_scene.UpdateWorldTransforms();
+	EXPECT_NEAR(glm::distance(glm::vec3((*m_scene.GetWorldTransform(m_entity.GetUUID()))[3]), glm::vec3(2.f, 3.f, 4.f)), 0.f, 0.0001f);
+	EXPECT_NEAR(glm::distance(glm::vec3((*m_scene.GetWorldTransform(light.GetUUID()))[3]), glm::vec3(2.f, 3.f, 3.f)), 0.f, 0.0001f);
+	const auto expected = m_scene.GetWorldOrientation(m_entity.GetUUID()) * glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
+	EXPECT_NEAR(std::abs(glm::dot(expected, m_scene.GetWorldOrientation(light.GetUUID()))), 1.f, 0.0001f);
+	m_entity.GetComponent<RenderableObjectComponent>().visible = false;
+	light.GetComponent<SpotLightComponent>().light.SetPower(0.f);
+	m_runtime->Stop();
+	EXPECT_TRUE(m_entity.GetComponent<RenderableObjectComponent>().visible);
+	EXPECT_FLOAT_EQ(light.GetComponent<SpotLightComponent>().light.GetProps().light_power, 4.f);
+	EXPECT_FLOAT_EQ(camera.GetComponent<CameraComponent>().camera->GetPersonDistance(), 7.f);
 }
 
 TEST_F(LuaRuntimeTest, configured_script_mount_loads_reloads_and_captures_lua_records)
@@ -751,4 +791,208 @@ TEST_F(LuaRuntimeTest, bounded_event_engine_preserves_existing_deferred_dispatch
 	EXPECT_EQ(received, 1);
 	events.DispatchPending([&](Event&) { ++received; });
 	EXPECT_EQ(received, 2);
+}
+
+TEST_F(LuaRuntimeTest, gameplay_world_pose_bindings_preserve_parent_space_and_scale)
+{
+	auto parent = m_scene.CreateEntity("Parent");
+	parent.GetComponent<TransformComponent>().translation = { 10.f, 0.f, 0.f };
+	parent.GetComponent<TransformComponent>().rotation.y = 90.f;
+	ASSERT_TRUE(m_scene.SetParent(m_entity.GetUUID(), parent.GetUUID()));
+	m_entity.GetComponent<TransformComponent>().scale = glm::vec3(2.f);
+	Load(R"(
+		assert(camera == nil and log == nil)
+		function on_update(dt)
+			assert(ecs.parent(ecs.self) ~= "0")
+			assert(ecs.set_world_pose(ecs.self, vec3(3,4,5), vec3(0,0,0)))
+			local p = ecs.world_position(ecs.self)
+			state.x = p.x; state.y = p.y; state.z = p.z
+			state.yaw = ecs.world_rotation(ecs.self).y
+			state.local_x = ecs.local_direction(ecs.parent(ecs.self), vec3(0,0,-1)).x
+			assert(ecs.set_world_pose(ecs.self, p, vec3(0,0,0), 180))
+			state.forward_z = ecs.forward(ecs.self).z
+		end
+	)");
+	m_runtime->Update(0.f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_NEAR(Number(*m_runtime, "x"), 3., 0.0001);
+	EXPECT_NEAR(Number(*m_runtime, "y"), 4., 0.0001);
+	EXPECT_NEAR(Number(*m_runtime, "z"), 5., 0.0001);
+	EXPECT_NEAR(Number(*m_runtime, "yaw"), 0., 0.0001);
+	EXPECT_NEAR(Number(*m_runtime, "local_x"), 1., 0.0001);
+	EXPECT_NEAR(glm::distance(m_entity.GetComponent<TransformComponent>().scale, glm::vec3(2.f)), 0.f, 0.0001f);
+}
+
+TEST_F(LuaRuntimeTest, gameplay_camera_bindings_update_world_pose_under_a_parent)
+{
+	auto parent = m_scene.CreateEntity("Parent");
+	parent.GetComponent<TransformComponent>().rotation.y = 90.f;
+	ASSERT_TRUE(m_scene.SetParent(m_entity.GetUUID(), parent.GetUUID()));
+	auto& camera = *m_entity.AddComponent<CameraComponent>(CameraProjectionProps{}).camera;
+	camera.SetMovementSpeed(4.f);
+	camera.SetSensivitity(1.f);
+	Load(R"(
+		function on_update(dt)
+			local direction = camera.direction(ecs.self)
+			local right = camera.right(ecs.self)
+			assert(direction.x < -0.99 and right.z < -0.99)
+			assert(camera.move(ecs.self, vec3(0,0,1), dt))
+			assert(camera.set_person(ecs.self, 7, 4))
+			state.x = camera.position(ecs.self).x
+			assert(camera.look(ecs.self, 10, 5))
+		end
+	)");
+	m_runtime->Update(0.5f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_NEAR(Number(*m_runtime, "x"), -2., 0.0001);
+	EXPECT_FLOAT_EQ(camera.GetPersonDistance(), 7.f);
+	EXPECT_FLOAT_EQ(camera.GetPersonHeight(), 4.f);
+	EXPECT_NEAR(camera.GetPitch(), 5.f, 0.0001f);
+	EXPECT_NEAR(std::remainder(camera.GetYaw() + 170.f, 360.f), 0.f, 0.0001f);
+}
+
+TEST_F(LuaRuntimeTest, gameplay_bindings_reject_invalid_values_and_missing_components)
+{
+	m_entity.AddComponent<RenderableObjectComponent>();
+	LightProps props;
+	props.light_power = 4.f;
+	m_entity.AddComponent<SpotLightComponent>(props);
+	m_entity.AddComponent<CameraComponent>(CameraProjectionProps{});
+	Load(R"(
+		function on_update(dt)
+			local id = ecs.self
+			assert(not ecs.set_visible(id, 1))
+			assert(not ecs.set_visible("0", true))
+			assert(not ecs.set_spotlight_power(id, -1))
+			assert(not ecs.set_spotlight_power(id, 0/0))
+			assert(not ecs.set_spotlight_power(id, "5"))
+			assert(ecs.spotlight_power("0") == nil)
+			assert(ecs.world_position({}) == nil and ecs.world_rotation("0") == nil)
+			assert(ecs.forward("0") == nil and ecs.parent(false) == "0")
+			assert(ecs.local_direction("0", vec3(1,2,3)).x == 1)
+			assert(ecs.local_direction("999", vec3(1,2,3)) == nil)
+			assert(ecs.local_direction(id, {}) == nil)
+			assert(not ecs.set_world_pose(id, vec3(0/0,0,0), vec3(0,0,0)))
+			assert(not ecs.set_world_pose(id, vec3(0,0,0), vec3(0,0,0), "bad"))
+			assert(not camera.move(id, {}, 1))
+			assert(not camera.move(id, vec3(0,0,1), -1))
+			assert(not camera.move(id, vec3(0,0,1), math.huge))
+			assert(not camera.look(id, "1", 0))
+			assert(not camera.look(id, 0, 0/0))
+			assert(not camera.set_person(id, -1, 0))
+			assert(not camera.set_person(id, 0, {}))
+			assert(camera.position("0") == nil and camera.right(false) == nil)
+			assert(camera.direction("999") == nil)
+			assert(not camera.move("0", vec3(0,0,0), 0))
+			assert(not camera.look("0", 0, 0))
+			assert(not camera.set_person("0", 0, 0))
+			assert(not log.trace({}) and not log.trace(string.rep("x",4097)))
+			assert(input.movement({}, "MoveLeft") == 0)
+		end
+	)");
+	m_runtime->Update(0.f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_TRUE(m_entity.GetComponent<RenderableObjectComponent>().visible);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, 4.f);
+	EXPECT_EQ(m_entity.GetComponent<TransformComponent>().translation, glm::vec3(0.f));
+}
+
+TEST_F(LuaRuntimeTest, gameplay_visibility_and_power_do_not_remove_authored_components)
+{
+	m_entity.AddComponent<RenderableObjectComponent>();
+	LightProps props;
+	props.light_power = 4.f;
+	m_entity.AddComponent<SpotLightComponent>(props);
+	Load(R"(
+		function on_update(dt)
+			assert(ecs.set_visible(ecs.self, false))
+			state.power = ecs.spotlight_power(ecs.self)
+			assert(ecs.set_spotlight_power(ecs.self, 0))
+		end
+	)");
+	m_runtime->Update(0.f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_FALSE(m_entity.GetComponent<RenderableObjectComponent>().visible);
+	EXPECT_DOUBLE_EQ(Number(*m_runtime, "power"), 4.);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<SpotLightComponent>().light.GetProps().light_power, 0.f);
+}
+
+TEST_F(LuaRuntimeTest, gameplay_input_bindings_are_neutral_without_input_service)
+{
+	ASSERT_FALSE(Input::IsAvailable());
+	Load(R"(
+		function on_update(dt)
+			assert(input.movement("MoveForward", "MoveBackward") == 0)
+			assert(not input.gamepad_enabled())
+			local mouse = input.mouse_position()
+			assert(mouse.x == 0 and mouse.y == 0)
+			assert(log.trace("Lua headless gameplay bindings"))
+		end
+	)");
+	m_runtime->Update(0.f);
+	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+}
+
+TEST_F(LuaRuntimeTest, sandbox_scenes_reference_only_valid_lua_example_assets)
+{
+	ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+	ScriptRegistry registry;
+	ASSERT_TRUE(LuaScript::Register(registry, m_files));
+	for (const auto* name : { "nuke.scene.json", "anor_londo.scene.json" })
+	{
+		SCOPED_TRACE(name);
+		SceneRecord record;
+		std::string error;
+		ASSERT_TRUE(SceneJson::Load(std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scenes" / name, record, error)) << error;
+		for (const auto& entity : record.entities)
+		{
+			ASSERT_TRUE(registry.Validate(entity, error)) << error;
+			for (const auto& script : entity.scripts) EXPECT_EQ(script.type, "Lua");
+		}
+	}
+}
+
+TEST_F(LuaRuntimeTest, sandbox_rotation_example_preserves_native_speed_units)
+{
+	m_entity.GetComponent<TransformComponent>().rotation = { 10.f, 20.f, 30.f };
+	LoadExample("rotation_model.lua", { { "speed", 0.1 } });
+	m_runtime->Update(0.25f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.y, 45.f);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.x, 10.f);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.z, 30.f);
+}
+
+TEST_F(LuaRuntimeTest, sandbox_tank_example_completes_patrol_and_preserves_reload_state)
+{
+	LoadExample("tank_movement.lua", { { "distance", 5. }, { "forward_direction", glm::vec3(1.f, 0.f, 0.f) } });
+	m_runtime->Update(1.f);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().translation.x, 5.f);
+	ASSERT_TRUE(m_runtime->Reload()) << m_runtime->GetLastError();
+	for (int i = 0; i < 3; ++i) m_runtime->Update(1.f);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.y, -180.f);
+	for (int i = 0; i < 4; ++i) m_runtime->Update(1.f);
+	ASSERT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().translation.x, 0.f);
+	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.y, 0.f);
+	EXPECT_DOUBLE_EQ(Number(*m_runtime, "length"), 0.);
+}
+
+TEST_F(LuaRuntimeTest, sandbox_position_logging_supports_self_linked_and_missing_cameras)
+{
+	LoadExample("log_position.lua");
+	m_runtime->Update(0.f);
+	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	auto camera = m_scene.CreateEntity("Camera");
+	camera.AddComponent<CameraComponent>(CameraProjectionProps{});
+	ASSERT_TRUE(m_scene.SetEntityLink(m_entity.GetUUID(), "camera", camera.GetUUID()));
+	m_runtime->Update(0.f);
+	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	m_entity.AddComponent<CameraComponent>(CameraProjectionProps{});
+	m_runtime->Update(0.f);
+	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
+	m_scene.DestroyEntity(camera);
+	m_entity.RemoveComponent<CameraComponent>();
+	m_runtime->Update(0.f);
+	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
 }

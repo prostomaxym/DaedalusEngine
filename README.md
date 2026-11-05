@@ -1,12 +1,11 @@
 ﻿# Daedalus Engine
-Cross-platform (Windows + Linux) C++17 game engine. Personal project. Under early stage of development
+Cross-platform (Windows + Linux + Android) C++20 game engine. Personal project. Under early stage of development
 
 ## Builds
 
-[![Windows-Master-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Master-CI.yml/badge.svg?branch=master)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Master-CI.yml)
 [![Windows-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Windows-Dev-CI.yml)
-[![Linux-Master-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml/badge.svg?branch=master)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Master-CI.yml)
 [![Linux-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Linux-Dev-CI.yml)
+[![Android-Dev-CI](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Android-Dev-CI.yml/badge.svg)](https://github.com/prostomaxym/daedalus_engine/actions/workflows/Android-Dev-CI.yml)
 
 ## Requirements
 - CMake 3.21+ (required by `CMakePresets.json`)

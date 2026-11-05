@@ -210,7 +210,7 @@ TEST(HierarchyIntegrationTest, legacy_conflicting_poses_become_linked_entities_w
 	SceneRecord upgraded;
 	std::string error;
 	ASSERT_TRUE(SceneJson::Upgrade(legacy, upgraded, error)) << error;
-	ASSERT_EQ(upgraded.version, 2u);
+	ASSERT_EQ(upgraded.version, CurrentSceneVersion);
 	ASSERT_EQ(upgraded.entities.size(), 3u);
 	EXPECT_FALSE(upgraded.entities[0].camera);
 	EXPECT_FALSE(upgraded.entities[0].spot_light);

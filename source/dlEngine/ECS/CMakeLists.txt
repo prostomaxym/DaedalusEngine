@@ -28,6 +28,8 @@ set(ECS_PROJECT_FILES
     Serialization/SceneJson.h
     Serialization/SceneJson.cpp
     Serialization/SceneMigration.cpp
+    Serialization/SceneComposer.h
+    Serialization/SceneComposer.cpp
     Serialization/ScriptRegistry.h
     Serialization/ScriptRegistry.cpp
     Serialization/SceneSerializer.h

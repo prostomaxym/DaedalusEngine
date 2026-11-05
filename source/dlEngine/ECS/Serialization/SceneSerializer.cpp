@@ -4,6 +4,7 @@
 #include "ScriptRegistry.h"
 #include "Renderer/Resources/Texture.h"
 #include "SceneJson.h"
+#include "SceneComposer.h"
 #include "ECS/Scene.h"
 #include "Utils/Utf8.h"
 #include "Core/AssetPipeline.h"
@@ -177,8 +178,12 @@ bool SceneSerializer::Instantiate(const SceneRecord& source, Scene& scene, const
 {
 	error.clear();
 	if (scene.IsRunning() || !scene.IsEmpty()) { error = "Scene loading requires an empty, stopped scene"; return false; }
-	SceneRecord record;
-	if (!SceneJson::Upgrade(source, record, error)) return false;
+	SceneRecord upgraded, record;
+	if (!SceneJson::Upgrade(source, upgraded, error)) return false;
+	VirtualFileSystem files;
+	if (!pipeline && std::any_of(upgraded.entities.begin(), upgraded.entities.end(), [](const auto& entity) { return entity.prefab.has_value(); }))
+		if (!files.Mount("assets", assets, error)) return false;
+	if (!SceneComposer::Expand(upgraded, pipeline ? pipeline->GetFiles() : files, record, error)) return false;
 	for (const auto& entity : record.entities)
 	{
 		if (!scripts.Validate(entity, error)) return false;

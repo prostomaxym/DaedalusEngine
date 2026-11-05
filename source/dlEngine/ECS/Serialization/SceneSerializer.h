@@ -17,6 +17,7 @@ namespace Daedalus
 	{
 	public:
 		// Resource instantiation runs on the application thread after renderer/physics initialization.
+		// Prefabs expand before construction; capture saves their expanded entities.
 		static bool Instantiate(const SceneRecord& record, Scene& scene, const std::filesystem::path& assets,
 			const ScriptRegistry& scripts, std::string& error, const AssetPipeline* pipeline = nullptr);
 		static bool LoadAsset(const AssetPipeline& pipeline, std::string_view path, Scene& scene, const ScriptRegistry& scripts, std::string& error);

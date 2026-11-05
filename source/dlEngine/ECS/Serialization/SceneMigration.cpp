@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <limits>
 #include <set>
@@ -21,19 +22,11 @@ namespace
 	}
 }
 
-bool SceneJson::Upgrade(const SceneRecord& source, SceneRecord& record, std::string& error)
+static bool UpgradeV1(SceneRecord& result, std::string& error)
 {
-	if (!Validate(source, error)) return false;
-	SceneRecord result = source;
-	if (source.version == 2)
-	{
-		record = std::move(result);
-		return true;
-	}
-
 	std::set<std::string> ids;
 	std::set<std::string> parents;
-	for (const auto& entity : source.entities)
+	for (const auto& entity : result.entities)
 	{
 		ids.insert(entity.id);
 		if (entity.parent) parents.insert(*entity.parent);
@@ -102,7 +95,43 @@ bool SceneJson::Upgrade(const SceneRecord& source, SceneRecord& record, std::str
 	}
 	result.entities.insert(result.entities.end(), std::make_move_iterator(added.begin()), std::make_move_iterator(added.end()));
 	result.version = 2;
-	if (!Validate(result, error)) return false;
+	return true;
+}
+
+namespace
+{
+	bool UpgradeV2(SceneRecord& result, std::string&)
+	{
+		result.version = 3;
+		return true;
+	}
+
+	struct MigrationStep
+	{
+		uint32_t source_version;
+		bool (*apply)(SceneRecord&, std::string&);
+	};
+
+	constexpr std::array<MigrationStep, 2> Steps{ { { 1, UpgradeV1 }, { 2, UpgradeV2 } } };
+	static_assert(Steps.size() + 1 == CurrentSceneVersion);
+}
+
+bool SceneJson::Upgrade(const SceneRecord& source, SceneRecord& record, std::string& error)
+{
+	if (!Validate(source, error)) return false;
+	SceneRecord result = source;
+	while (result.version < CurrentSceneVersion)
+	{
+		const auto previous = result.version;
+		const auto& step = Steps[previous - 1];
+		if (step.source_version != previous || !step.apply(result, error)) return false;
+		if (result.version != previous + 1)
+		{
+			error = "Scene migration did not advance exactly one version";
+			return false;
+		}
+		if (!Validate(result, error)) return false;
+	}
 	record = std::move(result);
 	return true;
 }

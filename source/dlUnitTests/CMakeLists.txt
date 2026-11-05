@@ -45,6 +45,8 @@ set(ECS_TEST_FILES
     ECSTests/SceneTest.cpp
     ECSTests/SceneManagerTest.cpp
     ECSTests/SceneJsonTest.cpp
+    ECSTests/SceneMigrationTest.cpp
+    ECSTests/ScenePrefabTest.cpp
     ECSTests/SceneSerializerTest.cpp
     ECSTests/TransformComponentTest.cpp
     ECSTests/TransformHierarchyTest.cpp

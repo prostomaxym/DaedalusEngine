@@ -131,7 +131,7 @@ TEST(SceneJsonTest, rejects_unknown_components)
 TEST(SceneJsonTest, rejects_unsupported_version)
 {
 	auto record = Sample();
-	record.version = 3;
+	record.version = CurrentSceneVersion + 1;
 	std::string error;
 	EXPECT_FALSE(SceneJson::Validate(record, error));
 }

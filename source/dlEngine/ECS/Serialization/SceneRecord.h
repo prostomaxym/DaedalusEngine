@@ -11,6 +11,8 @@
 
 namespace Daedalus
 {
+	inline constexpr uint32_t CurrentSceneVersion = 3;
+
 	struct TransformRecord
 	{
 		glm::vec3 translation{ 0.f };
@@ -89,6 +91,12 @@ namespace Daedalus
 		std::map<std::string, ScriptProperty> properties;
 	};
 
+	struct PrefabRecord
+	{
+		std::string path;
+		std::map<std::string, std::string> exports;
+	};
+
 	struct EntityRecord
 	{
 		std::string id;
@@ -105,11 +113,12 @@ namespace Daedalus
 		std::vector<ScriptRecord> scripts;
 		std::optional<std::string> parent;
 		std::map<std::string, std::string> links;
+		std::optional<PrefabRecord> prefab;
 	};
 
 	struct SceneRecord
 	{
-		uint32_t version = 2;
+		uint32_t version = CurrentSceneVersion;
 		std::string name;
 		std::string primary_camera;
 		std::vector<EntityRecord> entities;

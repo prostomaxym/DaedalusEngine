@@ -116,13 +116,17 @@ Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
 	entity.AddComponent<TransformComponent>();
 	auto& tag = entity.AddComponent<TagComponent>(name.empty() ? "Entity" : name);
 	m_entity_map[uuid] = entity;
+	m_transform_nodes.try_emplace(uuid);
+	if (m_transform_order.capacity() < m_transform_nodes.size())
+		m_transform_order.reserve(m_transform_nodes.size() * 2);
+	m_hierarchy_dirty = true;
 
 	return entity;
 }
 
 void Scene::DestroyEntity(Entity entity)
 {
-	if (!m_registry.valid(static_cast<entt::entity>(entity))) return;
+	if (entity.m_scene != this || !m_registry.valid(static_cast<entt::entity>(entity))) return;
 	if (entity.HasComponent<DirectionalLightComponent>()) entity.RemoveComponent<DirectionalLightComponent>();
 	if (entity.HasComponent<PointLightComponent>()) entity.RemoveComponent<PointLightComponent>();
 	if (entity.HasComponent<SpotLightComponent>()) entity.RemoveComponent<SpotLightComponent>();
@@ -131,6 +135,7 @@ void Scene::DestroyEntity(Entity entity)
 		m_primary_camera = UUID(0);
 		m_render_system->SetCamera(nullptr);
 	}
+	RemoveFromHierarchy(entity.GetUUID());
 	m_entity_map.erase(entity.GetUUID());
 	m_registry.destroy(entity);
 }

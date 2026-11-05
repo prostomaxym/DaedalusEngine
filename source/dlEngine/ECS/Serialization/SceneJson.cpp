@@ -70,6 +70,7 @@ namespace
 		else if constexpr (std::is_same_v<R, EntityRecord>)
 		{
 			f("id", r.id); f("name", r.name); f("transform", r.transform);
+			f("parent", r.parent);
 			f("model", r.model); f("camera", r.camera);
 			f("directional_light", r.directional_light); f("point_light", r.point_light); f("spot_light", r.spot_light);
 			f("skybox", r.skybox); f("rigid_body", r.rigid_body); f("kinematic_body", r.kinematic_body); f("scripts", r.scripts);
@@ -341,6 +342,26 @@ bool SceneJson::Validate(const SceneRecord& record, std::string& error)
 		std::set<std::string> script_types;
 		for (const auto& script : entity.scripts)
 			if (script.type.empty() || !script_types.insert(script.type).second) return Fail(error, path + ".scripts", "script names must be nonempty and unique per entity");
+	}
+	std::map<std::string, const EntityRecord*> hierarchy;
+	for (const auto& entity : record.entities) hierarchy.emplace(entity.id, &entity);
+	for (const auto& entity : record.entities)
+	{
+		if (!entity.parent) continue;
+		if (!hierarchy.count(*entity.parent)) return Fail(error, "$.entities.parent", "must reference an existing entity");
+		if (entity.rigid_body || entity.kinematic_body) return Fail(error, "$.entities.parent", "physics bodies must remain roots");
+	}
+	std::set<std::string> visited;
+	for (const auto& entity : record.entities)
+	{
+		std::set<std::string> chain;
+		const auto* ancestor = &entity;
+		while (ancestor && !visited.count(ancestor->id))
+		{
+			if (!chain.insert(ancestor->id).second) return Fail(error, "$.entities.parent", "transform hierarchy contains a cycle");
+			ancestor = ancestor->parent ? hierarchy.at(*ancestor->parent) : nullptr;
+		}
+		visited.insert(chain.begin(), chain.end());
 	}
 	if (!primary_found || (has_camera && record.primary_camera.empty())) return Fail(error, "$.primary_camera", "must reference a camera entity");
 	return true;

@@ -46,8 +46,5 @@ namespace Daedalus
 
         int m_viewport_width{ 0 };
 		int m_viewport_height{ 0 };
-        mutable std::vector<TransformComponent> m_transform_inputs;
-        mutable std::vector<glm::mat4> m_transform_matrices;
-        mutable std::vector<std::shared_ptr<Model>> m_models;
     };
 }

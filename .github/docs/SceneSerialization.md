@@ -52,11 +52,13 @@ See `source/dlSandbox/scenes/nuke.scene.json` for a complete hand-authored examp
 
 Every entity requires `id`, a unique, nonzero decimal uint64 **string**. Strings preserve UUIDs above JavaScript's exact-integer range. Leading zeros, duplicate IDs, and invalid/overflowing IDs fail. `name` defaults to `Entity` and must not be empty.
 
+An optional `parent` UUID string references another entity in the same scene; omission means a root. Forward references are allowed. Missing parents, self-parenting, cycles and parents on rigid/kinematic body entities are rejected before scene construction. Local `transform` TRS is preserved; world matrices compose as `parent_world * local`. Parent links and world matrices are established before client scripts are constructed. Existing flat version-1 files remain supported; older engine readers that do not recognize `parent` reject hierarchical files. This is an optional schema extension, not a version-migration framework.
+
 Components are named fields on each entity, not C++ type names or memory snapshots:
 
 | Field | Persistent contents |
 | --- | --- |
-| `transform` | `translation`, `rotation`, `scale`, each a three-number array. Rotation is pitch/yaw/roll in degrees. Defaults are zero translation/rotation and unit scale; zero scale is rejected. |
+| `transform` | Local `translation`, `rotation`, `scale`, each a three-number array. Rotation is pitch/yaw/roll in degrees. Defaults are zero translation/rotation and unit scale; zero scale is rejected. |
 | `model` | Asset-root-relative or canonical virtual `path`, plus numeric `import_flags` (`ModelParserFlags`/Assimp bitmask). Material dependencies use VFS-relative resolution, including ZIP entries and embedded textures; runtime material overrides are not saved. |
 | `camera` | `projection` (`perspective` or `orthographic`), position/up/yaw/pitch, projection parameters, viewport policy, and control settings. |
 | `directional_light`, `point_light`, `spot_light` | Position, direction, ambient/diffuse/specular colors, power, range, angles, shadow settings. |
@@ -128,6 +130,6 @@ This is checked, cross-platform replacement, **not an atomic/power-loss-durable 
 
 ## Scope and validation
 
-Version 1 covers authored scene definitions, not savegames, hierarchy, prefabs, automatic scene restart, custom material serialization or arbitrary reflected components. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
+Version 1 covers authored scene definitions including local transform hierarchies, not savegames, prefabs, automatic scene restart, custom material serialization or arbitrary reflected components. Physics bodies must remain roots; visual children may follow them. Cameras and lights retain their independent pose properties rather than inheriting entity world transforms. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
 
 Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or the configuration built). Scene tests and the asset follow-up tests cover record/VFS/ZIP loading and CPU model/texture imports without a GL context. GPU upload/replacement and visual behavior still require a separate sandbox smoke test.

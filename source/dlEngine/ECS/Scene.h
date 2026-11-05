@@ -4,10 +4,13 @@
 #include "Macros.h"
 #include "Utils/DeltaTime.h"
 #include <entt/entity/registry.hpp>
+#include <glm/glm.hpp>
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace Daedalus
 {
@@ -63,6 +66,14 @@ namespace Daedalus
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
 
+		// Parenting and orphaning preserve local TRS; physics bodies must remain roots.
+		[[nodiscard]] bool SetParent(UUID child, UUID parent = UUID(0));
+		[[nodiscard]] UUID GetParent(UUID child) const;
+		[[nodiscard]] std::span<const UUID> GetChildren(UUID parent) const;
+		// Refresh after editing local transforms and before reading cached world matrices.
+		size_t UpdateWorldTransforms();
+		[[nodiscard]] const glm::mat4* GetWorldTransform(UUID entity) const;
+
 		const std::string& GetSceneName() const { return m_scene_name; }
 		void SetSceneName(const std::string& name) { m_scene_name = name; }
 		Camera* GetCamera();
@@ -80,6 +91,24 @@ namespace Daedalus
 			static_assert(sizeof(T) == 0);
 		}
 		
+		struct TransformNode
+		{
+			UUID parent{ 0 };
+			std::vector<UUID> children;
+			glm::vec3 translation{ 0.f };
+			glm::vec3 rotation{ 0.f };
+			glm::vec3 scale{ 1.f };
+			glm::mat4 local{ 1.f };
+			glm::mat4 world{ 1.f };
+			bool dirty{ true };
+			bool changed{ false };
+		};
+
+		void RemoveFromHierarchy(UUID entity);
+		std::unordered_map<UUID, TransformNode> m_transform_nodes;
+		std::vector<UUID> m_transform_order;
+		bool m_hierarchy_dirty{ true };
+
 		std::string m_scene_name;
 		entt::registry m_registry;
 		std::unordered_map<UUID, entt::entity> m_entity_map;

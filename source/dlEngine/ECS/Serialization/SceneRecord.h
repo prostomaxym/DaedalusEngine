@@ -103,6 +103,7 @@ namespace Daedalus
 		std::optional<BodyRecord> rigid_body;
 		std::optional<BodyRecord> kinematic_body;
 		std::vector<ScriptRecord> scripts;
+		std::optional<std::string> parent;
 	};
 
 	struct SceneRecord

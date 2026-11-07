@@ -137,6 +137,16 @@ TEST_F(LuaRuntimeTest, updates_local_transform_from_authored_properties)
 	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
 }
 
+TEST_F(LuaRuntimeTest, reads_and_writes_vector_components)
+{
+	Load("function on_update(dt) local value=vec3(1,2,3); value.x=value.y+value.z; "
+		"state.x=value.x; state.y=value.y; state.z=value.z end");
+	m_runtime->Update(0.f);
+	EXPECT_DOUBLE_EQ(Number(*m_runtime, "x"), 5.);
+	EXPECT_DOUBLE_EQ(Number(*m_runtime, "y"), 2.);
+	EXPECT_DOUBLE_EQ(Number(*m_runtime, "z"), 3.);
+}
+
 TEST_F(LuaRuntimeTest, sandbox_player_follows_linked_camera_and_restores_presentation_on_stop)
 {
 	auto parent = m_scene.CreateEntity("Parent");

@@ -105,7 +105,12 @@ namespace Daedalus
 				"getmetatable", "setmetatable", "rawget", "rawset", "pcall", "xpcall" }) lua[name] = sol::nil;
 			lua["string"]["dump"] = sol::nil;
 			lua.new_usertype<glm::vec3>("Vector3", sol::no_constructor,
-				"x", &glm::vec3::x, "y", &glm::vec3::y, "z", &glm::vec3::z);
+				"x", sol::property([](const glm::vec3& value) { return value.x; },
+					[](glm::vec3& value, float component) { value.x = component; }),
+				"y", sol::property([](const glm::vec3& value) { return value.y; },
+					[](glm::vec3& value, float component) { value.y = component; }),
+				"z", sol::property([](const glm::vec3& value) { return value.z; },
+					[](glm::vec3& value, float component) { value.z = component; }));
 			lua.set_function("vec3", [](sol::object x, sol::object y, sol::object z) -> sol::optional<glm::vec3>
 			{
 				if (x.get_type() != sol::type::number || y.get_type() != sol::type::number || z.get_type() != sol::type::number)

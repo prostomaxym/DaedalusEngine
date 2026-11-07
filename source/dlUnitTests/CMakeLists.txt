@@ -50,6 +50,7 @@ set(ECS_TEST_FILES
     ECSTests/SceneMigrationTest.cpp
     ECSTests/ScenePrefabTest.cpp
     ECSTests/SceneSerializerTest.cpp
+    ECSTests/SkyboxComponentTest.cpp
     ECSTests/TransformComponentTest.cpp
     ECSTests/TransformHierarchyTest.cpp
     ECSTests/TransformPreparationTest.cpp

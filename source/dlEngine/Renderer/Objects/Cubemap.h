@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Macros.h"
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -10,7 +12,7 @@ namespace Daedalus
 	class TextureCubemap;
 	class VertexArray;
 	class VertexBuffer;
-	class Cubemap
+	class DAEDALUS_API Cubemap
 	{
 	public:
 		Cubemap(const std::vector<std::string>& faces);

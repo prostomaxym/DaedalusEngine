@@ -19,6 +19,7 @@ set(PLATFORM_PROJECT_FILES
     Platform.h
     Platform.cpp
     ResourcesMonitor.h
+    ResourcesMonitor.cpp
 
     ImGuiBackend.h
     OpenGL/OpenGLHeaders.h
@@ -47,32 +48,34 @@ set(PLATFORM_PROJECT_FILES
     OpenGL/OpenGLVertexBuffer.cpp
 
     Windows/WindowsInput.h
+    Windows/WindowsExecutablePath.cpp
     Windows/WindowsWindow.h
     Windows/WindowsWindow.cpp
-    Windows/WindowsResourcesMonitor.h
     Windows/WindowsResourcesMonitor.cpp
 
     Linux/LinuxInput.h
+    Linux/LinuxExecutablePath.cpp
     Linux/LinuxWindow.h
     Linux/LinuxWindow.cpp
-    Linux/LinuxResourcesMonitor.h
     Linux/LinuxResourcesMonitor.cpp
 
+    Android/AndroidBootstrap.h
+    Android/AndroidBootstrap.cpp
+    Android/AndroidRuntime.h
+    Android/AndroidRuntime.cpp
+    Android/AndroidWindow.h
+    Android/AndroidWindow.cpp
+    Android/AndroidInput.h
+    Android/AndroidInput.cpp
+    Android/AndroidContext.h
+    Android/AndroidContext.cpp
+    Android/AndroidResourcesMonitor.cpp
+    Android/AndroidLogSink.h
+    Android/AndroidImGui.cpp
 )
 
-if(ANDROID)
+if(NOT ANDROID)
     list(APPEND PLATFORM_PROJECT_FILES
-        Android/AndroidBootstrap.h Android/AndroidBootstrap.cpp
-        Android/AndroidRuntime.h Android/AndroidRuntime.cpp
-        Android/AndroidWindow.h Android/AndroidWindow.cpp
-        Android/AndroidInput.h Android/AndroidInput.cpp
-        Android/AndroidContext.h Android/AndroidContext.cpp
-        Android/AndroidResourcesMonitor.cpp
-        Android/AndroidLogSink.h
-        Android/AndroidImGui.cpp)
-else()
-    list(APPEND PLATFORM_PROJECT_FILES
-        ResourcesMonitor.cpp
         GLFW/GamepadButtonEvents.h
         GLFW/GLFWInput.h GLFW/GLFWInput.cpp
         GLFW/GLFWWindow.h GLFW/GLFWWindow.cpp GLFW/GLFWImGui.cpp

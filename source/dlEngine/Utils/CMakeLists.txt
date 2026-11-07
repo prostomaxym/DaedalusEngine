@@ -22,6 +22,8 @@ set(UTILS_PROJECT_FILES
    Random.h
    Random.cpp
    RingVector.h
+   StartupPaths.h
+   StartupPaths.cpp
    Timer.h
    TouchControls.h
    Utf8.h

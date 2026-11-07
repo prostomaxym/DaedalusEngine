@@ -7,12 +7,27 @@ on:
     branches: [ "development" ]
 
 env:
-  BUILD_TYPE: Release
   VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}/.vcpkg-binary-cache,readwrite'
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Linux (${{ matrix.label }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Release
+            build_type: Release
+            sanitizers: 'OFF'
+          - label: ASan-UBSan
+            build_type: ReleaseDevTools
+            sanitizers: 'ON'
+    env:
+      BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
     - uses: actions/checkout@v3
@@ -43,11 +58,22 @@ jobs:
         ./ThirdParty/vcpkg/bootstrap-vcpkg.sh
         
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON -DVCPKG_TARGET_TRIPLET=x64-linux -DVCPKG_OVERLAY_TRIPLETS="${{github.workspace}}/ThirdParty/vcpkg_triplets" -DCMAKE_TOOLCHAIN_FILE="${{github.workspace}}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_TESTS=ON -DENABLE_SANITIZERS=${{ matrix.sanitizers }} -DVCPKG_TARGET_TRIPLET=x64-linux -DVCPKG_OVERLAY_TRIPLETS="${{github.workspace}}/ThirdParty/vcpkg_triplets" -DCMAKE_TOOLCHAIN_FILE="${{github.workspace}}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel 2
       
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}  -VV
+      env:
+        ASAN_OPTIONS: detect_leaks=1:halt_on_error=1:abort_on_error=1
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+
+    - name: Upload CTest diagnostics
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-ctest-${{ matrix.label }}
+        path: build/Testing/Temporary/*.log
+        if-no-files-found: ignore

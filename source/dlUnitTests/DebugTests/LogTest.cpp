@@ -35,6 +35,7 @@ TEST(LogTest, enable_and_disable_category)
 TEST(LogTest, disable_category_twice_keeps_it_disabled)
 {
 	Log::EnableAllCategories();
+	EXPECT_TRUE(Log::IsEnabled(Log::Categories::Events));
 	Log::DisableCategory(Log::Categories::Events);
 	Log::DisableCategory(Log::Categories::Events);
 	EXPECT_FALSE(Log::IsEnabled(Log::Categories::Events));

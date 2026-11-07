@@ -26,12 +26,13 @@ Windows (PowerShell, from repo root):
 - Configure: `cmake --preset windows` (or `WinScripts/WindowsConfig.bat`)
 - Build: `cmake --build build --config Release`
 - Test: `ctest --test-dir build -C Release --output-on-failure` (or run `runtime/bin/windows-x64/dlUnitTests.exe`)
+- Keep the user's persistent PowerShell terminal alive during validation: do not use exit in commands sent to that terminal. Capture and report `$LASTEXITCODE` without terminating the terminal host.
 
 Linux:
 - Configure: `LinuxScripts/LinuxConfig.sh` (uses vcpkg toolchain, x64-linux triplet)
 - Build: `cmake --build build`
 
-Always make sure changes compile on both Windows and Linux. Linux CI runs on every push; avoid MSVC-only constructs, Windows headers outside `Platform/Windows`, and case-mismatched `#include` paths (Linux is case-sensitive). For Daedalus changes, validate on Windows only and defer WSL/Linux validation unless explicitly requested.
+Always make sure changes compile on both Windows and Linux. Linux CI runs on every push; avoid MSVC-only constructs, Windows headers outside `Platform/Windows`, and case-mismatched `#include` paths (Linux is case-sensitive). For Daedalus changes, validate on Windows only and defer WSL/Linux validation unless explicitly requested. Verify builds and tests locally on Windows; Linux and Android build/test validation belongs to CI at PR stage. Perform interactive validation during implementation and report observed results explicitly.
 
 ## Code conventions (match existing code)
 - Indentation: tabs. Allman braces for classes/functions/namespaces as in existing files.
@@ -39,7 +40,7 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - Everything lives in `namespace Daedalus`.
 - Types/methods: `PascalCase` (`Application::GetInstance`). Local variables and parameters: `snake_case`.
 - Members: `m_` prefix (`m_window`); static members: `s_` prefix (`s_instance`).
-- Exported engine classes use the `DAEDALUS_API` macro (see `Core/Macros.h`). Platform macros: `DL_PLATFORM_WINDOWS`, `DL_PLATFORM_LINUX`.
+- Exported engine classes use the `DAEDALUS_API` macro (see `Core/Macros.h`). Platform macros: `DL_PLATFORM_WINDOWS`, `DL_PLATFORM_LINUX`, `DL_PLATFORM_ANDROID`.
 - Ownership: `std::unique_ptr` by default; raw pointers are non-owning only (comment who owns). Avoid `new`/`delete`; prefer `std::make_unique`.
 - Const-correctness, `override`, `nullptr`, `enum class`, `[[nodiscard]]` where it helps.
 - Special members: follow rule of 0/5; delete copy/move explicitly for singletons.
@@ -77,3 +78,6 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 
 ## Scripting
 - Daedalus Lua scripts should load like other assets/shaders through a separate `PathConfig` `ScriptsFolder` and `scripts:/` VFS mount, rather than relying on `assets:/` script paths.
+
+## Platform-Specific Instructions
+- For Daedalus Platform projects, include Android headers and sources alongside Windows and Linux in desktop IDE projects. Guard Android-only includes, declarations, and implementations with `DL_PLATFORM_ANDROID` rather than excluding the files through ANDROID-only CMake source lists; keep platform-specific dependencies conditional.

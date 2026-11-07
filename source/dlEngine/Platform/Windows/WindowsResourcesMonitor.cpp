@@ -1,12 +1,16 @@
 #ifdef DL_PLATFORM_WINDOWS
-#include "WindowsResourcesMonitor.h"
+#include "Platform/ResourcesMonitor.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <pdh.h>
 #include <pdhmsg.h>
 #include <psapi.h>
-#include <thread>
+
+#include "Platform/Nvidia/NvidiaGPUMonitor.h"
+
+#include <chrono>
+#include <cstring>
 
 namespace
 {
@@ -173,34 +177,75 @@ namespace
     CpuUsageMonitor cpu_monitor;
 }
 
-using namespace Daedalus;
+namespace Daedalus
+{
+	float ResourcesMonitor::GetAppCPUUsage()
+	{
+		return cpu_monitor.GetAppLoadPercent();
+	}
 
-float WindowsResourcesMonitor::GetAppCPUUsage()
-{
-	return cpu_monitor.GetAppLoadPercent();
-}
+	float ResourcesMonitor::GetTotalCPUUsage()
+	{
+		return cpu_monitor.GetTotalLoadPercent();
+	}
 
-float WindowsResourcesMonitor::GetTotalCPUUsage()
-{
-	return cpu_monitor.GetTotalLoadPercent();
-}
+	float ResourcesMonitor::GetAppRAMUsageInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetAppMemoryUsedInBytes());
+	}
 
-unsigned long long WindowsResourcesMonitor::GetAppRAMUsageInBytes()
-{
-	return RAMUsageMonitor::GetAppMemoryUsedInBytes();
-}
+	float ResourcesMonitor::GetAppRAMUsageInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetAppMemoryUsedInBytes());
+	}
 
-unsigned long long WindowsResourcesMonitor::GetTotalRAMUsageInBytes()
-{
-	return RAMUsageMonitor::GetTotalMemoryUsedInBytes();
-}
+	float ResourcesMonitor::GetTotalRAMUsageInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetTotalMemoryUsedInBytes());
+	}
 
-unsigned long long WindowsResourcesMonitor::GetSystemRAMInBytes()
-{
-	return RAMUsageMonitor::GetSystemRAMInBytes();
-}
-const std::string& WindowsResourcesMonitor::GetProcessorName()
-{
-	return cpu_monitor.GetProcessorName();
+	float ResourcesMonitor::GetTotalRAMUsageInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetTotalMemoryUsedInBytes());
+	}
+
+	float ResourcesMonitor::GetSystemRAMInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetSystemRAMInBytes());
+	}
+
+	float ResourcesMonitor::GetSystemRAMInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetSystemRAMInBytes());
+	}
+
+	const std::string& ResourcesMonitor::GetProcessorName()
+	{
+		return cpu_monitor.GetProcessorName();
+	}
+
+	const GpuInfo& ResourcesMonitor::GetGPUInfo()
+	{
+		return NvidiaGPUMonitor::GetInfo();
+	}
+
+	const std::string& ResourcesMonitor::GetDeviceDescription()
+	{
+		static const std::string description = []
+		{
+			SYSTEM_INFO info{};
+			GetNativeSystemInfo(&info);
+			const char* architecture = "Unknown architecture";
+			switch (info.wProcessorArchitecture)
+			{
+			case PROCESSOR_ARCHITECTURE_AMD64: architecture = "x64"; break;
+			case PROCESSOR_ARCHITECTURE_INTEL: architecture = "x86"; break;
+			case PROCESSOR_ARCHITECTURE_ARM64: architecture = "ARM64"; break;
+			case PROCESSOR_ARCHITECTURE_ARM: architecture = "ARM"; break;
+			}
+			return std::string("Windows / ") + architecture + "\n" + GetProcessorName();
+		}();
+		return description;
+	}
 }
 #endif

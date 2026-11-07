@@ -15,6 +15,7 @@ int main(int argc, char** argv)
 	Daedalus::ResourceManager resources;
 	Daedalus::Physics physics;
 	Daedalus::Log::Init();
+	EXPECT_FALSE(Daedalus::Log::IsEnabled(Daedalus::Log::Categories::Events));
 	const auto result = RUN_ALL_TESTS();
 	Daedalus::Log::Shutdown();
 	return result;

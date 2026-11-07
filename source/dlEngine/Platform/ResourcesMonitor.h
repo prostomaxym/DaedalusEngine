@@ -18,8 +18,8 @@ namespace Daedalus
 		float memory_used_GB{ 0.f };
 	};
 
-	float ConvertBytesToMB(unsigned long long bytes);
-	float ConvertBytesToGB(unsigned long long bytes);
+	DAEDALUS_API float ConvertBytesToMB(unsigned long long bytes);
+	DAEDALUS_API float ConvertBytesToGB(unsigned long long bytes);
 
 	class DAEDALUS_API ResourcesMonitor
 	{
@@ -39,8 +39,6 @@ namespace Daedalus
 		static const std::string& GetProcessorName();
 
 		static const GpuInfo& GetGPUInfo();
-#ifdef DL_PLATFORM_ANDROID
 		static const std::string& GetDeviceDescription();
-#endif
 	};
 }

@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "AndroidContext.h"
 #include "Debug/Log.h"
 #include <android/native_window.h>
@@ -92,3 +94,5 @@ namespace Daedalus
 		if (HasSurface()) eglSwapInterval(m_display, enabled ? 1 : 0);
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

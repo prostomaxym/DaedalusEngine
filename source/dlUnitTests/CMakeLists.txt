@@ -50,6 +50,7 @@ set(ECS_TEST_FILES
     ECSTests/SceneMigrationTest.cpp
     ECSTests/ScenePrefabTest.cpp
     ECSTests/SceneSerializerTest.cpp
+    ECSTests/SkyboxComponentTest.cpp
     ECSTests/TransformComponentTest.cpp
     ECSTests/TransformHierarchyTest.cpp
     ECSTests/TransformPreparationTest.cpp
@@ -66,6 +67,10 @@ set(EVENTS_TEST_FILES
 set(PHYSICS_TEST_FILES
     PhysicsTests/PhysicsTest.cpp
     PhysicsTests/PhysicsEnhancementsTest.cpp
+    )
+
+set(PLATFORM_TEST_FILES
+    PlatformTests/ResourcesMonitorTest.cpp
     )
 
 set(RENDERER_TEST_FILES
@@ -95,9 +100,11 @@ set(UTILS_TEST_FILES
     UtilsTests/KeyCodesTest.cpp
     UtilsTests/RandomTest.cpp
     UtilsTests/RingVectorTest.cpp
+    UtilsTests/StartupPathsTest.cpp
     UtilsTests/TimerTest.cpp
     UtilsTests/TouchControlsTest.cpp
     UtilsTests/Utf8Test.cpp
+    UtilsTests/WorkingDirectoryTest.cpp
     )
 
 set(PROJECT_FILES
@@ -109,6 +116,7 @@ set(PROJECT_FILES
     ${ECS_TEST_FILES}
     ${EVENTS_TEST_FILES}
     ${PHYSICS_TEST_FILES}
+    ${PLATFORM_TEST_FILES}
     ${RENDERER_TEST_FILES}
     ${THREADS_TEST_FILES}
     ${UTILS_TEST_FILES}

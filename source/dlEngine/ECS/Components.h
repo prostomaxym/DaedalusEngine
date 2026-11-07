@@ -91,7 +91,7 @@ namespace Daedalus
 			: model(ResourceManager::LoadModel(path, parser_flags)), source_path(path), import_flags(parser_flags) {}
 	};
 
-	struct DAEDALUS_API SkyboxComponent //TODO: investigate how to remove exporting
+	struct SkyboxComponent
 	{
 		Cubemap cubemap;
 		float rotation_angle{ 0.f };

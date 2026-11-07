@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "AndroidBootstrap.h"
 #include "AndroidRuntime.h"
 #include "AndroidWindow.h"
@@ -72,8 +74,12 @@ namespace Daedalus
 				std::filesystem::create_directories(root / folder, error);
 				if (error) return false;
 			}
-			std::filesystem::current_path(root, error);
-			if (error) return false;
+			std::string startup_error;
+			if (!WorkingDirectory::SetRootDirectory(root, startup_error))
+			{
+				__android_log_print(ANDROID_LOG_ERROR, "Daedalus", "%s", startup_error.c_str());
+				return false;
+			}
 			auto* manager = app.activity->assetManager; // NativeActivity owns the asset manager.
 			auto* directory = AAssetManager_openDir(manager, "");
 			if (!directory) return false;
@@ -133,3 +139,5 @@ namespace Daedalus
 		Log::Shutdown();
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

@@ -2,9 +2,21 @@
 
 `dlGame` is the generic runtime-configured client for Daedalus Engine. It implements `CreateApplication()` with `GameApp`, which installs `GameLayer` to register the Lua adapter and load the selected runtime scene. Gameplay comes from scene records and Lua assets, not compiled example classes.
 
-Build it with any configuration (`Debug`, `Release`, `ReleaseDevTools`, see the root README). The executable is placed in `runtime/bin/<platform>-x64/<Configuration>/`. In Visual Studio, set `dlGame` as the startup project after CMake regenerates the solution. Desktop packages and shortcuts use the name **Daedalus Game**.
+Build it with any configuration (`Debug`, `Release`, `ReleaseDevTools`, see the root README). Multi-config generators place the executable in `runtime/bin/<platform>-x64/<Configuration>/`; single-config generators use `runtime/bin/<platform>-x64/`. In Visual Studio, set `dlGame` as the startup project after CMake regenerates the solution. Desktop packages and shortcuts use the name **Daedalus Game**.
 
 Android builds `libdlGame.so` and installs **Daedalus Game** as `org.daedalus.game`. This is a new app identity, not an update of `org.daedalus.sandbox`: the old installation and its private data remain separate. Supply runtime assets/scripts/configuration again for the new app; no private-data migration is performed. See [Android deployment](../../.github/docs/Android.md).
+
+## Desktop launch paths
+
+Desktop startup uses the executable location, not the shell/IDE working directory. The development layouts above select `runtime/` as the root; an installed `<root>/bin/dlGame` selects `<root>`. Other layouts default beside the executable. There is no neighbor-folder, `path.ini` marker or ancestor search.
+
+- `--runtime-root <directory>` selects an existing runtime root; its default path config is `path.ini` in that root.
+- `--path-config <file>` selects a different path config. With no root override, its parent becomes the root.
+- Both overrides may be supplied. Relative arguments resolve independently against the launch directory; use quotes for paths containing spaces. For example: `dlGame.exe --runtime-root "D:\My Game" --path-config "D:\Settings\game-paths.ini"`.
+- The root and config-parent directories must already exist. A missing config file uses defaults beside that selected file; normal shutdown saves to that same file, even if CWD changes later. INI folders resolve beside the selected config, not the root override.
+- Malformed, duplicate or unknown arguments fail before application construction. `--help` alone shows usage without starting the window/rendering engine.
+
+Startup path selection does not create directories or copy runtime scenes/scripts. Android retains its explicitly prepared private-data root and does not use these desktop arguments. See [Architecture](../../.github/docs/ARCHITECTURE.md#application-lifecycle) for host bootstrap APIs and exact layout rules.
 
 ## Runtime scenes
 

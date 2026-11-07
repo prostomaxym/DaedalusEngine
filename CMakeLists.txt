@@ -22,6 +22,7 @@ if(ANDROID)
 endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Version.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts/Sanitizers.cmake)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -84,6 +85,13 @@ endif()
 
 # Subprojects config
 add_subdirectory(source)
+
+foreach(target Config Core Debug ECS Events Physics Platform Renderer Threads Utils dlEngine dlGame)
+  daedalus_enable_sanitizers(${target})
+endforeach()
+if(TARGET dlUnitTests)
+  daedalus_enable_sanitizers(dlUnitTests)
+endif()
 
 # Install setup
 if(NOT ANDROID)

@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Platform/ResourcesMonitor.h"
 #include "Platform/OpenGL/OpenGLHeaders.h"
 #include <sys/sysinfo.h>
@@ -24,8 +26,6 @@ namespace Daedalus
 		}
 	}
 
-	float ConvertBytesToMB(unsigned long long bytes) { return static_cast<float>(bytes) / (1024.f * 1024.f); }
-	float ConvertBytesToGB(unsigned long long bytes) { return ConvertBytesToMB(bytes) / 1024.f; }
 	float ResourcesMonitor::GetAppCPUUsage()
 	{
 		static double previous_cpu = 0.0, previous_wall = 0.0;
@@ -99,3 +99,5 @@ namespace Daedalus
 		return info;
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

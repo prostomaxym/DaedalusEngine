@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DL_PLATFORM_ANDROID
+
 #include <spdlog/sinks/android_sink.h>
 
 namespace Daedalus
@@ -9,3 +11,5 @@ namespace Daedalus
 		return spdlog::android_logger_mt("ENGINE", "Daedalus");
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

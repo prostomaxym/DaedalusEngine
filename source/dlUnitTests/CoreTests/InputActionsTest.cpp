@@ -40,7 +40,7 @@ namespace
 		static VirtualFileSystem Files()
 		{
 			VirtualFileSystem files;
-			EXPECT_TRUE(files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+			EXPECT_TRUE(files.Mount("scripts", std::filesystem::path(DL_GAME_EXAMPLES) / "scripts"));
 			return files;
 		}
 		LuaRuntime m_runtime;

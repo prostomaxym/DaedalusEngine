@@ -4,16 +4,14 @@
 #include "Core/EntryPoint.h"
 // --------------------------------------
 
-#include "Utils/HighPerformanceRequest.h"
-
 #include <Daedalus.h>
 
 namespace Daedalus
 {
-	class Sandbox : public Application
+	class GameApp final : public Application
 	{
 	public:
-		Sandbox();
-		~Sandbox() override = default;
+		GameApp();
+		~GameApp() override = default;
 	};
 }

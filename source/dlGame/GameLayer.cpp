@@ -1,9 +1,9 @@
-#include "ExampleLayer.h"
+#include "GameLayer.h"
 #include <Daedalus.h>
 
 using namespace Daedalus;
 
-void ExampleLayer::OnAttach()
+void GameLayer::OnAttach()
 {
 	std::string error;
 	if (!LuaScript::Register(m_scripts, Application::GetInstance()->GetEngine().GetAssets().GetFiles()))
@@ -20,7 +20,7 @@ void ExampleLayer::OnAttach()
 	Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene));
 }
 
-void ExampleLayer::OnDetach()
+void GameLayer::OnDetach()
 {
 	m_scripts = ScriptRegistry{};
 }

@@ -6,8 +6,8 @@ include(InstallRequiredSystemLibraries)
 set(CPACK_OUTPUT_FILE_PREFIX  "${CMAKE_CURRENT_SOURCE_DIR}/runtime")
 set(CPACK_NSIS_MODIFY_PATH "on")
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/runtime")
-set(CPACK_PACKAGE_EXECUTABLES "dlSandbox;Daedalus Sandbox")
-set(CPACK_CREATE_DESKTOP_LINKS dlSandbox)
+set(CPACK_PACKAGE_EXECUTABLES "dlGame;Daedalus Game")
+set(CPACK_CREATE_DESKTOP_LINKS dlGame)
 
 if(WIN32)
 	# Protect retained settings from CPack's package-owned file deletion list.
@@ -50,10 +50,10 @@ daedalus_cleanup_generated:
 ]])
 endif()
 
-set(CPACK_PACKAGE_NAME "Daedalus Development Sandbox")
+set(CPACK_PACKAGE_NAME "Daedalus Game")
 set(CPACK_PACKAGE_VENDOR "Maksym Yershykov Dev")
-set(CPACK_PACKAGE_DESCRIPTION "Development Kit for Daedalus Engine: Daedalus Engine, Sandbox Application and Daedalus Editor")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Development Kit for Daedalus Engine")
+set(CPACK_PACKAGE_DESCRIPTION "Daedalus Engine and the runtime-configured Daedalus Game application")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Runtime-configured game application for Daedalus Engine")
 
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VERSION_MAJOR "${DAEDALUS_VERSION_MAJOR}")

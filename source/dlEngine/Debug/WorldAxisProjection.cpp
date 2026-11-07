@@ -22,7 +22,7 @@ namespace Daedalus
 		const float aspect = std::abs(projection[1][1] / projection[0][0]);
 		if (!std::isfinite(size) || size <= 0.f || !std::isfinite(aspect) || aspect <= 0.f) return false;
 
-		// Match the sandbox smoke axes, including the real third-person view transform.
+		// Match the game smoke axes, including the real third-person view transform.
 		const auto origin = camera.GetPosition() + camera.GetDirection() * distance - camera.GetUp() * (size * 1.6f);
 		const auto transform = projection * camera.GetViewMatrix();
 		const auto project = [&](const glm::vec3& point, glm::vec2& screen)

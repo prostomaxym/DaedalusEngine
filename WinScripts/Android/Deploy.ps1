@@ -41,11 +41,11 @@ else
 }
 
 Invoke-Checked $adb @('-s', $Serial, 'install', '-r', (Resolve-Path $ApkPath).Path)
-Invoke-Checked $adb @('-s', $Serial, 'shell', 'am', 'force-stop', 'org.daedalus.sandbox')
-$launch = @(Invoke-Checked $adb @('-s', $Serial, 'shell', 'am', 'start', '-W', '-n', 'org.daedalus.sandbox/android.app.NativeActivity'))
+Invoke-Checked $adb @('-s', $Serial, 'shell', 'am', 'force-stop', 'org.daedalus.game')
+$launch = @(Invoke-Checked $adb @('-s', $Serial, 'shell', 'am', 'start', '-W', '-n', 'org.daedalus.game/android.app.NativeActivity'))
 $launch | Write-Output
 if (!($launch -match '^Status: ok')) { throw 'Android did not report a successful activity launch.' }
 Start-Sleep -Seconds 3
-$process_id = @(Invoke-Checked $adb @('-s', $Serial, 'shell', 'pidof', 'org.daedalus.sandbox'))
-if (!$process_id.Count) { throw 'Sandbox process is not running after launch. Inspect logcat for details.' }
-Write-Output "Deployed to $Serial; sandbox PID: $process_id. Existing app data preserved."
+$process_id = @(Invoke-Checked $adb @('-s', $Serial, 'shell', 'pidof', 'org.daedalus.game'))
+if (!$process_id.Count) { throw 'Game process is not running after launch. Inspect logcat for details.' }
+Write-Output "Deployed to $Serial; game PID: $process_id. Existing org.daedalus.game app data preserved."

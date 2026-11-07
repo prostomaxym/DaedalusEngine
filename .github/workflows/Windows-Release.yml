@@ -65,7 +65,7 @@ jobs:
         if ($VersionNumber -notmatch '^\d+\.\d+\.\d+$') {
           throw "Invalid project version: $VersionNumber"
         }
-        $ProductName = "Daedalus Development Sandbox-" + $VersionNumber + "-win64"
+        $ProductName = "Daedalus Game-" + $VersionNumber + "-win64"
         $ProductPath = "${{github.workspace}}/runtime/" + $ProductName + ".exe"
         Write-Host "ProductName: $ProductName"
         Write-Host "ProductPath: $ProductPath"

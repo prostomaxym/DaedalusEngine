@@ -13,7 +13,7 @@ android {
 	buildToolsVersion '33.0.2'
 
 	defaultConfig {
-		applicationId 'org.daedalus.sandbox'
+		applicationId 'org.daedalus.game'
 		minSdk 28
 		targetSdk 33
 		versionCode 1

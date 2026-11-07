@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Renderer/Primitives/GraphicsContext.h"
 #include <EGL/egl.h>
 
@@ -35,3 +37,5 @@ namespace Daedalus
 		bool m_vsync{ true };
 	};
 }
+
+#endif // DL_PLATFORM_ANDROID

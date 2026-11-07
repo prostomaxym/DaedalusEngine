@@ -68,6 +68,28 @@ TEST_F(PathConfigTest, default_scripts_folder_is_relative_to_runtime_root)
 	EXPECT_EQ(PathConfig::GetScriptsPath(), std::filesystem::current_path() / "script");
 }
 
+TEST_F(PathConfigTest, explicit_default_base_is_independent_of_working_directory)
+{
+	PathConfig::LoadDefault(m_directory);
+	EXPECT_EQ(PathConfig::GetAssetsPath(), m_directory / "asset");
+	EXPECT_EQ(PathConfig::GetShadersPath(), m_directory / "shader");
+	EXPECT_EQ(PathConfig::GetScriptsPath(), m_directory / "script");
+	EXPECT_EQ(PathConfig::GetConfigPath(), m_directory / "config");
+	EXPECT_EQ(PathConfig::GetLogsPath(), m_directory / "logs");
+}
+
+TEST_F(PathConfigTest, explicit_defaults_reset_previous_scene_and_config_selection)
+{
+	WriteConfig("[Path]\nSceneFile=custom.scene.json\nScriptsFolder=custom_lua\n"
+		"[Config]\nConfigsFolder=settings\nGraphicsConfigFile=video.ini\nKeybindConfigFile=input.ini\n");
+	PathConfig::Load(m_config_path);
+	PathConfig::LoadDefault(m_directory);
+	EXPECT_EQ(PathConfig::GetScenePath(), m_directory / "asset/scenes/startup.scene.json");
+	EXPECT_EQ(PathConfig::GetScriptsPath(), m_directory / "script");
+	EXPECT_EQ(PathConfig::GetGraphicsConfigPath(), m_directory / "config/graphics.ini");
+	EXPECT_EQ(PathConfig::GetKeybindConfigPath(), m_directory / "config/keybinds.ini");
+}
+
 TEST_F(PathConfigTest, scripts_folder_is_independent_and_ini_relative)
 {
 	WriteConfig("[Path]\nAssetsFolder=assets\nShadersFolder=shaders\nScriptsFolder=game/../lua\n");

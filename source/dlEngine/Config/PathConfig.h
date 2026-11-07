@@ -19,7 +19,8 @@ namespace Daedalus
 
 		static void Load(const std::filesystem::path& path) { GetInstance().LoadImpl(path); }
 		static void Save(const std::filesystem::path& path) { GetInstance().SaveImpl(path); }
-		static void LoadDefault() { GetInstance().LoadDefaultImpl(); }
+		static void LoadDefault() { LoadDefault(std::filesystem::current_path()); }
+		static void LoadDefault(const std::filesystem::path& base) { GetInstance().LoadDefaultImpl(base); }
 		
 		static std::filesystem::path GetAssetsPath() { return GetInstance().m_assets_dir; }
 		static std::filesystem::path GetShadersPath() { return GetInstance().m_shaders_dir; }
@@ -36,7 +37,7 @@ namespace Daedalus
 		void LoadWorkDirectory(const std::filesystem::path& path);
 		void LoadImpl(const std::filesystem::path& path);
 		void SaveImpl(const std::filesystem::path& path);
-		void LoadDefaultImpl();
+		void LoadDefaultImpl(const std::filesystem::path& base);
 
 		static PathConfig& GetInstance();
 

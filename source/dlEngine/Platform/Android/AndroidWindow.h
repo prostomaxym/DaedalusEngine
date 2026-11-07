@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Core/Window.h"
 #include "AndroidContext.h"
 #include <cstdint>
@@ -39,3 +41,5 @@ namespace Daedalus
 		bool m_closed{ false };
 	};
 }
+
+#endif // DL_PLATFORM_ANDROID

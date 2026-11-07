@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Platform/ImGuiBackend.h"
 #include "Core/Window.h"
 #include "AndroidInput.h"
@@ -20,3 +22,5 @@ namespace Daedalus::ImGuiBackend
 	// ImGui selects its precision-qualified GLES shader sources for version 300 specifically.
 	const char* ShaderVersion() { return "#version 300 es"; }
 }
+
+#endif // DL_PLATFORM_ANDROID

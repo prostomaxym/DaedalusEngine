@@ -1,4 +1,5 @@
 #include "WorkingDirectory.h"
+#include "Utf8.h"
 
 #include "Config/GraphicsConfig.h"
 #include "Config/KeybindConfig.h"
@@ -6,78 +7,97 @@
 #include "Debug/Log.h"
 #include "Debug/ImGuiLayer.h"
 
+#include <cstdlib>
+#include <utility>
+
 using namespace Daedalus;
 
 namespace
 {
-	constexpr auto bin_dir = "bin";
-	constexpr auto changedir_back = "../";
-	constexpr auto path_config_file = "path.ini";
+	void RequireStartupPaths(const StartupPaths& paths)
+	{
+		if (paths.path_config.empty())
+		{
+			Log::Write(Log::Levels::Error, Log::Categories::EngineCore,
+				"Runtime paths must be selected before application construction");
+			std::abort();
+		}
+	}
 }
 
-void WorkingDirectory::SetRootDirectory(const std::filesystem::path& path)
+StartupPaths WorkingDirectory::s_startup_paths;
+
+bool WorkingDirectory::SetRootDirectory(const std::filesystem::path& path, std::string& error)
 {
-	const auto& current_path = !path.empty() ? path : EvaluateStandardRootDirectory();
-	std::filesystem::current_path(current_path);
+	if (path.empty() || (!path.is_absolute() && (path.has_root_name() || path.has_root_directory())))
+	{
+		error = "An explicit absolute or launch-relative runtime root is required";
+		return false;
+	}
+	std::error_code code;
+	const auto root = std::filesystem::absolute(path, code).lexically_normal();
+	if (code)
+	{
+		error = "Cannot resolve the runtime root: " + code.message();
+		return false;
+	}
+	return SetStartupPaths({ root, root / "path.ini" }, error);
 }
 
 std::filesystem::path WorkingDirectory::GetRootDirectory()
 {
-	return std::filesystem::current_path();
+	return s_startup_paths.runtime_root;
 }
 
-std::filesystem::path WorkingDirectory::EvaluateStandardRootDirectory()
+std::filesystem::path WorkingDirectory::GetPathConfigPath()
 {
-	int dir_depth = 0;
-	constexpr auto max_depth = 5; //Explicitly limit number of CDs to avoid problems if not found
-	bool found = false;
+	return s_startup_paths.path_config;
+}
 
-	for (; dir_depth < max_depth; ++dir_depth)
+bool WorkingDirectory::SetStartupPaths(const StartupPaths& paths, std::string& error)
+{
+	if (!paths.runtime_root.is_absolute() || !paths.path_config.is_absolute() || !paths.path_config.has_filename())
 	{
-		if (std::filesystem::exists(bin_dir))
-		{
-			break;
-		}
-
-		std::filesystem::path current_path = std::filesystem::current_path();
-
-		for (const auto& entry : std::filesystem::directory_iterator(current_path))
-		{
-			if (std::filesystem::is_directory(entry))
-			{
-				std::filesystem::path subDirPath = entry.path();
-				std::filesystem::path targetFolderPath = subDirPath / bin_dir;
-
-				if (std::filesystem::exists(targetFolderPath))
-				{
-					std::filesystem::current_path(subDirPath);
-					found = true;
-					break;
-				}
-			}
-		}
-
-		if (found)
-			break;
-
-		std::filesystem::current_path(changedir_back);
+		error = "Selected runtime root and path config must be absolute paths";
+		return false;
 	}
-
-	if (dir_depth == max_depth)
+	StartupPaths selected{ paths.runtime_root.lexically_normal(), paths.path_config.lexically_normal() };
+	std::error_code code;
+	if (!std::filesystem::is_directory(selected.runtime_root, code))
 	{
-		constexpr auto err_msg = "Root application directory not found";
-		Log::Write(Log::Levels::Error, Log::Categories::EngineCore, err_msg);
-		throw std::runtime_error(err_msg);
+		error = "Runtime root is not an accessible directory: " + Utf8ToString(selected.runtime_root.generic_u8string());
+		if (code) error += " (" + code.message() + ")";
+		return false;
 	}
-		
-	const auto current_path = std::filesystem::current_path();
-	Log::Write(Log::Levels::Info, Log::Categories::EngineCore, "Root application directory set - {}", current_path.string());
-	return current_path;
+	if (!std::filesystem::is_directory(selected.path_config.parent_path(), code))
+	{
+		error = "Path config parent is not an accessible directory: " + Utf8ToString(selected.path_config.parent_path().generic_u8string());
+		if (code) error += " (" + code.message() + ")";
+		return false;
+	}
+	const auto config_status = std::filesystem::status(selected.path_config, code);
+	if ((code && code != std::errc::no_such_file_or_directory)
+		|| (std::filesystem::exists(config_status) && !std::filesystem::is_regular_file(config_status)))
+	{
+		error = "Path config must be a regular file or a missing file: " + Utf8ToString(selected.path_config.generic_u8string());
+		if (code) error += " (" + code.message() + ")";
+		return false;
+	}
+	std::filesystem::current_path(selected.runtime_root, code);
+	if (code)
+	{
+		error = "Cannot select the runtime working directory: " + code.message();
+		return false;
+	}
+	s_startup_paths = std::move(selected);
+	error.clear();
+	return true;
 }
 
 void WorkingDirectory::LoadConfigs()
 {
-	PathConfig::Load(WorkingDirectory::GetRootDirectory() / path_config_file);
+	RequireStartupPaths(s_startup_paths);
+	PathConfig::Load(s_startup_paths.path_config);
 	GraphicsConfig::Load(PathConfig::GetGraphicsConfigPath());
 	KeybindConfig::Load(PathConfig::GetKeybindConfigPath());
 	ImGuiLayer::LoadConfig();
@@ -85,7 +105,8 @@ void WorkingDirectory::LoadConfigs()
 
 void WorkingDirectory::SaveConfigs()
 {
-	PathConfig::Save(WorkingDirectory::GetRootDirectory() / path_config_file);
+	RequireStartupPaths(s_startup_paths);
+	PathConfig::Save(s_startup_paths.path_config);
 	GraphicsConfig::Save(PathConfig::GetGraphicsConfigPath());
 	KeybindConfig::Save(PathConfig::GetKeybindConfigPath());
 }

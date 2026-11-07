@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Core/Input.h"
 #include "Utils/TouchControls.h"
 #include <array>
@@ -39,3 +41,5 @@ namespace Daedalus
 		bool m_bindings_ensured{ false };
 	};
 }
+
+#endif // DL_PLATFORM_ANDROID

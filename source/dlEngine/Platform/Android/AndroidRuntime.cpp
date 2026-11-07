@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "AndroidRuntime.h"
 #include "AndroidWindow.h"
 #include "AndroidInput.h"
@@ -67,3 +69,5 @@ namespace Daedalus
 		return 1;
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

@@ -110,6 +110,7 @@ void Log::Init()
 	s_impl->set_level(spdlog::level::trace);
 
 	EnableAllCategories();
+	DisableCategory(Categories::Events);
 }
 
 void Log::Shutdown()

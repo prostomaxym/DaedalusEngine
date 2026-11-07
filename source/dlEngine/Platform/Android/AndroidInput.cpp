@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "AndroidInput.h"
 #include "AndroidRuntime.h"
 #include "Config/KeybindConfig.h"
@@ -174,3 +176,5 @@ namespace Daedalus
 		}
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

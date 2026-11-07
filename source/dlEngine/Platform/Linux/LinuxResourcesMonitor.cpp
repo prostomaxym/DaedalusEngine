@@ -1,9 +1,11 @@
 #ifdef DL_PLATFORM_LINUX
-#include "LinuxResourcesMonitor.h"
+#include "Platform/ResourcesMonitor.h"
+#include "Platform/Nvidia/NvidiaGPUMonitor.h"
 
 #include "sys/types.h"
 #include "sys/times.h"
 #include "sys/sysinfo.h"
+#include <sys/utsname.h>
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
@@ -219,35 +221,68 @@ namespace
 	CpuUsageMonitor cpu_monitor;
 }
 
-using namespace Daedalus;
-
-float LinuxResourcesMonitor::GetAppCPUUsage()
+namespace Daedalus
 {
-	return cpu_monitor.GetAppLoadPercent();
-}
+	float ResourcesMonitor::GetAppCPUUsage()
+	{
+		return cpu_monitor.GetAppLoadPercent();
+	}
 
-float LinuxResourcesMonitor::GetTotalCPUUsage()
-{
-	return cpu_monitor.GetTotalLoadPercent();
-}
+	float ResourcesMonitor::GetTotalCPUUsage()
+	{
+		return cpu_monitor.GetTotalLoadPercent();
+	}
 
-unsigned long long LinuxResourcesMonitor::GetAppRAMUsageInBytes()
-{
-	return RAMUsageMonitor::GetAppMemoryUsedInBytes();
-}
+	float ResourcesMonitor::GetAppRAMUsageInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetAppMemoryUsedInBytes());
+	}
 
-unsigned long long LinuxResourcesMonitor::GetTotalRAMUsageInBytes()
-{
-	return RAMUsageMonitor::GetTotalMemoryUsedInBytes();
-}
+	float ResourcesMonitor::GetAppRAMUsageInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetAppMemoryUsedInBytes());
+	}
 
-unsigned long long LinuxResourcesMonitor::GetSystemRAMInBytes()
-{
-	return RAMUsageMonitor::GetSystemRAMInBytes();
-}
+	float ResourcesMonitor::GetTotalRAMUsageInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetTotalMemoryUsedInBytes());
+	}
 
-const std::string& LinuxResourcesMonitor::GetProcessorName()
-{
-	return RAMUsageMonitor::GetProcessorName();
+	float ResourcesMonitor::GetTotalRAMUsageInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetTotalMemoryUsedInBytes());
+	}
+
+	float ResourcesMonitor::GetSystemRAMInMB()
+	{
+		return ConvertBytesToMB(RAMUsageMonitor::GetSystemRAMInBytes());
+	}
+
+	float ResourcesMonitor::GetSystemRAMInGB()
+	{
+		return ConvertBytesToGB(RAMUsageMonitor::GetSystemRAMInBytes());
+	}
+
+	const std::string& ResourcesMonitor::GetProcessorName()
+	{
+		return RAMUsageMonitor::GetProcessorName();
+	}
+
+	const GpuInfo& ResourcesMonitor::GetGPUInfo()
+	{
+		return NvidiaGPUMonitor::GetInfo();
+	}
+
+	const std::string& ResourcesMonitor::GetDeviceDescription()
+	{
+		static const std::string description = []
+		{
+			struct utsname info{};
+			const auto system = uname(&info) == 0 ?
+				std::string(info.sysname) + " " + info.release + " / " + info.machine : "Linux / Unknown architecture";
+			return system + "\n" + GetProcessorName();
+		}();
+		return description;
+	}
 }
 #endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DL_PLATFORM_ANDROID
+
 #include "Macros.h"
 #include <cstdint>
 
@@ -40,3 +42,5 @@ namespace Daedalus
 		bool m_focused{ false };
 	};
 }
+
+#endif // DL_PLATFORM_ANDROID

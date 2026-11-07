@@ -1,3 +1,5 @@
+#ifdef DL_PLATFORM_ANDROID
+
 #include "AndroidWindow.h"
 #include "AndroidRuntime.h"
 #include "Events/ApplicationEvent.h"
@@ -80,3 +82,5 @@ namespace Daedalus
 		}
 	}
 }
+
+#endif // DL_PLATFORM_ANDROID

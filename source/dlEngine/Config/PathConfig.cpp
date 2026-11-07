@@ -65,22 +65,22 @@ PathConfig& PathConfig::GetInstance()
 
 void PathConfig::LoadImpl(const std::filesystem::path& path)
 {
-	const auto base = std::filesystem::absolute(path).lexically_normal().parent_path();
-	LoadDefault();
-	LoadWorkDirectory(base);
+	const auto config_path = std::filesystem::absolute(path).lexically_normal();
+	const auto base = config_path.parent_path();
+	LoadDefaultImpl(base);
 
 	CSimpleIniA ini;
     ini.SetUnicode();
 
-    SI_Error rc = ini.LoadFile(path.string().c_str());
+	SI_Error rc = ini.LoadFile(config_path.c_str());
     if (rc < 0)
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load path config from {}\nLoading default config", path.string());
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to load path config from {}\nLoading default config", Utf8ToString(config_path.generic_u8string()));
 		return;
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded path config from {}", path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Loaded path config from {}", Utf8ToString(config_path.generic_u8string()));
 	}
 
 	m_assets_dir = (base / ini.GetValue(PathSectionName, AssetsDirName, "asset")).lexically_normal();
@@ -108,20 +108,20 @@ void PathConfig::SaveImpl(const std::filesystem::path& path)
 	ini.SetValue(ConfigSectionName, GraphicConfigName, MakeRelativePath(m_config_dir / m_graphics_config_name, m_config_dir).generic_string().c_str());
 	ini.SetValue(ConfigSectionName, KeybindConfigName, MakeRelativePath(m_config_dir / m_keybind_config_name, m_config_dir).generic_string().c_str());
 	
-    SI_Error rc = ini.SaveFile(path.string().c_str());
+	SI_Error rc = ini.SaveFile(path.c_str());
     if (rc < 0) 
 	{
-		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save path config to {}\n", path.string());
+		Log::Write(Log::Levels::Warn, Log::Categories::Application, "Failed to save path config to {}\n", Utf8ToString(path.generic_u8string()));
     }
 	else
 	{
-		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved path config to {}", path.string());
+		Log::Write(Log::Levels::Info, Log::Categories::Application, "Saved path config to {}", Utf8ToString(path.generic_u8string()));
 	}
 }
 
-void PathConfig::LoadDefaultImpl()
+void PathConfig::LoadDefaultImpl(const std::filesystem::path& base)
 {
-	LoadWorkDirectory(std::filesystem::current_path());
+	LoadWorkDirectory(std::filesystem::absolute(base).lexically_normal());
 	m_scene_file = DefaultSceneFile;
 	m_graphics_config_name = "graphics.ini";
 	m_keybind_config_name = "keybinds.ini";

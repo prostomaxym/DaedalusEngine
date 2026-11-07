@@ -9,6 +9,9 @@ on:
 env:
   VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}/.vcpkg-binary-cache,readwrite'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Linux (${{ matrix.label }})

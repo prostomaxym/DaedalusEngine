@@ -44,7 +44,10 @@ std::pair<int, int> GLFWWindow::GetMonitorResolution()
 	InitGLFW();
 
 	const auto monitor = glfwGetPrimaryMonitor();
+	if (!monitor) return { 1920, 1080 };
+
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	if (!mode) return { 1920, 1080 };
 
 	return { mode->width, mode->height };
 }

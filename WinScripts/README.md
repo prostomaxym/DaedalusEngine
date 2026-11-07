@@ -1,6 +1,6 @@
 ﻿# Windows scripts
 
-Helpers for Windows desktop builds and for building and deploying the Android sandbox from Windows.
+Helpers for Windows desktop builds and for building and deploying the Android game from Windows.
 
 ## Windows desktop
 
@@ -40,17 +40,17 @@ Prerequisites:
 - The repository's initialized and bootstrapped vcpkg submodule.
 - Android SDK platform 33, Build Tools `33.0.2`, platform-tools (`adb`), NDK `27.2.12479018`, and SDK CMake `3.22.1` (including Ninja).
 - JDK 11, selected through `JAVA_HOME` or `-JavaHome`, and Gradle `7.3.3`. The build helper looks for `gradle.bat` on `PATH`, then in the Gradle wrapper cache for `7.3.3`; otherwise pass `-GradlePath`.
-- For deployment or probing, a connected and authorized Android device. The sandbox targets `arm64-v8a` and requires Android 9 / API 28 or newer.
+- For deployment or probing, a connected and authorized Android device. dlGame targets `arm64-v8a` and requires Android 9 / API 28 or newer.
 
 SDK lookup defaults to `ANDROID_HOME`, otherwise `%LOCALAPPDATA%/Android/Sdk`. Pass `-SdkRoot` to override it.
 
 | Script | Purpose |
 | --- | --- |
 | `AndroidDependencies.bat` | Install `arm64-android` dependencies through `Android/Dependencies.ps1`. Supports `-SdkRoot`, `-NdkVersion`, `-InstalledDirectory`, `-WorkDirectory`, and `-DryRun`. |
-| `AndroidBuildRelease.bat` | Build Release native libraries and assemble the sandbox APK through `Android/Build.ps1`. |
-| `AndroidBuildReleaseDevTools.bat` | Build ReleaseDevTools native libraries and assemble the sandbox APK. |
+| `AndroidBuildRelease.bat` | Build Release native libraries and assemble the game APK through `Android/Build.ps1`. |
+| `AndroidBuildReleaseDevTools.bat` | Build ReleaseDevTools native libraries and assemble the game APK. |
 | `AndroidBuildAndDeploy.bat` | Build ReleaseDevTools, then install and launch it on a device. |
-| `AndroidDeploy.bat` | Install an existing APK through `Android/Deploy.ps1` with `adb install -r`, force-stop and launch `org.daedalus.sandbox`, then check that its process is running. Existing app data is preserved. Supports `-SdkRoot`, `-ApkPath`, and `-Serial`. |
+| `AndroidDeploy.bat` | Install an existing APK through `Android/Deploy.ps1` with `adb install -r`, force-stop and launch `org.daedalus.game`, then check that its process is running. Existing data for this app ID is preserved; old `org.daedalus.sandbox` data is separate and is not migrated. Supports `-SdkRoot`, `-ApkPath`, and `-Serial`. |
 | `Android/Probe.ps1` | Build and run an isolated GLES/shader feasibility probe on a device, then remove its temporary device files. Does not install an application or validate NativeActivity lifecycle or rendering performance. Supports `-SdkRoot`, `-NdkVersion`, `-CMakeVersion`, `-Serial`, and `-BuildDirectory`. |
 
 Typical sequence: run `./AndroidDependencies.bat`, then `./AndroidBuildRelease.bat` and `./AndroidDeploy.bat`, or use `./AndroidBuildAndDeploy.bat` for a ReleaseDevTools build and deployment. Invoke these paths from `WinScripts`; use full paths from elsewhere. Run the probe directly with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./Android/Probe.ps1`.

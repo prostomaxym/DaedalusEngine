@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.16.3)
 
 project(
-  dlSandbox
+	dlGame
   VERSION 1.0.0
   LANGUAGES CXX
   )
 
 set(PROJECT_FILES
-  ExampleLayer.h
-  ExampleLayer.cpp
-  SandboxApp.h
-	SandboxApp.cpp)
+	GameLayer.h
+  GameLayer.cpp
+  GameApp.h
+	GameApp.cpp)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PROJECT_FILES})
 
@@ -26,7 +26,7 @@ else()
 endif()
 
 if(WIN32)
-    target_sources(dlSandbox PRIVATE daedalus_icon.rc)
+	target_sources(${PROJECT_NAME} PRIVATE daedalus_icon.rc)
 endif()
 
 target_link_libraries(${PROJECT_NAME}

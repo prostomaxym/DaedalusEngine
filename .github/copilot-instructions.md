@@ -11,7 +11,7 @@ Personal cross-platform (Windows + Linux) C++ game engine in early development. 
 
 ## Repository layout
 - `source/dlEngine` – engine library. Modules: `Config`, `Core`, `Debug`, `ECS`, `Events`, `Physics`, `Platform`, `Renderer`, `Threads`, `Utils`.
-- `source/dlSandbox` – sample/client application (intended to evolve into a generic game application that loads scenes entirely from runtime asset files selected through config paths). Keep example scenes only as reference files, excluded from the application project and automatic copying; runtime assets are supplied manually. Daedalus example Lua scripts should live under `source/dlSandbox/scripts` as reference assets only, excluded from the sandbox project, build source lists, and automatic copying; deploy runtime scripts manually.
+- `source/dlGame` – generic client application loading scenes entirely from runtime asset files selected through config paths. Keep example scenes only as reference files, excluded from the application project and automatic copying; runtime assets are supplied manually. Daedalus example Lua scripts should live under `source/dlGame/scripts` as reference assets only, excluded from the game project, build source lists, and automatic copying; deploy runtime scripts manually.
 - `source/dlUnitTests` – gtest unit tests (built only with `-DENABLE_TESTS=ON`).
 - `source/shader` – shaders.
 - `CMakeScripts/` – install/pack scripts. `WinScripts/`, `LinuxScripts/` – helper scripts.
@@ -66,7 +66,7 @@ Always make sure changes compile on both Windows and Linux. Linux CI runs on eve
 - `ROADMAP.md` (repo root) is the source of truth for the engine audit and planned work. When a roadmap item is implemented, or a new gap/defect is found, update `ROADMAP.md` in the same change (mark items done, adjust module status, add new findings).
 
 ## Android Touch Controls
-- For the current Android touch controls, hard-coded controls duplicating sandbox functionality are acceptable; a customizable runtime UI is planned for the future, not required now.
+- For the current Android touch controls, hard-coded controls duplicating example gameplay functionality are acceptable; a customizable runtime UI is planned for the future, not required now.
 - Android APK build/cache/staging outputs should default to `runtime/DaedalusAndroidApk` under the repository rather than the system temporary directory; standalone deployment should use the matching APK path.
 
 ## Artifact Cleanup

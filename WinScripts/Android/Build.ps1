@@ -137,12 +137,12 @@ try
 		'-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON',
 		'-DENABLE_TESTS=OFF', "-DCMAKE_BUILD_TYPE=$Configuration"
 	)
-	Invoke-Checked $cmake @('--build', $native_build, '--target', 'dlSandbox', '--parallel', '4')
+	Invoke-Checked $cmake @('--build', $native_build, '--target', 'dlGame', '--parallel', '4')
 
 	$libraries = Join-Path $stage 'jniLibs/arm64-v8a'
 	$assets = Join-Path $stage 'assets'
 	New-Item -ItemType Directory -Force $libraries, $assets | Out-Null
-	foreach ($name in @('libdlEngine.so', 'libdlSandbox.so'))
+	foreach ($name in @('libdlEngine.so', 'libdlGame.so'))
 	{
 		Copy-Item (Join-Path $native_build "lib/arm64-v8a/$name") $libraries
 	}

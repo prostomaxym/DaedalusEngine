@@ -38,7 +38,7 @@ namespace Daedalus
 			}
 		}
 
-		// Android starts without a keybind INI, and the sandbox no longer creates defaults.
+		// Android starts without a keybind INI, and the generic game does not create defaults.
 		// Touch controls emulate these keys, so missing actions get fallback bindings.
 		void EnsureTouchActionBindings()
 		{

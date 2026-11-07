@@ -64,7 +64,7 @@ namespace
 
 		void LoadExample(const std::string& name, LuaRuntime::Properties properties = {})
 		{
-			ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+			ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_GAME_EXAMPLES) / "scripts"));
 			m_runtime = std::make_unique<LuaRuntime>(m_scene, m_entity.GetUUID(), m_files, "scripts:/" + name, std::move(properties));
 			ASSERT_TRUE(m_runtime->Reload()) << m_runtime->GetLastError();
 		}
@@ -147,7 +147,7 @@ TEST_F(LuaRuntimeTest, reads_and_writes_vector_components)
 	EXPECT_DOUBLE_EQ(Number(*m_runtime, "z"), 3.);
 }
 
-TEST_F(LuaRuntimeTest, sandbox_player_follows_linked_camera_and_restores_presentation_on_stop)
+TEST_F(LuaRuntimeTest, game_player_follows_linked_camera_and_restores_presentation_on_stop)
 {
 	auto parent = m_scene.CreateEntity("Parent");
 	parent.GetComponent<TransformComponent>().rotation.y = 30.f;
@@ -213,6 +213,63 @@ TEST_F(LuaRuntimeTest, configured_script_mount_loads_reloads_and_captures_lua_re
 	ASSERT_TRUE(SceneSerializer::Capture(scene, PathConfig::GetAssetsPath(), registry, captured, error)) << error;
 	ASSERT_EQ(captured.entities.size(), 1u);
 	EXPECT_EQ(std::get<std::string>(captured.entities[0].scripts[0].properties.at("asset")), "scripts:/mover.lua");
+}
+
+TEST_F(LuaRuntimeTest, game_startup_loads_config_selected_scene_and_separate_script_folder)
+{
+	const PathDefaults restore_paths;
+	std::filesystem::create_directories(m_root / "game_assets/levels");
+	std::filesystem::create_directories(m_root / "game_scripts");
+	Write("function on_update(dt) local p=ecs.position(ecs.self); p.x=properties.speed; assert(ecs.set_position(ecs.self,p)) end", "game_scripts/mover.lua");
+	Write("[Path]\nAssetsFolder=game_assets\nSceneFile=levels/selected.scene.json\nScriptsFolder=game_scripts\n", "path.ini");
+	PathConfig::Load(m_root / "path.ini");
+	auto record = Definition();
+	record.entities[0].scripts[0].properties["asset"] = std::string("scripts:/mover.lua");
+	std::string text, error;
+	ASSERT_TRUE(SceneJson::Serialize(record, text, error)) << error;
+	Write(text, "game_assets/levels/selected.scene.json");
+	VirtualFileSystem files;
+	ASSERT_TRUE(files.Mount("assets", PathConfig::GetAssetsPath()));
+	ASSERT_TRUE(files.Mount("scripts", PathConfig::GetScriptsPath()));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	ASSERT_TRUE(pipeline.Initialize());
+	ScriptRegistry registry;
+	ASSERT_TRUE(LuaScript::Register(registry, pipeline.GetFiles()));
+	Scene scene;
+	ASSERT_TRUE(SceneSerializer::LoadAsset(pipeline, PathConfig::GetSceneAssetPath(), scene, registry, error)) << error;
+	scene.UpdateScripts({});
+	auto entity = scene.GetEntityByUUID(Daedalus::UUID(42));
+	ASSERT_TRUE(entity);
+	EXPECT_FLOAT_EQ(entity.GetComponent<TransformComponent>().translation.x, 2.5f);
+	EXPECT_FALSE(std::filesystem::exists(PathConfig::GetAssetsPath() / "scenes/startup.scene.json"));
+}
+
+TEST_F(LuaRuntimeTest, game_startup_does_not_fall_back_when_selected_scene_is_missing)
+{
+	const PathDefaults restore_paths;
+	std::filesystem::create_directories(m_root / "game_assets/scenes");
+	std::filesystem::create_directories(m_root / "game_scripts");
+	Write("function on_update(dt) state.value=42 end", "game_scripts/mover.lua");
+	Write("[Path]\nAssetsFolder=game_assets\nSceneFile=missing.scene.json\nScriptsFolder=game_scripts\n", "path.ini");
+	PathConfig::Load(m_root / "path.ini");
+	auto record = Definition();
+	record.entities[0].scripts[0].properties["asset"] = std::string("scripts:/mover.lua");
+	std::string text, error;
+	ASSERT_TRUE(SceneJson::Serialize(record, text, error)) << error;
+	Write(text, "game_assets/scenes/startup.scene.json");
+	VirtualFileSystem files;
+	ASSERT_TRUE(files.Mount("assets", PathConfig::GetAssetsPath()));
+	ASSERT_TRUE(files.Mount("scripts", PathConfig::GetScriptsPath()));
+	JobSystem jobs(1);
+	AssetPipeline pipeline(jobs, std::move(files));
+	ASSERT_TRUE(pipeline.Initialize());
+	ScriptRegistry registry;
+	ASSERT_TRUE(LuaScript::Register(registry, pipeline.GetFiles()));
+	Scene scene;
+	EXPECT_FALSE(SceneSerializer::LoadAsset(pipeline, PathConfig::GetSceneAssetPath(), scene, registry, error));
+	EXPECT_FALSE(error.empty());
+	EXPECT_FALSE(scene.GetEntityByUUID(Daedalus::UUID(42)));
 }
 
 TEST_F(LuaRuntimeTest, existing_explicit_asset_mount_script_paths_remain_valid)
@@ -943,9 +1000,9 @@ TEST_F(LuaRuntimeTest, gameplay_input_bindings_are_neutral_without_input_service
 	EXPECT_TRUE(m_runtime->IsReady()) << m_runtime->GetLastError();
 }
 
-TEST_F(LuaRuntimeTest, sandbox_scenes_reference_only_valid_lua_example_assets)
+TEST_F(LuaRuntimeTest, game_scenes_reference_only_valid_lua_example_assets)
 {
-	ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scripts"));
+	ASSERT_TRUE(m_files.Mount("scripts", std::filesystem::path(DL_GAME_EXAMPLES) / "scripts"));
 	ScriptRegistry registry;
 	ASSERT_TRUE(LuaScript::Register(registry, m_files));
 	for (const auto* name : { "nuke.scene.json", "anor_londo.scene.json" })
@@ -953,7 +1010,7 @@ TEST_F(LuaRuntimeTest, sandbox_scenes_reference_only_valid_lua_example_assets)
 		SCOPED_TRACE(name);
 		SceneRecord record;
 		std::string error;
-		ASSERT_TRUE(SceneJson::Load(std::filesystem::path(DL_SANDBOX_EXAMPLES) / "scenes" / name, record, error)) << error;
+		ASSERT_TRUE(SceneJson::Load(std::filesystem::path(DL_GAME_EXAMPLES) / "scenes" / name, record, error)) << error;
 		for (const auto& entity : record.entities)
 		{
 			ASSERT_TRUE(registry.Validate(entity, error)) << error;
@@ -962,7 +1019,7 @@ TEST_F(LuaRuntimeTest, sandbox_scenes_reference_only_valid_lua_example_assets)
 	}
 }
 
-TEST_F(LuaRuntimeTest, sandbox_rotation_example_preserves_native_speed_units)
+TEST_F(LuaRuntimeTest, game_rotation_example_preserves_native_speed_units)
 {
 	m_entity.GetComponent<TransformComponent>().rotation = { 10.f, 20.f, 30.f };
 	LoadExample("rotation_model.lua", { { "speed", 0.1 } });
@@ -973,7 +1030,7 @@ TEST_F(LuaRuntimeTest, sandbox_rotation_example_preserves_native_speed_units)
 	EXPECT_FLOAT_EQ(m_entity.GetComponent<TransformComponent>().rotation.z, 30.f);
 }
 
-TEST_F(LuaRuntimeTest, sandbox_tank_example_completes_patrol_and_preserves_reload_state)
+TEST_F(LuaRuntimeTest, game_tank_example_completes_patrol_and_preserves_reload_state)
 {
 	LoadExample("tank_movement.lua", { { "distance", 5. }, { "forward_direction", glm::vec3(1.f, 0.f, 0.f) } });
 	m_runtime->Update(1.f);
@@ -988,7 +1045,7 @@ TEST_F(LuaRuntimeTest, sandbox_tank_example_completes_patrol_and_preserves_reloa
 	EXPECT_DOUBLE_EQ(Number(*m_runtime, "length"), 0.);
 }
 
-TEST_F(LuaRuntimeTest, sandbox_position_logging_supports_self_linked_and_missing_cameras)
+TEST_F(LuaRuntimeTest, game_position_logging_supports_self_linked_and_missing_cameras)
 {
 	LoadExample("log_position.lua");
 	m_runtime->Update(0.f);

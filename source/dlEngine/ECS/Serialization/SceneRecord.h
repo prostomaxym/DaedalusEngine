@@ -73,7 +73,7 @@ namespace Daedalus
 
 	struct BodyRecord : ColliderDescription
 	{
-		// Model-derived shapes use unscaled bounds, matching the existing sandbox.
+		// Model-derived shapes use unscaled bounds, matching the existing game examples.
 		float mass = 0.f;
 		PhysicsBodySettings settings;
 		glm::vec3 bounds_scale{ 1.f };

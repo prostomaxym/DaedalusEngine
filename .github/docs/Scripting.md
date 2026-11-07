@@ -4,7 +4,7 @@ The Phase 2 implementation uses Lua and sol2 privately inside `ECS/Scripting`. E
 
 ## Registration and runtime assets
 
-Register the built-in adapter with `LuaScript::Register(registry, engine.GetAssets().GetFiles())` before loading a scene. The sandbox registers only this adapter; its example scenes use Lua exclusively. Other clients can still register native adapters. Registration copies the VFS mount configuration into adapters/runtimes; the registry can be destroyed without invalidating existing scripts. Asset contents are still read from the mounted source and are not copied into saved scenes.
+Register the built-in adapter with `LuaScript::Register(registry, engine.GetAssets().GetFiles())` before loading a scene. dlGame registers only this adapter; its example scenes use Lua exclusively. Other clients can still register native adapters. Registration copies the VFS mount configuration into adapters/runtimes; the registry can be destroyed without invalidating existing scripts. Asset contents are still read from the mounted source and are not copied into saved scenes.
 
 Configure the script root alongside assets and shaders in `path.ini`:
 
@@ -111,9 +111,9 @@ Script-facing string/vector arguments are type-checked before native conversions
 
 Gameplay scalar arguments must be finite numbers with absolute value at most 100000000; vector arguments use the same per-component bounds as TRS. Camera/spotlight bindings require an existing component and never create or remove components. World/camera reads refresh scene-derived poses; setters write authoritative TRS rather than keeping independent camera transforms.
 
-## Sandbox examples
+## Game reference examples
 
-`source/dlSandbox/scripts` contains standalone camera, player, rotation, tank patrol and position-logging Lua examples. They replace the sandbox's native example classes and adapters, but are not listed in project targets, compiled, or copied by builds. Manually place them in `ScriptsFolder`; the reference scenes use matching `scripts:/` paths. The player asset includes camera controls because one Lua asset per entity and no module imports are supported. It uses named `camera`/`spot_light` links after legacy scene migration, retains model components when hiding them, and toggles existing spotlight power. Healthy stop callbacks restore model visibility, third-person offsets and flashlight power. See the [sandbox README](../../source/dlSandbox/README.md) for deployment and properties.
+`source/dlGame/scripts` contains standalone camera, player, rotation, tank patrol and position-logging Lua examples. They replace the former native example classes and adapters, but are not listed in project targets, compiled, or copied by builds. Manually place them in `ScriptsFolder`; the reference scenes use matching `scripts:/` paths. The player asset includes camera controls because one Lua asset per entity and no module imports are supported. It uses named `camera`/`spot_light` links after legacy scene migration, retains model components when hiding them, and toggles existing spotlight power. Healthy stop callbacks restore model visibility, third-person offsets and flashlight power. See the [game README](../../source/dlGame/README.md) for deployment and properties.
 
 ## Events and thread safety
 

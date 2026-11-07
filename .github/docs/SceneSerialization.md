@@ -5,22 +5,22 @@ Daedalus stores authored scenes as UTF-8 JSON. Persistent records are separate f
 ## Client workflow
 
 1. Create an empty `std::unique_ptr<Scene>` and an application-owned `ScriptRegistry`.
-2. Register the adapters used by the scene. The sandbox uses only `LuaScript::Register(scripts, engine.GetAssets().GetFiles())` in `source/dlSandbox/ExampleLayer.cpp`. Other clients can additionally register their own native-script adapters. See [Lua scripting](Scripting.md) for asset paths, properties, lifecycle and sandbox restrictions.
+2. Register the adapters used by the scene. dlGame uses only `LuaScript::Register(scripts, engine.GetAssets().GetFiles())` in `source/dlGame/GameLayer.cpp`. Other clients can additionally register their own native-script adapters. See [Lua scripting](Scripting.md) for asset paths, properties, lifecycle and sandbox restrictions.
 3. Call `SceneSerializer::LoadAsset(engine.GetAssets(), virtual_path_or_uuid, *scene, scripts, error)`, or use the compatible physical-file `Load` API for tools.
 4. On success, transfer ownership with `Application::GetInstance()->GetEngine().GetScenes().RequestScene(std::move(scene))`. At the next frame boundary the manager stops the old scene, activates the new one and starts runtime, logging any startup failure. The loaded name and primary-camera UUID are retained.
 5. The application forwards fixed updates, variable updates, rendering and viewport resizes through the scene manager. Request a null scene to unload it. Standalone tools may own scenes directly and use the corresponding runtime methods themselves.
 
-The sandbox loads its startup scene through `PathConfig::GetSceneAssetPath()` (`assets:/` plus `SceneFile`). Set `SceneFile` in `[Path]` of `runtime/path.ini`. `AssetsFolder` defaults to the runtime `asset` directory and may instead identify a ZIP file, for example `asset/game.zip`; ZIP contents use the same asset-root-relative layout. The default scene is `scenes/startup.scene.json`; no scene/archive is bundled or copied automatically. The legacy `GetScenePath()` remains for directory-backed physical loading.
+dlGame loads its startup scene through `PathConfig::GetSceneAssetPath()` (`assets:/` plus `SceneFile`). Set `SceneFile` in `[Path]` of `runtime/path.ini`. `AssetsFolder` defaults to the runtime `asset` directory and may instead identify a ZIP file, for example `asset/game.zip`; ZIP contents use the same asset-root-relative layout. The default scene is `scenes/startup.scene.json`; no scene/archive is bundled or copied automatically. The legacy `GetScenePath()` remains for directory-backed physical loading.
 
 To deploy an archive, first generate/preserve source UUID sidecars in a directory-backed asset tree, then ZIP the tree with each `<source>.meta` adjacent to its source. ZIP mounts are read-only: missing or invalid sidecars cannot be repaired inside them. Use ordinary ZIP tooling; encryption is unsupported. Asset/scene UUIDs use the nonzero decimal ID stored in the sidecar, distinct from entity UUIDs in scene JSON.
 
 For Windows PowerShell, packaging `runtime/asset/*` into `runtime/game.zip` keeps entries relative to the asset root; set a single `AssetsFolder=game.zip` key in `[Path]`. `Compress-Archive` may store entry names with backslashes: VFS canonicalizes these separators, while scene/resource references still use forward slashes. Archives containing both separator spellings of the same canonical name are rejected. No extraction or runtime archive rewriting is performed. Font loading also uses VFS. Missing sidecars are registry failures after a successful mount, not an `Unknown mount` error; preserve adjacent `.meta` files when packaging.
 
-Place your scene JSON and its referenced models, textures, and skybox images under the runtime asset folder manually. The files in `source/dlSandbox/scenes` are reference examples only: they are not part of the sandbox target and are not automatically deployed by builds or explicitly installed from source. To try one, manually copy `nuke.scene.json` or `anor_londo.scene.json` into `runtime/asset/scenes`, supply its referenced assets under `runtime/asset`, and set `[Path]` `SceneFile=scenes/nuke.scene.json` or `SceneFile=scenes/anor_londo.scene.json`. Alternatively, name your deployed scene `startup.scene.json` to use the default. Switching scenes requires changing configuration, not rebuilding the application.
+Place your scene JSON and its referenced models, textures, and skybox images under the runtime asset folder manually. The files in `source/dlGame/scenes` are reference examples only: they are not part of the game target and are not automatically deployed by builds or explicitly installed from source. To try one, manually copy `nuke.scene.json` or `anor_londo.scene.json` into `runtime/asset/scenes`, supply its referenced assets under `runtime/asset`, and set `[Path]` `SceneFile=scenes/nuke.scene.json` or `SceneFile=scenes/anor_londo.scene.json`. Alternatively, name your deployed scene `startup.scene.json` to use the default. Switching scenes requires changing configuration, not rebuilding the application.
 
 Installation still packages the contents of the runtime asset folder like other manually supplied assets. Missing or invalid scene files produce a logged loading error; there is no fallback to an example scene.
 
-Both reference scenes use `Lua` script records. Manually copy the `.lua` files from `source/dlSandbox/scripts` into the configured `ScriptsFolder` (default `runtime/script`); their `scripts:/` references are independent of the scene's asset folder. These Lua examples are also excluded from the sandbox project and all automatic build copying.
+Both reference scenes use `Lua` script records. Manually copy the `.lua` files from `source/dlGame/scripts` into the configured `ScriptsFolder` (default `runtime/script`); their `scripts:/` references are independent of the scene's asset folder. These Lua examples are also excluded from the game project and all automatic build copying.
 
 ### API responsibilities
 
@@ -46,7 +46,7 @@ Resource instantiation must run on the application/GL-context thread after rende
 
 ## Version 5 file structure
 
-The reference scenes in `source/dlSandbox/scenes` remain v1 migration examples. See `source/dlEngine/ECS/Serialization/SceneRecord.h` and `Physics/PhysicsTypes.h` for settings/defaults; camera/light pose members are legacy v1 migration inputs, not v2–v5 pose authority.
+The reference scenes in `source/dlGame/scenes` remain v1 migration examples. See `source/dlEngine/ECS/Serialization/SceneRecord.h` and `Physics/PhysicsTypes.h` for settings/defaults; camera/light pose members are legacy v1 migration inputs, not v2–v5 pose authority.
 
 ### Scene
 
@@ -121,7 +121,7 @@ Each `joints` entry has `target` (another entity's UUID string), `type` (`fixed`
 
 Upgrade first validates the original v1 contract, including root-only bodies and valid camera/light directions. Legacy camera/light positions were world-space and independent of entity TRS. A dedicated pose entity retains its ID and receives the converted TRS. An entity with multiple pose components, a model/body/skybox, a parent, or children keeps its original transform and hierarchy anchor; each independent camera/light moves to a new root entity. New IDs are the lowest available nonzero decimal IDs, avoiding collisions deterministically. Named `camera`, `directional_light`, `point_light`, and `spot_light` links connect the source to the new entities. Primary-camera selection follows a moved camera. Existing conflicting reserved links cause a diagnostic, not silent replacement.
 
-Scripts remain on their original entities. Custom adapters/scripts must support links if they require moved components; engine CameraController and sandbox adapters do. The example player uses its linked camera and spotlight, retaining independent model facing and aim. Migration changes records in memory only; source/runtime asset files are not rewritten.
+Scripts remain on their original entities. Custom adapters/scripts must support links if they require moved components; engine CameraController and game Lua examples do. The example player uses its linked camera and spotlight, retaining independent model facing and aim. Migration changes records in memory only; source/runtime asset files are not rewritten.
 
 ### Ordered migrations
 
@@ -201,7 +201,7 @@ Property values support booleans, finite numbers (`double`), strings, and three-
 
 Register a C++ type under only one name. Unknown scripts and unsupported component storages fail capture rather than disappearing from a saved file. Capture sorts native-script names and entity UUIDs for stable output. Script runtime state, such as tank movement progress or previous mouse coordinates, is intentionally reset on load.
 
-Sandbox Lua examples (all use `type: "Lua"` and an `asset` property):
+Game Lua reference examples (all use `type: "Lua"` and an `asset` property):
 
 | Asset under `scripts:/` | Properties / prerequisites |
 | --- | --- |
@@ -225,4 +225,4 @@ This is checked, cross-platform replacement, **not an atomic/power-loss-durable 
 
 Version 5 covers authored scene definitions, local transform hierarchies, unit-scale-ancestor physics parenting, named links, ordered migrations, prefab composition, variants, typed per-instance overrides, synchronous boundary spawning, runtime provenance, collider/material/filter settings, capsule characters, joints and scene gravity. It is not a savegame, reference-preserving prefab serializer, automatic restart, custom render-material serializer or arbitrary reflected-component framework. Velocities, contact phases, character movement/jump state, broken constraints and debug-draw toggles are transient. Model/texture/cubemap resources can hot-reload while retaining shared identity; entities, scripts and model-derived colliders are not recreated. SceneManager supports explicit whole-scene replacement at a frame boundary. Scene JSON does not embed binary assets; collider vertex/index arrays are explicit numeric configuration and model formats may contain embedded textures handled by the importer. Scene/ECS registry objects are not moved because systems retain references to them.
 
-Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or the configuration built). Scene tests and the asset follow-up tests cover record/VFS/ZIP loading and CPU model/texture imports without a GL context. GPU upload/replacement and visual behavior still require a separate sandbox smoke test.
+Configure tests with `ENABLE_TESTS=ON`, build, then run `ctest --test-dir build -C Release --output-on-failure` (or the configuration built). Scene tests and the asset follow-up tests cover record/VFS/ZIP loading and CPU model/texture imports without a GL context. GPU upload/replacement and visual behavior still require a separate dlGame smoke test.
